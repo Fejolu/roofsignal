@@ -70,7 +70,8 @@ section {
 }
 
 .nav a,
-.footer a {
+.footer a,
+.footer div > span {
   color: #fff;
   text-decoration: none;
   font-size: 14px;
@@ -458,8 +459,7 @@ h2 {
   gap: 8px;
 }
 
-.footer p,
-.footer div > span { opacity: .7; }
+.footer p { opacity: .7; }
 
 .page-hero {
   background: linear-gradient(90deg, #050908, #10201d);
