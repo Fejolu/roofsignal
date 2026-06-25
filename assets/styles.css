@@ -606,6 +606,12 @@ h2 {
   gap: 60px;
 }
 
+.contact-grid a {
+  color: var(--orange);
+  font-weight: 800;
+  text-decoration: none;
+}
+
 form {
   display: grid;
   gap: 14px;
