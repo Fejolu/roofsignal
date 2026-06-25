@@ -58,11 +58,14 @@ section {
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
   color: #fff;
   text-decoration: none;
   font-weight: 900;
   letter-spacing: 0;
   font-size: 22px;
+  line-height: 1;
   white-space: nowrap;
 }
 
