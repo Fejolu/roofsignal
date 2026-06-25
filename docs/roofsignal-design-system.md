@@ -117,7 +117,7 @@ Alle componenten zijn rustig, herbruikbaar en functioneel.
 
 - Primaire CTA: oranje achtergrond.
 - Secundaire CTA: transparant of outline.
-- Tekst is concreet: "Plan een gebouwinspectie", "Bekijk voorbeeldrapport".
+- Tekst is concreet: "Vraag portefeuillescan aan", "Bekijk voorbeeldrapport".
 - Geen vage CTA's zoals "Ontdek meer".
 
 ### Cards

@@ -358,6 +358,29 @@ h2 {
   text-transform: uppercase;
 }
 
+.executive-summary {
+  border: 1px solid var(--line);
+  border-radius: var(--rs-radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: var(--muted);
+}
+
+.executive-summary span {
+  display: block;
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.executive-summary strong {
+  display: block;
+  line-height: 1.35;
+}
+
 .report-photo {
   position: relative;
   min-height: 320px;
@@ -395,6 +418,41 @@ h2 {
 .p3 { left: 12%; top: 48%; }
 .p4 { right: 11%; top: 12%; }
 .p5 { left: 28%; bottom: 12%; }
+
+.finding-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.finding-grid div {
+  border: 1px solid var(--line);
+  border-radius: var(--rs-radius);
+  padding: 12px;
+  background: #fff;
+}
+
+.finding-grid span {
+  display: inline-flex;
+  margin-bottom: 6px;
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.finding-grid strong,
+.finding-grid small {
+  display: block;
+}
+
+.finding-grid small {
+  margin-top: 4px;
+  color: var(--rs-graphite-600);
+  line-height: 1.4;
+}
 
 .report-rows {
   display: grid;
@@ -443,6 +501,38 @@ h2 {
   background: var(--orange);
   border-radius: 50%;
   margin-right: 10px;
+}
+
+.audience-cards a {
+  display: inline-flex;
+  margin-top: 10px;
+  color: var(--orange);
+  font-weight: 900;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.trust-list {
+  display: grid;
+  gap: 12px;
+}
+
+.trust-list div {
+  border: 1px solid var(--line);
+  border-radius: var(--rs-radius);
+  padding: 16px 18px;
+  background: #fff;
+  box-shadow: var(--rs-shadow-soft);
+}
+
+.trust-list strong,
+.trust-list span {
+  display: block;
+}
+
+.trust-list span {
+  margin-top: 4px;
+  color: var(--rs-graphite-600);
 }
 
 .cta {
@@ -674,6 +764,7 @@ button { cursor: pointer; }
   .check-grid { grid-template-columns: 1fr; }
   .report-photo { min-height: 240px; }
   .pin { font-size: 12px; padding: 7px 10px; }
+  .finding-grid { grid-template-columns: 1fr; }
   .report-rows div { grid-template-columns: 1fr; gap: 4px; }
   .four,
   .three,
