@@ -8,6 +8,8 @@ RoofSignal verkoopt geen drones en geen foto's. RoofSignal verkoopt vertrouwen i
 
 Iedere pixel moet onzekerheid verminderen. Iedere pagina moet rust uitstralen. Iedere keuze moet objectiviteit ondersteunen.
 
+Strategische product- en groeibeslissingen vallen onder `docs/property-intelligence-engine.md`. RSDS bepaalt hoe die strategie visueel, tekstueel en interactief wordt uitgevoerd.
+
 ## Merkpersoonlijkheid
 
 RoofSignal is rustig, analytisch, objectief, deskundig, premium, technisch, modern en betrouwbaar.
