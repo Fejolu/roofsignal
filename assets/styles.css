@@ -79,6 +79,10 @@ section {
   opacity: 1;
 }
 
+.footer .logo span {
+  opacity: 1;
+}
+
 .nav a:hover {
   opacity: 1;
   color: var(--orange);
@@ -451,7 +455,7 @@ h2 {
 }
 
 .footer p,
-.footer span { opacity: .7; }
+.footer div > span { opacity: .7; }
 
 .page-hero {
   background: linear-gradient(90deg, #050908, #10201d);
