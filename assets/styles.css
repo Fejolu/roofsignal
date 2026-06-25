@@ -106,7 +106,7 @@ section {
   position: relative;
   background:
     linear-gradient(90deg, rgba(0,0,0,.92), rgba(0,0,0,.52), rgba(0,0,0,.18)),
-    url('hero-roofsignal-v3.png') center/cover;
+    url('hero-roofsignal-v4.png') center/cover;
   display: flex;
   align-items: center;
 }
@@ -334,7 +334,7 @@ h2 {
   overflow: hidden;
   background:
     linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.2)),
-    url('hero-roofsignal-v3.png') center/cover;
+    url('hero-roofsignal-v4.png') center/cover;
 }
 
 .pin {
@@ -359,9 +359,11 @@ h2 {
   background: var(--orange);
 }
 
-.p1 { left: 9%; top: 18%; }
-.p2 { right: 10%; top: 42%; }
-.p3 { left: 18%; bottom: 16%; }
+.p1 { left: 56%; top: 18%; }
+.p2 { right: 8%; top: 42%; }
+.p3 { left: 12%; top: 48%; }
+.p4 { right: 11%; top: 12%; }
+.p5 { left: 28%; bottom: 12%; }
 
 .report-rows {
   display: grid;
