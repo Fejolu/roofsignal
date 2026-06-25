@@ -73,6 +73,12 @@ section {
   opacity: .85;
 }
 
+.footer .logo {
+  font-size: 22px;
+  font-weight: 900;
+  opacity: 1;
+}
+
 .nav a:hover {
   opacity: 1;
   color: var(--orange);
