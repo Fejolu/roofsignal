@@ -106,7 +106,7 @@ section {
   position: relative;
   background:
     linear-gradient(90deg, rgba(0,0,0,.92), rgba(0,0,0,.52), rgba(0,0,0,.18)),
-    url('hero-roofsignal-v4.png') center/cover;
+    url('hero-roofsignal-v5.png') center/cover;
   display: flex;
   align-items: center;
 }
@@ -334,7 +334,7 @@ h2 {
   overflow: hidden;
   background:
     linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.2)),
-    url('hero-roofsignal-v4.png') center/cover;
+    url('hero-roofsignal-v5.png') center/cover;
 }
 
 .pin {
@@ -512,6 +512,9 @@ button { cursor: pointer; }
     display: block;
     min-height: auto;
     padding: 96px 0 28px;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.96), rgba(0,0,0,.88) 62%, rgba(0,0,0,.42)),
+      url('hero-roofsignal-v5.png') center/cover;
   }
   .hero-content {
     margin: 0 56px 0 24px;
