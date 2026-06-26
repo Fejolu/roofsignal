@@ -16,8 +16,44 @@
 <main>
 <section class="page-hero"><p class="eyebrow">Transparante start</p><h1>Tarieven per onderhoudsvraag.</h1><p>De prijs hangt af van objecttype, bereikbaarheid, gewenste rapportdiepte, aantal bouwdelen en of het om één object of een portefeuille gaat.</p></section>
 <section class="section"><div class="cards three"><article><span class="phase">Quickscan</span><h3>Gerichte objectvraag</h3><p>Voor één concreet risico zoals lekkage-indicatie, gootcontrole, stormschade of zichtbaar gevelgebrek.</p></article><article><span class="phase">Standaard</span><h3>Gebouwschilrapport</h3><p>Dak, goten, schoorsteen, geveldetails en relevante installaties met foto-evidence en onderhoudsprioriteiten.</p></article><article><span class="phase">Portefeuille</span><h3>Onderhoudsdossier</h3><p>Periodieke rapportages voor VvE’s, beheerders en bedrijven die conditie door de tijd willen volgen.</p></article></div></section>
+<section class="section pricing-calculator" aria-labelledby="prijsindicatie">
+  <div>
+    <p class="eyebrow orange">Prijsindicatie</p>
+    <h2 id="prijsindicatie">Bereken een realistische startofferte.</h2>
+    <p>De indicatie gebruikt drie factoren: objectcomplexiteit, bereikbaarheid en inspectiediepte. De uiteindelijke offerte volgt na afstemming van object, toestemming en gewenste rapportage.</p>
+  </div>
+  <form class="quote-tool" id="quoteTool">
+    <label>Objectcomplexiteit<select name="complexity"><option value="1">1 — vrijstaande woning</option><option value="2">2 — kleine VvE</option><option value="3" selected>3 — middelgroot bedrijfspand</option><option value="4">4 — groot appartementencomplex</option><option value="5">5 — logistiek terrein / zonnepark</option></select></label>
+    <label>Bereikbaarheid<select name="accessibility"><option value="1" selected>1 — Apeldoorn</option><option value="2">2 — Stedendriehoek</option><option value="3">3 — Randstad</option><option value="4">4 — buitengebied</option><option value="5">5 — beperkt of vergunninggevoelig</option></select></label>
+    <label>Inspectiediepte<select name="scope"><option value="1">1 — dak alleen</option><option value="2">2 — dak + goten</option><option value="3">3 — gebouwschil</option><option value="4" selected>4 — gebouwschil + rapportage</option><option value="5">5 — intelligence report + thermografie/planning</option></select></label>
+    <output class="quote-output" id="quoteOutput">
+      <span>Gewogen score</span>
+      <strong>3.20</strong>
+      <span>Indicatie</span>
+      <strong>EUR 800</strong>
+    </output>
+  </form>
+</section>
 <section class="section data-list"><div><p class="eyebrow orange">Offerte op maat</p><h2>U betaalt voor bruikbaar onderhoudsinzicht.</h2></div><ul><li>Onderhoudsvraag en bouwdelen vooraf afgestemd</li><li>Foto’s, executive summary en rapportage inbegrepen</li><li>Indicatieve herstelprioriteiten mogelijk</li><li>Oplevering meestal binnen 48 uur na opname</li><li>Start met één object, drie adressen of één concrete onderhoudsvraag</li></ul></section>
 </main>
 <footer class="footer"><div><a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div><h4>Voor wie</h4><a href="vve-beheerders.html">VvE beheerders</a><a href="vastgoedbeheerders.html">Vastgoedbeheerders</a><a href="bedrijfspanden.html">Bedrijfspanden</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span></div></footer>
+<script>
+const quoteTool = document.getElementById('quoteTool');
+const quoteOutput = document.getElementById('quoteOutput');
+function nearest50(value) {
+  return Math.floor((value + 25) / 50) * 50;
+}
+function updateQuote() {
+  const data = new FormData(quoteTool);
+  const complexity = Number(data.get('complexity'));
+  const accessibility = Number(data.get('accessibility'));
+  const scope = Number(data.get('scope'));
+  const weighted = complexity * 0.4 + accessibility * 0.2 + scope * 0.4;
+  const price = Math.max(500, nearest50(250 * weighted));
+  quoteOutput.innerHTML = '<span>Gewogen score</span><strong>' + weighted.toFixed(2) + '</strong><span>Indicatie</span><strong>EUR ' + price.toLocaleString('nl-NL') + '</strong>';
+}
+quoteTool.addEventListener('input', updateQuote);
+updateQuote();
+</script>
 </body>
 </html>

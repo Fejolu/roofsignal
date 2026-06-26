@@ -1,0 +1,293 @@
+[
+  {
+    "object_name": "Detached house",
+    "client_type": "Vastgoedeigenaar",
+    "complexity": {
+      "score": 1,
+      "explanation": "Complexity is scored 1/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "detached-house scale"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 1,
+      "explanation": "Accessibility is scored 1/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "local Apeldoorn object"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 1,
+      "explanation": "Scope is scored 1/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "roof inspection"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 1.0,
+    "suggested_quotation": 500,
+    "confidence": "High",
+    "assumptions": [
+      "Single simple object used for lower-bound validation."
+    ]
+  },
+  {
+    "object_name": "Small VvE",
+    "client_type": "VvE beheer",
+    "complexity": {
+      "score": 3,
+      "explanation": "Complexity is scored 3/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "small apartment/VvE scale",
+        "small multi-unit size: 650 m2",
+        "small managed roof area: 320 m2",
+        "moderate height: 10 m",
+        "several details or roof elements"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 1,
+      "explanation": "Accessibility is scored 1/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "local Apeldoorn object"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 4,
+      "explanation": "Scope is scored 4/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "gutters included",
+        "maintenance prioritisation included"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 3.0,
+    "suggested_quotation": 750,
+    "confidence": "High",
+    "assumptions": [
+      "Small VvE with basic prioritisation."
+    ]
+  },
+  {
+    "object_name": "Large VvE",
+    "client_type": "VvE beheer",
+    "complexity": {
+      "score": 5,
+      "explanation": "Complexity is scored 5/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "large apartment complex",
+        "substantial gross size: 5200 m2",
+        "medium roof area: 2100 m2",
+        "large facade area: 4800 m2",
+        "height requires more planning: 18 m",
+        "many roof planes, details, structures or buildings",
+        "solar installation adds reporting complexity"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 3,
+      "explanation": "Accessibility is scored 3/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "local Apeldoorn object",
+        "parking or dense urban setting",
+        "multiple locations/buildings: 2"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 4,
+      "explanation": "Scope is scored 4/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "building envelope included",
+        "structured reporting required",
+        "MJOP indication included",
+        "maintenance prioritisation included"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 4.2,
+    "suggested_quotation": 1050,
+    "confidence": "High",
+    "assumptions": [
+      "Two connected buildings; no thermography in base case."
+    ]
+  },
+  {
+    "object_name": "School",
+    "client_type": "Schoolbestuur",
+    "complexity": {
+      "score": 4,
+      "explanation": "Complexity is scored 4/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "managed commercial or institutional object",
+        "medium gross size: 3600 m2",
+        "medium roof area: 1600 m2",
+        "facade review adds effort: 2400 m2",
+        "moderate height: 12 m",
+        "multiple roof planes, details, structures or buildings",
+        "solar installation adds reporting complexity"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 4,
+      "explanation": "Accessibility is scored 4/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "local Apeldoorn object",
+        "permissions or flight restriction expected"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 4,
+      "explanation": "Scope is scored 4/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "building envelope included",
+        "structured reporting required",
+        "MJOP indication included",
+        "maintenance prioritisation included"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 4.0,
+    "suggested_quotation": 1000,
+    "confidence": "High",
+    "assumptions": [
+      "Inspection planned outside pupil arrival/departure windows."
+    ]
+  },
+  {
+    "object_name": "Logistics centre",
+    "client_type": "Vastgoedbeheer",
+    "complexity": {
+      "score": 5,
+      "explanation": "Complexity is scored 5/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "industrial, logistics or solar-site scale",
+        "large gross size: 18000 m2",
+        "very large roof area: 12000 m2",
+        "large facade area: 9000 m2",
+        "moderate height: 14 m",
+        "many roof planes, details, structures or buildings",
+        "solar installation adds reporting complexity"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 2,
+      "explanation": "Accessibility is scored 2/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "Stedendriehoek/Veluwe travel distance"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 5,
+      "explanation": "Scope is scored 5/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "structured reporting required",
+        "full intelligence/planning scope",
+        "MJOP indication included",
+        "maintenance prioritisation included",
+        "cost estimation included"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 4.4,
+    "suggested_quotation": 1100,
+    "confidence": "High",
+    "assumptions": [
+      "Large roof with many installations."
+    ]
+  },
+  {
+    "object_name": "Agricultural property",
+    "client_type": "Agrarisch vastgoed",
+    "complexity": {
+      "score": 5,
+      "explanation": "Complexity is scored 5/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "medium gross size: 4200 m2",
+        "large roof area: 3100 m2",
+        "facade review adds effort: 1800 m2",
+        "many roof planes, details, structures or buildings",
+        "solar installation adds reporting complexity"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 5,
+      "explanation": "Accessibility is scored 5/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "remote or rural access",
+        "multiple locations/buildings: 4"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 4,
+      "explanation": "Scope is scored 4/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "gutters included",
+        "maintenance prioritisation included"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 4.6,
+    "suggested_quotation": 1150,
+    "confidence": "High",
+    "assumptions": [
+      "Multiple sheds and farmhouse treated as one visit."
+    ]
+  },
+  {
+    "object_name": "Solar park",
+    "client_type": "Energie asset",
+    "complexity": {
+      "score": 5,
+      "explanation": "Complexity is scored 5/5 based on object scale, roof/facade effort and technical details.",
+      "signals": [
+        "industrial, logistics or solar-site scale",
+        "large gross size: 14000 m2",
+        "very large roof area: 12000 m2",
+        "many roof planes, details, structures or buildings",
+        "solar installation adds reporting complexity"
+      ],
+      "weight": 0.4
+    },
+    "accessibility": {
+      "score": 5,
+      "explanation": "Accessibility is scored 5/5 based on travel, site access and permission complexity.",
+      "signals": [
+        "remote or rural access",
+        "permissions or flight restriction expected",
+        "multiple locations/buildings: 5"
+      ],
+      "weight": 0.2
+    },
+    "scope": {
+      "score": 5,
+      "explanation": "Scope is scored 5/5 based on inspection depth and reporting/intelligence deliverables.",
+      "signals": [
+        "structured reporting required",
+        "full intelligence/planning scope",
+        "thermography included",
+        "maintenance prioritisation included",
+        "cost estimation included",
+        "portfolio comparison included"
+      ],
+      "weight": 0.4
+    },
+    "weighted_score": 5.0,
+    "suggested_quotation": 1250,
+    "confidence": "High",
+    "assumptions": [
+      "Represents upper-bound validation object."
+    ]
+  }
+]
