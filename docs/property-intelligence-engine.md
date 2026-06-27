@@ -128,6 +128,9 @@ Think in portfolios, not individual buildings.
 
 RoofSignal should not search for companies. RoofSignal should search for signals.
 
+Implementation note: the first practical lead engine lives in `tools/roofsignal_lead_engine.py`.
+Usage is documented in `docs/lead-engine.md`.
+
 Signals include:
 
 - Building age.

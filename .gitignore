@@ -1,0 +1,17 @@
+# OS/editor noise
+.DS_Store
+
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local generated lead data and reports
+data/leads/
+results/leads/
+
+# Logs/temp
+*.log
+*.tmp
