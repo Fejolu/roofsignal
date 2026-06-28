@@ -390,27 +390,34 @@ h3 {
   min-height: 330px;
   position: relative;
   overflow: hidden;
+  display: block;
   background:
     linear-gradient(130deg, rgba(5,9,8,.05), rgba(5,9,8,.25)),
     repeating-linear-gradient(35deg, #69736f 0 18px, #56605c 18px 36px);
 }
 
-.photo-block.facade {
-  background:
-    linear-gradient(130deg, rgba(5,9,8,.03), rgba(5,9,8,.18)),
-    repeating-linear-gradient(90deg, #a96345 0 22px, #b87558 22px 44px);
+.photo-block img,
+.thermo-block img {
+  width: 100%;
+  height: 100%;
+  min-height: 330px;
+  display: block;
+  object-fit: cover;
 }
 
-.photo-block.solar {
-  background:
-    linear-gradient(130deg, rgba(5,9,8,.05), rgba(5,9,8,.3)),
-    repeating-linear-gradient(90deg, #253130 0 46px, #1b2423 46px 50px, #324240 50px 96px);
+.photo-block.detail,
+.thermo-block.detail {
+  min-height: 220px;
 }
 
-.thermo-block {
-  background:
-    radial-gradient(circle at 69% 38%, #fff0a6 0 8%, #ff8b28 8% 16%, transparent 17%),
-    linear-gradient(135deg, #14203a, #334c71 38%, #78482f 72%, #201b28);
+.photo-block.detail img,
+.thermo-block.detail img {
+  min-height: 220px;
+}
+
+.finding-photo {
+  display: grid;
+  gap: 8px;
 }
 
 .pin {
@@ -441,6 +448,13 @@ h3 {
 .p3 { left: 18%; top: 58%; }
 .p4 { left: 62%; top: 60%; }
 .p5 { left: 39%; top: 43%; }
+.lead-pin { left: 53%; top: 45%; }
+.drain-pin { left: 42%; top: 35%; }
+.solar-hotspot-1 { left: 43%; top: 43%; }
+.solar-hotspot-2 { left: 58%; top: 45%; }
+.facade-joint { left: 57%; top: 38%; }
+.facade-crack { left: 75%; top: 46%; }
+.facade-fascia { left: 37%; top: 22%; }
 
 .caption {
   font-size: 12px;
