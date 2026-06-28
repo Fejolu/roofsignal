@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beheerderskant — RoofSignal</title>
+  <meta name="description" content="Concept voor de RoofSignal beheerderskant om klanten, inspecties, planning, facturen en support te beheren.">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="portal-body admin">
+<aside class="portal-sidebar">
+  <a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+  <nav class="portal-nav">
+    <a class="active" href="#dashboard">Dashboard</a>
+    <a href="#klanten">Klanten</a>
+    <a href="#inspecties">Inspecties</a>
+    <a href="#planning">Planning</a>
+    <a href="#facturen">Facturen</a>
+    <a href="#support">Support</a>
+  </nav>
+  <div class="portal-account">
+    <span>Beheerder</span>
+    <strong>RoofSignal team</strong>
+    <a href="portal-login.html">Uitloggen</a>
+  </div>
+</aside>
+
+<main class="portal-main">
+  <header class="portal-topbar">
+    <div>
+      <p class="eyebrow orange">Beheerderskant</p>
+      <h1>Klanten, objecten en opvolging.</h1>
+      <p>Intern overzicht voor klantbeheer, inspectieplanning, support en factuurstatus.</p>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn ghost-dark" href="portal-klant.html">Bekijk klantportaal</a>
+      <a class="btn" href="#klanten">Nieuwe klant</a>
+    </div>
+  </header>
+
+  <section id="dashboard" class="portal-grid metrics">
+    <article><span>Actieve klanten</span><strong>24</strong><p>8 VvE, 11 vastgoed, 5 bedrijf.</p></article>
+    <article><span>Open inspecties</span><strong>9</strong><p>3 wachten op rapportage.</p></article>
+    <article><span>Support</span><strong>6</strong><p>2 vragen met hoge prioriteit.</p></article>
+    <article><span>Omzet open</span><strong>EUR 7.850</strong><p>Facturen nog niet betaald.</p></article>
+  </section>
+
+  <section class="portal-layout">
+    <div class="portal-panel wide" id="klanten">
+      <div class="panel-head">
+        <div><span class="eyebrow orange">CRM</span><h2>Klanten beheren</h2></div>
+        <a href="mailto:info@roofsignal.nl">Account uitnodigen</a>
+      </div>
+      <table class="portal-table">
+        <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Laatste activiteit</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>VvE Parkzicht</td><td>VvE beheer</td><td>1</td><td>Rapport geopend</td><td><span class="status-dot red">Actie nodig</span></td></tr>
+          <tr><td>Ten Hag Vastgoedbeheer</td><td>Vastgoedbeheer</td><td>12</td><td>Portefeuillescan aangevraagd</td><td><span class="status-dot yellow">Intake</span></td></tr>
+          <tr><td>Logistiek Centrum Noord</td><td>Bedrijfspand</td><td>3</td><td>Inspectie gepland</td><td><span class="status-dot green">Actief</span></td></tr>
+          <tr><td>MVGM VvE Beheer</td><td>VvE beheer</td><td>7</td><td>Offerte verzonden</td><td><span class="status-dot yellow">Opvolgen</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="portal-panel" id="planning">
+      <div class="panel-head"><div><span class="eyebrow orange">Vandaag</span><h2>Operationeel</h2></div></div>
+      <div class="timeline-list">
+        <div><span>09:30</span><strong>Rapportcontrole</strong><p>VvE Parkzicht definitief maken.</p></div>
+        <div><span>11:00</span><strong>Nieuwe klant onboarden</strong><p>Account en objecten aanmaken.</p></div>
+        <div><span>14:30</span><strong>Drone-opname voorbereiden</strong><p>Weer, toegang en scope controleren.</p></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="portal-layout">
+    <div class="portal-panel" id="inspecties">
+      <div class="panel-head"><div><span class="eyebrow orange">Inspecties</span><h2>Rapportpijplijn</h2></div></div>
+      <div class="pipeline">
+        <article><span>Intake</span><strong>3</strong><p>Scope nog afstemmen.</p></article>
+        <article><span>Gepland</span><strong>4</strong><p>Opname staat in agenda.</p></article>
+        <article><span>Analyse</span><strong>2</strong><p>Foto's en bevindingen verwerken.</p></article>
+        <article><span>Geleverd</span><strong>11</strong><p>Deze maand afgerond.</p></article>
+      </div>
+    </div>
+
+    <div class="portal-panel" id="facturen">
+      <div class="panel-head"><div><span class="eyebrow orange">Facturen</span><h2>Betaalstatus</h2></div></div>
+      <table class="portal-table compact">
+        <thead><tr><th>Klant</th><th>Bedrag</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>VvE Parkzicht</td><td>EUR 1.250</td><td><span class="status-dot yellow">Open</span></td></tr>
+          <tr><td>Logistiek Centrum Noord</td><td>EUR 2.200</td><td><span class="status-dot green">Betaald</span></td></tr>
+          <tr><td>MVGM VvE Beheer</td><td>EUR 4.400</td><td><span class="status-dot red">Herinnering</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="portal-panel" id="support">
+    <div class="panel-head">
+      <div><span class="eyebrow orange">Support</span><h2>Klantvragen</h2></div>
+      <a href="mailto:info@roofsignal.nl">Nieuwe interne taak</a>
+    </div>
+    <div class="support-grid admin-support">
+      <div><strong>VvE Parkzicht</strong><span>PV-hotspot koppelen aan installateur.</span></div>
+      <div><strong>Ten Hag Vastgoedbeheer</strong><span>Objectlijst controleren op dubbele adressen.</span></div>
+      <div><strong>MVGM VvE Beheer</strong><span>Offerte opvolgen en portaaltoegang sturen.</span></div>
+      <div><strong>Logistiek Centrum Noord</strong><span>Planning bevestigen met facilitair manager.</span></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

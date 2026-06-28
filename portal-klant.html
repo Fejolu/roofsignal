@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Klantenportaal — RoofSignal</title>
+  <meta name="description" content="Concept voor het RoofSignal klantenportaal met inspecties, adviezen, facturen en planning.">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="portal-body">
+<aside class="portal-sidebar">
+  <a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+  <nav class="portal-nav">
+    <a class="active" href="#overzicht">Overzicht</a>
+    <a href="#inspecties">Inspecties</a>
+    <a href="#adviezen">Adviezen</a>
+    <a href="#facturen">Facturen</a>
+    <a href="#planning">Planning</a>
+    <a href="#support">Support</a>
+  </nav>
+  <div class="portal-account">
+    <span>Ingelogd als</span>
+    <strong>VvE Parkzicht</strong>
+    <a href="portal-login.html">Uitloggen</a>
+  </div>
+</aside>
+
+<main class="portal-main">
+  <header class="portal-topbar">
+    <div>
+      <p class="eyebrow orange">Klantenportaal</p>
+      <h1>VvE Parkzicht</h1>
+      <p>Inspecties, adviezen, facturen en planning voor uw objecten.</p>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn ghost-dark" href="voorbeeldrapport-uitgebreid.html">Bekijk voorbeeldrapport</a>
+      <a class="btn" href="#planning">Plan herinspectie</a>
+    </div>
+  </header>
+
+  <section id="overzicht" class="portal-grid metrics">
+    <article><span>Open adviezen</span><strong>8</strong><p>3 met hoge prioriteit.</p></article>
+    <article><span>Laatste inspectie</span><strong>26 jun</strong><p>Rapport beschikbaar.</p></article>
+    <article><span>Facturen</span><strong>1 open</strong><p>Vervaldatum 12 juli.</p></article>
+    <article><span>Planning</span><strong>2 acties</strong><p>Herstelcontrole en bestuursupdate.</p></article>
+  </section>
+
+  <section class="portal-layout">
+    <div class="portal-panel wide" id="inspecties">
+      <div class="panel-head">
+        <div><span class="eyebrow orange">Inspecties</span><h2>Objectdossier</h2></div>
+        <a href="voorbeeldrapport-uitgebreid.html">Open rapport</a>
+      </div>
+      <div class="inspection-card">
+        <img src="assets/report/roof-overview-hwa-standing-water-solar.jpg" alt="Dakinspectiebeeld VvE Parkzicht">
+        <div>
+          <span class="status-pill high">Actie nodig</span>
+          <h3>Gebouwschilrapport VvE Parkzicht</h3>
+          <p>Dak, gevel, goten, HWA, boeiboorden en PV-installatie beoordeeld. Rapport bevat prioriteiten, kostenindicatie en MJOP-input.</p>
+          <div class="mini-facts">
+            <span>12 bevindingen</span>
+            <span>3 hoog</span>
+            <span>5 normaal</span>
+            <span>4 monitoren</span>
+          </div>
+        </div>
+      </div>
+      <table class="portal-table">
+        <thead><tr><th>Datum</th><th>Object</th><th>Scope</th><th>Status</th><th>Rapport</th></tr></thead>
+        <tbody>
+          <tr><td>26 jun 2026</td><td>VvE Parkzicht</td><td>Gebouwschil + thermografie</td><td><span class="status-dot red">Actie nodig</span></td><td><a href="voorbeeldrapport-uitgebreid.html">Open</a></td></tr>
+          <tr><td>12 mrt 2026</td><td>VvE Parkzicht</td><td>Quickscan lekkage</td><td><span class="status-dot green">Afgerond</span></td><td><a href="#">Open</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="portal-panel" id="planning">
+      <div class="panel-head"><div><span class="eyebrow orange">Planning</span><h2>Komende acties</h2></div></div>
+      <div class="timeline-list">
+        <div><span>30 jun</span><strong>P1-herstel bespreken</strong><p>Bestuurscall met beheerder.</p></div>
+        <div><span>08 jul</span><strong>Offertes vergelijken</strong><p>Loodwerk, HWA en PV-diagnose.</p></div>
+        <div><span>Sep</span><strong>Herinspectie plannen</strong><p>Controle na uitvoering.</p></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="portal-layout">
+    <div class="portal-panel" id="adviezen">
+      <div class="panel-head"><div><span class="eyebrow orange">Adviezen</span><h2>Onderhoudsprioriteiten</h2></div></div>
+      <div class="advice-list">
+        <article><span class="status-pill high">P1</span><div><h3>Los loodwerk dakopstand</h3><p>Herstel binnen 30 dagen aanbevolen.</p></div><strong>EUR 650-1.400</strong></article>
+        <article><span class="status-pill high">P1</span><div><h3>HWA reinigen en controleren</h3><p>Wateraccumulatie voorkomen.</p></div><strong>EUR 250-650</strong></article>
+        <article><span class="status-pill normal">P2</span><div><h3>Voegwerk westgevel</h3><p>Bundelen in onderhoudsronde.</p></div><strong>EUR 900-2.800</strong></article>
+      </div>
+    </div>
+
+    <div class="portal-panel" id="facturen">
+      <div class="panel-head"><div><span class="eyebrow orange">Facturen</span><h2>Financieel</h2></div></div>
+      <table class="portal-table compact">
+        <thead><tr><th>Factuur</th><th>Bedrag</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>RS-2026-041</td><td>EUR 1.250</td><td><span class="status-dot yellow">Open</span></td></tr>
+          <tr><td>RS-2026-019</td><td>EUR 650</td><td><span class="status-dot green">Betaald</span></td></tr>
+        </tbody>
+      </table>
+      <a class="btn ghost-dark" href="mailto:info@roofsignal.nl">Vraag factuurkopie aan</a>
+    </div>
+  </section>
+
+  <section class="portal-panel" id="support">
+    <div class="panel-head">
+      <div><span class="eyebrow orange">Support</span><h2>Vragen en opvolging</h2></div>
+      <a href="mailto:info@roofsignal.nl">Nieuwe vraag</a>
+    </div>
+    <div class="support-grid">
+      <div><strong>Laatste vraag</strong><span>Kan RS-03 worden gekoppeld aan de PV-onderhoudspartij?</span></div>
+      <div><strong>Status</strong><span>In behandeling door RoofSignal</span></div>
+      <div><strong>Reactietermijn</strong><span>Binnen 1 werkdag</span></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

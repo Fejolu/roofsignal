@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portaal login — RoofSignal</title>
+  <meta name="description" content="Log in op het RoofSignal klantenportaal voor inspecties, adviezen, facturen en planning.">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="portal-body">
+<main class="auth-screen">
+  <section class="auth-brand">
+    <a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+    <div>
+      <p class="eyebrow orange">Klantenportaal</p>
+      <h1>Gebouwdata, rapporten en opvolging op één plek.</h1>
+      <p>Voor beheerders, eigenaren en besturen die inspecties, adviezen, facturen en planning overzichtelijk willen terugvinden.</p>
+    </div>
+    <div class="auth-proof">
+      <div><strong>Inspecties</strong><span>Rapporten en foto-evidence per object.</span></div>
+      <div><strong>Adviezen</strong><span>Prioriteiten, kostenindicaties en opvolgstatus.</span></div>
+      <div><strong>Planning</strong><span>Afspraken, herinspecties en open acties.</span></div>
+    </div>
+  </section>
+
+  <section class="auth-panel">
+    <div class="auth-panel-head">
+      <span class="eyebrow orange">Inloggen</span>
+      <h2>Toegang tot RoofSignal.</h2>
+      <p>Accounts worden meestal door RoofSignal aangemaakt voor klanten en beheerders. Nieuwe organisaties kunnen toegang aanvragen.</p>
+    </div>
+
+    <div class="auth-tabs" aria-label="Toegangstype">
+      <a class="active" href="#login">Inloggen</a>
+      <a href="#aanvragen">Toegang aanvragen</a>
+    </div>
+
+    <form id="login" class="portal-form">
+      <label>E-mailadres<input type="email" name="email" placeholder="naam@organisatie.nl" required></label>
+      <label>Wachtwoord<input type="password" name="password" placeholder="Wachtwoord" required></label>
+      <div class="form-row">
+        <label class="check"><input type="checkbox" name="remember"> Ingelogd blijven</label>
+        <a href="mailto:info@roofsignal.nl">Wachtwoord vergeten?</a>
+      </div>
+      <a class="btn" href="portal-klant.html">Log in als klant</a>
+      <a class="btn ghost-dark" href="portal-beheer.html">Bekijk beheerderskant</a>
+    </form>
+
+    <div id="aanvragen" class="request-access">
+      <h3>Registratie via RoofSignal</h3>
+      <p>Voor VvE’s, vastgoedbeheerders en bedrijfspanden kan RoofSignal een organisatieaccount aanmaken. Zelfregistratie kan later worden geactiveerd, maar standaard blijft toegang gecontroleerd.</p>
+      <form class="portal-form">
+        <label>Organisatie<input name="organisatie" placeholder="VvE / beheerder / eigenaar"></label>
+        <label>E-mailadres<input type="email" name="email" placeholder="contact@organisatie.nl"></label>
+        <label>Objecten<textarea name="objecten" rows="4" placeholder="Aantal objecten of adressen"></textarea></label>
+        <a class="btn" href="mailto:info@roofsignal.nl">Vraag toegang aan</a>
+      </form>
+    </div>
+  </section>
+</main>
+</body>
+</html>
