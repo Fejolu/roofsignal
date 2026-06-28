@@ -1107,6 +1107,18 @@ button { cursor: pointer; }
   border-color: var(--rs-orange);
 }
 
+.status-pill.demo {
+  color: var(--rs-graphite-900);
+  background: var(--rs-graphite-100);
+}
+
+.btn.danger {
+  background: transparent;
+  color: var(--rs-red);
+  border: 1px solid rgba(199,67,47,.32);
+  box-shadow: none;
+}
+
 .portal-table {
   width: 100%;
   border-collapse: collapse;
@@ -1250,6 +1262,25 @@ button { cursor: pointer; }
 
 .support-grid span {
   margin-top: 4px;
+}
+
+.demo-notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  border-color: rgba(255,90,20,.35);
+}
+
+.demo-notice h2 {
+  font-size: 24px;
+  margin: 4px 0 8px;
+}
+
+.demo-notice p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--rs-graphite-600);
 }
 
 @media (max-width: 1180px) {
@@ -1418,6 +1449,9 @@ button { cursor: pointer; }
   .portal-topbar {
     display: grid;
     align-items: start;
+  }
+  .demo-notice {
+    display: grid;
   }
   .metrics,
   .pipeline,
