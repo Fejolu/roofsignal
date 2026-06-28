@@ -663,7 +663,7 @@ h2 {
   gap: 60px;
 }
 
-.contact-grid a {
+.contact-grid a:not(.btn) {
   color: var(--orange);
   font-weight: 800;
   text-decoration: none;
@@ -676,6 +676,7 @@ form {
 
 input,
 textarea {
+  width: 100%;
   font: inherit;
   padding: 15px;
   border: 1px solid var(--line);
@@ -786,6 +787,7 @@ button { cursor: pointer; }
 }
 
 .portal-form {
+  width: 100%;
   max-width: 520px;
 }
 
@@ -807,10 +809,19 @@ button { cursor: pointer; }
   width: auto;
 }
 
-.portal-form a {
+.portal-form a:not(.btn) {
   color: var(--rs-orange);
   font-weight: 900;
   text-decoration: none;
+}
+
+.portal-form .btn {
+  color: #fff;
+  text-align: center;
+}
+
+.portal-form .ghost-dark {
+  color: var(--rs-graphite-900);
 }
 
 .form-row {
@@ -856,6 +867,8 @@ button { cursor: pointer; }
 }
 
 .access-form {
+  max-width: none;
+  width: 100%;
   background: #fff;
   border: 1px solid var(--rs-line);
   border-radius: var(--rs-radius);
