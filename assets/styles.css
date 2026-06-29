@@ -391,7 +391,7 @@ h2 {
   overflow: hidden;
   background:
     linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.2)),
-    url('hero-roofsignal-v6.jpg') center/cover;
+    url('report/roof-overview-hwa-standing-water-solar.jpg') center/cover;
 }
 
 .pin {
@@ -525,6 +525,23 @@ h2 {
   background: #fff;
 }
 
+.lead-section {
+  display: grid;
+  grid-template-columns: .9fr 1.1fr;
+  gap: 70px;
+  align-items: start;
+}
+
+.lead-form {
+  align-content: start;
+}
+
+.form-note {
+  margin: 0;
+  color: var(--rs-graphite-600);
+  font-size: 14px;
+}
+
 .quote-tool label {
   display: grid;
   gap: 7px;
@@ -628,8 +645,9 @@ h2 {
 .footer p { opacity: .7; }
 
 .footer-portal-link {
-  margin-top: 18px;
-  padding-top: 14px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.18);
 }
 
 .page-hero {
@@ -637,7 +655,7 @@ h2 {
   isolation: isolate;
   min-height: 430px;
   background:
-    linear-gradient(90deg, rgba(5,9,8,.94), rgba(5,9,8,.68) 54%, rgba(5,9,8,.18)),
+    linear-gradient(90deg, rgba(5,9,8,.82), rgba(5,9,8,.48) 54%, rgba(5,9,8,.10)),
     var(--page-hero-image, url('hero-roofsignal-v6.jpg')) center/cover;
   color: #fff;
   padding: 110px 7vw 80px;
@@ -660,6 +678,7 @@ h2 {
 .page-hero-vastgoed { --page-hero-image: url('heroes/vastgoedbeheerders.jpg'); }
 .page-hero-bedrijf { --page-hero-image: url('heroes/bedrijfspanden.jpg'); }
 .page-hero-portal { --page-hero-image: url('heroes/portal-login.jpg'); }
+.page-hero-voor-wie { --page-hero-image: url('heroes/vastgoedbeheerders.jpg'); }
 
 .service-cards article { min-height: 220px; }
 
@@ -1365,6 +1384,7 @@ button { cursor: pointer; }
   .contact-grid,
   .data-list,
   .pricing-calculator,
+  .lead-section,
   .receive,
   .report-preview,
   .auth-screen,
@@ -1467,9 +1487,9 @@ button { cursor: pointer; }
       url('hero-roofsignal-v6.jpg') 58% center/cover;
   }
   .hero-content {
-    margin: 0 56px 0 24px;
-    width: auto;
-    max-width: 300px;
+    margin: 0 24px;
+    width: calc(100% - 48px);
+    max-width: calc(100vw - 48px);
     overflow-wrap: break-word;
   }
   .hero h1 {
@@ -1484,7 +1504,7 @@ button { cursor: pointer; }
     min-height: 360px;
     padding: 92px 24px 56px;
     background:
-      linear-gradient(90deg, rgba(5,9,8,.96), rgba(5,9,8,.82) 62%, rgba(5,9,8,.46)),
+      linear-gradient(90deg, rgba(5,9,8,.86), rgba(5,9,8,.64) 62%, rgba(5,9,8,.24)),
       var(--page-hero-image, url('hero-roofsignal-v6.jpg')) 58% center/cover;
   }
   .eyebrow {
@@ -1502,13 +1522,15 @@ button { cursor: pointer; }
   }
   .actions .btn {
     width: 100%;
+    max-width: 100%;
     text-align: center;
   }
   .trustbar {
     position: static;
-    margin: 28px 56px 0 24px;
+    margin: 28px 24px 0;
+    width: calc(100% - 48px);
     grid-template-columns: 1fr;
-    max-width: 300px;
+    max-width: calc(100vw - 48px);
   }
   .split,
   .contact-grid,
@@ -1519,6 +1541,10 @@ button { cursor: pointer; }
   .auth-screen,
   .portal-layout,
   .portal-access {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .lead-section {
     grid-template-columns: 1fr;
     gap: 34px;
   }
@@ -1569,15 +1595,7 @@ button { cursor: pointer; }
   .four,
   .three,
   .steps { grid-template-columns: 1fr; }
-  .section { padding: 58px 56px 58px 22px; }
-  .section > *,
-  .check-grid,
-  .cards,
-  .quote-tool,
-  .report-card,
-  .data-list ul {
-    max-width: 300px;
-  }
+  .section { padding: 58px 24px; }
   .cta { display: block; }
   .cta .btn { margin-top: 20px; }
   .footer { grid-template-columns: 1fr; }
