@@ -49,6 +49,7 @@
       const organization = form.querySelector("[name='organization']");
       const status = form.querySelector("[data-lead-status]");
       const domain = getDomain(email?.value);
+      const type = form.dataset.leadForm;
 
       email?.setCustomValidity("");
       organization?.setCustomValidity("");
@@ -58,19 +59,18 @@
         return;
       }
 
-      if (!organization?.value.trim()) {
+      if (organization?.required && !organization.value.trim()) {
         organization?.setCustomValidity("Vul een organisatie of bedrijfsnaam in.");
         organization?.reportValidity();
         return;
       }
 
-      if (freeDomains.has(domain)) {
+      if (type !== "price" && freeDomains.has(domain)) {
         email.setCustomValidity("Gebruik bij voorkeur een zakelijk mailadres, zodat we de aanvraag aan de juiste organisatie kunnen koppelen.");
         email.reportValidity();
         return;
       }
 
-      const type = form.dataset.leadForm;
       const subject = type === "price" ? "Aanvraag prijsindicatie RoofSignal" : "Aanvraag voorbeeldrapport RoofSignal";
       const mailto = `mailto:info@roofsignal.nl?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildBody(form, type))}`;
       window.location.href = mailto;
