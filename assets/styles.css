@@ -140,7 +140,7 @@ section {
   position: relative;
   background:
     linear-gradient(90deg, rgba(0,0,0,.92), rgba(0,0,0,.58) 42%, rgba(0,0,0,.12)),
-    url('hero-roofsignal-v6.png') center/cover;
+    url('hero-roofsignal-v6.jpg') center/cover;
   display: flex;
   align-items: center;
 }
@@ -391,7 +391,7 @@ h2 {
   overflow: hidden;
   background:
     linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.2)),
-    url('hero-roofsignal-v6.png') center/cover;
+    url('hero-roofsignal-v6.jpg') center/cover;
 }
 
 .pin {
@@ -638,7 +638,7 @@ h2 {
   min-height: 430px;
   background:
     linear-gradient(90deg, rgba(5,9,8,.94), rgba(5,9,8,.68) 54%, rgba(5,9,8,.18)),
-    var(--page-hero-image, url('hero-roofsignal-v6.png')) center/cover;
+    var(--page-hero-image, url('hero-roofsignal-v6.jpg')) center/cover;
   color: #fff;
   padding: 110px 7vw 80px;
   display: grid;
@@ -655,7 +655,7 @@ h2 {
 .page-hero-tarieven { --page-hero-image: url('heroes/tarieven.jpg'); }
 .page-hero-contact { --page-hero-image: url('heroes/contact.jpg'); }
 .page-hero-over { --page-hero-image: url('heroes/over-ons.jpg'); }
-.page-hero-projecten { --page-hero-image: url('heroes/projecten.png'); }
+.page-hero-projecten { --page-hero-image: url('heroes/projecten.jpg'); }
 .page-hero-vve { --page-hero-image: url('heroes/vve-beheerders.jpg'); }
 .page-hero-vastgoed { --page-hero-image: url('heroes/vastgoedbeheerders.jpg'); }
 .page-hero-bedrijf { --page-hero-image: url('heroes/bedrijfspanden.jpg'); }
@@ -722,7 +722,7 @@ button { cursor: pointer; }
   color: #fff;
   background:
     linear-gradient(135deg, rgba(5,9,8,.98), rgba(5,9,8,.86)),
-    url('hero-roofsignal-v6.png') center/cover;
+    url('hero-roofsignal-v6.jpg') center/cover;
   padding: 52px;
   display: grid;
   align-content: space-between;
@@ -1464,7 +1464,7 @@ button { cursor: pointer; }
     padding: 92px 0 28px;
     background:
       linear-gradient(90deg, rgba(0,0,0,.96), rgba(0,0,0,.88) 58%, rgba(0,0,0,.40)),
-      url('hero-roofsignal-v6.png') 58% center/cover;
+      url('hero-roofsignal-v6.jpg') 58% center/cover;
   }
   .hero-content {
     margin: 0 56px 0 24px;
@@ -1485,7 +1485,7 @@ button { cursor: pointer; }
     padding: 92px 24px 56px;
     background:
       linear-gradient(90deg, rgba(5,9,8,.96), rgba(5,9,8,.82) 62%, rgba(5,9,8,.46)),
-      var(--page-hero-image, url('hero-roofsignal-v6.png')) 58% center/cover;
+      var(--page-hero-image, url('hero-roofsignal-v6.jpg')) 58% center/cover;
   }
   .eyebrow {
     font-size: 12px;
@@ -1588,7 +1588,7 @@ button { cursor: pointer; }
   .hero {
     background:
       linear-gradient(90deg, rgba(0,0,0,.97), rgba(0,0,0,.9) 66%, rgba(0,0,0,.55)),
-      url('hero-roofsignal-v6.png') 60% center/cover;
+      url('hero-roofsignal-v6.jpg') 60% center/cover;
   }
   .hero h1 {
     font-size: clamp(31px, 9vw, 36px);
