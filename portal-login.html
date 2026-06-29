@@ -6,6 +6,7 @@
   <title>Klantenportaal — RoofSignal</title>
   <meta name="description" content="Log in op het RoofSignal klantenportaal voor inspecties, adviezen, facturen en planning.">
   <link rel="stylesheet" href="assets/styles.css">
+  <script src="assets/portal-login.js" defer></script>
 </head>
 <body>
 <header class="site-header">
@@ -20,7 +21,7 @@
   <a class="btn btn-small" href="contact.html">Vraag portefeuillescan aan</a>
 </header>
 <main>
-  <section class="page-hero">
+  <section class="page-hero page-hero-portal">
     <p class="eyebrow">Klantenportaal</p>
     <h1>Toegang tot inspecties, adviezen en planning.</h1>
     <p>Het portaal is bedoeld voor klanten met een actief RoofSignal-dossier. Accounts worden standaard door RoofSignal aangemaakt, zodat toegang gecontroleerd blijft.</p>
@@ -40,15 +41,15 @@
     </div>
 
     <div class="quote-tool portal-login-card">
-      <form class="portal-form">
+      <form class="portal-form" id="portal-login-form">
         <label>E-mailadres<input type="email" name="email" placeholder="naam@organisatie.nl" required></label>
         <label>Wachtwoord<input type="password" name="password" placeholder="Wachtwoord" required></label>
         <div class="form-row">
           <label class="check"><input type="checkbox" name="remember"> Ingelogd blijven</label>
           <a href="mailto:info@roofsignal.nl">Wachtwoord vergeten?</a>
         </div>
-        <a class="btn" href="portal-klant.html">Log in als klant</a>
-        <a class="btn ghost-dark" href="portal-beheer.html">Bekijk beheerderskant</a>
+        <button class="btn" type="submit">Log in</button>
+        <p class="portal-route-note">RoofSignal-medewerkers krijgen na login automatisch toegang tot de interne beheeromgeving op basis van hun maildomein en rol.</p>
       </form>
     </div>
   </section>
@@ -68,6 +69,6 @@
     </form>
   </section>
 </main>
-<footer class="footer"><div><a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div><h4>Voor wie</h4><a href="vve-beheerders.html">VvE beheerders</a><a href="vastgoedbeheerders.html">Vastgoedbeheerders</a><a href="bedrijfspanden.html">Bedrijfspanden</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><a href="portal-login.html">Klantenportaal</a><span>Apeldoorn, Nederland</span></div></footer>
+<footer class="footer"><div><a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div><h4>Voor wie</h4><a href="vve-beheerders.html">VvE beheerders</a><a href="vastgoedbeheerders.html">Vastgoedbeheerders</a><a href="bedrijfspanden.html">Bedrijfspanden</a><a class="footer-portal-link" href="portal-login.html">Klantenportaal</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span></div></footer>
 </body>
 </html>
