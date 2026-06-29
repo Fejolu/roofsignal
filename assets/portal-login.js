@@ -21,11 +21,35 @@ function getPortalTarget(email) {
   return `portal-beheer.html?${params.toString()}`;
 }
 
-loginForm?.addEventListener("submit", (event) => {
+function routeForRole(email, profile) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const role = profile?.role || "";
+  const isInternal = normalizedEmail.endsWith("@roofsignal.nl") || ["support", "planning", "finance", "reportage", "owner_admin"].includes(role);
+  return isInternal ? "portal-beheer.html" : "portal-klant.html";
+}
+
+loginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const formData = new FormData(loginForm);
   const email = String(formData.get("email") || "");
+  const password = String(formData.get("password") || "");
+  const status = loginForm.querySelector(".portal-route-note");
+  const backend = window.RoofSignalBackend;
+
+  if (backend?.isConfigured) {
+    const result = await backend.signIn(email, password);
+    if (result.ok) {
+      const profile = await backend.getProfile();
+      window.location.href = routeForRole(email, profile);
+      return;
+    }
+
+    if (status) {
+      status.textContent = result.error?.message || "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang.";
+    }
+    return;
+  }
 
   window.location.href = getPortalTarget(email);
 });

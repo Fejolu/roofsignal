@@ -42,8 +42,24 @@
     return lines.join("\n");
   }
 
+  function buildPayload(form, type) {
+    const data = new FormData(form);
+    return {
+      type,
+      name: data.get("name") || "",
+      organization: data.get("organization") || "",
+      email: data.get("email") || "",
+      segment: data.get("segment") || "",
+      postcode: data.get("postcode") || "",
+      complexity: data.get("complexity") || "",
+      site_access: data.get("site_access") || "",
+      scope: data.get("scope") || "",
+      message: data.get("message") || "",
+    };
+  }
+
   for (const form of forms) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = form.querySelector("input[type='email']");
       const organization = form.querySelector("[name='organization']");
@@ -73,6 +89,21 @@
 
       const subject = type === "price" ? "Aanvraag prijsindicatie RoofSignal" : "Aanvraag voorbeeldrapport RoofSignal";
       const mailto = `mailto:info@roofsignal.nl?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildBody(form, type))}`;
+      const backend = window.RoofSignalBackend;
+
+      if (backend?.isConfigured) {
+        const result = await backend.submitLead(buildPayload(form, type));
+        if (result.ok) {
+          if (status) {
+            status.textContent = type === "price"
+              ? "Aanvraag ontvangen. We sturen de prijsindicatie naar het opgegeven mailadres."
+              : "Aanvraag ontvangen. We sturen het voorbeeldrapport naar het opgegeven mailadres.";
+          }
+          form.reset();
+          return;
+        }
+      }
+
       window.location.href = mailto;
 
       if (status) {

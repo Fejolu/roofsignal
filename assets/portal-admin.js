@@ -7,6 +7,14 @@
     Finance: "Facturen, offertes, betaalstatus",
     Rapportage: "Rapporten, objectdata, exports",
   };
+  const roleLabels = {
+    owner_admin: "Owner admin",
+    support: "Support",
+    planning: "Planning",
+    finance: "Finance",
+    rapportage: "Rapportage",
+    customer: "Klant",
+  };
 
   const customersBody = document.querySelector("#klanten tbody");
   const rolesBody = document.querySelector(".role-table tbody");
@@ -42,7 +50,37 @@
     return actionTarget.closest("tr");
   }
 
-  function editCustomer(row) {
+  function customerActions() {
+    return '<div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
+  }
+
+  function renderCustomers(customers) {
+    if (!customersBody || !customers.length) return;
+    customersBody.innerHTML = customers.map((customer) => {
+      return `<tr data-customer-id="${customer.id}"><td>${customer.name || "-"}</td><td>${customer.segment || "-"}</td><td>-</td><td>${customer.notes || "Database klant"}</td><td>${statusCell(customer.status || "Actief")}</td><td>${customerActions()}</td></tr>`;
+    }).join("");
+  }
+
+  function renderRoles(profiles) {
+    if (!rolesBody || !profiles.length) return;
+    rolesBody.innerHTML = profiles.map((profile) => {
+      const role = roleLabels[profile.role] || profile.role;
+      return `<tr><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
+    }).join("");
+  }
+
+  async function loadLiveAdminData() {
+    const backend = window.RoofSignalBackend;
+    if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
+    const [customers, profiles] = await Promise.all([
+      backend.listOrganizations(),
+      backend.listProfiles(),
+    ]);
+    renderCustomers(customers);
+    renderRoles(profiles);
+  }
+
+  async function editCustomer(row) {
     const cells = row.querySelectorAll("td");
     const name = prompt("Klantnaam", cells[0].textContent.trim());
     if (!name) return;
@@ -57,17 +95,27 @@
     cells[1].textContent = segment;
     cells[2].textContent = objects;
     cells[3].textContent = activity;
+    if (window.RoofSignalBackend?.isConfigured && row.dataset.customerId) {
+      await window.RoofSignalBackend.updateOrganization(row.dataset.customerId, {
+        name,
+        segment,
+        notes: activity,
+      });
+    }
     saveState();
   }
 
-  function deleteCustomer(row) {
+  async function deleteCustomer(row) {
     const name = row.querySelector("td")?.textContent.trim() || "deze klant";
     if (!confirm(`${name} verwijderen uit dit beheerportaal?`)) return;
+    if (window.RoofSignalBackend?.isConfigured && row.dataset.customerId) {
+      await window.RoofSignalBackend.deleteOrganization(row.dataset.customerId);
+    }
     row.remove();
     saveState();
   }
 
-  function editRole(row) {
+  async function editRole(row) {
     const cells = row.querySelectorAll("td");
     const email = prompt("E-mailadres", cells[0].textContent.trim());
     if (!email) return;
@@ -79,6 +127,9 @@
     cells[1].innerHTML = roleCell(role);
     cells[2].textContent = roleRights[role] || "Aangepaste rechten";
     cells[3].innerHTML = statusCell("Actief");
+    if (window.RoofSignalBackend?.isConfigured) {
+      await window.RoofSignalBackend.updateProfileRole(email, role === "Owner admin" ? "owner_admin" : role.toLowerCase());
+    }
     saveState();
   }
 
@@ -89,7 +140,7 @@
     saveState();
   }
 
-  function assignRole() {
+  async function assignRole() {
     const emailInput = roleBuilder?.querySelector("input");
     const roleSelect = roleBuilder?.querySelector("select");
     const email = emailInput?.value.trim().toLowerCase();
@@ -108,6 +159,10 @@
     });
     const row = existing || document.createElement("tr");
     row.innerHTML = `<td>${email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td>`;
+    if (window.RoofSignalBackend?.isConfigured) {
+      const result = await window.RoofSignalBackend.updateProfileRole(email, role === "Owner admin" ? "owner_admin" : role.toLowerCase());
+      if (!result.ok) alert("Deze gebruiker bestaat nog niet in Supabase Auth. Maak eerst het account aan of laat de gebruiker inloggen.");
+    }
     if (!existing) rolesBody.append(row);
     saveState();
   }
@@ -137,6 +192,7 @@
 
   loadState();
   loadCurrentCustomer();
+  loadLiveAdminData();
 
   document.addEventListener("click", (event) => {
     const target = event.target.closest("[data-admin-action]");
