@@ -35,13 +35,42 @@ function setStatus(form, message) {
   if (status) status.textContent = message;
 }
 
-function isRecoveryRoute() {
-  const marker = `${window.location.search} ${window.location.hash}`;
-  return marker.includes("type=recovery") || marker.includes("recovery");
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
-function showPasswordResetIfNeeded() {
-  if (!isRecoveryRoute() || !loginForm || !resetPasswordForm) return;
+function hasRecoveryMarker() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return searchParams.get("type") === "recovery"
+    || hashParams.get("type") === "recovery"
+    || searchParams.has("code");
+}
+
+async function getRecoverySession(backend) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const session = await backend.getSession();
+    if (session) return session;
+    await wait(250);
+  }
+
+  return null;
+}
+
+async function showPasswordResetIfNeeded() {
+  if (!hasRecoveryMarker() || !loginForm || !resetPasswordForm) return;
+
+  const backend = window.RoofSignalBackend;
+  if (backend?.isConfigured) {
+    const session = await getRecoverySession(backend);
+    if (!session) {
+      setStatus(loginForm, "Resetlink is verlopen of ongeldig. Vraag opnieuw een link aan.");
+      return;
+    }
+  }
 
   loginForm.hidden = true;
   resetPasswordForm.hidden = false;

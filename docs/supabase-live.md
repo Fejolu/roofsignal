@@ -34,7 +34,7 @@ Vul in `assets/supabase-config.js` de projectgegevens in:
 window.ROOFSIGNAL_SUPABASE = window.ROOFSIGNAL_SUPABASE || {
   url: "https://PROJECTREF.supabase.co",
   anonKey: "SUPABASE_ANON_KEY",
-  loginRedirectUrl: "https://roofsignal.nl/portal-login.html",
+  loginRedirectUrl: "https://www.roofsignal.nl/portal-login",
 };
 ```
 
@@ -44,8 +44,8 @@ Gebruik alleen de anon key in de frontend. De service role key mag nooit in de r
 
 In Supabase:
 
-- Zet Site URL op `https://roofsignal.nl`.
-- Voeg `https://roofsignal.nl/portal-login.html` toe aan Redirect URLs.
+- Zet Site URL op `https://www.roofsignal.nl`.
+- Voeg `https://www.roofsignal.nl/portal-login` en `https://www.roofsignal.nl/portal-login.html` toe aan Redirect URLs.
 - Maak accounts aan voor `admin@roofsignal.nl` en `ferry@roofsignal.nl`.
 - Na aanmaak krijgen deze adressen via de database-trigger de rol `owner_admin`.
 - Andere `@roofsignal.nl` adressen krijgen standaard `support`.
