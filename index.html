@@ -117,7 +117,11 @@
     <h2>Ontvang het rapport per e-mail.</h2>
     <p>We tonen het uitgebreide voorbeeldrapport niet direct in de browser. Vul uw gegevens in, dan sturen we het rapport naar het opgegeven e-mailadres.</p>
   </div>
-  <form class="quote-tool lead-form" data-lead-form="report">
+  <form class="quote-tool lead-form" data-lead-form="report" action="https://formsubmit.co/info@roofsignal.nl" method="POST">
+    <input type="hidden" name="_subject" value="Aanvraag voorbeeldrapport RoofSignal">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://roofsignal.nl/">
     <label>Naam<input name="name" autocomplete="name" placeholder="Naam" required></label>
     <label>Organisatie<input name="organization" autocomplete="organization" placeholder="Organisatie of bedrijf" required></label>
     <label>E-mailadres<input type="email" name="email" autocomplete="email" placeholder="naam@organisatie.nl" required></label>

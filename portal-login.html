@@ -75,12 +75,16 @@
       <h2>Nog geen account?</h2>
       <p>RoofSignal kan een organisatieaccount aanmaken voor beheerders, besturen en eigenaren. Als er nog geen rapport beschikbaar is, kunnen we de omgeving vullen met testdata en een testrapport. Die demo-informatie kan de gebruiker later zelf verwijderen.</p>
     </div>
-    <form class="portal-form access-form">
+    <form class="portal-form access-form" action="https://formsubmit.co/info@roofsignal.nl" method="POST">
+      <input type="hidden" name="_subject" value="Aanvraag klantenportaal toegang RoofSignal">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://roofsignal.nl/portal-login.html">
       <label>Organisatie<input name="organisatie" placeholder="VvE / beheerder / eigenaar"></label>
       <label>E-mailadres<input type="email" name="email" placeholder="contact@organisatie.nl"></label>
       <label>Objecten<textarea name="objecten" rows="4" placeholder="Aantal objecten of adressen"></textarea></label>
       <label class="check"><input type="checkbox" name="demo_data" checked> Demo-omgeving met testdata en testrapport klaarzetten als er nog geen rapport is</label>
-      <a class="btn" href="mailto:info@roofsignal.nl">Vraag toegang aan</a>
+      <button class="btn" type="submit">Vraag toegang aan</button>
     </form>
   </section>
 </main>
