@@ -64,14 +64,28 @@
 
   <section class="portal-panel" id="rechten">
     <div class="panel-head">
-      <div><span class="eyebrow orange">Rechtenmodel</span><h2>RoofSignal-medewerkers</h2></div>
+      <div><span class="eyebrow orange">Rechtenmodel</span><h2>Team, rollen en rechten</h2></div><a href="mailto:info@roofsignal.nl">Nieuw teamlid</a>
     </div>
     <div class="support-grid admin-support">
-      <div><strong>admin@roofsignal.nl</strong><span>Alle rollen: support, planning, facturen, klantbeheer, impersonatie en accountbeheer.</span></div>
-      <div><strong>ferry@roofsignal.nl</strong><span>Alle rollen: volledige toegang tot operatie, verkoop, rapportage en financiële status.</span></div>
-      <div><strong>@roofsignal.nl support</strong><span>Standaard interne toegang voor klantvragen, agenda, dossiernotities en meekijken met klanten.</span></div>
-      <div><strong>Klantdomeinen</strong><span>Geen beheeromgeving zichtbaar; gebruikers landen direct in hun eigen klantportaal.</span></div>
+      <div><strong>Owner admin</strong><span>Alle modules: klanten, rollen, offertes, facturen, planning, support, impersonatie en instellingen.</span></div>
+      <div><strong>Support</strong><span>Klantvragen, dossiernotities, meekijken, rapportstatus en agenda-inzage.</span></div>
+      <div><strong>Planning</strong><span>Inspecties plannen, agenda's beheren, toegang en opnamevoorbereiding vastleggen.</span></div>
+      <div><strong>Finance</strong><span>Facturen, offertes, betaalstatus, herinneringen en omzetoverzicht.</span></div>
     </div>
+    <div class="role-builder">
+      <label>E-mailadres<input value="planner@roofsignal.nl" aria-label="E-mailadres teamlid"></label>
+      <label>Rol<select aria-label="Rol teamlid"><option>Owner admin</option><option selected>Support</option><option>Planning</option><option>Finance</option><option>Rapportage</option></select></label>
+      <button class="btn" type="button" data-admin-action="assign-role">Rol toewijzen</button>
+    </div>
+    <table class="portal-table compact role-table">
+      <thead><tr><th>Teamlid</th><th>Rol</th><th>Rechten</th><th>Status</th><th>Acties</th></tr></thead>
+      <tbody>
+        <tr><td>admin@roofsignal.nl</td><td><span class="role-pill owner">Owner admin</span></td><td>Alles</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Intrekken</a></div></td></tr>
+        <tr><td>ferry@roofsignal.nl</td><td><span class="role-pill owner">Owner admin</span></td><td>Alles + accountbeheer</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Intrekken</a></div></td></tr>
+        <tr><td>support@roofsignal.nl</td><td><span class="role-pill">Support</span></td><td>Support, meekijken, dossiers</td><td><span class="status-dot yellow">Uitnodiging</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
+        <tr><td>planning@roofsignal.nl</td><td><span class="role-pill">Planning</span></td><td>Agenda, inspecties, toegang</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section class="portal-layout">
@@ -81,13 +95,13 @@
         <a href="mailto:info@roofsignal.nl">Account uitnodigen</a>
       </div>
       <table class="portal-table">
-        <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Laatste activiteit</th><th>Status</th></tr></thead>
+        <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Laatste activiteit</th><th>Status</th><th>Acties</th></tr></thead>
         <tbody>
-          <tr><td>VvE Parkzicht</td><td>VvE beheer</td><td>1</td><td>Rapport geopend</td><td><span class="status-dot red">Actie nodig</span></td></tr>
-          <tr><td>Nieuw account zonder inspectie</td><td>VvE beheer</td><td>0</td><td>Demo-data klaargezet</td><td><span class="status-dot yellow">Testdata</span></td></tr>
-          <tr><td>Ten Hag Vastgoedbeheer</td><td>Vastgoedbeheer</td><td>12</td><td>Portefeuillescan aangevraagd</td><td><span class="status-dot yellow">Intake</span></td></tr>
-          <tr><td>Logistiek Centrum Noord</td><td>Bedrijfspand</td><td>3</td><td>Inspectie gepland</td><td><span class="status-dot green">Actief</span></td></tr>
-          <tr><td>MVGM VvE Beheer</td><td>VvE beheer</td><td>7</td><td>Offerte verzonden</td><td><span class="status-dot yellow">Opvolgen</span></td></tr>
+          <tr><td>VvE Parkzicht</td><td>VvE beheer</td><td>1</td><td>Rapport geopend</td><td><span class="status-dot red">Actie nodig</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
+          <tr><td>Nieuw account zonder inspectie</td><td>VvE beheer</td><td>0</td><td>Demo-data klaargezet</td><td><span class="status-dot yellow">Testdata</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
+          <tr><td>Ten Hag Vastgoedbeheer</td><td>Vastgoedbeheer</td><td>12</td><td>Portefeuillescan aangevraagd</td><td><span class="status-dot yellow">Intake</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
+          <tr><td>Logistiek Centrum Noord</td><td>Bedrijfspand</td><td>3</td><td>Inspectie gepland</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
+          <tr><td>MVGM VvE Beheer</td><td>VvE beheer</td><td>7</td><td>Offerte verzonden</td><td><span class="status-dot yellow">Opvolgen</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -160,5 +174,6 @@
     </div>
   </section>
 </main>
+<script src="assets/portal-admin.js"></script>
 </body>
 </html>

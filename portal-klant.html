@@ -51,6 +51,19 @@
     </div>
   </header>
 
+  <section class="portal-panel admin-toolbar">
+    <div>
+      <span class="status-pill demo">Admin meekijken</span>
+      <h2>Volledige RoofSignal-rechten actief</h2>
+      <p>U bekijkt dit klantportaal als RoofSignal beheerder. Klantgegevens, demo-data, rollen en toegang kunnen vanuit deze context worden aangepast.</p>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn ghost-dark" href="#overzicht" data-admin-action="edit-current-customer">Klant bewerken</a>
+      <a class="btn ghost-dark" href="portal-beheer.html#rechten">Rollen beheren</a>
+      <a class="btn danger" href="#overzicht" data-admin-action="delete-current-customer">Klant verwijderen</a>
+    </div>
+  </section>
+
   <section id="overzicht" class="portal-grid metrics">
     <article><span>Open adviezen</span><strong>8</strong><p>3 met hoge prioriteit.</p></article>
     <article><span>Laatste inspectie</span><strong>26 jun</strong><p>Rapport beschikbaar.</p></article>
@@ -145,5 +158,6 @@
     </div>
   </section>
 </main>
+<script src="assets/portal-admin.js"></script>
 </body>
 </html>
