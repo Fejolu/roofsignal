@@ -61,10 +61,17 @@
         <label>Wachtwoord<input type="password" name="password" placeholder="Wachtwoord" required></label>
         <div class="form-row">
           <label class="check"><input type="checkbox" name="remember"> Ingelogd blijven</label>
-          <a href="mailto:info@roofsignal.nl">Wachtwoord vergeten?</a>
+          <button class="inline-button" type="button" data-password-reset-request>Wachtwoord vergeten?</button>
         </div>
         <button class="btn" type="submit">Log in</button>
         <p class="portal-route-note">Gebruik de inloggegevens die u van RoofSignal heeft ontvangen.</p>
+      </form>
+      <form class="portal-form password-reset-form" id="password-reset-form" hidden>
+        <h3>Nieuw wachtwoord instellen</h3>
+        <label>Nieuw wachtwoord<input type="password" name="password" placeholder="Minimaal 8 tekens" minlength="8" required></label>
+        <label>Herhaal wachtwoord<input type="password" name="password_confirm" placeholder="Herhaal wachtwoord" minlength="8" required></label>
+        <button class="btn" type="submit">Wachtwoord opslaan</button>
+        <p class="portal-route-note">Stel een nieuw wachtwoord in om daarna opnieuw in te loggen.</p>
       </form>
     </div>
   </section>

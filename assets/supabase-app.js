@@ -68,6 +68,25 @@
     return { ok: true };
   }
 
+  async function resetPassword(email) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
+    });
+
+    return error ? { ok: false, error } : { ok: true };
+  }
+
+  async function updatePassword(password) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+
+    const { error } = await supabase.auth.updateUser({ password });
+    return error ? { ok: false, error } : { ok: true };
+  }
+
   async function getSession() {
     const supabase = await getClient();
     if (!supabase) return null;
@@ -155,6 +174,8 @@
     getClient,
     submitLead,
     signIn,
+    resetPassword,
+    updatePassword,
     signOut,
     getSession,
     getProfile,

@@ -1,4 +1,6 @@
 const loginForm = document.querySelector("#portal-login-form");
+const resetRequestButton = document.querySelector("[data-password-reset-request]");
+const resetPasswordForm = document.querySelector("#password-reset-form");
 
 const fullAccessEmails = new Set([
   "admin@roofsignal.nl",
@@ -28,13 +30,32 @@ function routeForRole(email, profile) {
   return isInternal ? "portal-beheer.html" : "portal-klant.html";
 }
 
+function setStatus(form, message) {
+  const status = form?.querySelector(".portal-route-note");
+  if (status) status.textContent = message;
+}
+
+function isRecoveryRoute() {
+  const marker = `${window.location.search} ${window.location.hash}`;
+  return marker.includes("type=recovery") || marker.includes("recovery");
+}
+
+function showPasswordResetIfNeeded() {
+  if (!isRecoveryRoute() || !loginForm || !resetPasswordForm) return;
+
+  loginForm.hidden = true;
+  resetPasswordForm.hidden = false;
+  setStatus(resetPasswordForm, "Kies een nieuw wachtwoord voor uw RoofSignal-account.");
+}
+
+showPasswordResetIfNeeded();
+
 loginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const formData = new FormData(loginForm);
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
-  const status = loginForm.querySelector(".portal-route-note");
   const backend = window.RoofSignalBackend;
 
   if (backend?.isConfigured) {
@@ -45,11 +66,64 @@ loginForm?.addEventListener("submit", async (event) => {
       return;
     }
 
-    if (status) {
-      status.textContent = result.error?.message || "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang.";
-    }
+    setStatus(loginForm, result.error?.message || "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang.");
     return;
   }
 
   window.location.href = getPortalTarget(email);
+});
+
+resetRequestButton?.addEventListener("click", async () => {
+  const emailInput = loginForm?.querySelector("input[name='email']");
+  const email = String(emailInput?.value || "").trim();
+  const backend = window.RoofSignalBackend;
+
+  emailInput?.setCustomValidity("");
+
+  if (!email || !emailInput?.checkValidity()) {
+    emailInput?.setCustomValidity("Vul eerst uw e-mailadres in.");
+    emailInput?.reportValidity();
+    return;
+  }
+
+  if (!backend?.isConfigured) {
+    setStatus(loginForm, "Wachtwoordherstel is tijdelijk niet beschikbaar. Mail info@roofsignal.nl voor toegang.");
+    return;
+  }
+
+  const result = await backend.resetPassword(email);
+  setStatus(loginForm, result.ok
+    ? "Als dit e-mailadres bekend is, ontvangt u een link om uw wachtwoord opnieuw in te stellen."
+    : result.error?.message || "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang.");
+});
+
+resetPasswordForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(resetPasswordForm);
+  const password = String(formData.get("password") || "");
+  const passwordConfirm = String(formData.get("password_confirm") || "");
+  const backend = window.RoofSignalBackend;
+
+  if (password !== passwordConfirm) {
+    setStatus(resetPasswordForm, "De wachtwoorden komen niet overeen.");
+    return;
+  }
+
+  if (!backend?.isConfigured) {
+    setStatus(resetPasswordForm, "Wachtwoord opslaan is tijdelijk niet beschikbaar. Mail info@roofsignal.nl voor toegang.");
+    return;
+  }
+
+  const result = await backend.updatePassword(password);
+  if (!result.ok) {
+    setStatus(resetPasswordForm, result.error?.message || "Wachtwoord opslaan is niet gelukt.");
+    return;
+  }
+
+  await backend.signOut?.();
+  resetPasswordForm.reset();
+  resetPasswordForm.hidden = true;
+  loginForm.hidden = false;
+  setStatus(loginForm, "Wachtwoord opgeslagen. U kunt nu opnieuw inloggen.");
 });

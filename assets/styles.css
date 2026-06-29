@@ -26,6 +26,10 @@
 * { box-sizing: border-box; }
 * { min-width: 0; }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: Inter, Arial, sans-serif;
@@ -1070,6 +1074,22 @@ button { cursor: pointer; }
   color: var(--rs-orange);
   font-weight: 900;
   text-decoration: none;
+}
+
+.inline-button {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  color: var(--rs-orange);
+  background: transparent;
+  font: inherit;
+  font-weight: 900;
+  text-align: left;
+}
+
+.password-reset-form h3 {
+  margin: 0;
+  font-size: 24px;
 }
 
 .portal-form .btn {
