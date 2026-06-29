@@ -26,7 +26,7 @@
   <nav class="portal-nav">
     <a class="active" href="#dashboard">Dashboard</a>
     <a href="#klanten">Klanten</a>
-    <a href="#inspecties">Inspecties</a>
+    <a href="#inspecties">Beoordelingen</a>
     <a href="#planning">Planning</a>
     <a href="#facturen">Facturen</a>
     <a href="#offertes">Offertes</a>
@@ -56,7 +56,7 @@
 
   <section id="dashboard" class="portal-grid metrics">
     <article><span>Actieve klanten</span><strong>24</strong><p>8 VvE, 11 vastgoed, 5 bedrijf.</p></article>
-    <article><span>Open inspecties</span><strong>9</strong><p>3 wachten op rapportage.</p></article>
+    <article><span>Open beoordelingen</span><strong>9</strong><p>3 wachten op rapportage.</p></article>
     <article><span>Support</span><strong>6</strong><p>2 vragen met hoge prioriteit.</p></article>
     <article><span>Omzet open</span><strong>EUR 7.850</strong><p>Facturen nog niet betaald.</p></article>
     <article><span>Offertes</span><strong>5</strong><p>2 concepten wachten op akkoord.</p></article>
@@ -69,7 +69,7 @@
     <div class="support-grid admin-support">
       <div><strong>Owner admin</strong><span>Alle modules: klanten, rollen, offertes, facturen, planning, support, impersonatie en instellingen.</span></div>
       <div><strong>Support</strong><span>Klantvragen, dossiernotities, meekijken, rapportstatus en agenda-inzage.</span></div>
-      <div><strong>Planning</strong><span>Inspecties plannen, agenda's beheren, toegang en opnamevoorbereiding vastleggen.</span></div>
+      <div><strong>Planning</strong><span>Beoordelingen plannen, agenda's beheren, toegang en opnamevoorbereiding vastleggen.</span></div>
       <div><strong>Finance</strong><span>Facturen, offertes, betaalstatus, herinneringen en omzetoverzicht.</span></div>
     </div>
     <div class="role-builder">
@@ -83,7 +83,7 @@
         <tr><td>admin@roofsignal.nl</td><td><span class="role-pill owner">Owner admin</span></td><td>Alles</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Intrekken</a></div></td></tr>
         <tr><td>ferry@roofsignal.nl</td><td><span class="role-pill owner">Owner admin</span></td><td>Alles + accountbeheer</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Intrekken</a></div></td></tr>
         <tr><td>support@roofsignal.nl</td><td><span class="role-pill">Support</span></td><td>Support, meekijken, dossiers</td><td><span class="status-dot yellow">Uitnodiging</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
-        <tr><td>planning@roofsignal.nl</td><td><span class="role-pill">Planning</span></td><td>Agenda, inspecties, toegang</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
+        <tr><td>planning@roofsignal.nl</td><td><span class="role-pill">Planning</span></td><td>Agenda, beoordelingen, toegang</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
       </tbody>
     </table>
   </section>
@@ -98,9 +98,9 @@
         <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Laatste activiteit</th><th>Status</th><th>Acties</th></tr></thead>
         <tbody>
           <tr><td>VvE Parkzicht</td><td>VvE beheer</td><td>1</td><td>Rapport geopend</td><td><span class="status-dot red">Actie nodig</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-          <tr><td>Nieuw account zonder inspectie</td><td>VvE beheer</td><td>0</td><td>Demo-data klaargezet</td><td><span class="status-dot yellow">Testdata</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
+          <tr><td>Nieuw account zonder rapport</td><td>VvE beheer</td><td>0</td><td>Demo-data klaargezet</td><td><span class="status-dot yellow">Testdata</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
           <tr><td>Ten Hag Vastgoedbeheer</td><td>Vastgoedbeheer</td><td>12</td><td>Portefeuillescan aangevraagd</td><td><span class="status-dot yellow">Intake</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-          <tr><td>Logistiek Centrum Noord</td><td>Bedrijfspand</td><td>3</td><td>Inspectie gepland</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
+          <tr><td>Logistiek Centrum Noord</td><td>Bedrijfspand</td><td>3</td><td>Beoordeling gepland</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
           <tr><td>MVGM VvE Beheer</td><td>VvE beheer</td><td>7</td><td>Offerte verzonden</td><td><span class="status-dot yellow">Opvolgen</span></td><td><div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
         </tbody>
       </table>
@@ -110,7 +110,7 @@
       <div class="panel-head"><div><span class="eyebrow orange">Vandaag</span><h2>Operationeel</h2></div></div>
       <div class="timeline-list">
         <div><span>09:30</span><strong>Rapportcontrole</strong><p>VvE Parkzicht definitief maken.</p></div>
-        <div><span>11:00</span><strong>Nieuwe klant onboarden</strong><p>Account aanmaken en testdata toevoegen als er nog geen inspectie is.</p></div>
+        <div><span>11:00</span><strong>Nieuwe klant onboarden</strong><p>Account aanmaken en testdata toevoegen als er nog geen rapport is.</p></div>
         <div><span>14:30</span><strong>Drone-opname voorbereiden</strong><p>Weer, toegang en scope controleren.</p></div>
       </div>
     </aside>
@@ -118,7 +118,7 @@
 
   <section class="portal-layout">
     <div class="portal-panel" id="inspecties">
-      <div class="panel-head"><div><span class="eyebrow orange">Inspecties</span><h2>Rapportpijplijn</h2></div></div>
+      <div class="panel-head"><div><span class="eyebrow orange">Beoordelingen</span><h2>Rapportpijplijn</h2></div></div>
       <div class="pipeline">
         <article><span>Intake</span><strong>3</strong><p>Scope nog afstemmen.</p></article>
         <article><span>Gepland</span><strong>4</strong><p>Opname staat in agenda.</p></article>
@@ -148,7 +148,7 @@
     <div class="support-grid admin-support">
       <div><strong>Concept opbouwen</strong><span>Klant, objecten, scope, begaanbaarheid, reisafstand, rapportdiepte en prijsregels combineren.</span></div>
       <div><strong>Verzenden</strong><span>Offerte per klantcontact versturen en status zichtbaar houden in het dossier.</span></div>
-      <div><strong>Akkoord verwerken</strong><span>Na akkoord direct planning, factuurvoorstel en inspectietaak klaarzetten.</span></div>
+      <div><strong>Akkoord verwerken</strong><span>Na akkoord direct planning, factuurvoorstel en beoordelingstaak klaarzetten.</span></div>
       <div><strong>Historie bewaren</strong><span>Alle versies, opmerkingen en akkoordmomenten per klant en object terugvinden.</span></div>
     </div>
     <table class="portal-table compact offer-table">

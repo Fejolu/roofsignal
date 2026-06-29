@@ -457,6 +457,85 @@ h2 {
   line-height: 1.4;
 }
 
+.independence-band {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.case-study {
+  display: grid;
+  grid-template-columns: .82fr 1.18fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.case-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.case-metrics article {
+  border: 1px solid var(--line);
+  border-radius: var(--rs-radius);
+  padding: 18px;
+  background: #fff;
+  box-shadow: var(--rs-shadow-soft);
+}
+
+.case-metrics span {
+  display: block;
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.case-metrics strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.case-metrics p {
+  margin: 0;
+  color: var(--rs-graphite-600);
+}
+
+.case-findings {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.case-findings div {
+  border-left: 3px solid var(--orange);
+  padding: 14px 16px;
+  background: var(--rs-graphite-100);
+  border-radius: 0 var(--rs-radius) var(--rs-radius) 0;
+}
+
+.case-findings strong,
+.case-findings span {
+  display: block;
+}
+
+.case-findings span {
+  margin-top: 4px;
+  color: var(--rs-graphite-600);
+}
+
+.urgency-section .cards {
+  margin-top: 26px;
+}
+
+.founder-section {
+  align-items: start;
+}
+
 .report-rows {
   display: grid;
   gap: 10px;
@@ -1467,6 +1546,7 @@ button { cursor: pointer; }
   .data-list,
   .pricing-calculator,
   .lead-section,
+  .case-study,
   .receive,
   .report-preview,
   .auth-screen,
@@ -1478,6 +1558,8 @@ button { cursor: pointer; }
   .four,
   .three,
   .steps,
+  .case-metrics,
+  .case-findings,
   .metrics,
   .pipeline,
   .support-grid,
@@ -1570,8 +1652,8 @@ button { cursor: pointer; }
   }
   .hero-content {
     margin: 0 24px;
-    width: calc(100% - 48px);
-    max-width: calc(100vw - 48px);
+    width: auto;
+    max-width: calc(100dvw - 48px);
     overflow-wrap: break-word;
   }
   .hero h1 {
@@ -1595,8 +1677,23 @@ button { cursor: pointer; }
   }
   .lead {
     font-size: 18px;
-    max-width: 100%;
+    max-width: calc(100dvw - 48px);
     overflow-wrap: break-word;
+  }
+  .hero-content,
+  .section > *,
+  .page-hero > *,
+  .report-card,
+  .quote-tool,
+  .btn {
+    max-width: calc(100dvw - 48px);
+  }
+  .hero h1,
+  .page-hero h1,
+  h2,
+  p,
+  .btn {
+    overflow-wrap: anywhere;
   }
   .actions {
     display: grid;
@@ -1608,16 +1705,13 @@ button { cursor: pointer; }
     text-align: center;
   }
   .trustbar {
-    position: static;
-    margin: 28px 24px 0;
-    width: calc(100% - 48px);
-    grid-template-columns: 1fr;
-    max-width: calc(100vw - 48px);
+    display: none;
   }
   .split,
   .contact-grid,
   .data-list,
   .pricing-calculator,
+  .case-study,
   .receive,
   .report-preview,
   .auth-screen,
@@ -1677,6 +1771,8 @@ button { cursor: pointer; }
   .report-photo { min-height: 240px; }
   .pin { font-size: 12px; padding: 7px 10px; }
   .finding-grid { grid-template-columns: 1fr; }
+  .case-metrics,
+  .case-findings { grid-template-columns: 1fr; }
   .report-rows div { grid-template-columns: 1fr; gap: 4px; }
   .four,
   .three,
@@ -1689,6 +1785,14 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 520px) {
+  .hero-content,
+  .section > *,
+  .page-hero > *,
+  .report-card,
+  .quote-tool,
+  .btn {
+    max-width: 330px;
+  }
   .hero {
     background:
       linear-gradient(90deg, rgba(0,0,0,.97), rgba(0,0,0,.9) 66%, rgba(0,0,0,.55)),
@@ -1698,7 +1802,10 @@ button { cursor: pointer; }
     font-size: clamp(31px, 9vw, 36px);
   }
   .lead {
-    font-size: 17px;
+    font-size: 16px;
+  }
+  h2 {
+    font-size: 27px;
   }
   .trustbar div {
     padding: 16px;

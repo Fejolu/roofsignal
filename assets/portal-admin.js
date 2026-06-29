@@ -3,7 +3,7 @@
   const roleRights = {
     "Owner admin": "Alles",
     Support: "Support, meekijken, dossiers",
-    Planning: "Agenda, inspecties, toegang",
+    Planning: "Agenda, beoordelingen, toegang",
     Finance: "Facturen, offertes, betaalstatus",
     Rapportage: "Rapporten, objectdata, exports",
   };
