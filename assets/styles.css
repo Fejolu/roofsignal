@@ -575,16 +575,13 @@ h2 {
 }
 
 .founder-avatar {
-  display: grid;
-  place-items: center;
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  color: #fff;
-  background: var(--rs-graphite-950);
   border: 3px solid var(--orange);
-  font-size: 34px;
-  font-weight: 900;
+  object-fit: cover;
+  object-position: center;
+  background: var(--rs-graphite-950);
 }
 
 .founder-card span {
