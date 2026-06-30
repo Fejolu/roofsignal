@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="assets/styles.css">
   <script src="assets/supabase-config.js"></script>
   <script src="assets/supabase-app.js" defer></script>
+  <script src="assets/lead-capture.js" defer></script>
   <script src="assets/portal-login.js" defer></script>
 </head>
 <body>
@@ -83,16 +84,13 @@
       <h2>Nog geen account?</h2>
       <p>RoofSignal kan een organisatieaccount aanmaken voor beheerders, besturen en eigenaren. Als er nog geen rapport beschikbaar is, kunnen we de omgeving vullen met testdata en een testrapport. Die demo-informatie kan de gebruiker later zelf verwijderen.</p>
     </div>
-    <form class="portal-form access-form" action="https://formsubmit.co/info@roofsignal.nl" method="POST">
-      <input type="hidden" name="_subject" value="Aanvraag klantenportaal toegang RoofSignal">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_next" value="https://www.roofsignal.nl/portal-login">
-      <label>Organisatie<input name="organisatie" placeholder="VvE / beheerder / eigenaar"></label>
-      <label>E-mailadres<input type="email" name="email" placeholder="contact@organisatie.nl"></label>
+    <form class="portal-form access-form" data-lead-form="access">
+      <label>Organisatie<input name="organisatie" placeholder="VvE / beheerder / eigenaar" required></label>
+      <label>E-mailadres<input type="email" name="email" placeholder="contact@organisatie.nl" required></label>
       <label>Objecten<textarea name="objecten" rows="4" placeholder="Aantal objecten of adressen"></textarea></label>
       <label class="check"><input type="checkbox" name="demo_data" checked> Demo-omgeving met testdata en testrapport klaarzetten als er nog geen rapport is</label>
       <button class="btn" type="submit">Vraag toegang aan</button>
+      <p class="form-note" data-lead-status>We gebruiken uw gegevens alleen om portaaltoegang voor uw organisatie te beoordelen.</p>
     </form>
   </section>
 </main>

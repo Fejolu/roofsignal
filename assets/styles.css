@@ -754,6 +754,59 @@ h2 {
   font-size: 14px;
 }
 
+.form-status {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--rs-radius);
+  background: var(--muted);
+  line-height: 1.45;
+}
+
+.form-status strong {
+  color: var(--rs-graphite-950);
+  font-size: 16px;
+}
+
+.form-status.success {
+  border-color: rgba(40, 112, 74, .28);
+  background: #f5faf6;
+}
+
+.form-status.success strong span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  border-radius: 50%;
+  color: #fff;
+  background: #28704a;
+  font-size: 14px;
+}
+
+.form-status.error {
+  border-color: rgba(169, 62, 38, .3);
+  background: #fff7f4;
+}
+
+.form-status a {
+  color: var(--orange);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+button[disabled] {
+  cursor: wait;
+  opacity: .72;
+}
+
+form.is-complete button[disabled] {
+  cursor: default;
+  opacity: 1;
+}
+
 .quote-tool label {
   display: grid;
   gap: 7px;
