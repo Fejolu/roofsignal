@@ -1,12 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RoofSignal">
   <rect width="64" height="64" rx="14" fill="#111315"/>
-<<<<<<< HEAD
   <rect x="13" y="13" width="38" height="38" rx="8" fill="#111315" stroke="#f47b20" stroke-width="4"/>
   <text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="700" fill="#ffffff">⌂</text>
-=======
-  <path d="M14 35 32 19l18 16" fill="none" stroke="#f47b20" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M21 35v13h22V35" fill="none" stroke="#f4f0e8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M39 20c5 2 9 6 11 11" fill="none" stroke="#f47b20" stroke-width="3" stroke-linecap="round" opacity=".9"/>
-  <path d="M44 13c8 4 14 10 17 19" fill="none" stroke="#f4f0e8" stroke-width="3" stroke-linecap="round" opacity=".65"/>
->>>>>>> 66b4f7d7351be8fcf2ee9f7cf5ed7212eb3fb3c5
 </svg>
