@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RoofSignal">
+  <rect width="64" height="64" rx="14" fill="#111315"/>
+  <path d="M14 35 32 19l18 16" fill="none" stroke="#f47b20" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21 35v13h22V35" fill="none" stroke="#f4f0e8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M39 20c5 2 9 6 11 11" fill="none" stroke="#f47b20" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+  <path d="M44 13c8 4 14 10 17 19" fill="none" stroke="#f4f0e8" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+</svg>
