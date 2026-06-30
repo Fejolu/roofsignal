@@ -2,8 +2,6 @@
   const forms = document.querySelectorAll("[data-lead-form]");
   const contactPhone = "085 21 28 019";
   const contactEmail = "info@roofsignal.nl";
-  const mailEndpoint = "https://formsubmit.co/ajax/info@roofsignal.nl";
-  const reportUrl = "https://roofsignal.nl/voorbeeldrapport-uitgebreid.html";
   const freeDomains = new Set([
     "gmail.com",
     "hotmail.com",
@@ -56,9 +54,9 @@
   function successCopy(type) {
     if (type === "report") {
       return {
-        title: "Voorbeeldrapport aangevraagd",
+        title: "Voorbeeldrapport aangevraagd.",
         body: "Bedankt voor uw interesse in RoofSignal.",
-        next: "Het voorbeeldrapport wordt binnen enkele minuten verzonden naar het opgegeven e-mailadres.",
+        next: "We sturen het rapport naar het opgegeven e-mailadres.",
       };
     }
 
@@ -83,86 +81,6 @@
       body: "Bedankt voor uw interesse in RoofSignal.",
       next: "We nemen contact op via het opgegeven e-mailadres.",
     };
-  }
-
-  function mailSubject(type) {
-    if (type === "report") return "Aanvraag voorbeeldrapport RoofSignal";
-    if (type === "price") return "Aanvraag offerte RoofSignal";
-    if (type === "access") return "Aanvraag klantenportaal toegang RoofSignal";
-    return "Aanvraag portefeuillescan RoofSignal";
-  }
-
-  function autoresponse(type) {
-    if (type === "report") {
-      return [
-        "Bedankt voor uw interesse in RoofSignal.",
-        "",
-        "U kunt het uitgebreide voorbeeldrapport hier bekijken:",
-        reportUrl,
-        "",
-        "Geen e-mail ontvangen binnen 5 minuten of lukt de link niet?",
-        `Neem contact op via ${contactPhone} of ${contactEmail}.`,
-        "",
-        "RoofSignal",
-      ].join("\n");
-    }
-
-    if (type === "price") {
-      return [
-        "Bedankt voor uw offerteaanvraag bij RoofSignal.",
-        "",
-        "We beoordelen de gegevens en sturen een heldere reactie naar het opgegeven e-mailadres.",
-        "",
-        `Vragen? Neem contact op via ${contactPhone} of ${contactEmail}.`,
-        "",
-        "RoofSignal",
-      ].join("\n");
-    }
-
-    return [
-      "Bedankt voor uw aanvraag bij RoofSignal.",
-      "",
-      "We hebben uw gegevens ontvangen en nemen contact op via het opgegeven e-mailadres.",
-      "",
-      `Vragen? Neem contact op via ${contactPhone} of ${contactEmail}.`,
-      "",
-      "RoofSignal",
-    ].join("\n");
-  }
-
-  function buildMailFormData(payload, type) {
-    const data = new FormData();
-    data.append("_subject", mailSubject(type));
-    data.append("_template", "table");
-    data.append("_captcha", "false");
-    data.append("_autoresponse", autoresponse(type));
-    data.append("name", payload.name);
-    data.append("email", payload.email);
-    data.append("organization", payload.organization);
-    data.append("request_type", type);
-    data.append("segment", payload.segment);
-    data.append("postcode", payload.postcode);
-    data.append("complexity", payload.complexity);
-    data.append("site_access", payload.site_access);
-    data.append("scope", payload.scope);
-    data.append("message", payload.message);
-    data.append("source_path", window.location.pathname);
-    return data;
-  }
-
-  async function submitMail(payload, type) {
-    const response = await fetch(mailEndpoint, {
-      method: "POST",
-      headers: { Accept: "application/json" },
-      body: buildMailFormData(payload, type),
-    });
-
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || result.success === false || result.success === "false") {
-      throw new Error(result.message || "Mail delivery failed.");
-    }
-
-    return result;
   }
 
   function setBusy(form, isBusy) {
@@ -245,13 +163,13 @@
 
       try {
         const payload = buildPayload(form, type);
-        await submitMail(payload, type);
+        if (!backend?.isConfigured) {
+          throw new Error("Supabase lead endpoint is not configured.");
+        }
 
-        if (backend?.isConfigured) {
-          const result = await backend.submitLead(payload);
-          if (!result.ok) {
-            console.warn("RoofSignal lead storage failed after mail delivery.", result.error || result);
-          }
+        const result = await backend.submitLead(payload);
+        if (!result.ok) {
+          throw result.error || new Error("Supabase lead endpoint rejected the request.");
         }
 
         form.reset();
@@ -260,7 +178,10 @@
         completed = true;
         window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
       } catch (error) {
-        console.error("RoofSignal lead submit failed.", error);
+        console.error("RoofSignal report request failed.", {
+          endpoint: "Supabase lead_requests",
+          error,
+        });
         if (status) renderError(status);
         window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
       } finally {

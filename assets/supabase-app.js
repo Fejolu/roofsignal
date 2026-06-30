@@ -20,8 +20,15 @@
   }
 
   function normalizeLeadPayload(payload) {
+    const requestType = ["report", "price", "contact"].includes(payload.type)
+      ? payload.type
+      : "contact";
+    const message = payload.type === requestType
+      ? payload.message
+      : [`Origineel formulier: ${payload.type}`, payload.message].filter(Boolean).join("\n");
+
     return {
-      request_type: payload.type,
+      request_type: requestType,
       name: payload.name,
       organization: payload.organization || null,
       email: payload.email,
@@ -30,7 +37,7 @@
       object_complexity: payload.complexity || null,
       site_access: payload.site_access || null,
       scope: payload.scope || null,
-      message: payload.message || null,
+      message: message || null,
       source_path: window.location.pathname,
     };
   }
