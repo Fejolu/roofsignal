@@ -14,6 +14,8 @@ The real product is Property Intelligence: structured, actionable knowledge abou
 
 The drone is not the product. The drone is the first sensor.
 
+The drone is the evidence source, not the proposition.
+
 The inspection is not the product. The inspection is structured data acquisition.
 
 The report is not the product. The report is actionable maintenance intelligence.
@@ -80,6 +82,10 @@ Every defect improves the intelligence layer.
 Nothing may exist only inside PDFs.
 
 Every observation should become structured information.
+
+RoofSignal sells reports but builds datasets.
+
+While on-site, capture the maximum useful dataset whenever operationally reasonable: roof, facade, chimney, gutters, details, context images, GPS positions and structured metadata. The customer receives the deliverables associated with their package, while RoofSignal retains the complete internal dataset when contractually and legally allowed.
 
 ## Data Rights Principle
 
@@ -269,6 +275,54 @@ Recommended report structure:
 
 Warning: MJOP language should be careful. RoofSignal can support MJOP decisions, but should avoid implying full certified MJOP replacement unless that expertise and liability coverage exist.
 
+## Inspection Methodology
+
+RoofSignal should not depend on individual pilot skill.
+
+The target standard is that two different pilots produce nearly identical outputs for the same scope.
+
+This requires:
+
+- Fixed workflows.
+- Fixed inspection paths.
+- Fixed report structures.
+- Fixed outputs.
+- Repeatable image capture standards.
+- Minimum evidence requirements per building element.
+
+Optical zoom is mandatory for serious inspection work. Without optical zoom, gutters, flashing, chimneys and fine roof/gevel details either become unreliable or force the pilot unnecessarily close to the object.
+
+Future capture platform requirements:
+
+- Optical zoom.
+- Stable gimbal.
+- Precise camera control.
+- Enterprise workflow support.
+
+Professional hardware may be rented when needed. This lowers startup risk for thermal drones, enterprise drones and specialised payloads. The main early bottleneck is customer acquisition, not hardware ownership.
+
+## Automation Roadmap
+
+Do not build the future platform first, but preserve the path.
+
+Phases:
+
+1. Manual drone flight.
+2. Waypoint-assisted inspection.
+3. Automatic 3D building reconstruction.
+4. Autonomous inspection routes.
+5. Historical comparison and predictive maintenance.
+
+Long-term workflow:
+
+1. Drone scans building geometry.
+2. 3D model is generated.
+3. Inspection route is automatically generated.
+4. Drone performs standardised inspection.
+5. Findings are compared against previous inspections.
+
+This is not the 2026 commercial promise. The immediate priority remains first customer, first report, first case study, first testimonial and first recurring client.
+
 ## Data Model
 
 Store structured information.
@@ -397,3 +451,5 @@ Challenge these assumptions continuously:
 Build a company that starts by inspecting buildings and becomes the operating system for building maintenance.
 
 Every decision should move RoofSignal closer to that future.
+
+See also: `docs/strategic-direction-summer-2026.md`.

@@ -169,6 +169,14 @@ Gebruik alleen beelden die geloofwaardig voelen:
 
 De drone is nooit de held. Het gebouw is de held. De drone is klein, realistisch en professioneel.
 
+Visuele balans:
+
+- 70% uitkomsten en beslissingen.
+- 20% bewijs en bevindingen.
+- 10% drone-aanwezigheid.
+
+De drone mag zichtbaar zijn om te verklaren waar het bewijs vandaan komt, maar mag nooit de propositie worden.
+
 ## Hero
 
 De hero bestaat uit één sterke foto.

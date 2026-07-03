@@ -34,6 +34,7 @@
     const data = new FormData(form);
     const messageLines = [];
     appendDetail(messageLines, "Bericht", readField(data, "message", "Bericht"));
+    appendDetail(messageLines, "Telefoon", readField(data, "phone", "Telefoon"));
     appendDetail(messageLines, "Objecten/adressen", readField(data, "buildings", "Gebouwen", "objecten"));
     appendDetail(messageLines, "Demo-data", data.get("demo_data") ? "Ja" : "");
 
@@ -144,7 +145,7 @@
         return;
       }
 
-      if (type !== "price" && freeDomains.has(domain)) {
+      if (type !== "price" && type !== "de-parken" && freeDomains.has(domain)) {
         email.setCustomValidity("Gebruik bij voorkeur een zakelijk mailadres, zodat we de aanvraag aan de juiste organisatie kunnen koppelen.");
         email.reportValidity();
         return;

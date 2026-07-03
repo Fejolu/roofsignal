@@ -149,12 +149,71 @@ section {
   align-items: center;
 }
 
+.local-hero {
+  min-height: 700px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(90deg, rgba(5,9,8,.94), rgba(5,9,8,.66) 46%, rgba(5,9,8,.2)),
+    var(--local-hero-image, url('hero-roofsignal-v6.jpg')) center/cover;
+}
+
+.de-parken-hero {
+  --local-hero-image: url('heroes/de-parken-woningscan.jpg');
+}
+
 .hero-content {
   position: relative;
   max-width: 850px;
   margin-left: 7vw;
   margin-right: 7vw;
   color: white;
+}
+
+.local-hero-content {
+  position: relative;
+  max-width: 760px;
+  margin-left: 7vw;
+  margin-right: 7vw;
+  color: #fff;
+}
+
+.local-hero-content h1 {
+  max-width: 760px;
+  margin: 0 0 24px;
+  font-size: clamp(44px, 6vw, 76px);
+  line-height: 1;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.local-trustbar {
+  position: absolute;
+  left: 7vw;
+  right: 7vw;
+  bottom: 34px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  color: #fff;
+}
+
+.local-trustbar div {
+  padding: 18px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: var(--rs-radius);
+  backdrop-filter: blur(10px);
+}
+
+.local-trustbar strong,
+.local-trustbar span {
+  display: block;
+}
+
+.local-trustbar span {
+  opacity: .75;
 }
 
 .eyebrow {
@@ -363,6 +422,10 @@ h2 {
 
 .report-copy .btn { margin-top: 12px; }
 
+.local-report-card {
+  align-self: stretch;
+}
+
 .report-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -556,6 +619,10 @@ h2 {
 
 .urgency-section .cards {
   margin-top: 26px;
+}
+
+.local-strategy .cards {
+  margin-top: 28px;
 }
 
 .founder-section {
@@ -1704,10 +1771,18 @@ button { cursor: pointer; }
     min-height: 680px;
     background-position: 58% center;
   }
+  .local-hero {
+    min-height: 660px;
+    background-position: 58% center;
+  }
   .hero h1 {
     font-size: clamp(54px, 6vw, 74px);
   }
   .trustbar {
+    left: 5vw;
+    right: 5vw;
+  }
+  .local-trustbar {
     left: 5vw;
     right: 5vw;
   }
@@ -1733,8 +1808,14 @@ button { cursor: pointer; }
   .hero-content {
     max-width: 680px;
   }
+  .local-hero-content {
+    max-width: 680px;
+  }
   .hero h1 {
     font-size: clamp(46px, 6vw, 64px);
+  }
+  .local-hero-content h1 {
+    font-size: clamp(42px, 6vw, 62px);
   }
   .page-hero h1 {
     font-size: clamp(42px, 6vw, 62px);
@@ -1853,7 +1934,21 @@ button { cursor: pointer; }
       linear-gradient(90deg, rgba(0,0,0,.96), rgba(0,0,0,.88) 58%, rgba(0,0,0,.40)),
       url('hero-roofsignal-v6.jpg') 58% center/cover;
   }
+  .local-hero {
+    display: block;
+    min-height: auto;
+    padding: 92px 0 28px;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.96), rgba(0,0,0,.88) 58%, rgba(0,0,0,.40)),
+      var(--local-hero-image, url('hero-roofsignal-v6.jpg')) 58% center/cover;
+  }
   .hero-content {
+    margin: 0 24px;
+    width: auto;
+    max-width: calc(100dvw - 48px);
+    overflow-wrap: break-word;
+  }
+  .local-hero-content {
     margin: 0 24px;
     width: auto;
     max-width: calc(100dvw - 48px);
@@ -1861,6 +1956,11 @@ button { cursor: pointer; }
   }
   .hero h1 {
     font-size: clamp(32px, 9vw, 38px);
+    line-height: 1.04;
+    max-width: 100%;
+  }
+  .local-hero-content h1 {
+    font-size: clamp(32px, 9vw, 40px);
     line-height: 1.04;
     max-width: 100%;
   }
@@ -1884,6 +1984,7 @@ button { cursor: pointer; }
     overflow-wrap: break-word;
   }
   .hero-content,
+  .local-hero-content,
   .section > *,
   .page-hero > *,
   .report-card,
@@ -1892,6 +1993,7 @@ button { cursor: pointer; }
     max-width: calc(100dvw - 48px);
   }
   .hero h1,
+  .local-hero-content h1,
   .page-hero h1,
   h2,
   p,
@@ -1909,6 +2011,12 @@ button { cursor: pointer; }
   }
   .trustbar {
     display: none;
+  }
+  .local-trustbar {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+    margin: 28px 24px 0;
   }
   .split,
   .audience-expansion,
