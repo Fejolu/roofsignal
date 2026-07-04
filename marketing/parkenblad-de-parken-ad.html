@@ -30,21 +30,38 @@
       min-height: 210mm;
       background: #fff;
       display: grid;
-      grid-template-rows: 82mm 1fr auto;
+      grid-template-rows: 88mm 1fr auto;
       box-shadow: 0 20px 60px rgba(0,0,0,.16);
       overflow: hidden;
     }
 
     .visual {
       position: relative;
-      background:
-        linear-gradient(90deg, rgba(5,9,8,.92), rgba(5,9,8,.42)),
-        url("../assets/heroes/de-parken-woningscan.jpg") center/cover;
       color: #fff;
       padding: 18mm;
+      overflow: hidden;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .visual img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .visual:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(5,9,8,.92), rgba(5,9,8,.46) 56%, rgba(5,9,8,.18));
     }
 
     .logo {
+      position: relative;
+      z-index: 1;
       display: inline-flex;
       align-items: center;
       color: #fff;
@@ -64,6 +81,24 @@
       margin-right: 7px;
       border: 1px solid var(--orange);
       border-radius: 5px;
+    }
+
+    .visual-label {
+      position: relative;
+      z-index: 1;
+      max-width: 76mm;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 800;
+      color: rgba(255,255,255,.9);
+    }
+
+    .visual-label strong {
+      display: block;
+      margin-bottom: 2mm;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1.08;
     }
 
     .copy {
@@ -105,6 +140,43 @@
       border-radius: 8px;
       background: var(--muted);
       font-weight: 800;
+    }
+
+    .cta-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6mm;
+      align-items: center;
+      margin-top: 8mm;
+      padding: 5mm;
+      border: 2px solid var(--orange);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .cta-box strong {
+      display: block;
+      margin-bottom: 1mm;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .cta-box span {
+      display: block;
+      color: #4b5350;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .cta-pill {
+      display: inline-block;
+      white-space: nowrap;
+      padding: 3mm 4mm;
+      border-radius: 7px;
+      background: var(--orange);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
     }
 
     .footer {
@@ -153,7 +225,12 @@
 <body>
   <article class="ad">
     <div class="visual">
+      <img src="/assets/heroes/de-parken-woningscan.jpg" onerror="this.onerror=null;this.src='../assets/heroes/de-parken-woningscan.jpg'" alt="">
       <a class="logo" href="../index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+      <div class="visual-label">
+        <strong>Onafhankelijke woningscan voor De Parken.</strong>
+        Onderhoud begint met objectief inzicht in dak, gevel en goten.
+      </div>
     </div>
     <div class="copy">
       <p class="eyebrow">Voor bewoners van De Parken</p>
@@ -164,6 +241,13 @@
         <div>Geen herstelverkoop.</div>
         <div>Wel objectief inzicht.</div>
       </div>
+      <div class="cta-box">
+        <div>
+          <strong>Vraag een Woningscan aan</strong>
+          <span>Scan de QR-code of ga naar roofsignal.nl/de-parken</span>
+        </div>
+        <span class="cta-pill">Pilotplekken beperkt</span>
+      </div>
     </div>
     <footer class="footer">
       <div>
@@ -171,7 +255,7 @@
         <span>Vraag aan via roofsignal.nl/de-parken</span><br>
         <span>info@roofsignal.nl - 085 21 28 019</span>
       </div>
-      <div class="qr"><img src="../assets/de-parken-qr.svg" alt="QR-code naar roofsignal.nl/de-parken"></div>
+      <div class="qr"><img src="/assets/de-parken-qr.svg" onerror="this.onerror=null;this.src='../assets/de-parken-qr.svg'" alt="QR-code naar roofsignal.nl/de-parken"></div>
     </footer>
   </article>
 </body>
