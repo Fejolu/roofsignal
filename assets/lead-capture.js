@@ -49,6 +49,7 @@
       site_access: readField(data, "site_access"),
       scope: readField(data, "scope"),
       message: messageLines.join("\n"),
+      source_path: window.location.pathname,
     };
   }
 

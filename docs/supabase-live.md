@@ -59,3 +59,22 @@ In Supabase:
 - Rollen kunnen vanuit het portaal worden aangepast voor bestaande Supabase Auth-gebruikers.
 
 Zolang de config leeg is, valt de site terug op de huidige demo/mailto-flow.
+
+## 5. E-mailnotificaties via Brevo
+
+Deploy de Edge Function:
+
+```sh
+supabase functions deploy send-lead-notification
+```
+
+Zet daarna minimaal deze Supabase secrets:
+
+```sh
+supabase secrets set BREVO_API_KEY="..."
+supabase secrets set BREVO_FROM_EMAIL="noreply@roofsignal.nl"
+supabase secrets set BREVO_FROM_NAME="RoofSignal"
+supabase secrets set NOTIFICATION_EMAIL="info@roofsignal.nl"
+```
+
+De frontend roept `send-lead-notification` aan na een succesvolle insert in `lead_requests`. De function gebruikt Brevo Transactional Email en valt lokaal zonder `BREVO_API_KEY` terug naar dry-run logging.

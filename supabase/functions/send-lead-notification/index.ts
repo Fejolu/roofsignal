@@ -1,16 +1,31 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-async function sendEmail(apiKey: string, from: string, to: string, subject: string, text: string, html: string, replyTo: string) {
-  const res = await fetch("https://api.resend.com/emails", {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+};
+
+async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${apiKey}`,
+      "api-key": apiKey,
+      "accept": "application/json",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to: [to], subject, text, html, reply_to: replyTo }),
+    body: JSON.stringify({
+      sender: { email: fromEmail, name: fromName },
+      to: [{ email: to }],
+      replyTo: { email: replyTo },
+      subject,
+      textContent: text,
+      htmlContent: html,
+    }),
   });
   const body = await res.json();
-  if (!res.ok) throw new Error(body.message || JSON.stringify(body));
+  if (!res.ok) throw new Error(body.message || body.code || JSON.stringify(body));
   return body;
 }
 
@@ -87,8 +102,12 @@ function createHtmlBody(record: LeadRecord): string {
 }
 
 serve(async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: corsHeaders });
   }
 
   let record: LeadRecord;
@@ -112,39 +131,40 @@ serve(async (req: Request): Promise<Response> => {
       status: raw.status || "new",
     };
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: corsHeaders });
   }
 
   if (!record.email) {
-    return new Response(JSON.stringify({ error: "Missing required field: email" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing required field: email" }), { status: 400, headers: corsHeaders });
   }
   if (!record.name && !record.organization) {
-    return new Response(JSON.stringify({ error: "Missing required fields: name or organization" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing required fields: name or organization" }), { status: 400, headers: corsHeaders });
   }
 
-  const apiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
+  const apiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
   if (!apiKey) {
-    console.log("[NO-RESEND] Would send email:", JSON.stringify(record));
+    console.log("[NO-BREVO] Would send email:", JSON.stringify(record));
     return new Response(JSON.stringify({ success: true, mode: "dry-run" }), {
-      headers: { "Content-Type": "application/json" },
+      headers: corsHeaders,
     });
   }
 
-  const fromEmail = Deno.env.get("FROM_EMAIL") || "RoofSignal <noreply@roofsignal.nl>";
+  const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || "noreply@roofsignal.nl";
+  const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
   const toEmail = Deno.env.get("NOTIFICATION_EMAIL") || "info@roofsignal.nl";
   const subject = EMAIL_SUBJECTS[record.request_type] || `RoofSignal – Nieuwe lead (${record.request_type})`;
 
   try {
-    const data = await sendEmail(apiKey, fromEmail, toEmail, subject, formatLeadBody(record), createHtmlBody(record), record.email);
-    console.log("Email sent:", data?.id);
-    return new Response(JSON.stringify({ success: true, id: data?.id }), {
-      headers: { "Content-Type": "application/json" },
+    const data = await sendEmail(apiKey, fromEmail, fromName, toEmail, subject, formatLeadBody(record), createHtmlBody(record), record.email);
+    console.log("Email sent:", data?.messageId);
+    return new Response(JSON.stringify({ success: true, id: data?.messageId }), {
+      headers: corsHeaders,
     });
   } catch (err) {
     console.error("Send error:", err);
     return new Response(
       JSON.stringify({ success: false, error: err instanceof Error ? err.message : "Unknown error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: corsHeaders }
     );
   }
 });
