@@ -123,21 +123,24 @@
 
   async function notifyEdgeFunction(payload) {
     const config = window.ROOFSIGNAL_SUPABASE;
-    if (!config?.url) return;
-    const url = `${config.url}/functions/v1/send-lead-notification`;
-    try {
-      await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.anonKey}`,
-        },
-        body: JSON.stringify({ record: payload }),
-      });
-    } catch (err) {
-      // Silently fail – the DB webhook is the primary delivery path.
-      console.warn("Edge function call failed (will rely on DB webhook):", err);
+    if (!config?.url || !config?.anonKey) {
+      throw new Error("Supabase email endpoint is not configured.");
     }
+    const url = `${config.url}/functions/v1/send-lead-notification`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.anonKey}`,
+      },
+      body: JSON.stringify({ record: payload }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Email notification endpoint rejected the request.");
+    }
+    return result;
   }
 
   for (const form of forms) {
@@ -193,11 +196,7 @@
           throw result.error || new Error("Supabase lead endpoint rejected the request.");
         }
 
-        // Fire-and-forget: notify the edge function to send the internal
-        // notification and applicant confirmation emails.
-        notifyEdgeFunction(payload).catch((err) => {
-          console.warn("Edge function notification failed:", err);
-        });
+        await notifyEdgeFunction(payload);
 
         form.reset();
         form.classList.add("is-complete");
