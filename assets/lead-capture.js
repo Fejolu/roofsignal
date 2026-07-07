@@ -66,7 +66,7 @@
       return {
         title: "Offerteaanvraag ontvangen",
         body: "Bedankt voor uw aanvraag.",
-        next: "We beoordelen de gegevens en sturen een heldere reactie naar het opgegeven e-mailadres.",
+        next: "U ontvangt eerst een automatische bevestiging. De offerte volgt meestal binnen 48 uur.",
       };
     }
 
@@ -102,7 +102,7 @@
       <strong><span aria-hidden="true">✓</span> ${copy.title}</strong>
       <span>${copy.body}</span>
       <span>${copy.next}</span>
-      <span><b>Geen e-mail ontvangen binnen 5 minuten?</b><br>
+      <span><b>Geen bevestigingsmail ontvangen binnen enkele minuten?</b><br>
         Neem contact op via <a href="tel:+31852128019">${contactPhone}</a> of
         <a href="mailto:${contactEmail}">${contactEmail}</a>.
       </span>
