@@ -77,4 +77,9 @@ supabase secrets set BREVO_FROM_NAME="RoofSignal"
 supabase secrets set NOTIFICATION_EMAIL="info@roofsignal.nl"
 ```
 
-De frontend roept `send-lead-notification` aan na een succesvolle insert in `lead_requests`. De function gebruikt Brevo Transactional Email en valt lokaal zonder `BREVO_API_KEY` terug naar dry-run logging.
+De frontend roept `send-lead-notification` aan na een succesvolle insert in `lead_requests`. De function gebruikt Brevo Transactional Email en verstuurt per aanvraag:
+
+- een interne notificatie naar `NOTIFICATION_EMAIL`
+- een bevestiging naar het e-mailadres van de aanvrager
+
+Zonder `BREVO_API_KEY` valt de function lokaal terug naar dry-run logging.

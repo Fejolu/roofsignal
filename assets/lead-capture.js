@@ -193,11 +193,10 @@
           throw result.error || new Error("Supabase lead endpoint rejected the request.");
         }
 
-        // Fire-and-forget: notify the edge function to send email.
-        // If a Database Webhook is also configured, the edge function
-        // may run twice, but that's harmless (two emails, same lead).
+        // Fire-and-forget: notify the edge function to send the internal
+        // notification and applicant confirmation emails.
         notifyEdgeFunction(payload).catch((err) => {
-          console.warn("Edge function notification failed (DB webhook may still send it):", err);
+          console.warn("Edge function notification failed:", err);
         });
 
         form.reset();
