@@ -20,9 +20,10 @@
   }
 
   function normalizeLeadPayload(payload) {
-    const requestType = ["report", "price", "contact"].includes(payload.type)
-      ? payload.type
-      : "contact";
+    const knownTypes = ["report", "price", "contact", "parken", "access"];
+    // Map frontend form types to DB enum values
+    const typeMap = { "de-parken": "parken" };
+    const requestType = typeMap[payload.type] || (knownTypes.includes(payload.type) ? payload.type : "contact");
     const message = payload.type === requestType
       ? payload.message
       : [`Origineel formulier: ${payload.type}`, payload.message].filter(Boolean).join("\n");
