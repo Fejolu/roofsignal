@@ -7,8 +7,29 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
-  const payload: Record<string, unknown> = {
+async function sendResendEmail(apiKey: string, fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: `${fromName} <${fromEmail}>`,
+      to: [to],
+      reply_to: replyTo,
+      subject,
+      text,
+      html,
+    }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.message || body.name || JSON.stringify(body));
+  return body;
+}
+
+async function sendBrevoEmail(apiKey: string, fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
+  const payload = {
     sender: { email: fromEmail, name: fromName },
     to: [{ email: to }],
     replyTo: { email: replyTo },
@@ -17,11 +38,8 @@ async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to
     },
     subject,
     textContent: text,
+    htmlContent: html,
   };
-
-  if (Deno.env.get("BREVO_SEND_HTML") === "true" && html) {
-    payload.htmlContent = html;
-  }
 
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -35,6 +53,20 @@ async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to
   const body = await res.json();
   if (!res.ok) throw new Error(body.message || body.code || JSON.stringify(body));
   return body;
+}
+
+async function sendEmail(fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
+  const resendApiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
+  if (resendApiKey) {
+    return sendResendEmail(resendApiKey, fromEmail, fromName, to, subject, text, html, replyTo);
+  }
+
+  const brevoApiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
+  if (brevoApiKey) {
+    return sendBrevoEmail(brevoApiKey, fromEmail, fromName, to, subject, text, html, replyTo);
+  }
+
+  throw new Error("No email provider is configured.");
 }
 
 function escapeHtml(value: string | null | undefined): string {
@@ -229,9 +261,9 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ error: "Missing required fields: name or organization" }), { status: 400, headers: corsHeaders });
   }
 
-  const apiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
-  if (!apiKey) {
-    console.log("[NO-BREVO] Would send email:", JSON.stringify(record));
+  const hasEmailProvider = Boolean((Deno.env.get("RESEND_API_KEY") || Deno.env.get("BREVO_API_KEY") || "").trim());
+  if (!hasEmailProvider) {
+    console.log("[NO-EMAIL-PROVIDER] Would send email:", JSON.stringify(record));
     return new Response(JSON.stringify({ success: true, mode: "dry-run" }), {
       headers: corsHeaders,
     });
@@ -245,15 +277,18 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     const [internal, confirmation] = await Promise.all([
-      sendEmail(apiKey, fromEmail, fromName, toEmail, subject, formatLeadBody(record), createHtmlBody(record), record.email),
-      sendEmail(apiKey, fromEmail, fromName, record.email, applicant.subject, formatApplicantBody(record), createApplicantHtmlBody(record), toEmail),
+      sendEmail(fromEmail, fromName, toEmail, subject, formatLeadBody(record), createHtmlBody(record), record.email),
+      sendEmail(fromEmail, fromName, record.email, applicant.subject, formatApplicantBody(record), createApplicantHtmlBody(record), toEmail),
     ]);
-    console.log("Emails sent:", { internal: internal?.messageId, confirmation: confirmation?.messageId });
+    console.log("Emails sent:", {
+      internal: internal?.id || internal?.messageId,
+      confirmation: confirmation?.id || confirmation?.messageId,
+    });
     return new Response(JSON.stringify({
       success: true,
       ids: {
-        internal: internal?.messageId,
-        confirmation: confirmation?.messageId,
+        internal: internal?.id || internal?.messageId,
+        confirmation: confirmation?.id || confirmation?.messageId,
       },
     }), {
       headers: corsHeaders,
