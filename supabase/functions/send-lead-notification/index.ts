@@ -19,6 +19,9 @@ async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to
       sender: { email: fromEmail, name: fromName },
       to: [{ email: to }],
       replyTo: { email: replyTo },
+      headers: {
+        "X-Mailin-Track": "0",
+      },
       subject,
       textContent: text,
       htmlContent: html,
