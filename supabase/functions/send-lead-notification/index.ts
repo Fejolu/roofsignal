@@ -8,6 +8,21 @@ const corsHeaders = {
 };
 
 async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
+  const payload: Record<string, unknown> = {
+    sender: { email: fromEmail, name: fromName },
+    to: [{ email: to }],
+    replyTo: { email: replyTo },
+    headers: {
+      "X-Mailin-Track": "0",
+    },
+    subject,
+    textContent: text,
+  };
+
+  if (Deno.env.get("BREVO_SEND_HTML") === "true" && html) {
+    payload.htmlContent = html;
+  }
+
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
@@ -15,17 +30,7 @@ async function sendEmail(apiKey: string, fromEmail: string, fromName: string, to
       "accept": "application/json",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      sender: { email: fromEmail, name: fromName },
-      to: [{ email: to }],
-      replyTo: { email: replyTo },
-      headers: {
-        "X-Mailin-Track": "0",
-      },
-      subject,
-      textContent: text,
-      htmlContent: html,
-    }),
+    body: JSON.stringify(payload),
   });
   const body = await res.json();
   if (!res.ok) throw new Error(body.message || body.code || JSON.stringify(body));
