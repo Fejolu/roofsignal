@@ -2,21 +2,6 @@
   const forms = document.querySelectorAll("[data-lead-form]");
   const contactPhone = "085 21 28 019";
   const contactEmail = "info@roofsignal.nl";
-  const freeDomains = new Set([
-    "gmail.com",
-    "hotmail.com",
-    "outlook.com",
-    "live.nl",
-    "live.com",
-    "icloud.com",
-    "yahoo.com",
-    "proton.me",
-    "protonmail.com",
-  ]);
-
-  function getDomain(email) {
-    return String(email || "").trim().toLowerCase().split("@")[1] || "";
-  }
 
   function readField(data, ...names) {
     for (const name of names) {
@@ -151,7 +136,6 @@
       const email = form.querySelector("input[type='email']");
       const organization = form.querySelector("[name='organization']");
       const status = form.querySelector("[data-lead-status]");
-      const domain = getDomain(email?.value);
       const type = form.dataset.leadForm;
 
       email?.setCustomValidity("");
@@ -165,12 +149,6 @@
       if (organization?.required && !organization.value.trim()) {
         organization?.setCustomValidity("Vul een organisatie of bedrijfsnaam in.");
         organization?.reportValidity();
-        return;
-      }
-
-      if (type !== "price" && type !== "de-parken" && freeDomains.has(domain)) {
-        email.setCustomValidity("Gebruik bij voorkeur een zakelijk mailadres, zodat we de aanvraag aan de juiste organisatie kunnen koppelen.");
-        email.reportValidity();
         return;
       }
 
