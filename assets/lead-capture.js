@@ -43,7 +43,7 @@
       return {
         title: "Voorbeeldrapport aangevraagd.",
         body: "Bedankt voor uw interesse in RoofSignal.",
-        next: "We sturen het rapport naar het opgegeven e-mailadres.",
+        next: "We sturen direct een link naar het voorbeeldrapport.",
       };
     }
 

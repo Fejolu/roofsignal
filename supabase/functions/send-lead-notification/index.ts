@@ -103,6 +103,7 @@ const EMAIL_SUBJECTS: Record<string, string> = {
   "de-parken": "RoofSignal – Aanvraag Woningscan De Parken",
   access: "RoofSignal – Aanvraag portaaltoegang",
 };
+const SAMPLE_REPORT_URL = "https://www.roofsignal.nl/voorbeeldrapport-uitgebreid.html";
 
 function formatLeadBody(record: LeadRecord): string {
   const lines: string[] = [];
@@ -155,7 +156,7 @@ function applicantCopy(record: LeadRecord): { subject: string; intro: string; ne
     return {
       subject: "RoofSignal – uw voorbeeldrapportaanvraag is ontvangen",
       intro: "Bedankt voor uw interesse in het RoofSignal voorbeeldrapport.",
-      next: "We sturen het voorbeeldrapport of een passende reactie naar dit e-mailadres.",
+      next: "U kunt het voorbeeldrapport direct bekijken via de link in deze e-mail.",
     };
   }
   if (record.request_type === "price") {
@@ -203,6 +204,9 @@ function formatApplicantBody(record: LeadRecord): string {
   if (record.postcode) lines.push(`- Postcode: ${record.postcode}`);
   if (record.scope) lines.push(`- Scope: ${record.scope}`);
   if (record.message) lines.push(`- Bericht: ${record.message}`);
+  if (record.request_type === "report") {
+    lines.push("", "Voorbeeldrapport direct bekijken:", SAMPLE_REPORT_URL);
+  }
   lines.push("", "Heeft u vragen? Reageer dan op deze e-mail of mail naar info@roofsignal.nl.", "", "Met vriendelijke groet,", "RoofSignal", "085 21 28 019", "roofsignal.nl");
   return lines.join("\n");
 }
@@ -218,7 +222,10 @@ function createApplicantHtmlBody(record: LeadRecord): string {
   add("Postcode", record.postcode);
   add("Scope", record.scope);
   add("Bericht", record.message);
-  return `<!DOCTYPE html><html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;max-width:580px;margin:0 auto;padding:20px"><div style="background:#0f172a;padding:20px;border-radius:8px 8px 0 0"><span style="color:#f97316;font-size:24px">⌂</span><span style="color:#fff;font-weight:700;font-size:18px">ROOF<span style="color:#f97316">SIGNAL</span></span></div><div style="padding:24px;border:1px solid #e2e8f0;border-top:0;border-radius:0 0 8px 8px"><h2 style="margin:0 0 16px;color:#0f172a">${escapeHtml(copy.subject.replace("RoofSignal – ", ""))}</h2><p>Beste ${escapeHtml(record.name || record.organization || "aanvrager")},</p><p>${escapeHtml(copy.intro)}</p><p>${escapeHtml(copy.next)}</p><table style="border-collapse:collapse;margin-top:16px">${rows.join("")}</table><hr style="margin:20px 0;border:0;border-top:1px solid #e2e8f0"><p>Heeft u vragen? Reageer dan op deze e-mail of mail naar <a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a>.</p><p style="margin-bottom:0">Met vriendelijke groet,<br>RoofSignal<br><a href="tel:+31852128019">085 21 28 019</a><br><a href="https://www.roofsignal.nl">roofsignal.nl</a></p></div></body></html>`;
+  const reportCta = record.request_type === "report"
+    ? `<p style="margin:20px 0"><a href="${SAMPLE_REPORT_URL}" style="display:inline-block;background:#f97316;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:6px">Bekijk voorbeeldrapport</a></p><p style="font-size:13px;color:#555">Werkt de knop niet? Open dan deze link:<br><a href="${SAMPLE_REPORT_URL}">${SAMPLE_REPORT_URL}</a></p>`
+    : "";
+  return `<!DOCTYPE html><html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;max-width:580px;margin:0 auto;padding:20px"><div style="background:#0f172a;padding:20px;border-radius:8px 8px 0 0"><span style="color:#f97316;font-size:24px">⌂</span><span style="color:#fff;font-weight:700;font-size:18px">ROOF<span style="color:#f97316">SIGNAL</span></span></div><div style="padding:24px;border:1px solid #e2e8f0;border-top:0;border-radius:0 0 8px 8px"><h2 style="margin:0 0 16px;color:#0f172a">${escapeHtml(copy.subject.replace("RoofSignal – ", ""))}</h2><p>Beste ${escapeHtml(record.name || record.organization || "aanvrager")},</p><p>${escapeHtml(copy.intro)}</p><p>${escapeHtml(copy.next)}</p>${reportCta}<table style="border-collapse:collapse;margin-top:16px">${rows.join("")}</table><hr style="margin:20px 0;border:0;border-top:1px solid #e2e8f0"><p>Heeft u vragen? Reageer dan op deze e-mail of mail naar <a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a>.</p><p style="margin-bottom:0">Met vriendelijke groet,<br>RoofSignal<br><a href="tel:+31852128019">085 21 28 019</a><br><a href="https://www.roofsignal.nl">roofsignal.nl</a></p></div></body></html>`;
 }
 
 serve(async (req: Request): Promise<Response> => {
