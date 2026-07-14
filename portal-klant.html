@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Property Intelligence Platform | RoofSignal">
   <meta name="twitter:description" content="Objectgericht RoofSignal klantportaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta name="twitter:image" content="https://roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=platform2">
+  <link rel="stylesheet" href="assets/styles.css?v=platform3">
 </head>
 <body class="portal-body">
 <aside class="portal-sidebar">
@@ -32,6 +32,8 @@
     <a href="#inspecties">Inspecties</a>
     <a href="#media">Media</a>
     <a href="#ai">AI</a>
+    <a href="#management">Management</a>
+    <a href="#finance-hub">Finance Hub</a>
     <a href="#planning">Planning</a>
     <a href="#financieel">Financieel</a>
   </nav>
@@ -48,7 +50,7 @@
     <div>
       <p class="eyebrow orange">Property Intelligence Platform</p>
       <h1>VvE Parkzicht</h1>
-      <p>Objecten, inspecties, onderhoudshistorie, facturen en intelligence in een doorlopend digitaal vastgoeddossier.</p>
+      <p>Objecten, inspecties, onderhoudshistorie, facturen, intelligence en interne bedrijfssturing in een doorlopend digitaal vastgoeddossier.</p>
     </div>
     <div class="topbar-actions">
       <a class="btn ghost-dark" href="#objectdossier">Open objectdossier</a>
@@ -64,6 +66,7 @@
     </div>
     <div class="topbar-actions">
       <a class="btn ghost-dark" href="#intelligence">Bekijk intelligence</a>
+      <a class="btn ghost-dark" href="#management">Dagcockpit</a>
       <a class="btn ghost-dark" href="#media">Ontgrendel modules</a>
     </div>
   </section>
@@ -74,6 +77,52 @@
     <article><span>Conditiebeeld</span><strong>3,2</strong><p>NEN 2767-aligned indicatie.</p></article>
     <article><span>Datawaarde</span><strong>82%</strong><p>Dossierdekking na laatste inspectie.</p></article>
     <article><span>Abonnement</span><strong>EUR 29</strong><p>1-5 objecten, eerste maand gratis.</p></article>
+  </section>
+
+  <section class="portal-panel management-command" id="management">
+    <div class="panel-head">
+      <div><span class="eyebrow orange">Administrator</span><h2>Managementdashboard</h2></div>
+      <a href="#finance-hub">Open Finance Hub</a>
+    </div>
+    <div class="management-grid">
+      <article>
+        <span>Operationeel</span>
+        <strong>7 inspecties deze week</strong>
+        <p>Gemiddelde inspectietijd 84 min, reistijd 6,2 uur, bezettingsgraad 78%.</p>
+      </article>
+      <article>
+        <span>Commercieel</span>
+        <strong>31% winratio</strong>
+        <p>14 nieuwe leads, 9 offertes open, gemiddelde orderwaarde EUR 1.480.</p>
+      </article>
+      <article>
+        <span>Property Intelligence</span>
+        <strong>18 nieuwe signalen</strong>
+        <p>6 nieuwe objecten, 11 inspecties verwerkt, 4 AI-analyses klaar voor review.</p>
+      </article>
+      <article>
+        <span>Financieel</span>
+        <strong>EUR 42.850 YTD</strong>
+        <p>MRR EUR 1.276, ARR EUR 15.312, openstaand EUR 3.740.</p>
+      </article>
+      <article>
+        <span>Personeel</span>
+        <strong>3 inspecteurs inzetbaar</strong>
+        <p>1 vakantieaanvraag, 0 ziek, A2 en thermal certificeringen beschikbaar.</p>
+      </article>
+    </div>
+    <div class="daily-cockpit">
+      <div>
+        <h3>Dagelijkse cockpit</h3>
+        <p>De eigenaar ziet hier elke ochtend de toestand van operatie, sales, finance, personeel en objectdata zonder losse rapportages te openen.</p>
+      </div>
+      <div class="mini-facts">
+        <span>Admin only</span>
+        <span>CRM + ERP</span>
+        <span>Planning</span>
+        <span>Finance</span>
+      </div>
+    </div>
   </section>
 
   <section class="portal-layout object-command">
@@ -261,6 +310,68 @@
         <p>Gebaseerd op dakoppervlak, geveloppervlak, bouwlagen, PV, bereikbaarheid en historische inspectietijd.</p>
       </div>
     </div>
+  </section>
+
+  <section class="portal-layout finance-command" id="finance-hub">
+    <div class="portal-panel wide">
+      <div class="panel-head">
+        <div><span class="eyebrow orange">Administrator / Finance</span><h2>Finance Hub</h2></div>
+        <a href="#accountant-export">Accountant export</a>
+      </div>
+      <div class="finance-kpi-grid">
+        <article><span>Vandaag</span><strong>EUR 1.250</strong><p>Omzet geboekt.</p></article>
+        <article><span>Deze maand</span><strong>EUR 12.740</strong><p>Excl. btw, inclusief abonnementen.</p></article>
+        <article><span>Dit jaar</span><strong>EUR 42.850</strong><p>YTD omzet.</p></article>
+        <article><span>Cashflow</span><strong>EUR 8.920</strong><p>Verwacht binnen 30 dagen.</p></article>
+        <article><span>MRR</span><strong>EUR 1.276</strong><p>44 actieve abonnementen.</p></article>
+        <article><span>ARR</span><strong>EUR 15.312</strong><p>Op basis van huidige MRR.</p></article>
+        <article><span>Churn</span><strong>1,8%</strong><p>Laatste 90 dagen.</p></article>
+        <article><span>Te factureren</span><strong>EUR 4.600</strong><p>3 afgeronde opdrachten.</p></article>
+      </div>
+      <table class="portal-table">
+        <thead><tr><th>Administratie</th><th>Status</th><th>Automatisering</th><th>Eigenaar</th></tr></thead>
+        <tbody>
+          <tr><td>Offertes en opdrachtbevestigingen</td><td><span class="status-dot yellow">Open workflows</span></td><td>Conversie naar order en factuur</td><td>Commercie / Finance</td></tr>
+          <tr><td>Facturen en creditfacturen</td><td><span class="status-dot green">Centraal model</span></td><td>Status open, betaald, verlopen, gecrediteerd</td><td>Finance</td></tr>
+          <tr><td>Betalingen en herinneringen</td><td><span class="status-dot red">Belacties nodig</span></td><td>1e, 2e en 3e herinnering automatisch</td><td>Backoffice / Finance</td></tr>
+          <tr><td>BTW en grootboekcategorieen</td><td><span class="status-dot yellow">Voorbereid</span></td><td>Mapping voor Exact, AFAS, Twinfield, Moneybird</td><td>Finance</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="portal-panel">
+      <div class="panel-head"><div><span class="eyebrow orange">Herinneringen</span><h2>Belijst</h2></div></div>
+      <div class="timeline-list">
+        <div><span>Automatisch</span><strong>Eerste herinnering</strong><p>Versturen na vervaldatum volgens betaalconditie.</p></div>
+        <div><span>Automatisch</span><strong>Tweede herinnering</strong><p>Daarna taak aanmaken: klant nabellen over openstaande factuur.</p></div>
+        <div><span>Automatisch</span><strong>Derde herinnering</strong><p>Escalatie naar Finance met laatste betaaltermijn.</p></div>
+        <div><span>Wekelijks</span><strong>Actielijst bellen</strong><p>Alle klanten met tweede herinnering in een Finance/Backoffice-lijst.</p></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="portal-layout">
+    <div class="portal-panel wide" id="accountant-export">
+      <div class="panel-head">
+        <div><span class="eyebrow orange">Accountant export</span><h2>BTW, jaarrekening en belasting</h2></div>
+        <a href="#finance-hub">Terug naar Finance Hub</a>
+      </div>
+      <div class="export-grid">
+        <article><strong>Periode</strong><span>Boekjaar, kwartaal, maand of later custom periode.</span></article>
+        <article><strong>Bestanden</strong><span>Excel .xlsx, CSV en PDF-managementrapport.</span></article>
+        <article><strong>Gebruik</strong><span>BTW-aangifte, jaarrekening, inkomstenbelasting en vennootschapsbelasting.</span></article>
+        <article><strong>Koppelingen</strong><span>Voorbereid voor Exact Online, AFAS, Twinfield, Moneybird en andere boekhoudsystemen.</span></article>
+      </div>
+    </div>
+
+    <aside class="portal-panel">
+      <div class="panel-head"><div><span class="eyebrow orange">Exportcontrole</span><h2>Datakwaliteit</h2></div></div>
+      <div class="support-grid single">
+        <div><strong>BTW compleet</strong><span>Tarief, grondslag en documentrelatie aanwezig.</span></div>
+        <div><strong>Grootboek voorbereid</strong><span>Categorie per omzetstroom en abonnement.</span></div>
+        <div><strong>Audit trail</strong><span>Offerte, order, factuur, betaling en creditnota gekoppeld.</span></div>
+      </div>
+    </aside>
   </section>
 
   <section class="portal-layout">

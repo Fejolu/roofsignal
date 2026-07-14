@@ -1778,7 +1778,10 @@ button { cursor: pointer; }
 .intelligence-feed,
 .entitlement-list,
 .ai-prompt-list,
-.media-stack {
+.media-stack,
+.management-grid,
+.finance-kpi-grid,
+.export-grid {
   display: grid;
   gap: 12px;
 }
@@ -1854,6 +1857,90 @@ button { cursor: pointer; }
 
 .object-dossier-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.management-command {
+  border-color: rgba(255,90,20,.24);
+}
+
+.management-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.management-grid article,
+.finance-kpi-grid article,
+.export-grid article,
+.daily-cockpit {
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 16px;
+  background: var(--rs-graphite-100);
+}
+
+.management-grid span,
+.finance-kpi-grid span {
+  display: block;
+  color: var(--rs-graphite-600);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.management-grid strong,
+.finance-kpi-grid strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.management-grid p,
+.finance-kpi-grid p,
+.daily-cockpit p,
+.export-grid span {
+  margin: 0;
+  color: var(--rs-graphite-600);
+}
+
+.daily-cockpit {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-top: 14px;
+  background: #fff8f4;
+  border-color: rgba(255,90,20,.24);
+}
+
+.daily-cockpit h3 {
+  margin: 0 0 6px;
+}
+
+.finance-command {
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, .55fr);
+}
+
+.finance-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.export-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.export-grid strong,
+.export-grid span {
+  display: block;
+}
+
+.export-grid strong {
+  margin-bottom: 6px;
+}
+
+.support-grid.single {
+  grid-template-columns: 1fr;
 }
 
 .object-dossier-grid > div,
@@ -2047,7 +2134,10 @@ button { cursor: pointer; }
   .platform-metrics,
   .object-list,
   .object-dossier-grid,
-  .ai-prompt-list {
+  .ai-prompt-list,
+  .management-grid,
+  .finance-kpi-grid,
+  .export-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   h2 {
@@ -2266,8 +2356,15 @@ button { cursor: pointer; }
   .platform-metrics,
   .object-list,
   .object-dossier-grid,
-  .ai-prompt-list {
+  .ai-prompt-list,
+  .management-grid,
+  .finance-kpi-grid,
+  .export-grid {
     grid-template-columns: 1fr;
+  }
+  .daily-cockpit {
+    display: grid;
+    align-items: start;
   }
   .role-builder,
   .admin-toolbar {
@@ -2280,6 +2377,8 @@ button { cursor: pointer; }
     grid-template-columns: 1fr;
   }
   .portal-table {
+    display: block;
+    overflow-x: auto;
     font-size: 13px;
   }
   .check-grid { grid-template-columns: 1fr; }
