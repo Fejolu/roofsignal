@@ -46,8 +46,7 @@ function hasRecoveryMarker() {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
 
   return searchParams.get("type") === "recovery"
-    || hashParams.get("type") === "recovery"
-    || searchParams.has("code");
+    || hashParams.get("type") === "recovery";
 }
 
 async function getRecoverySession(backend) {
@@ -58,6 +57,20 @@ async function getRecoverySession(backend) {
   }
 
   return null;
+}
+
+async function routeExistingSession() {
+  if (hasRecoveryMarker()) return;
+
+  const backend = window.RoofSignalBackend;
+  if (!backend?.isConfigured) return;
+
+  const session = await backend.getSession();
+  const email = session?.user?.email;
+  if (!email) return;
+
+  const profile = await backend.getProfile();
+  window.location.href = routeForRole(email, profile);
 }
 
 async function showPasswordResetIfNeeded() {
@@ -78,6 +91,7 @@ async function showPasswordResetIfNeeded() {
 }
 
 showPasswordResetIfNeeded();
+routeExistingSession();
 
 loginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -90,6 +104,11 @@ loginForm?.addEventListener("submit", async (event) => {
   if (backend?.isConfigured) {
     const result = await backend.signIn(email, password);
     if (result.ok) {
+      if (!password) {
+        setStatus(loginForm, "Als dit e-mailadres bekend is, ontvangt u een inloglink.");
+        return;
+      }
+
       const profile = await backend.getProfile();
       window.location.href = routeForRole(email, profile);
       return;
