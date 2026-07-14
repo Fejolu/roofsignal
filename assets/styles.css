@@ -1761,6 +1761,202 @@ button { cursor: pointer; }
   color: var(--rs-graphite-600);
 }
 
+.property-platform .portal-topbar h1 {
+  max-width: 760px;
+}
+
+.platform-metrics {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.object-command {
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, .55fr);
+}
+
+.object-list,
+.object-dossier-grid,
+.intelligence-feed,
+.entitlement-list,
+.ai-prompt-list,
+.media-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.object-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.object-card {
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  min-height: 240px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 16px;
+  background: var(--rs-graphite-100);
+}
+
+.object-card.active {
+  border-color: rgba(255,90,20,.45);
+  background: #fff8f4;
+}
+
+.object-card.locked {
+  color: var(--rs-graphite-700);
+}
+
+.object-card h3,
+.object-card p,
+.object-card dl,
+.object-card dd,
+.object-card dt,
+.object-dossier-grid h3,
+.intelligence-feed h3,
+.intelligence-feed p,
+.ai-answer p,
+.portal-note {
+  margin: 0;
+}
+
+.object-card p,
+.portal-note,
+.ai-answer p {
+  color: var(--rs-graphite-600);
+}
+
+.object-card dl {
+  display: grid;
+  gap: 8px;
+}
+
+.object-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--rs-line);
+  padding-top: 8px;
+}
+
+.object-card dt {
+  color: var(--rs-graphite-600);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.object-card dd {
+  text-align: right;
+  font-weight: 800;
+}
+
+.object-dossier-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.object-dossier-grid > div,
+.ai-answer,
+.complexity-score {
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 16px;
+  background: var(--rs-graphite-100);
+}
+
+.object-dossier-grid h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.intelligence-feed article {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 14px;
+  align-items: start;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 14px;
+}
+
+.delta {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 900;
+}
+
+.delta.negative { background: var(--rs-red); }
+.delta.stable { background: var(--rs-graphite-700); }
+.delta.positive { background: #28704a; }
+
+.entitlement-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--rs-line);
+  padding-bottom: 10px;
+}
+
+.entitlement-list div:last-child {
+  border-bottom: 0;
+}
+
+.media-stack img {
+  width: 100%;
+  min-height: 240px;
+  object-fit: cover;
+  border-radius: var(--rs-radius);
+}
+
+.ai-prompt-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ai-prompt-list button {
+  min-height: 54px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 12px 14px;
+  background: #fff;
+  color: var(--rs-graphite-900);
+  font: inherit;
+  font-weight: 900;
+  text-align: left;
+}
+
+.ai-answer {
+  margin-top: 14px;
+}
+
+.complexity-score {
+  margin-top: 16px;
+}
+
+.complexity-score span {
+  color: var(--rs-graphite-600);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.complexity-score strong {
+  display: block;
+  font-size: 30px;
+  margin: 6px 0;
+}
+
+.complexity-score p {
+  color: var(--rs-graphite-600);
+  margin: 0;
+}
+
 @media (max-width: 1180px) {
   .site-header {
     padding: 0 5vw;
@@ -1847,7 +2043,11 @@ button { cursor: pointer; }
   .metrics,
   .pipeline,
   .support-grid,
-  .admin-support {
+  .admin-support,
+  .platform-metrics,
+  .object-list,
+  .object-dossier-grid,
+  .ai-prompt-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   h2 {
@@ -2062,7 +2262,11 @@ button { cursor: pointer; }
   .metrics,
   .pipeline,
   .support-grid,
-  .admin-support {
+  .admin-support,
+  .platform-metrics,
+  .object-list,
+  .object-dossier-grid,
+  .ai-prompt-list {
     grid-template-columns: 1fr;
   }
   .role-builder,

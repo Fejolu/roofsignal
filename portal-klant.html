@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
-  <title>Klantenportaal demo | RoofSignal</title>
-  <meta name="description" content="Demo van het RoofSignal klantenportaal met rapporten, adviezen, facturen en planning.">
+  <title>Property Intelligence Platform | RoofSignal</title>
+  <meta name="description" content="RoofSignal klantenportaal voor objectdossiers, inspecties, Property Intelligence, planning, documenten en facturen.">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <link rel="canonical" href="https://roofsignal.nl/portal-klant.html">
   <meta property="og:locale" content="nl_NL">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="RoofSignal">
-  <meta property="og:title" content="Klantenportaal demo | RoofSignal">
-  <meta property="og:description" content="Demo van het RoofSignal klantenportaal met rapporten, adviezen, facturen en planning.">
+  <meta property="og:title" content="Property Intelligence Platform | RoofSignal">
+  <meta property="og:description" content="Objectgericht RoofSignal klantportaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta property="og:url" content="https://roofsignal.nl/portal-klant.html">
   <meta property="og:image" content="https://roofsignal.nl/assets/hero-roofsignal-v6.jpg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Klantenportaal demo | RoofSignal">
-  <meta name="twitter:description" content="Demo van het RoofSignal klantenportaal met rapporten, adviezen, facturen en planning.">
+  <meta name="twitter:title" content="Property Intelligence Platform | RoofSignal">
+  <meta name="twitter:description" content="Objectgericht RoofSignal klantportaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta name="twitter:image" content="https://roofsignal.nl/assets/hero-roofsignal-v6.jpg">
   <link rel="stylesheet" href="assets/styles.css">
 </head>
@@ -25,142 +25,269 @@
 <aside class="portal-sidebar">
   <a class="logo" href="index.html"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
   <nav class="portal-nav">
-    <a class="active" href="#overzicht">Overzicht</a>
-    <a href="#inspecties">Rapporten</a>
-    <a href="#adviezen">Adviezen</a>
-    <a href="#facturen">Facturen</a>
+    <a class="active" href="#dashboard">Dashboard</a>
+    <a href="#objecten">Objecten</a>
+    <a href="#objectdossier">Objectdossier</a>
+    <a href="#intelligence">Intelligence</a>
+    <a href="#inspecties">Inspecties</a>
+    <a href="#media">Media</a>
+    <a href="#ai">AI</a>
     <a href="#planning">Planning</a>
-    <a href="#support">Support</a>
+    <a href="#financieel">Financieel</a>
   </nav>
   <div class="portal-account">
     <span>Ingelogd als</span>
     <strong>VvE Parkzicht</strong>
+    <span>Abonnement: Portfolio 1-5</span>
     <a href="portal-login.html">Uitloggen</a>
   </div>
 </aside>
 
-<main class="portal-main">
+<main class="portal-main property-platform">
   <header class="portal-topbar">
     <div>
-      <p class="eyebrow orange">Klantenportaal</p>
+      <p class="eyebrow orange">Property Intelligence Platform</p>
       <h1>VvE Parkzicht</h1>
-      <p>Rapporten, adviezen, facturen en planning voor uw objecten.</p>
+      <p>Objecten, inspecties, onderhoudshistorie, facturen en intelligence in een doorlopend digitaal vastgoeddossier.</p>
     </div>
     <div class="topbar-actions">
-      <a class="btn ghost-dark" href="voorbeeldrapport-uitgebreid.html">Bekijk voorbeeldrapport</a>
-      <a class="btn" href="#planning">Plan herbeoordeling</a>
+      <a class="btn ghost-dark" href="#objectdossier">Open objectdossier</a>
+      <a class="btn" href="#planning">Plan herinspectie</a>
     </div>
   </header>
 
   <section class="portal-panel admin-toolbar">
     <div>
-      <span class="status-pill demo">Admin meekijken</span>
-      <h2>Volledige RoofSignal-rechten actief</h2>
-      <p>U bekijkt dit klantportaal als RoofSignal beheerder. Klantgegevens, demo-data, rollen en toegang kunnen vanuit deze context worden aangepast.</p>
+      <span class="status-pill demo">Platform v2</span>
+      <h2>Objectgericht, niet rapportgericht</h2>
+      <p>Deze klantomgeving is ingericht rond objecten. Inspecties, rapporten, media, facturen, AI-analyses en onderhoudsacties verrijken hetzelfde objectdossier.</p>
     </div>
     <div class="topbar-actions">
-      <a class="btn ghost-dark" href="#overzicht" data-admin-action="edit-current-customer">Klant bewerken</a>
-      <a class="btn ghost-dark" href="portal-beheer.html#rechten">Rollen beheren</a>
-      <a class="btn danger" href="#overzicht" data-admin-action="delete-current-customer">Klant verwijderen</a>
+      <a class="btn ghost-dark" href="#intelligence">Bekijk intelligence</a>
+      <a class="btn ghost-dark" href="#media">Ontgrendel modules</a>
     </div>
   </section>
 
-  <section id="overzicht" class="portal-grid metrics">
-    <article><span>Open adviezen</span><strong>8</strong><p>3 met hoge prioriteit.</p></article>
-    <article><span>Laatste rapport</span><strong>26 jun</strong><p>Rapport beschikbaar.</p></article>
-    <article><span>Facturen</span><strong>1 open</strong><p>Vervaldatum 12 juli.</p></article>
-    <article><span>Planning</span><strong>2 acties</strong><p>Herstelcontrole en bestuursupdate.</p></article>
+  <section id="dashboard" class="portal-grid metrics platform-metrics">
+    <article><span>Objecten</span><strong>3</strong><p>1 actief dossier, 2 toekomstige objecten.</p></article>
+    <article><span>Open acties</span><strong>8</strong><p>3 hoog, 4 normaal, 1 monitoren.</p></article>
+    <article><span>Conditiebeeld</span><strong>3,2</strong><p>NEN 2767-aligned indicatie.</p></article>
+    <article><span>Datawaarde</span><strong>82%</strong><p>Dossierdekking na laatste inspectie.</p></article>
+    <article><span>Abonnement</span><strong>EUR 29</strong><p>1-5 objecten, eerste maand gratis.</p></article>
   </section>
 
-  <section class="portal-panel demo-notice">
-    <div>
-      <span class="status-pill demo">Demo-omgeving</span>
-      <h2>Testdata actief</h2>
-      <p>Dit account bevat voorbeelddata en een testrapport totdat de eerste echte rapportage is toegevoegd. De gebruiker kan deze demo-informatie verwijderen zonder effect op echte objectdata.</p>
+  <section class="portal-layout object-command">
+    <div class="portal-panel wide" id="objecten">
+      <div class="panel-head">
+        <div><span class="eyebrow orange">Portfolio</span><h2>Objecten</h2></div>
+        <a href="#planning">Nieuw object toevoegen</a>
+      </div>
+      <div class="object-list">
+        <article class="object-card active">
+          <div>
+            <span class="status-pill high">Actie nodig</span>
+            <h3>Parkzicht Hoofdgebouw</h3>
+            <p>VvE-complex met plat dak, PV-installatie, metselwerkgevels en meerdere HWA-zones.</p>
+          </div>
+          <dl>
+            <div><dt>Object-ID</dt><dd>RS-OBJ-00041</dd></div>
+            <div><dt>Laatste inspectie</dt><dd>26 jun 2026</dd></div>
+            <div><dt>Volgende actie</dt><dd>Herstelcontrole plannen</dd></div>
+          </dl>
+        </article>
+        <article class="object-card locked">
+          <div>
+            <span class="status-pill demo">Voorbereid</span>
+            <h3>Berging en fietsenstalling</h3>
+            <p>Object aangemaakt voor toekomstige opname en MJOP-koppeling.</p>
+          </div>
+          <dl>
+            <div><dt>Status</dt><dd>Nog niet geinspecteerd</dd></div>
+            <div><dt>Data</dt><dd>Basisgegevens</dd></div>
+          </dl>
+        </article>
+        <article class="object-card locked">
+          <div>
+            <span class="status-pill demo">Voorbereid</span>
+            <h3>Garageboxen achterzijde</h3>
+            <p>Potentieel separaat object voor routeplanning en onderhoudshistorie.</p>
+          </div>
+          <dl>
+            <div><dt>Status</dt><dd>Objectconcept</dd></div>
+            <div><dt>Data</dt><dd>Adres en scope</dd></div>
+          </dl>
+        </article>
+      </div>
     </div>
-    <div class="topbar-actions">
-      <a class="btn ghost-dark" href="voorbeeldrapport-uitgebreid.html">Open testrapport</a>
-      <a class="btn danger" href="#inspecties">Verwijder testdata</a>
+
+    <aside class="portal-panel">
+      <div class="panel-head"><div><span class="eyebrow orange">Waarschuwingen</span><h2>Nu relevant</h2></div></div>
+      <div class="timeline-list">
+        <div><span>Hoog</span><strong>HWA-zone A blijft risicovol</strong><p>Reiniging en detailcontrole combineren.</p></div>
+        <div><span>Weer</span><strong>Stormhistorie toegevoegd</strong><p>Windstoten regio Apeldoorn verhogen inspectieprioriteit.</p></div>
+        <div><span>Upsell</span><strong>Thermal data beschikbaar</strong><p>Opgenomen, maar nog niet ontgrendeld in dit pakket.</p></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="portal-panel" id="objectdossier">
+    <div class="panel-head">
+      <div><span class="eyebrow orange">Objectdossier</span><h2>Parkzicht Hoofdgebouw</h2></div>
+      <a href="voorbeeldrapport-uitgebreid.html">Open rapport</a>
     </div>
+    <div class="object-dossier-grid">
+      <div>
+        <h3>Objectgegevens</h3>
+        <table class="portal-table compact">
+          <tbody>
+            <tr><th>Adres</th><td>Parkzichtlaan 12-48, Apeldoorn</td></tr>
+            <tr><th>Type</th><td>VvE wooncomplex</td></tr>
+            <tr><th>Bouwjaar</th><td>1987</td></tr>
+            <tr><th>Objectstatus</th><td><span class="status-dot red">Actie nodig</span></td></tr>
+            <tr><th>Scope</th><td>Dak, gevel, HWA, schoorsteen, PV, boeiboorden</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>NEN 2580-ready objectdata</h3>
+        <table class="portal-table compact">
+          <tbody>
+            <tr><th>BVO</th><td>3.840 m2</td></tr>
+            <tr><th>GO indicatief</th><td>3.120 m2</td></tr>
+            <tr><th>Gebouwinhoud</th><td>10.950 m3</td></tr>
+            <tr><th>Dakoppervlak</th><td>1.180 m2</td></tr>
+            <tr><th>Geveloppervlak</th><td>2.460 m2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>NEN 2767-aligned conditiedata</h3>
+        <table class="portal-table compact">
+          <tbody>
+            <tr><th>Gebrekstructuur</th><td>Ernst, omvang, intensiteit</td></tr>
+            <tr><th>Indicatieve score</th><td>3,2 - onderhoud plannen</td></tr>
+            <tr><th>Elementen</th><td>Dakbedekking, HWA, voegwerk, lood, PV</td></tr>
+            <tr><th>Bewijsniveau</th><td>Dronebeeld + detailfoto + locatie</td></tr>
+            <tr><th>Claimniveau</th><td>Visuele beoordeling, geen gecertificeerde meting</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="portal-layout">
+    <div class="portal-panel wide" id="intelligence">
+      <div class="panel-head">
+        <div><span class="eyebrow orange">Property Intelligence</span><h2>Wat is veranderd?</h2></div>
+        <a href="#ai">Vraag AI om toelichting</a>
+      </div>
+      <div class="intelligence-feed">
+        <article><span class="delta negative">+2</span><div><h3>Nieuwe beschadigingen sinds vorige inspectie</h3><p>Nieuwe randdetailschade rond dakopstand zuid en beginnende open voeg bij westgevel.</p></div></article>
+        <article><span class="delta negative">-1</span><div><h3>HWA-conditie verslechterd</h3><p>Wateraccumulatie zichtbaar rond afvoerzone A. Reiniging alleen is waarschijnlijk onvoldoende zonder detailcontrole.</p></div></article>
+        <article><span class="delta stable">0</span><div><h3>Voegwerk noordgevel stabiel</h3><p>Geen duidelijke progressie zichtbaar ten opzichte van maart 2026.</p></div></article>
+        <article><span class="delta positive">+1</span><div><h3>Schoorsteen verbeterd</h3><p>Eerdere losse dekplaat lijkt hersteld; monitoren blijft wenselijk na stormperiode.</p></div></article>
+      </div>
+    </div>
+
+    <aside class="portal-panel">
+      <div class="panel-head"><div><span class="eyebrow orange">Entitlements</span><h2>Pakket & upgrades</h2></div></div>
+      <div class="entitlement-list">
+        <div><strong>Rapport</strong><span class="status-dot green">Ontgrendeld</span></div>
+        <div><strong>Dronefoto's</strong><span class="status-dot green">Ontgrendeld</span></div>
+        <div><strong>Thermal</strong><span class="status-dot yellow">Beschikbaar als upgrade</span></div>
+        <div><strong>3D-model</strong><span class="status-dot yellow">Data vastgelegd</span></div>
+        <div><strong>AI MJOP-input</strong><span class="status-dot yellow">Niet inbegrepen</span></div>
+      </div>
+      <p class="portal-note">Upgradeprijzen volgen minimaal het pakketverschil. Reeds verzamelde data wordt niet onder de oorspronkelijke waarde verkocht.</p>
+    </aside>
   </section>
 
   <section class="portal-layout">
     <div class="portal-panel wide" id="inspecties">
       <div class="panel-head">
-        <div><span class="eyebrow orange">Rapporten</span><h2>Objectdossier</h2></div>
-        <a href="voorbeeldrapport-uitgebreid.html">Open rapport</a>
-      </div>
-      <div class="inspection-card">
-        <img src="assets/report/roof-overview-hwa-standing-water-solar.jpg" alt="Gebouwschilbeeld VvE Parkzicht">
-        <div>
-          <span class="status-pill high">Actie nodig</span>
-          <h3>Gebouwschilrapport VvE Parkzicht</h3>
-          <p>Dak, gevel, goten, HWA, boeiboorden en PV-installatie beoordeeld. Rapport bevat prioriteiten, kostenindicatie en MJOP-input. In nieuwe accounts kan dit als verwijderbaar testrapport worden getoond.</p>
-          <div class="mini-facts">
-            <span>12 bevindingen</span>
-            <span>3 hoog</span>
-            <span>5 normaal</span>
-            <span>4 monitoren</span>
-          </div>
-        </div>
+        <div><span class="eyebrow orange">Inspecties</span><h2>Nieuwste eerst</h2></div>
+        <a href="#planning">Nieuwe inspectie aanvragen</a>
       </div>
       <table class="portal-table">
-        <thead><tr><th>Datum</th><th>Object</th><th>Scope</th><th>Status</th><th>Rapport</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Object</th><th>Scope</th><th>Dataset</th><th>Status</th><th>Actie</th></tr></thead>
         <tbody>
-          <tr><td>26 jun 2026</td><td>VvE Parkzicht</td><td>Gebouwschilrapportage</td><td><span class="status-dot red">Actie nodig</span></td><td><a href="voorbeeldrapport-uitgebreid.html">Open</a></td></tr>
-          <tr><td>Demo</td><td>Voorbeeldobject</td><td>Testrapport</td><td><span class="status-dot yellow">Verwijderbaar</span></td><td><a href="voorbeeldrapport-uitgebreid.html">Open</a></td></tr>
-          <tr><td>12 mrt 2026</td><td>VvE Parkzicht</td><td>Quickscan lekkage</td><td><span class="status-dot green">Afgerond</span></td><td><a href="#">Open</a></td></tr>
+          <tr><td>26 jun 2026</td><td>Parkzicht Hoofdgebouw</td><td>Gebouwschil + PV</td><td>Foto, thermal, video, 3D-ready</td><td><span class="status-dot red">Actie nodig</span></td><td><a href="voorbeeldrapport-uitgebreid.html">Open</a></td></tr>
+          <tr><td>12 mrt 2026</td><td>Parkzicht Hoofdgebouw</td><td>Quickscan lekkage</td><td>Foto + bevindingen</td><td><span class="status-dot green">Afgerond</span></td><td><a href="#">Vergelijk</a></td></tr>
+          <tr><td>Demo</td><td>Voorbeeldobject</td><td>Testrapport</td><td>Verwijderbaar</td><td><span class="status-dot yellow">Demo</span></td><td><a href="voorbeeldrapport-uitgebreid.html">Open</a></td></tr>
         </tbody>
       </table>
     </div>
 
-    <aside class="portal-panel" id="planning">
-      <div class="panel-head"><div><span class="eyebrow orange">Planning</span><h2>Komende acties</h2></div></div>
-      <div class="timeline-list">
-        <div><span>30 jun</span><strong>P1-herstel bespreken</strong><p>Bestuurscall met beheerder.</p></div>
-        <div><span>08 jul</span><strong>Offertes vergelijken</strong><p>Loodwerk, HWA en PV-diagnose.</p></div>
-        <div><span>Sep</span><strong>Herbeoordeling plannen</strong><p>Controle na uitvoering.</p></div>
+    <aside class="portal-panel" id="media">
+      <div class="panel-head"><div><span class="eyebrow orange">Media</span><h2>Bewijs per laag</h2></div></div>
+      <div class="media-stack">
+        <img src="assets/report/roof-overview-hwa-standing-water-solar.jpg" alt="Dronebeeld Parkzicht dakvlak">
+        <div class="mini-facts">
+          <span>148 foto's</span>
+          <span>12 details</span>
+          <span>6 HWA-zones</span>
+          <span>3 locked modules</span>
+        </div>
       </div>
     </aside>
   </section>
 
   <section class="portal-layout">
-    <div class="portal-panel" id="adviezen">
-      <div class="panel-head"><div><span class="eyebrow orange">Adviezen</span><h2>Onderhoudsprioriteiten</h2></div></div>
-      <div class="advice-list">
-        <article><span class="status-pill high">P1</span><div><h3>Los loodwerk dakopstand</h3><p>Herstel binnen 30 dagen aanbevolen.</p></div><strong>EUR 650-1.400</strong></article>
-        <article><span class="status-pill high">P1</span><div><h3>HWA reinigen en controleren</h3><p>Wateraccumulatie voorkomen.</p></div><strong>EUR 250-650</strong></article>
-        <article><span class="status-pill normal">P2</span><div><h3>Voegwerk westgevel</h3><p>Bundelen in onderhoudsronde.</p></div><strong>EUR 900-2.800</strong></article>
+    <div class="portal-panel" id="ai">
+      <div class="panel-head"><div><span class="eyebrow orange">AI</span><h2>Objectassistent</h2></div></div>
+      <div class="ai-prompt-list">
+        <button type="button">Waarom ontstaat deze scheur?</button>
+        <button type="button">Wat gebeurt er als we niets doen?</button>
+        <button type="button">Vergelijk inspectie 2026 met maart 2026</button>
+        <button type="button">Maak MJOP-input voor dit object</button>
+        <button type="button">Vat alle open acties samen</button>
+      </div>
+      <div class="ai-answer">
+        <strong>Voorbeeldantwoord</strong>
+        <p>De hoogste urgentie zit in waterafvoer en dakranddetails. De NEN 2767-aligned signalen wijzen niet op volledige vervanging, maar wel op gericht herstel en hercontrole.</p>
       </div>
     </div>
 
-    <div class="portal-panel" id="facturen">
-      <div class="panel-head"><div><span class="eyebrow orange">Facturen</span><h2>Financieel</h2></div></div>
-      <table class="portal-table compact">
-        <thead><tr><th>Factuur</th><th>Bedrag</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>RS-2026-041</td><td>EUR 1.250</td><td><span class="status-dot yellow">Open</span></td></tr>
-          <tr><td>RS-2026-019</td><td>EUR 650</td><td><span class="status-dot green">Betaald</span></td></tr>
-        </tbody>
-      </table>
-      <a class="btn ghost-dark" href="mailto:info@roofsignal.nl">Vraag factuurkopie aan</a>
+    <div class="portal-panel" id="planning">
+      <div class="panel-head"><div><span class="eyebrow orange">Planning</span><h2>Inspectieplanning</h2></div></div>
+      <div class="timeline-list">
+        <div><span>30 jun</span><strong>Bestuurscall</strong><p>P1-herstel bespreken met beheerder.</p></div>
+        <div><span>08 jul</span><strong>Offertes vergelijken</strong><p>Loodwerk, HWA en PV-diagnose bundelen.</p></div>
+        <div><span>Sep</span><strong>Herinspectie voorstellen</strong><p>Planning op basis van weer, complexiteit en route.</p></div>
+      </div>
+      <div class="complexity-score">
+        <span>Inspection Complexity Score</span>
+        <strong>3,8 / 5</strong>
+        <p>Gebaseerd op dakoppervlak, geveloppervlak, bouwlagen, PV, bereikbaarheid en historische inspectietijd.</p>
+      </div>
     </div>
   </section>
 
-  <section class="portal-panel" id="support">
-    <div class="panel-head">
-      <div><span class="eyebrow orange">Support</span><h2>Vragen en opvolging</h2></div>
-      <a href="mailto:info@roofsignal.nl">Nieuwe vraag</a>
+  <section class="portal-layout">
+    <div class="portal-panel" id="financieel">
+      <div class="panel-head"><div><span class="eyebrow orange">Financieel</span><h2>Facturen en abonnement</h2></div></div>
+      <table class="portal-table compact">
+        <thead><tr><th>Document</th><th>Bedrag</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>RS-2026-041 Inspectie</td><td>EUR 1.250</td><td><span class="status-dot yellow">Open</span></td></tr>
+          <tr><td>Abonnement Portfolio 1-5</td><td>EUR 29/mnd</td><td><span class="status-dot green">Actief</span></td></tr>
+          <tr><td>RS-2026-019 Quickscan</td><td>EUR 650</td><td><span class="status-dot green">Betaald</span></td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="support-grid">
-      <div><strong>Laatste vraag</strong><span>Kan RS-03 worden gekoppeld aan de PV-onderhoudspartij?</span></div>
-      <div><strong>Status</strong><span>In behandeling door RoofSignal</span></div>
-      <div><strong>Reactietermijn</strong><span>Binnen 1 werkdag</span></div>
+
+    <div class="portal-panel">
+      <div class="panel-head"><div><span class="eyebrow orange">CRM / Support</span><h2>Opvolging</h2></div></div>
+      <div class="support-grid">
+        <div><strong>Laatste vraag</strong><span>PV-hotspot koppelen aan onderhoudspartij.</span></div>
+        <div><strong>Eigenaarstaak</strong><span>Akkoord geven op HWA-detailcontrole.</span></div>
+        <div><strong>RoofSignal taak</strong><span>Herinspectievoorstel klaarzetten.</span></div>
+      </div>
     </div>
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js" defer></script>
+<script src="assets/supabase-app.js?v=2" defer></script>
 <script src="assets/portal-admin.js" defer></script>
 </body>
 </html>
