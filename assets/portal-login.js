@@ -30,9 +30,26 @@ function routeForRole(email, profile) {
   return isInternal ? "portal-beheer.html" : "portal-klant.html";
 }
 
-function setStatus(form, message) {
+function setStatus(form, message, type = "note") {
   const status = form?.querySelector(".portal-route-note");
-  if (status) status.textContent = message;
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle("form-status", type !== "note");
+  status.classList.toggle("success", type === "success");
+  status.classList.toggle("error", type === "error");
+}
+
+function setSubmitState(form, isLoading, label) {
+  const button = form?.querySelector('button[type="submit"]');
+  if (!button) return;
+
+  if (!button.dataset.defaultLabel) {
+    button.dataset.defaultLabel = button.textContent.trim();
+  }
+
+  button.disabled = isLoading;
+  button.textContent = label || button.dataset.defaultLabel;
 }
 
 function wait(ms) {
@@ -102,10 +119,17 @@ loginForm?.addEventListener("submit", async (event) => {
   const backend = window.RoofSignalBackend;
 
   if (backend?.isConfigured) {
+    setSubmitState(loginForm, true, password ? "Inloggen..." : "Inloglink versturen...");
+    setStatus(loginForm, password
+      ? "We controleren uw inloggegevens."
+      : "We versturen een beveiligde inloglink naar uw e-mailadres.",
+    "info");
+
     const result = await backend.signIn(email, password);
     if (result.ok) {
       if (!password) {
-        setStatus(loginForm, "Als dit e-mailadres bekend is, ontvangt u een inloglink.");
+        setSubmitState(loginForm, false, "Inloglink opnieuw versturen");
+        setStatus(loginForm, "Inloglink verstuurd. Check uw mailbox en open de link om het klantenportaal te gebruiken.", "success");
         return;
       }
 
@@ -114,7 +138,8 @@ loginForm?.addEventListener("submit", async (event) => {
       return;
     }
 
-    setStatus(loginForm, result.error?.message || "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang.");
+    setSubmitState(loginForm, false);
+    setStatus(loginForm, result.error?.message || "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang.", "error");
     return;
   }
 
