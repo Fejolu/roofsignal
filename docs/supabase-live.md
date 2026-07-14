@@ -54,7 +54,7 @@ In Supabase:
 
 - Homepage voorbeeldrapport-aanvraag wordt opgeslagen in `lead_requests`.
 - Tarieven prijsindicatie wordt opgeslagen in `lead_requests`.
-- Portaal-login gebruikt Supabase Auth.
+- Portaal-login gebruikt Supabase Auth. Wachtwoord-login gaat direct via Supabase Auth; wachtwoordloze inloglinks lopen via de Edge Function `send-portal-login-link`, zodat de e-mail vanuit RoofSignal komt met RoofSignal-opmaak in plaats van de standaard Supabase Auth-template.
 - Beheerdersportaal kan organisaties laden, aanpassen en soft-deleten.
 - Rollen kunnen vanuit het portaal worden aangepast voor bestaande Supabase Auth-gebruikers.
 
@@ -83,3 +83,21 @@ De frontend roept `send-lead-notification` aan na een succesvolle insert in `lea
 - een bevestiging naar het e-mailadres van de aanvrager
 
 Zonder `BREVO_API_KEY` valt de function lokaal terug naar dry-run logging.
+
+## 6. Portal-inloglinks via RoofSignal
+
+Deploy de Edge Function:
+
+```sh
+supabase functions deploy send-portal-login-link --project-ref kakpticlxlaxtebhsuoh
+```
+
+Deze function gebruikt `SUPABASE_SERVICE_ROLE_KEY` om een Supabase Auth magic link te genereren voor bestaande profielen en verstuurt die link daarna via Resend of Brevo. De function geeft altijd een generieke succesrespons terug voor onbekende e-mailadressen, zodat accountstatus niet publiek uitlekt.
+
+Benodigde secrets:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY` of `BREVO_API_KEY`
+- `BREVO_FROM_EMAIL` of `FROM_EMAIL`
+- `BREVO_FROM_NAME`

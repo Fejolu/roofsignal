@@ -65,10 +65,10 @@
       return { ok: true };
     }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
+    const { error } = await supabase.functions.invoke("send-portal-login-link", {
+      body: {
+        email,
+        redirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
       },
     });
 
