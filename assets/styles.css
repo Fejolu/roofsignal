@@ -263,6 +263,10 @@ section {
   flex-wrap: wrap;
 }
 
+.center-actions {
+  justify-content: center;
+}
+
 .trustbar {
   position: absolute;
   left: 7vw;
