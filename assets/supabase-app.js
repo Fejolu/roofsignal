@@ -123,11 +123,32 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("organizations")
-      .select("id,name,segment,status,notes,created_at")
+      .select("id,name,segment,contact_name,contact_email,contact_phone,address,kvk_number,bank_account,status,notes,created_at")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
+  }
+
+  async function createOrganization(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+    const { data, error } = await supabase
+      .from("organizations")
+      .insert(payload)
+      .select("id,name,segment,contact_name,contact_email,contact_phone,address,kvk_number,bank_account,status,notes,created_at")
+      .single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createProperties(properties) {
+    const supabase = await getClient();
+    if (!supabase || !properties?.length) return { ok: false, fallback: true };
+    const { data, error } = await supabase
+      .from("properties")
+      .insert(properties)
+      .select("id,organization_id,name,address,status,created_at");
+    return error ? { ok: false, error } : { ok: true, data };
   }
 
   async function updateOrganization(id, payload) {
@@ -188,6 +209,8 @@
     getSession,
     getProfile,
     listOrganizations,
+    createOrganization,
+    createProperties,
     updateOrganization,
     deleteOrganization,
     listProfiles,

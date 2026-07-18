@@ -18,6 +18,12 @@ create table if not exists public.organizations (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   segment text,
+  contact_name text,
+  contact_email text,
+  contact_phone text,
+  address text,
+  kvk_number text,
+  bank_account text,
   status text not null default 'prospect',
   notes text,
   created_at timestamptz not null default now(),
@@ -102,7 +108,7 @@ create table if not exists public.lead_requests (
 
 create table if not exists public.quotes (
   id uuid primary key default gen_random_uuid(),
-  organization_id uuid references public.organizations(id) on delete set null,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
   lead_request_id uuid references public.lead_requests(id) on delete set null,
   quote_number text unique,
   title text not null,
@@ -115,7 +121,7 @@ create table if not exists public.quotes (
 
 create table if not exists public.invoices (
   id uuid primary key default gen_random_uuid(),
-  organization_id uuid references public.organizations(id) on delete set null,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
   quote_id uuid references public.quotes(id) on delete set null,
   invoice_number text unique,
   amount numeric(12,2),
@@ -127,7 +133,7 @@ create table if not exists public.invoices (
 
 create table if not exists public.appointments (
   id uuid primary key default gen_random_uuid(),
-  organization_id uuid references public.organizations(id) on delete set null,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
   property_id uuid references public.properties(id) on delete set null,
   title text not null,
   starts_at timestamptz,

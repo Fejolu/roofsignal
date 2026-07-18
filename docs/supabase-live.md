@@ -55,10 +55,11 @@ In Supabase:
 - Homepage voorbeeldrapport-aanvraag wordt opgeslagen in `lead_requests`.
 - Tarieven prijsindicatie wordt opgeslagen in `lead_requests`.
 - Portaal-login gebruikt Supabase Auth. Wachtwoord-login gaat direct via Supabase Auth; wachtwoordloze inloglinks lopen via de Edge Function `send-portal-login-link`, zodat de e-mail vanuit RoofSignal komt met RoofSignal-opmaak in plaats van de standaard Supabase Auth-template.
-- Beheerdersportaal kan organisaties laden, aanpassen en soft-deleten.
+- Beheerdersportaal kan organisaties aanmaken, laden, aanpassen en soft-deleten.
 - Rollen kunnen vanuit het portaal worden aangepast voor bestaande Supabase Auth-gebruikers.
+- Offertes, facturen en afspraken moeten aan een organisatie gekoppeld zijn. Verwijderen van een organisatie verwijdert deze afhankelijke records mee, zodat er geen klantloze backoffice-data overblijft.
 
-Zolang de config leeg is, valt de site terug op de huidige demo/mailto-flow.
+Zolang de config leeg is, valt de site terug op demo-opslag in de browser. Klanten aanmaken blijft dan binnen de backoffice, maar wordt nog niet naar Supabase geschreven.
 
 ## 5. E-mailnotificaties via Brevo
 

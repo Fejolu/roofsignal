@@ -50,8 +50,8 @@
       <p>Interne RoofSignal-omgeving voor support, klantbeheer, facturen, agenda’s, planning en meekijken met klantaccounts.</p>
     </div>
     <div class="topbar-actions">
-      <a class="btn ghost-dark" href="portal-klant">Impersonatie starten</a>
-      <a class="btn" href="#klanten">Nieuwe klant</a>
+      <a class="btn ghost-dark" href="portal-klant" data-admin-action="start-impersonation">Impersonatie starten</a>
+      <a class="btn" href="portal-klant-aanmaken.html">Nieuwe klant</a>
     </div>
   </header>
 
@@ -65,7 +65,7 @@
 
   <section class="portal-panel" id="rechten">
     <div class="panel-head">
-      <div><span class="eyebrow orange">Rechtenmodel</span><h2>Team, rollen en rechten</h2></div><a href="mailto:info@roofsignal.nl">Nieuw teamlid</a>
+      <div><span class="eyebrow orange">Rechtenmodel</span><h2>Team, rollen en rechten</h2></div><a href="#rechten" data-admin-action="focus-role-builder">Nieuw teamlid</a>
     </div>
     <div class="support-grid admin-support">
       <div><strong>Owner admin</strong><span>Alle modules: klanten, rollen, offertes, facturen, planning, support, impersonatie en instellingen.</span></div>
@@ -93,10 +93,14 @@
     <div class="portal-panel wide" id="klanten">
       <div class="panel-head">
         <div><span class="eyebrow orange">CRM</span><h2>Klanten beheren</h2></div>
-        <a href="mailto:info@roofsignal.nl">Account uitnodigen</a>
+        <a href="portal-klant-aanmaken.html">Account aanmaken</a>
+      </div>
+      <div class="customer-search">
+        <label>Zoeken<input type="search" data-customer-search placeholder="Zoek op bedrijf, contactpersoon, e-mail, telefoon, adres, KvK, IBAN of object"></label>
+        <p class="form-note" data-customer-search-status>Zoeken gebruikt alle bekende klantvelden.</p>
       </div>
       <table class="portal-table">
-        <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Laatste activiteit</th><th>Status</th><th>Acties</th></tr></thead>
+        <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Contact / activiteit</th><th>Status</th><th>Acties</th></tr></thead>
         <tbody>
           <tr><td>VvE Parkzicht</td><td>VvE beheer</td><td>1</td><td>Rapport geopend</td><td><span class="status-dot red">Actie nodig</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
           <tr><td>Nieuw account zonder rapport</td><td>VvE beheer</td><td>0</td><td>Demo-data klaargezet</td><td><span class="status-dot yellow">Testdata</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
@@ -144,7 +148,7 @@
   <section class="portal-panel" id="offertes">
     <div class="panel-head">
       <div><span class="eyebrow orange">Offertes</span><h2>Offertes maken en opvolgen</h2></div>
-      <a href="mailto:info@roofsignal.nl">Nieuwe offerte</a>
+      <a href="#offertes" data-admin-action="create-offer">Nieuwe offerte</a>
     </div>
     <div class="support-grid admin-support">
       <div><strong>Concept opbouwen</strong><span>Klant, objecten, scope, begaanbaarheid, reisafstand, rapportdiepte en prijsregels combineren.</span></div>
@@ -165,7 +169,7 @@
   <section class="portal-panel" id="support">
     <div class="panel-head">
       <div><span class="eyebrow orange">Support</span><h2>Klantvragen</h2></div>
-      <a href="mailto:info@roofsignal.nl">Nieuwe interne taak</a>
+      <a href="#support" data-admin-action="create-support-task">Nieuwe interne taak</a>
     </div>
     <div class="support-grid admin-support">
       <div><strong>VvE Parkzicht</strong><span>PV-hotspot koppelen aan installateur en desnoods klantaccount overnemen tijdens supportcall.</span></div>

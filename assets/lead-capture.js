@@ -89,7 +89,7 @@
       <span>${copy.next}</span>
       <span><b>Geen bevestigingsmail ontvangen binnen enkele minuten?</b><br>
         Neem contact op via <a href="tel:+31852128019">${contactPhone}</a> of
-        <a href="mailto:${contactEmail}">${contactEmail}</a>.
+        <a href="contact">${contactEmail}</a>.
       </span>
     `;
   }
@@ -101,7 +101,7 @@
       <strong>Verzenden lukt niet</strong>
       <span>De aanvraag kon niet automatisch worden verwerkt. Neem direct contact op via
         <a href="tel:+31852128019">${contactPhone}</a> of
-        <a href="mailto:${contactEmail}">${contactEmail}</a>.
+        <a href="contact">${contactEmail}</a>.
       </span>
     `;
   }

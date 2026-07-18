@@ -54,7 +54,7 @@
     </div>
     <div class="topbar-actions">
       <a class="btn ghost-dark" href="#objectdossier">Open objectdossier</a>
-      <a class="btn" href="#planning">Plan herinspectie</a>
+      <a class="btn" href="#planning" data-portal-action="plan-reinspection">Plan herinspectie</a>
     </div>
   </header>
 
@@ -67,7 +67,7 @@
     <div class="topbar-actions">
       <a class="btn ghost-dark" href="#intelligence">Bekijk intelligence</a>
       <a class="btn ghost-dark" href="#management">Dagcockpit</a>
-      <a class="btn ghost-dark" href="#media">Ontgrendel modules</a>
+      <a class="btn ghost-dark" href="#media" data-portal-action="unlock-modules">Ontgrendel modules</a>
     </div>
   </section>
 
@@ -129,7 +129,7 @@
     <div class="portal-panel wide" id="objecten">
       <div class="panel-head">
         <div><span class="eyebrow orange">Portfolio</span><h2>Objecten</h2></div>
-        <a href="#planning">Nieuw object toevoegen</a>
+        <a href="#planning" data-portal-action="add-object">Nieuw object toevoegen</a>
       </div>
       <div class="object-list">
         <article class="object-card active">
@@ -228,7 +228,7 @@
     <div class="portal-panel wide" id="intelligence">
       <div class="panel-head">
         <div><span class="eyebrow orange">Property Intelligence</span><h2>Wat is veranderd?</h2></div>
-        <a href="#ai">Vraag AI om toelichting</a>
+        <a href="#ai" data-portal-action="explain-intelligence">Vraag AI om toelichting</a>
       </div>
       <div class="intelligence-feed">
         <article><span class="delta negative">+2</span><div><h3>Nieuwe beschadigingen sinds vorige inspectie</h3><p>Nieuwe randdetailschade rond dakopstand zuid en beginnende open voeg bij westgevel.</p></div></article>
@@ -255,13 +255,13 @@
     <div class="portal-panel wide" id="inspecties">
       <div class="panel-head">
         <div><span class="eyebrow orange">Inspecties</span><h2>Nieuwste eerst</h2></div>
-        <a href="#planning">Nieuwe inspectie aanvragen</a>
+        <a href="#planning" data-portal-action="request-inspection">Nieuwe inspectie aanvragen</a>
       </div>
       <table class="portal-table">
         <thead><tr><th>Datum</th><th>Object</th><th>Scope</th><th>Dataset</th><th>Status</th><th>Actie</th></tr></thead>
         <tbody>
           <tr><td>26 jun 2026</td><td>Parkzicht Hoofdgebouw</td><td>Gebouwschil + PV</td><td>Foto, thermal, video, 3D-ready</td><td><span class="status-dot red">Actie nodig</span></td><td><a href="voorbeeldrapport-uitgebreid">Open</a></td></tr>
-          <tr><td>12 mrt 2026</td><td>Parkzicht Hoofdgebouw</td><td>Quickscan lekkage</td><td>Foto + bevindingen</td><td><span class="status-dot green">Afgerond</span></td><td><a href="#">Vergelijk</a></td></tr>
+          <tr><td>12 mrt 2026</td><td>Parkzicht Hoofdgebouw</td><td>Quickscan lekkage</td><td>Foto + bevindingen</td><td><span class="status-dot green">Afgerond</span></td><td><a href="#ai" data-portal-action="compare-inspections">Vergelijk</a></td></tr>
           <tr><td>Demo</td><td>Voorbeeldobject</td><td>Testrapport</td><td>Verwijderbaar</td><td><span class="status-dot yellow">Demo</span></td><td><a href="voorbeeldrapport-uitgebreid">Open</a></td></tr>
         </tbody>
       </table>
@@ -285,11 +285,11 @@
     <div class="portal-panel" id="ai">
       <div class="panel-head"><div><span class="eyebrow orange">AI</span><h2>Objectassistent</h2></div></div>
       <div class="ai-prompt-list">
-        <button type="button">Waarom ontstaat deze scheur?</button>
-        <button type="button">Wat gebeurt er als we niets doen?</button>
-        <button type="button">Vergelijk inspectie 2026 met maart 2026</button>
-        <button type="button">Maak MJOP-input voor dit object</button>
-        <button type="button">Vat alle open acties samen</button>
+        <button type="button" data-portal-action="ai-crack">Waarom ontstaat deze scheur?</button>
+        <button type="button" data-portal-action="ai-do-nothing">Wat gebeurt er als we niets doen?</button>
+        <button type="button" data-portal-action="compare-inspections">Vergelijk inspectie 2026 met maart 2026</button>
+        <button type="button" data-portal-action="ai-mjop">Maak MJOP-input voor dit object</button>
+        <button type="button" data-portal-action="ai-actions">Vat alle open acties samen</button>
       </div>
       <div class="ai-answer">
         <strong>Voorbeeldantwoord</strong>
@@ -316,7 +316,7 @@
     <div class="portal-panel wide">
       <div class="panel-head">
         <div><span class="eyebrow orange">Administrator / Finance</span><h2>Finance Hub</h2></div>
-        <a href="#accountant-export">Accountant export</a>
+        <a href="#accountant-export" data-portal-action="prepare-accountant-export">Accountant export</a>
       </div>
       <div class="finance-kpi-grid">
         <article><span>Vandaag</span><strong>EUR 1.250</strong><p>Omzet geboekt.</p></article>

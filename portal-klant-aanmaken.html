@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
+  <title>Nieuwe klant | RoofSignal</title>
+  <meta name="description" content="Nieuwe klant aanmaken in de RoofSignal backoffice.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="canonical" href="https://www.roofsignal.nl/portal-klant-aanmaken">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="portal-body admin">
+<aside class="portal-sidebar">
+  <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+  <nav class="portal-nav">
+    <a href="portal-beheer#dashboard">Dashboard</a>
+    <a class="active" href="portal-beheer#klanten">Klanten</a>
+    <a href="portal-beheer#inspecties">Beoordelingen</a>
+    <a href="portal-beheer#planning">Planning</a>
+    <a href="portal-beheer#facturen">Facturen</a>
+    <a href="portal-beheer#offertes">Offertes</a>
+    <a href="portal-beheer#support">Support</a>
+    <a href="portal-beheer#rechten">Rollen</a>
+  </nav>
+  <div class="portal-account">
+    <span>Beheerder</span>
+    <strong>RoofSignal team</strong>
+    <span>Owner admin / support</span>
+    <a href="portal-login">Uitloggen</a>
+  </div>
+</aside>
+
+<main class="portal-main">
+  <header class="portal-topbar">
+    <div>
+      <p class="eyebrow orange">CRM</p>
+      <h1>Nieuwe klant aanmaken</h1>
+      <p>Leg de basis vast. Alleen het e-mailadres is verplicht; de rest kan later worden aangevuld.</p>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn ghost-dark" href="portal-beheer#klanten">Terug naar klanten</a>
+    </div>
+  </header>
+
+  <section class="portal-panel">
+    <form class="customer-detail-form" id="customer-detail-form">
+      <div class="form-section-head">
+        <span class="eyebrow orange">Basis</span>
+        <h2>Organisatie en contact</h2>
+      </div>
+      <label>Bedrijfsnaam<input name="company_name" placeholder="Bedrijfsnaam, VvE of eigenaar"></label>
+      <label>Contactpersoon<input name="contact_name" placeholder="Naam contactpersoon"></label>
+      <label>E-mailadres<input name="contact_email" type="email" placeholder="contact@organisatie.nl" required></label>
+      <label>Telefoonnummer<input name="contact_phone" type="tel" placeholder="085 21 28 019"></label>
+      <label class="wide-field">Adres<textarea name="address" rows="3" placeholder="Straat, huisnummer, postcode, plaats"></textarea></label>
+      <label>KvK<input name="kvk_number" placeholder="KvK-nummer"></label>
+      <label>Bankrekening<input name="bank_account" placeholder="IBAN"></label>
+      <label class="wide-field">Objecten<textarea name="objects" rows="6" placeholder="Een object per regel, bijvoorbeeld: Parkzicht Hoofdgebouw - Parkzichtlaan 12-48, Apeldoorn"></textarea></label>
+      <div class="form-actions">
+        <button class="btn" type="submit">Klant aanmaken</button>
+        <a class="btn ghost-dark" href="portal-beheer#klanten">Annuleren</a>
+      </div>
+      <p class="form-note" data-customer-detail-status>Na aanmaken staat de klant in Klanten beheren. Objecten worden gekoppeld aan deze klant.</p>
+    </form>
+  </section>
+</main>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/supabase-app.js" defer></script>
+<script src="assets/portal-customer-create.js" defer></script>
+</body>
+</html>
