@@ -273,6 +273,24 @@
   }
 
   function updateAggregateData(hasCustomers) {
+    const dashboardCards = [...document.querySelectorAll("#dashboard article")];
+    const customerCount = customersBody
+      ? [...customersBody.querySelectorAll("tr")].filter((row) => !row.dataset.emptyRow).length
+      : 0;
+
+    if (!hasCustomers) {
+      const emptyValues = ["0", "0", "0", "EUR 0", "0"];
+      dashboardCards.forEach((card, index) => {
+        const value = card.querySelector("strong");
+        const note = card.querySelector("p");
+        if (value) value.textContent = emptyValues[index] || "0";
+        if (note) note.textContent = "Geen klantdata.";
+      });
+    } else if (dashboardCards[0]) {
+      const value = dashboardCards[0].querySelector("strong");
+      if (value) value.textContent = String(customerCount);
+    }
+
     if (pipeline && !hasCustomers) {
       pipeline.querySelectorAll("article").forEach((article) => {
         const value = article.querySelector("strong");
@@ -280,12 +298,6 @@
         if (value) value.textContent = "0";
         if (note) note.textContent = "Geen klantdata.";
       });
-    }
-
-    const activeCustomersMetric = document.querySelector("#dashboard article:first-child strong");
-    if (activeCustomersMetric && customersBody) {
-      const count = [...customersBody.querySelectorAll("tr")].filter((row) => !row.dataset.emptyRow).length;
-      activeCustomersMetric.textContent = String(count);
     }
   }
 
