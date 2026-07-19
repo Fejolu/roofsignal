@@ -28,6 +28,12 @@
   const supportGrid = document.querySelector("#support .support-grid");
   const planningList = document.querySelector("#planning .timeline-list");
   const pipeline = document.querySelector("#inspecties .pipeline");
+  const objectManager = document.querySelector("[data-object-manager]");
+  const objectManagerTitle = document.querySelector("[data-object-manager-title]");
+  const objectManagerStatus = document.querySelector("[data-object-manager-status]");
+  const objectEditList = document.querySelector("[data-object-edit-list]");
+  let activeObjectCustomerRow = null;
+  let activeCustomerObjects = [];
 
   function saveState() {
     localStorage.setItem(stateKey, JSON.stringify({
@@ -114,7 +120,7 @@
   }
 
   function customerActions() {
-    return '<div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
+    return '<div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="manage-objects">Objecten</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
   }
 
   function customerRow(customer) {
@@ -203,6 +209,11 @@
       if (row.dataset.emptyRow) return;
       row.dataset.customerKey = customerKey(customerNameFromRow(row));
       if (!row.dataset.search) row.dataset.search = row.textContent;
+      const actions = row.querySelector(".table-actions");
+      if (actions && !actions.querySelector("[data-admin-action='manage-objects']")) {
+        const takeover = actions.querySelector("a[href^='portal-klant']");
+        takeover?.insertAdjacentHTML("afterend", '<a href="#klanten" data-admin-action="manage-objects">Objecten</a>');
+      }
     });
   }
 
@@ -417,6 +428,144 @@
     row.remove();
     syncCustomerOwnedData();
     saveState();
+  }
+
+  function setObjectManagerStatus(message, tone = "") {
+    if (!objectManagerStatus) return;
+    objectManagerStatus.textContent = message;
+    objectManagerStatus.dataset.statusTone = tone;
+  }
+
+  function propertySearchText(property) {
+    return [
+      property.name,
+      property.address,
+      property.postcode,
+      property.city,
+      property.status,
+    ].filter(Boolean).join(" ");
+  }
+
+  function refreshCustomerObjectCount(row, objects = activeCustomerObjects) {
+    if (!row) return;
+    const count = objects.filter((object) => object.status !== "deleted").length;
+    const cells = row.querySelectorAll("td");
+    if (cells[2]) cells[2].textContent = String(count);
+    row.dataset.search = [
+      row.textContent,
+      objects.map(propertySearchText).join(" "),
+    ].filter(Boolean).join(" ");
+    filterCustomers();
+    saveState();
+  }
+
+  function objectEditCard(property) {
+    return [
+      `<article class="object-edit-card" data-property-id="${escapeHtml(property.id || "")}">`,
+      '<div class="object-edit-fields">',
+      `<label>Objectnaam<input data-object-field="name" value="${escapeHtml(property.name || "")}" placeholder="Objectnaam"></label>`,
+      `<label>Adres<input data-object-field="address" value="${escapeHtml(property.address || "")}" placeholder="Straat en huisnummer"></label>`,
+      `<label>Postcode<input data-object-field="postcode" value="${escapeHtml(property.postcode || "")}" placeholder="7311 AA"></label>`,
+      `<label>Plaats<input data-object-field="city" value="${escapeHtml(property.city || "")}" placeholder="Apeldoorn"></label>`,
+      '<label>Status<select data-object-field="status">',
+      ["active", "concept", "paused"].map((status) => {
+        const labels = { active: "Actief", concept: "Concept", paused: "Gepauzeerd" };
+        const selected = (property.status || "active") === status ? " selected" : "";
+        return `<option value="${status}"${selected}>${labels[status]}</option>`;
+      }).join(""),
+      '</select></label>',
+      '</div>',
+      '<div class="object-edit-actions">',
+      '<button class="btn ghost-dark" type="button" data-admin-action="save-object">Opslaan</button>',
+      '<button class="btn ghost-dark text-danger" type="button" data-admin-action="delete-object">Verwijderen</button>',
+      '</div>',
+      '</article>',
+    ].join("");
+  }
+
+  function renderObjectManager(objects) {
+    if (!objectEditList) return;
+    if (!objects.length) {
+      objectEditList.innerHTML = '<div class="empty-state">Deze klant heeft nog geen gekoppelde objecten.</div>';
+      return;
+    }
+    objectEditList.innerHTML = objects.map(objectEditCard).join("");
+  }
+
+  async function manageObjects(row) {
+    if (!row || row.dataset.emptyRow || !objectManager) return;
+    activeObjectCustomerRow = row;
+    activeCustomerObjects = [];
+    const customerName = customerNameFromRow(row);
+    objectManager.hidden = false;
+    if (objectManagerTitle) objectManagerTitle.textContent = `Objecten van ${customerName}`;
+    setObjectManagerStatus("Objecten ophalen...");
+    renderObjectManager([]);
+    objectManager.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    if (!window.RoofSignalBackend?.isConfigured || !row.dataset.customerId) {
+      setObjectManagerStatus("Deze klantregel heeft geen databasekoppeling. Objecten kunnen pas worden beheerd nadat de klant in Supabase staat.", "error");
+      return;
+    }
+
+    activeCustomerObjects = await window.RoofSignalBackend.listOrganizationProperties(row.dataset.customerId);
+    renderObjectManager(activeCustomerObjects);
+    refreshCustomerObjectCount(row, activeCustomerObjects);
+    setObjectManagerStatus(activeCustomerObjects.length
+      ? `${activeCustomerObjects.length} object${activeCustomerObjects.length === 1 ? "" : "en"} geladen.`
+      : "Geen gekoppelde objecten gevonden.",
+    activeCustomerObjects.length ? "success" : "");
+  }
+
+  function propertyPayloadFromCard(card) {
+    const value = (field) => card.querySelector(`[data-object-field="${field}"]`)?.value.trim() || "";
+    return {
+      name: value("name") || "Object",
+      address: value("address") || null,
+      postcode: value("postcode") || null,
+      city: value("city") || null,
+      status: value("status") || "active",
+    };
+  }
+
+  async function saveObject(card) {
+    const id = card?.dataset.propertyId;
+    if (!id || !window.RoofSignalBackend?.isConfigured) return;
+    const payload = propertyPayloadFromCard(card);
+    setObjectManagerStatus("Object wordt opgeslagen...");
+    const result = await window.RoofSignalBackend.updateProperty(id, payload);
+    if (!result.ok) {
+      setObjectManagerStatus(result.error?.message || "Object opslaan is mislukt.", "error");
+      return;
+    }
+    activeCustomerObjects = activeCustomerObjects.map((object) => object.id === id ? result.data : object);
+    renderObjectManager(activeCustomerObjects);
+    refreshCustomerObjectCount(activeObjectCustomerRow, activeCustomerObjects);
+    setObjectManagerStatus(`${payload.name} is opgeslagen.`, "success");
+  }
+
+  async function deleteObject(card) {
+    const id = card?.dataset.propertyId;
+    const name = card?.querySelector('[data-object-field="name"]')?.value.trim() || "dit object";
+    if (!id || !window.RoofSignalBackend?.isConfigured) return;
+    if (!confirm(`${name} verwijderen bij deze klant?`)) return;
+    setObjectManagerStatus("Object wordt verwijderd...");
+    const result = await window.RoofSignalBackend.deleteProperty(id);
+    if (!result.ok) {
+      setObjectManagerStatus(result.error?.message || "Object verwijderen is mislukt.", "error");
+      return;
+    }
+    activeCustomerObjects = activeCustomerObjects.filter((object) => object.id !== id);
+    renderObjectManager(activeCustomerObjects);
+    refreshCustomerObjectCount(activeObjectCustomerRow, activeCustomerObjects);
+    setObjectManagerStatus(`${name} is verwijderd.`, "success");
+  }
+
+  function closeObjectManager() {
+    if (!objectManager) return;
+    objectManager.hidden = true;
+    activeObjectCustomerRow = null;
+    activeCustomerObjects = [];
   }
 
   function setPortalNotice(message, tone = "info") {
@@ -728,6 +877,10 @@
     if (action === "focus-role-builder") focusRoleBuilder();
     if (action === "create-offer") createOffer();
     if (action === "create-support-task") createSupportTask();
+    if (action === "manage-objects") manageObjects(rowFor(target));
+    if (action === "save-object") saveObject(target.closest("[data-property-id]"));
+    if (action === "delete-object") deleteObject(target.closest("[data-property-id]"));
+    if (action === "close-object-manager") closeObjectManager();
     if (action === "edit-customer") editCustomer(rowFor(target));
     if (action === "delete-customer") deleteCustomer(rowFor(target));
     if (action === "edit-role") editRole(rowFor(target));

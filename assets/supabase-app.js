@@ -127,13 +127,15 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("organizations")
-      .select("id,name,segment,contact_name,contact_email,contact_phone,address,kvk_number,bank_account,status,notes,created_at,properties(id)")
+      .select("id,name,segment,contact_name,contact_email,contact_phone,address,kvk_number,bank_account,status,notes,created_at,properties(id,deleted_at)")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
     if (error) return [];
     return (data || []).map((organization) => ({
       ...organization,
-      objects: Array.isArray(organization.properties) ? organization.properties.length : 0,
+      objects: Array.isArray(organization.properties)
+        ? organization.properties.filter((property) => !property.deleted_at).length
+        : 0,
     }));
   }
 
@@ -154,7 +156,7 @@
     const { data, error } = await supabase
       .from("properties")
       .insert(properties)
-      .select("id,organization_id,name,address,status,created_at");
+      .select("id,organization_id,name,address,postcode,city,status,created_at");
     return error ? { ok: false, error } : { ok: true, data };
   }
 
@@ -169,6 +171,41 @@
       },
     });
     return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listOrganizationProperties(organizationId) {
+    const supabase = await getClient();
+    if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase
+      .from("properties")
+      .select("id,organization_id,name,address,postcode,city,status,created_at")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+
+  async function updateProperty(id, payload) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase
+      .from("properties")
+      .update(payload)
+      .eq("id", id)
+      .select("id,organization_id,name,address,postcode,city,status,created_at")
+      .single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function deleteProperty(id) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { error } = await supabase
+      .from("properties")
+      .update({ deleted_at: new Date().toISOString(), status: "deleted" })
+      .eq("id", id);
+    return error ? { ok: false, error } : { ok: true };
   }
 
   async function updateOrganization(id, payload) {
@@ -232,6 +269,9 @@
     createOrganization,
     createProperties,
     createPortalCustomer,
+    listOrganizationProperties,
+    updateProperty,
+    deleteProperty,
     updateOrganization,
     deleteOrganization,
     listProfiles,

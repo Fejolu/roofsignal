@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal5">
+  <link rel="stylesheet" href="assets/styles.css?v=portal7">
 </head>
 <body class="portal-body admin">
 <aside class="portal-sidebar">
@@ -108,6 +108,17 @@
           <tr><td>MVGM VvE Beheer</td><td>VvE beheer</td><td>7</td><td>Offerte verzonden</td><td><span class="status-dot yellow">Opvolgen</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
         </tbody>
       </table>
+      <div class="customer-object-manager" data-object-manager hidden>
+        <div class="panel-head compact-head">
+          <div>
+            <span class="eyebrow orange">Objecten</span>
+            <h3 data-object-manager-title>Objecten beheren</h3>
+          </div>
+          <a href="#klanten" data-admin-action="close-object-manager">Sluiten</a>
+        </div>
+        <p class="form-note" data-object-manager-status>Kies een klant om de gekoppelde objecten te beheren.</p>
+        <div class="object-edit-list" data-object-edit-list></div>
+      </div>
     </div>
 
     <aside class="portal-panel" id="planning">
@@ -179,7 +190,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js" defer></script>
-<script src="assets/portal-admin.js" defer></script>
+<script src="assets/supabase-app.js?v=5" defer></script>
+<script src="assets/portal-admin.js?v=2" defer></script>
 </body>
 </html>

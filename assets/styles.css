@@ -1622,6 +1622,80 @@ button { cursor: pointer; }
   font-size: 13px;
 }
 
+.customer-object-manager {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  background: var(--rs-graphite-100);
+}
+
+.customer-object-manager[hidden] {
+  display: none;
+}
+
+.compact-head h3 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+
+.object-edit-list {
+  display: grid;
+  gap: 12px;
+}
+
+.object-edit-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  background: #fff;
+}
+
+.object-edit-fields {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.2fr) minmax(110px, .55fr) minmax(150px, .75fr) minmax(130px, .6fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.object-edit-fields label {
+  display: grid;
+  gap: 7px;
+  font-weight: 900;
+}
+
+.object-edit-fields input,
+.object-edit-fields select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+}
+
+.object-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  padding: 14px;
+  border: 1px dashed var(--rs-line);
+  border-radius: var(--rs-radius);
+  color: var(--rs-graphite-600);
+  background: #fff;
+  font-weight: 800;
+}
+
 .customer-detail-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2795,6 +2869,7 @@ button { cursor: pointer; }
   .address-grid,
   .object-entry,
   .object-entry-fields,
+  .object-edit-fields,
   .object-inspection-preview dl {
     grid-template-columns: 1fr;
   }
