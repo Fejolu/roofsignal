@@ -5,6 +5,8 @@
   const objectList = document.querySelector("[data-object-entry-list]");
   const addObjectButton = document.querySelector("[data-add-object]");
   const objectPreview = document.querySelector("[data-object-preview]");
+  const addressLookupEndpoint = "https://api.pdok.nl/bzk/locatieserver/search/v3_1";
+  const addressLookupStates = [];
   let objectSequence = 0;
 
   function escapeHtml(value) {
@@ -50,6 +52,200 @@
     const streetLine = [parts.street, parts.house_number].filter(Boolean).join(" ");
     const cityLine = [parts.postcode, parts.city].filter(Boolean).join(" ");
     return [streetLine, cityLine].filter(Boolean).join(", ");
+  }
+
+  function normalizePostcode(value) {
+    const compact = String(value || "").replace(/\s+/g, "").toUpperCase();
+    const match = compact.match(/^(\d{4})([A-Z]{2})$/);
+    return match ? `${match[1]} ${match[2]}` : String(value || "").trim().toUpperCase();
+  }
+
+  function readAddressFromFields(fields) {
+    return {
+      street: fields.street?.value.trim() || "",
+      house_number: fields.houseNumber?.value.trim() || "",
+      postcode: normalizePostcode(fields.postcode?.value || ""),
+      city: fields.city?.value.trim() || "",
+    };
+  }
+
+  function hasAddressInput(address) {
+    return Boolean(address.street || address.house_number || address.postcode || address.city);
+  }
+
+  function addressLookupQuery(address) {
+    return [
+      address.street,
+      address.house_number,
+      address.postcode,
+      address.city,
+    ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  function addressFromPdokDoc(doc) {
+    const postcode = normalizePostcode(doc.postcode || "");
+    const houseNumber = String(doc.huis_nlt || [
+      doc.huisnummer,
+      doc.huisletter,
+      doc.huisnummertoevoeging,
+    ].filter(Boolean).join("") || "").trim();
+    return {
+      street: String(doc.straatnaam || doc.openbareruimtenaam || "").trim(),
+      house_number: houseNumber,
+      postcode,
+      city: String(doc.woonplaatsnaam || "").trim(),
+    };
+  }
+
+  function addressFields(container, prefix = "") {
+    const field = (name) => prefix ? `input[name="${prefix}_${name}"]` : `input[name="${name}"]`;
+    return {
+      street: container.querySelector(field("street")),
+      houseNumber: container.querySelector(field("house_number")),
+      postcode: container.querySelector(field("postcode")),
+      city: container.querySelector(field("city")),
+    };
+  }
+
+  function setLookupPanel(state, tone, message, suggestions = []) {
+    state.panel.dataset.statusTone = tone || "";
+    state.suggestions = suggestions;
+    const list = suggestions.length
+      ? `<div class="address-suggestion-list">${suggestions.map((suggestion, index) => (
+        `<button type="button" data-address-suggestion="${index}">${escapeHtml(suggestion.weergavenaam || "Adres")}</button>`
+      )).join("")}</div>`
+      : "";
+    state.panel.innerHTML = `<p>${escapeHtml(message)}</p>${list}`;
+    state.panel.querySelectorAll("[data-address-suggestion]").forEach((button) => {
+      button.addEventListener("click", () => selectAddressSuggestion(state, Number(button.dataset.addressSuggestion)));
+    });
+  }
+
+  async function fetchAddressSuggestions(state) {
+    const address = readAddressFromFields(state.fields);
+    const query = addressLookupQuery(address);
+    state.lastQuery = query;
+
+    if (query.length < 4) {
+      setLookupPanel(state, "", "Typ straat, huisnummer, postcode of plaats om het adres te controleren.");
+      return [];
+    }
+
+    state.controller?.abort();
+    state.controller = new AbortController();
+    setLookupPanel(state, "info", "Adres controleren...");
+
+    try {
+      const params = new URLSearchParams({ q: query, fq: "type:adres", rows: "5" });
+      const response = await fetch(`${addressLookupEndpoint}/suggest?${params}`, {
+        signal: state.controller.signal,
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) throw new Error("Adrescheck is tijdelijk niet beschikbaar.");
+      const payload = await response.json();
+      const suggestions = payload?.response?.docs || [];
+      if (state.lastQuery !== query) return suggestions;
+      if (!suggestions.length) {
+        setLookupPanel(state, "error", "Geen officieel BAG-adres gevonden. Controleer straat, huisnummer, postcode en plaats.");
+        return suggestions;
+      }
+      setLookupPanel(state, "info", "Kies het juiste officiële adres uit de suggesties.", suggestions);
+      return suggestions;
+    } catch (error) {
+      if (error?.name === "AbortError") return [];
+      setLookupPanel(state, "error", error?.message || "Adrescheck is tijdelijk niet beschikbaar.");
+      return [];
+    }
+  }
+
+  function scheduleAddressLookup(state) {
+    window.clearTimeout(state.timer);
+    state.timer = window.setTimeout(() => fetchAddressSuggestions(state), 280);
+  }
+
+  function applyAddressToFields(state, address) {
+    state.suppressInput = true;
+    state.fields.street.value = address.street;
+    state.fields.houseNumber.value = address.house_number;
+    state.fields.postcode.value = address.postcode;
+    state.fields.city.value = address.city;
+    Object.values(state.fields).forEach((field) => field.dispatchEvent(new Event("input", { bubbles: true })));
+    state.suppressInput = false;
+  }
+
+  async function selectAddressSuggestion(state, index) {
+    const suggestion = state.suggestions[index];
+    if (!suggestion?.id) return;
+    setLookupPanel(state, "info", "Officieel adres ophalen...");
+
+    try {
+      const params = new URLSearchParams({ id: suggestion.id });
+      const response = await fetch(`${addressLookupEndpoint}/lookup?${params}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) throw new Error("Adres kon niet worden opgehaald.");
+      const payload = await response.json();
+      const doc = payload?.response?.docs?.[0] || suggestion;
+      const address = addressFromPdokDoc(doc);
+      if (!hasAddressInput(address)) throw new Error("Adresgegevens zijn onvolledig.");
+      applyAddressToFields(state, address);
+      state.valid = true;
+      state.selectedId = suggestion.id;
+      setLookupPanel(state, "success", `Adres gecontroleerd: ${formatAddress(address)}.`);
+    } catch (error) {
+      state.valid = false;
+      setLookupPanel(state, "error", error?.message || "Adres kon niet worden gecontroleerd.");
+    }
+  }
+
+  function initAddressLookup(container, prefix = "") {
+    if (!container) return null;
+    const fields = addressFields(container, prefix);
+    if (!fields.street || !fields.houseNumber || !fields.postcode || !fields.city) return null;
+
+    const panel = document.createElement("div");
+    panel.className = "address-lookup-panel";
+    panel.setAttribute("aria-live", "polite");
+    container.dataset.addressLookup = "";
+    container.append(panel);
+
+    const state = {
+      container,
+      fields,
+      panel,
+      suggestions: [],
+      valid: false,
+      selectedId: "",
+      timer: 0,
+      controller: null,
+      lastQuery: "",
+      suppressInput: false,
+    };
+
+    Object.values(fields).forEach((field) => {
+      field.addEventListener("input", () => {
+        if (state.suppressInput) return;
+        state.valid = false;
+        state.selectedId = "";
+        scheduleAddressLookup(state);
+      });
+    });
+    setLookupPanel(state, "", "Typ straat, huisnummer, postcode of plaats om het adres te controleren.");
+    addressLookupStates.push(state);
+    return state;
+  }
+
+  async function validateAddressLookups() {
+    for (const state of addressLookupStates) {
+      const address = readAddressFromFields(state.fields);
+      if (!hasAddressInput(address)) continue;
+      if (state.valid) continue;
+      await fetchAddressSuggestions(state);
+      setLookupPanel(state, "error", "Kies een officieel BAG-adres uit de suggesties voordat u de klant aanmaakt.", state.suggestions);
+      state.fields.street.focus();
+      return false;
+    }
+    return true;
   }
 
   function readAddress(prefix, data) {
@@ -189,6 +385,7 @@
       '</div>',
     ].join("");
     objectList.append(entry);
+    initAddressLookup(entry.querySelector(".object-entry-fields"), `object_${key}`);
     entry.addEventListener("input", () => updateObjectCardTitle(entry));
     entry.querySelector("[data-select-object]")?.addEventListener("click", () => selectObject(entry));
     selectObject(entry);
@@ -199,6 +396,8 @@
     if (!form) return;
 
     const data = new FormData(form);
+    if (!(await validateAddressLookups())) return;
+
     const contactEmail = String(data.get("contact_email") || "").trim().toLowerCase();
     const emailInput = form.querySelector("input[name='contact_email']");
     emailInput?.setCustomValidity("");
@@ -263,6 +462,7 @@
   }
 
   addObjectButton?.addEventListener("click", () => addObjectEntry());
+  initAddressLookup(form?.querySelector(".address-grid"));
   if (objectList && !objectList.children.length) addObjectEntry();
   form?.addEventListener("submit", submitCustomer);
 })();

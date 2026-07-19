@@ -1675,6 +1675,67 @@ button { cursor: pointer; }
   grid-column: 2;
 }
 
+.address-lookup-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  background: #fff;
+  color: var(--rs-graphite-600);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.address-lookup-panel p {
+  margin: 0;
+}
+
+.address-lookup-panel[data-status-tone="info"] {
+  border-color: rgba(255,90,20,.28);
+  color: var(--rs-graphite-700);
+  background: #fff8f4;
+}
+
+.address-lookup-panel[data-status-tone="success"] {
+  border-color: rgba(35,134,86,.28);
+  color: var(--rs-green);
+  background: rgba(35,134,86,.07);
+}
+
+.address-lookup-panel[data-status-tone="error"] {
+  border-color: rgba(229,57,53,.28);
+  color: var(--rs-red);
+  background: rgba(229,57,53,.07);
+}
+
+.address-suggestion-list {
+  display: grid;
+  gap: 6px;
+}
+
+.address-suggestion-list button {
+  min-height: 40px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 9px 11px;
+  background: #fff;
+  color: var(--rs-graphite-900);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.address-suggestion-list button:hover,
+.address-suggestion-list button:focus-visible {
+  border-color: rgba(255,90,20,.48);
+  outline: none;
+  background: #fff8f4;
+}
+
 .object-builder {
   display: grid;
   gap: 14px;
