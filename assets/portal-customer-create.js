@@ -7,6 +7,7 @@
   const objectPreview = document.querySelector("[data-object-preview]");
   const addressLookupEndpoint = "https://api.pdok.nl/bzk/locatieserver/search/v3_1";
   const addressLookupStates = [];
+  let customerAddressLookupState = null;
   let objectSequence = 0;
 
   function escapeHtml(value) {
@@ -398,6 +399,30 @@
     }
   }
 
+  function copyCustomerAddress(entry, objectLookupState) {
+    if (!form || !entry || !objectLookupState) return;
+    const customerAddress = readAddressFromFields(addressFields(form));
+    if (!hasAddressInput(customerAddress)) {
+      setStatus("Vul eerst het klantadres in voordat u het naar een object overneemt.", "error");
+      form.querySelector('input[name="street"]')?.focus();
+      return;
+    }
+
+    applyAddressToFields(objectLookupState, customerAddress);
+    objectLookupState.valid = Boolean(customerAddressLookupState?.valid);
+    objectLookupState.selectedId = customerAddressLookupState?.selectedId || "";
+    updateObjectCardTitle(entry);
+
+    if (objectLookupState.valid) {
+      setLookupPanel(objectLookupState, "success", `Klantadres overgenomen en gecontroleerd: ${formatAddress(customerAddress)}.`);
+      setStatus("Het gecontroleerde klantadres is overgenomen naar het object.", "success");
+    } else {
+      setLookupPanel(objectLookupState, "info", "Klantadres overgenomen. Kies het officiële BAG-adres uit de suggesties om het te controleren.");
+      scheduleAddressLookup(objectLookupState);
+      setStatus("Klantadres overgenomen. Controleer het adres via de BAG-suggestie bij het object.");
+    }
+  }
+
   function addObjectEntry(initial = {}) {
     if (!objectList) return;
     objectSequence += 1;
@@ -417,13 +442,17 @@
       `<label>Huisnummer<input name="object_${key}_house_number" placeholder="12-48" value="${escapeHtml(initial.house_number || "")}"></label>`,
       `<label>Postcode<input name="object_${key}_postcode" placeholder="7311 AA" value="${escapeHtml(initial.postcode || "")}"></label>`,
       `<label>Plaats<input name="object_${key}_city" placeholder="Apeldoorn" value="${escapeHtml(initial.city || "")}"></label>`,
-      '<div class="object-entry-actions"><button class="inline-button text-danger" type="button" data-remove-object>Object verwijderen</button></div>',
+      '<div class="object-entry-actions">',
+      '<button class="inline-button" type="button" data-copy-customer-address>Klantadres overnemen</button>',
+      '<button class="inline-button text-danger" type="button" data-remove-object>Object verwijderen</button>',
+      '</div>',
       '</div>',
     ].join("");
     objectList.append(entry);
-    initAddressLookup(entry.querySelector(".object-entry-fields"), `object_${key}`);
+    const objectLookupState = initAddressLookup(entry.querySelector(".object-entry-fields"), `object_${key}`);
     entry.addEventListener("input", () => updateObjectCardTitle(entry));
     entry.querySelector("[data-select-object]")?.addEventListener("click", () => selectObject(entry));
+    entry.querySelector("[data-copy-customer-address]")?.addEventListener("click", () => copyCustomerAddress(entry, objectLookupState));
     entry.querySelector("[data-remove-object]")?.addEventListener("click", () => removeObjectEntry(entry));
     selectObject(entry);
   }
@@ -508,7 +537,7 @@
   }
 
   addObjectButton?.addEventListener("click", () => addObjectEntry());
-  initAddressLookup(form?.querySelector(".address-grid"));
+  customerAddressLookupState = initAddressLookup(form?.querySelector(".address-grid"));
   if (objectList && !objectList.children.length) addObjectEntry();
   form?.addEventListener("submit", submitCustomer);
 })();
