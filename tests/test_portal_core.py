@@ -90,5 +90,25 @@ def test_internal_workflows_start_from_a_selected_customer():
     assert 'data-admin-action="manage-customer"' in script
     for action in ("customer-objects", "customer-inspection", "customer-quote", "customer-task"):
         assert f'data-admin-action="{action}"' in portal
-    assert portal.count(' workflow-form"') == 3
+    assert portal.count(' workflow-form"') == 4
     assert "closeWorkflowForms" in script
+
+
+def test_quotes_support_multiple_objects_and_three_products():
+    portal = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    migration = read("supabase/migrations/20260719233000_customer_order_lifecycle.sql")
+    assert "data-quote-object-list" in portal
+    for product in ("quickscan", "object_report", "portfolio_scan"):
+        assert product in script
+        assert product in migration
+    assert "create table if not exists public.quote_items" in migration
+    assert "quote_item_id" in migration
+
+
+def test_selected_customer_opens_complete_dossier():
+    portal = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    assert "data-customer-dossier-overview" in portal
+    for section in ("Objecten", "Offertes", "Inspecties & rapporten", "Planning", "Facturen", "Open acties"):
+        assert f'dossierItems("{section}"' in script

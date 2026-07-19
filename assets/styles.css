@@ -1747,6 +1747,7 @@ button { cursor: pointer; }
 .compact-workflow-form > label { grid-column: span 3; }
 .compact-workflow-form > .btn { grid-column: span 3; }
 .compact-workflow-form > .form-note { grid-column: span 9; align-self: center; margin: 0; }
+.compact-workflow-form > .quote-object-list { grid-column: 1 / -1; }
 .inspection-workspace form > label { grid-column: span 3; }
 .inspection-workspace form > label:has(textarea) { grid-column: span 6; }
 .inspection-workspace form > .btn { grid-column: span 3; }
@@ -1777,6 +1778,23 @@ button { cursor: pointer; }
 .finding-list article { padding: 14px; border: 1px solid #e6e2de; border-radius: 12px; background: #fff; }
 .finding-list article span { display: block; color: #666; margin-top: 4px; }
 
+.quote-object-list { display: grid; gap: 10px; }
+.quote-object-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, .8fr) minmax(220px, 1.2fr) minmax(140px, .55fr);
+  gap: 12px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  background: #fff;
+}
+.quote-object-select { display: flex !important; grid-template-columns: none !important; align-items: center; gap: 10px !important; }
+.quote-object-select input { width: auto; }
+.quote-object-select span,
+.quote-object-select small { display: block; }
+.quote-object-select small { margin-top: 3px; color: var(--rs-graphite-600); font-weight: 500; }
+
 @media (max-width: 900px) {
   .inspection-workspace form,
   .compact-workflow-form { grid-template-columns: 1fr; }
@@ -1787,6 +1805,7 @@ button { cursor: pointer; }
   .inspection-workspace form > .btn,
   .inspection-workspace .wide-field,
   .inspection-workspace form label:has(textarea) { grid-column: auto; }
+  .quote-object-row { grid-template-columns: 1fr; }
   .customer-workspace { grid-template-columns: 1fr; }
   .customer-workspace-actions { justify-content: flex-start; }
 }
@@ -2220,12 +2239,24 @@ button { cursor: pointer; }
 .customer-workspace h3 { margin: 4px 0 6px; font-size: 24px; }
 .customer-workspace p { margin: 0; color: var(--rs-graphite-600); }
 .customer-workspace-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.customer-dossier-overview { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.customer-dossier-overview section { padding: 14px; border: 1px solid var(--rs-line); border-radius: var(--rs-radius); background: #fff; }
+.customer-dossier-overview h4 { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+.customer-dossier-overview h4 span { color: var(--rs-orange); }
+.customer-dossier-overview ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.customer-dossier-overview li { padding-top: 8px; border-top: 1px solid var(--rs-line); }
+.customer-dossier-overview li:first-child { padding-top: 0; border-top: 0; }
+.customer-dossier-overview strong,
+.customer-dossier-overview small { display: block; }
+.customer-dossier-overview small,
+.customer-dossier-overview section > p { color: var(--rs-graphite-600); }
 .workflow-form[hidden],
 .customer-workspace[hidden] { display: none; }
 
 @media (max-width: 900px) {
   .customer-workspace { grid-template-columns: 1fr; }
   .customer-workspace-actions { justify-content: flex-start; }
+  .customer-dossier-overview { grid-template-columns: 1fr; }
 }
 
 .portal-table th,

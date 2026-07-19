@@ -202,7 +202,7 @@
     if (!supabase) return [];
     let query = supabase
       .from("inspections")
-      .select("id,organization_id,property_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at,properties(name,address,postcode,city),organizations(name)")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,appointment_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at,properties(name,address,postcode,city),organizations(name)")
       .order("created_at", { ascending: false });
     if (organizationId) query = query.eq("organization_id", organizationId);
     const { data, error } = await query;
@@ -216,7 +216,7 @@
     const { data, error } = await supabase
       .from("inspections")
       .insert(payload)
-      .select("id,organization_id,property_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,appointment_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at")
       .single();
     return error ? { ok: false, error } : { ok: true, data };
   }
@@ -258,6 +258,43 @@
     const supabase = await getClient();
     if (!supabase) return { ok: false };
     const { data, error } = await supabase.from("quotes").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createQuoteItems(items) {
+    const supabase = await getClient();
+    if (!supabase || !items?.length) return { ok: false };
+    const { data, error } = await supabase.from("quote_items").insert(items).select("*");
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listQuoteItems(quoteId = "") {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    let query = supabase.from("quote_items").select("*,properties(name,address,postcode,city)").order("created_at");
+    if (quoteId) query = query.eq("quote_id", quoteId);
+    const { data, error } = await query;
+    return error ? [] : data || [];
+  }
+
+  async function updateQuote(id, payload) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase.from("quotes").update(payload).eq("id", id).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createAppointment(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("appointments").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createInvoice(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("invoices").insert(payload).select("*").single();
     return error ? { ok: false, error } : { ok: true, data };
   }
 
@@ -366,7 +403,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("invoices")
-      .select("id,organization_id,invoice_number,amount,status,due_date,created_at,organizations(name)")
+      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,created_at,organizations(name)")
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
@@ -377,7 +414,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("quotes")
-      .select("id,organization_id,quote_number,title,amount,status,valid_until,created_at,organizations(name)")
+      .select("id,organization_id,property_id,quote_number,title,amount,status,valid_until,created_at,organizations(name),properties(name)")
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
@@ -388,7 +425,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id,organization_id,property_id,title,starts_at,ends_at,status,notes,created_at,organizations(name),properties(name)")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,title,starts_at,ends_at,status,notes,created_at,organizations(name),properties(name)")
       .order("starts_at", { ascending: true });
     if (error) return [];
     return data || [];
@@ -483,6 +520,11 @@
     createFinding,
     createReport,
     createQuote,
+    createQuoteItems,
+    listQuoteItems,
+    updateQuote,
+    createAppointment,
+    createInvoice,
     listTasks,
     createTask,
     createOrganization,

@@ -43,14 +43,24 @@
   const findingList = document.querySelector("[data-finding-list]");
   const reportForm = document.querySelector("[data-report-create-form]");
   const quoteForm = document.querySelector("[data-quote-create-form]");
+  const quoteScheduleForm = document.querySelector("[data-quote-schedule-form]");
+  const quoteScheduleTitle = document.querySelector("[data-quote-schedule-title]");
   const taskForm = document.querySelector("[data-task-create-form]");
   const customerWorkspace = document.querySelector("[data-customer-workspace]");
   const customerWorkspaceTitle = document.querySelector("[data-customer-workspace-title]");
+  const customerDossierOverview = document.querySelector("[data-customer-dossier-overview]");
   let activeObjectCustomerRow = null;
   let activeCustomerObjects = [];
   let liveOrganizations = [];
   let liveInspections = [];
   let activeInspection = null;
+  let liveAppointments = [];
+  let liveInvoices = [];
+  let liveQuotes = [];
+  let liveQuoteItems = [];
+  let activeQuote = null;
+  let liveTasks = [];
+  let liveReports = [];
   let portalAccess = null;
 
   function saveState() {
@@ -220,6 +230,10 @@
     return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(Number(value || 0));
   }
 
+  function productLabel(value) {
+    return { quickscan: "Quickscan", object_report: "Objectrapportage", portfolio_scan: "Portefeuillescan" }[value] || value || "Inspectie";
+  }
+
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
@@ -227,11 +241,25 @@
       : '<tr data-empty-row><td colspan="3">Geen facturen.</td></tr>';
   }
 
+  function quoteNextAction(quote) {
+    const items = liveQuoteItems.filter((item) => item.quote_id === quote.id);
+    const inspections = liveInspections.filter((item) => item.quote_id === quote.id);
+    const invoice = liveInvoices.find((item) => item.quote_id === quote.id);
+    if (["draft", "sent"].includes(quote.status)) return `<button class="inline-button" data-admin-action="accept-quote" data-quote-id="${escapeHtml(quote.id)}">Akkoord registreren</button>`;
+    if (quote.status !== "accepted") return "-";
+    const unscheduled = items.filter((item) => !inspections.some((inspection) => inspection.quote_item_id === item.id));
+    if (unscheduled.length) return `<button class="inline-button" data-admin-action="schedule-quote" data-quote-id="${escapeHtml(quote.id)}">${unscheduled.length} object${unscheduled.length === 1 ? "" : "en"} plannen</button>`;
+    const openInspection = inspections.find((inspection) => inspection.status !== "delivered");
+    if (openInspection) return `<button class="inline-button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(openInspection.id)}">Inspectie openen</button>`;
+    if (!invoice) return `<button class="inline-button" data-admin-action="invoice-quote" data-quote-id="${escapeHtml(quote.id)}">Factuur aanmaken</button>`;
+    return `Factuur ${escapeHtml(invoice.status || "concept")}`;
+  }
+
   function renderQuotes(quotes = []) {
     if (!offersBody) return;
     offersBody.innerHTML = quotes.length
-      ? quotes.map((quote) => `<tr><td>${escapeHtml(quote.organizations?.name || "-")}</td><td>${escapeHtml(quote.title || quote.quote_number || "Offerte")}</td><td>${escapeHtml(formatMoney(quote.amount))}</td><td>${statusCell(escapeHtml(quote.status || "Concept"), quote.status === "accepted" ? "green" : "yellow")}</td></tr>`).join("")
-      : '<tr data-empty-row><td colspan="4">Geen offertes.</td></tr>';
+      ? quotes.map((quote) => { const items = liveQuoteItems.filter((item) => item.quote_id === quote.id); return `<tr><td>${escapeHtml(quote.organizations?.name || "-")}</td><td>${escapeHtml(items.map((item) => item.properties?.name).filter(Boolean).join(", ") || "-")}</td><td>${escapeHtml(quote.title || quote.quote_number || "Offerte")}</td><td>${escapeHtml(formatMoney(quote.amount))}</td><td>${statusCell(escapeHtml(quote.status || "Concept"), quote.status === "accepted" ? "green" : "yellow")}</td><td>${quoteNextAction(quote)}</td></tr>`; }).join("")
+      : '<tr data-empty-row><td colspan="6">Geen offertes.</td></tr>';
   }
 
   function renderAppointments(appointments = []) {
@@ -258,7 +286,7 @@
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, inspections, invoices, quotes, appointments, tasks] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
       backend.listInspections(),
@@ -266,8 +294,16 @@
       backend.listQuotes(),
       backend.listAppointments(),
       backend.listTasks(),
+      backend.listQuoteItems(),
+      backend.listReports(),
     ]);
     liveOrganizations = customers;
+    liveAppointments = appointments;
+    liveInvoices = invoices;
+    liveQuotes = quotes;
+    liveQuoteItems = quoteItems;
+    liveTasks = tasks;
+    liveReports = reports;
     renderCustomers(customers);
     renderRoles(profiles);
     renderInspections(inspections);
@@ -754,15 +790,40 @@
   }
 
   function closeWorkflowForms(except = null) {
-    [inspectionForm, quoteForm, taskForm].forEach((form) => { if (form && form !== except) form.hidden = true; });
+    [inspectionForm, quoteForm, quoteScheduleForm, taskForm].forEach((form) => { if (form && form !== except) form.hidden = true; });
   }
 
-  function openCustomer(row) {
+  function dossierItems(title, items, emptyMessage) {
+    return `<section><h4>${escapeHtml(title)} <span>${items.length}</span></h4>${items.length ? `<ul>${items.slice(0, 5).map((item) => `<li>${item}</li>`).join("")}</ul>` : `<p>${escapeHtml(emptyMessage)}</p>`}</section>`;
+  }
+
+  async function renderCustomerDossier(organizationId) {
+    if (!customerDossierOverview) return;
+    customerDossierOverview.innerHTML = '<div class="empty-state">Klantdossier laden...</div>';
+    const properties = await window.RoofSignalBackend.listOrganizationProperties(organizationId);
+    const inspections = liveInspections.filter((item) => item.organization_id === organizationId);
+    const quotes = liveQuotes.filter((item) => item.organization_id === organizationId);
+    const invoices = liveInvoices.filter((item) => item.organization_id === organizationId);
+    const appointments = liveAppointments.filter((item) => item.organization_id === organizationId);
+    const tasks = liveTasks.filter((item) => item.organization_id === organizationId && !["completed", "cancelled"].includes(item.status));
+    const reports = liveReports.filter((item) => item.organization_id === organizationId);
+    customerDossierOverview.innerHTML = [
+      dossierItems("Objecten", properties.map((item) => `<strong>${escapeHtml(item.name)}</strong><small>${escapeHtml([item.address, item.postcode, item.city].filter(Boolean).join(", "))}</small>`), "Geen objecten."),
+      dossierItems("Offertes", quotes.map((item) => `<strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(formatMoney(item.amount))} · ${escapeHtml(item.status)}</small>`), "Geen offertes."),
+      dossierItems("Inspecties & rapporten", inspections.map((item) => `<strong>${escapeHtml(item.properties?.name || "Object")}</strong><small>${escapeHtml(item.scope || "Inspectie")} · ${escapeHtml(item.status)}</small>`).concat(reports.map((item) => `<strong>${escapeHtml(item.title)}</strong><small>Rapport · ${escapeHtml(item.status)}</small>`)), "Geen inspecties of rapporten."),
+      dossierItems("Planning", appointments.map((item) => `<strong>${escapeHtml(formatPortalDate(item.starts_at))}</strong><small>${escapeHtml(item.title || "Afspraak")}</small>`), "Niets gepland."),
+      dossierItems("Facturen", invoices.map((item) => `<strong>${escapeHtml(formatMoney(item.amount))}</strong><small>${escapeHtml(item.status || "concept")}</small>`), "Geen facturen."),
+      dossierItems("Open acties", tasks.map((item) => `<strong>${escapeHtml(item.title)}</strong><small>${escapeHtml([item.priority, item.due_at ? formatPortalDate(item.due_at) : ""].filter(Boolean).join(" · "))}</small>`), "Geen open acties."),
+    ].join("");
+  }
+
+  async function openCustomer(row) {
     if (!row?.dataset.customerId || !customerWorkspace) return;
     activeObjectCustomerRow = row;
     customerWorkspace.hidden = false;
     if (customerWorkspaceTitle) customerWorkspaceTitle.textContent = customerNameFromRow(row);
     closeWorkflowForms();
+    await renderCustomerDossier(row.dataset.customerId);
     customerWorkspace.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
@@ -791,22 +852,76 @@
   }
 
   async function loadQuoteObjects(organizationId) {
-    const select = quoteForm?.querySelector('[name="property_id"]');
-    if (!select) return;
+    const list = quoteForm?.querySelector("[data-quote-object-list]");
+    if (!list) return;
     const properties = organizationId ? await window.RoofSignalBackend.listOrganizationProperties(organizationId) : [];
-    select.innerHTML = '<option value="">Geen specifiek object</option>' + properties.map((property) => `<option value="${escapeHtml(property.id)}">${escapeHtml(property.name)}</option>`).join("");
-    select.disabled = !organizationId;
+    const products = '<option value="quickscan">Quickscan</option><option value="object_report" selected>Objectrapportage</option><option value="portfolio_scan">Portefeuillescan</option>';
+    list.innerHTML = properties.length ? properties.map((property) => `<article class="quote-object-row" data-quote-property="${escapeHtml(property.id)}"><label class="quote-object-select"><input type="checkbox" name="selected_property" value="${escapeHtml(property.id)}"><span><strong>${escapeHtml(property.name)}</strong><small>${escapeHtml([property.address, property.postcode, property.city].filter(Boolean).join(", "))}</small></span></label><label>Product<select data-quote-item-field="inspection_product">${products}</select></label><label>Scope<input data-quote-item-field="scope" placeholder="Bouwdelen en onderzoeksvraag"></label><label>Bedrag excl. btw<input data-quote-item-field="amount" type="number" min="0" step="0.01"></label></article>`).join("") : '<div class="empty-state">Deze klant heeft nog geen objecten. Voeg eerst een object toe.</div>';
   }
 
   async function submitQuote(event) {
     event.preventDefault();
     const data = new FormData(quoteForm);
-    const result = await window.RoofSignalBackend.createQuote({ organization_id: data.get("organization_id"), property_id: data.get("property_id") || null, title: String(data.get("title") || "").trim(), amount: Number(data.get("amount") || 0), status: "draft" });
     const status = quoteForm.querySelector("[data-quote-create-status]");
+    const selectedRows = [...quoteForm.querySelectorAll("[data-quote-property]")].filter((row) => row.querySelector('[name="selected_property"]').checked);
+    if (!selectedRows.length) return setWorkflowStatus(status, "Selecteer minimaal één object.", "error");
+    const itemValues = selectedRows.map((row) => ({ property_id: row.dataset.quoteProperty, inspection_product: row.querySelector('[data-quote-item-field="inspection_product"]').value, scope: row.querySelector('[data-quote-item-field="scope"]').value.trim() || null, amount: Number(row.querySelector('[data-quote-item-field="amount"]').value || 0) }));
+    if (itemValues.some((item) => item.amount <= 0)) return setWorkflowStatus(status, "Vul voor ieder geselecteerd object een bedrag in.", "error");
+    const total = itemValues.reduce((sum, item) => sum + item.amount, 0);
+    const result = await window.RoofSignalBackend.createQuote({ organization_id: data.get("organization_id"), title: String(data.get("title") || "").trim(), amount: total, status: "draft" });
     if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Offerte opslaan is mislukt.", "error");
+    const items = await window.RoofSignalBackend.createQuoteItems(itemValues.map((item) => ({ ...item, quote_id: result.data.id, organization_id: data.get("organization_id") })));
+    if (!items.ok) return setWorkflowStatus(status, items.error?.message || "Objectregels opslaan is mislukt.", "error");
     quoteForm.reset(); await loadQuoteObjects("");
-    setWorkflowStatus(status, "Conceptofferte is opgeslagen.", "success");
-    renderQuotes(await window.RoofSignalBackend.listQuotes());
+    setWorkflowStatus(status, `Conceptofferte met ${itemValues.length} object${itemValues.length === 1 ? "" : "en"} is opgeslagen.`, "success");
+    await loadLiveAdminData();
+  }
+
+  async function acceptQuote(id) {
+    const result = await window.RoofSignalBackend.updateQuote(id, { status: "accepted" });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Offerte bijwerken is mislukt.", "error");
+    setPortalNotice("Akkoord is geregistreerd. De inspectiedatum kan nu worden gepland.", "success");
+    await loadLiveAdminData();
+  }
+
+  function openQuoteSchedule(id) {
+    activeQuote = liveQuotes.find((quote) => quote.id === id) || null;
+    if (!activeQuote || !quoteScheduleForm) return;
+    closeWorkflowForms(quoteScheduleForm);
+    quoteScheduleForm.hidden = false;
+    const select = quoteScheduleForm.querySelector('[name="quote_item_id"]');
+    const unscheduled = liveQuoteItems.filter((item) => item.quote_id === id && !liveInspections.some((inspection) => inspection.quote_item_id === item.id));
+    select.innerHTML = '<option value="">Selecteer object</option>' + unscheduled.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.properties?.name || "Object")} · ${escapeHtml(productLabel(item.inspection_product))}</option>`).join("");
+    if (quoteScheduleTitle) quoteScheduleTitle.textContent = `${activeQuote.organizations?.name || "Klant"} · inspectie plannen`;
+    quoteScheduleForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function submitQuoteSchedule(event) {
+    event.preventDefault(); if (!activeQuote) return;
+    const data = new FormData(quoteScheduleForm);
+    const startsAt = new Date(String(data.get("starts_at")));
+    const endsAt = new Date(startsAt.getTime() + Number(data.get("duration_hours") || 2) * 3600000);
+    const status = quoteScheduleForm.querySelector("[data-quote-schedule-status]");
+    const quoteItem = liveQuoteItems.find((item) => item.id === data.get("quote_item_id"));
+    if (!quoteItem) return setWorkflowStatus(status, "Selecteer een object uit de offerte.", "error");
+    const appointment = await window.RoofSignalBackend.createAppointment({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, title: `${productLabel(quoteItem.inspection_product)} · ${quoteItem.properties?.name || "Object"}`, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "planned" });
+    if (!appointment.ok) return setWorkflowStatus(status, appointment.error?.message || "Planning opslaan is mislukt.", "error");
+    const inspection = await window.RoofSignalBackend.createInspection({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, appointment_id: appointment.data.id, scope: [productLabel(quoteItem.inspection_product), quoteItem.scope].filter(Boolean).join(" · "), scheduled_at: startsAt.toISOString(), status: "planned" });
+    if (!inspection.ok) return setWorkflowStatus(status, inspection.error?.message || "Inspectie aanmaken is mislukt.", "error");
+    quoteScheduleForm.reset(); quoteScheduleForm.hidden = true;
+    setPortalNotice("De datum is gepland en de inspectie is aangemaakt.", "success");
+    await loadLiveAdminData();
+  }
+
+  async function invoiceQuote(id) {
+    const quote = liveQuotes.find((item) => item.id === id);
+    const inspections = liveInspections.filter((item) => item.quote_id === id);
+    if (!quote || !inspections.length || inspections.some((inspection) => inspection.status !== "delivered")) return;
+    const due = new Date(); due.setDate(due.getDate() + 30);
+    const result = await window.RoofSignalBackend.createInvoice({ organization_id: quote.organization_id, quote_id: quote.id, amount: quote.amount, status: "draft", due_date: due.toISOString().slice(0, 10) });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Factuur aanmaken is mislukt.", "error");
+    setPortalNotice("Conceptfactuur is aangemaakt vanuit de afgeronde inspectie.", "success");
+    await loadLiveAdminData();
   }
 
   async function submitTask(event) {
@@ -860,7 +975,7 @@
     if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Rapport publiceren is mislukt.", "error");
     await window.RoofSignalBackend.updateInspection(activeInspection.id, { status: "delivered", inspected_at: activeInspection.inspected_at || new Date().toISOString() });
     reportForm.reset(); setWorkflowStatus(inspectionWorkspaceStatus, "Rapport is gepubliceerd in het klantenportaal.", "success");
-    renderInspections(await window.RoofSignalBackend.listInspections());
+    await loadLiveAdminData();
   }
 
   function setAiAnswer(title, body) {
@@ -1365,6 +1480,9 @@
     if (action === "customer-quote") openCustomerWorkflow("quote");
     if (action === "customer-task") openCustomerWorkflow("task");
     if (action === "open-inspection") openInspection(target.dataset.inspectionId);
+    if (action === "accept-quote") acceptQuote(target.dataset.quoteId);
+    if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
+    if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
     if (action === "manage-objects") manageObjects(rowFor(target));
     if (action === "save-object") saveObject(target.closest("[data-property-id]"));
     if (action === "delete-object") deleteObject(target.closest("[data-property-id]"));
@@ -1383,6 +1501,7 @@
   inspectionForm?.addEventListener("submit", createInspection);
   quoteForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadQuoteObjects(event.target.value));
   quoteForm?.addEventListener("submit", submitQuote);
+  quoteScheduleForm?.addEventListener("submit", submitQuoteSchedule);
   taskForm?.addEventListener("submit", submitTask);
   inspectionStatusForm?.addEventListener("submit", submitInspectionStatus);
   findingForm?.addEventListener("submit", submitFinding);
