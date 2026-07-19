@@ -44,6 +44,8 @@
   const reportForm = document.querySelector("[data-report-create-form]");
   const quoteForm = document.querySelector("[data-quote-create-form]");
   const taskForm = document.querySelector("[data-task-create-form]");
+  const customerWorkspace = document.querySelector("[data-customer-workspace]");
+  const customerWorkspaceTitle = document.querySelector("[data-customer-workspace-title]");
   let activeObjectCustomerRow = null;
   let activeCustomerObjects = [];
   let liveOrganizations = [];
@@ -115,7 +117,7 @@
   }
 
   function customerActions() {
-    return '<div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="manage-objects">Objecten</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
+    return '<div class="table-actions"><a href="#klanten" data-admin-action="manage-customer">Open klant</a><a href="portal-klant.html">Klantweergave</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
   }
 
   function customerRow(customer) {
@@ -350,11 +352,6 @@
       if (row.dataset.emptyRow) return;
       row.dataset.customerKey = customerKey(customerNameFromRow(row));
       if (!row.dataset.search) row.dataset.search = row.textContent;
-      const actions = row.querySelector(".table-actions");
-      if (actions && !actions.querySelector("[data-admin-action='manage-objects']")) {
-        const takeover = actions.querySelector("a[href^='portal-klant']");
-        takeover?.insertAdjacentHTML("afterend", '<a href="#klanten" data-admin-action="manage-objects">Objecten</a>');
-      }
     });
   }
 
@@ -747,6 +744,39 @@
   function createOffer() {
     quoteForm?.scrollIntoView({ behavior: "smooth", block: "center" });
     quoteForm?.querySelector('[name="organization_id"]')?.focus();
+  }
+
+  function selectOrganizationInForm(form, organizationId) {
+    const select = form?.querySelector('[name="organization_id"]');
+    if (!select) return;
+    select.value = organizationId || "";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function closeWorkflowForms(except = null) {
+    [inspectionForm, quoteForm, taskForm].forEach((form) => { if (form && form !== except) form.hidden = true; });
+  }
+
+  function openCustomer(row) {
+    if (!row?.dataset.customerId || !customerWorkspace) return;
+    activeObjectCustomerRow = row;
+    customerWorkspace.hidden = false;
+    if (customerWorkspaceTitle) customerWorkspaceTitle.textContent = customerNameFromRow(row);
+    closeWorkflowForms();
+    customerWorkspace.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function openCustomerWorkflow(type) {
+    const organizationId = activeObjectCustomerRow?.dataset.customerId;
+    if (!organizationId) return setPortalNotice("Selecteer eerst een klant.", "error");
+    if (type === "objects") return manageObjects(activeObjectCustomerRow);
+    const target = { inspection: inspectionForm, quote: quoteForm, task: taskForm }[type];
+    if (!target) return;
+    closeWorkflowForms(target);
+    target.hidden = false;
+    selectOrganizationInForm(target, organizationId);
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.querySelector("input:not([type='hidden']), select")?.focus();
   }
 
   function createSupportTask() {
@@ -1329,6 +1359,11 @@
     if (action === "focus-role-builder") focusRoleBuilder();
     if (action === "create-offer") createOffer();
     if (action === "create-support-task") createSupportTask();
+    if (action === "manage-customer") openCustomer(rowFor(target));
+    if (action === "customer-objects") openCustomerWorkflow("objects");
+    if (action === "customer-inspection") openCustomerWorkflow("inspection");
+    if (action === "customer-quote") openCustomerWorkflow("quote");
+    if (action === "customer-task") openCustomerWorkflow("task");
     if (action === "open-inspection") openInspection(target.dataset.inspectionId);
     if (action === "manage-objects") manageObjects(rowFor(target));
     if (action === "save-object") saveObject(target.closest("[data-property-id]"));

@@ -81,3 +81,14 @@ def test_customer_portal_uses_customer_focused_dashboard_and_copy():
     assert "Nieuw object toevoegen" not in portal
     for label in ("Objecten", "Inspecties", "Rapporten", "Bevindingen"):
         assert f"<span>{label}</span>" in portal
+
+
+def test_internal_workflows_start_from_a_selected_customer():
+    portal = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    assert "data-customer-workspace" in portal
+    assert 'data-admin-action="manage-customer"' in script
+    for action in ("customer-objects", "customer-inspection", "customer-quote", "customer-task"):
+        assert f'data-admin-action="{action}"' in portal
+    assert portal.count(' workflow-form"') == 3
+    assert "closeWorkflowForms" in script

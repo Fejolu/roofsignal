@@ -1787,6 +1787,8 @@ button { cursor: pointer; }
   .inspection-workspace form > .btn,
   .inspection-workspace .wide-field,
   .inspection-workspace form label:has(textarea) { grid-column: auto; }
+  .customer-workspace { grid-template-columns: 1fr; }
+  .customer-workspace-actions { justify-content: flex-start; }
 }
 
 .inspection-create-form .form-section-head,
@@ -2202,6 +2204,29 @@ button { cursor: pointer; }
 
 .portal-table tbody tr:hover { background: #fffaf7; }
 .portal-table tbody tr:last-child td { border-bottom: 0; }
+
+.customer-workspace {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 77, 20, .28);
+  border-radius: var(--rs-radius);
+  background: #fffaf7;
+}
+
+.customer-workspace h3 { margin: 4px 0 6px; font-size: 24px; }
+.customer-workspace p { margin: 0; color: var(--rs-graphite-600); }
+.customer-workspace-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.workflow-form[hidden],
+.customer-workspace[hidden] { display: none; }
+
+@media (max-width: 900px) {
+  .customer-workspace { grid-template-columns: 1fr; }
+  .customer-workspace-actions { justify-content: flex-start; }
+}
 
 .portal-table th,
 .portal-table td {
