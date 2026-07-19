@@ -15,6 +15,44 @@
     rapportage: "Rapportage",
     customer: "Klant",
   };
+  const inspectionDepths = {
+    basis: {
+      label: "Basis", price: 395,
+      coverage: {
+        "Dakbedekking": ["Gebroken, verschoven of ontbrekende dakpannen", "Gescheurde leien", "Losliggende bitumen", "Beschadigde dakbedekking"],
+        "Nok": ["Losliggende nokvorsten", "Gescheurde mortel", "Ontbrekende bevestigingen", "Mosvorming"],
+        "Kilgoten": ["Verstoppingen", "Vuilophoping", "Corrosie", "Scheuren"],
+        "Aansluitingen": ["Loodwerk", "Muurlood", "Dakdoorvoeren", "Ventilatiepijpen", "Ontluchtingen"],
+        "Dakkapellen": ["Houtrot", "Lekkagesporen", "Los lood", "Beschadigde bekleding"],
+        "Dakveiligheid": ["Losliggende onderdelen", "Vallende elementen"],
+        "Metselwerk": ["Scheuren", "Losse of verweerde stenen", "Vorstschade"],
+        "Voegwerk": ["Uitgesleten of gescheurde voegen", "Los voegwerk"],
+        "Gevelvervorming": ["Doorbuiging", "Uitbuiken", "Verzakking"],
+        "Geveldetails": ["Lateien", "Rollagen", "Siermetselwerk", "Ornamenten"],
+        "Vocht": ["Uitbloei", "Groene aanslag", "Vochtsporen"],
+        "Rapportage": ["20-40 bewijsfoto's", "Samenvatting", "Direct aanpakken", "Binnen 1-3 jaar", "Monitoren"],
+      },
+    },
+    plus: {
+      label: "Plus", price: 595,
+      coverage: {
+        "Alles uit Basis": [],
+        "Schoorstenen": ["Metselwerk: losse stenen en scheuren", "Voegwerk: verweerd en uitgesleten", "Lood: gescheurd en los", "Dekplaat: scheuren en losliggend", "Veiligheid: vallende onderdelen"],
+        "Goten": ["Verstopping door bladeren, mos of takken", "Stagnerend water en verzakkingen", "Corrosie, scheuren en lekkagepunten", "Losse of verbogen beugels"],
+        "Houtwerk": ["Kozijnen: houtrot en open verbindingen", "Daklijsten: aantasting en verwering", "Windveren: scheuren en rot", "Schilderwerk: bladderen en kaal hout"],
+        "Onderhoudsadvies": ["Komend jaar", "1-3 jaar", "3-5 jaar", "Kostenbandbreedtes en maatregelen"],
+      },
+    },
+    premium: {
+      label: "Premium", price: 995,
+      coverage: {
+        "Alles uit Plus": [],
+        "Thermische scan": ["Warmtelekken bij dak, gevel en kozijnen", "Natte isolatie in dak- en gevelpakket", "Hotspots en defecte zonnecellen", "Koude natte plekken"],
+        "MJOP-indicatie": ["Conditie per onderdeel", "Verwachte termijn", "Rood: veiligheid of lekkage", "Oranje: waardevermindering", "Groen: cosmetisch"],
+        "Herstelbegroting": ["Indicatie per hoofdonderdeel", "Kostenbandbreedtes voor schilderwerk, voegwerk en dakrenovatie"],
+      },
+    },
+  };
 
   const customersBody = document.querySelector("#klanten tbody");
   const rolesBody = document.querySelector(".role-table tbody");
@@ -61,6 +99,7 @@
   let activeQuote = null;
   let liveTasks = [];
   let liveReports = [];
+  let liveUpgradeRequests = [];
   let portalAccess = null;
 
   function saveState() {
@@ -234,6 +273,20 @@
     return { quickscan: "Quickscan", object_report: "Objectrapportage", portfolio_scan: "Portefeuillescan" }[value] || value || "Inspectie";
   }
 
+  function depthSnapshot(variant, depth) {
+    const selected = inspectionDepths[depth] || inspectionDepths.basis;
+    return { variant, variant_label: productLabel(variant), depth, depth_label: selected.label, list_price_ex_vat: selected.price, currency: "EUR", coverage: selected.coverage };
+  }
+
+  function updateQuoteDepth(row) {
+    const depth = row?.querySelector('[data-quote-item-field="inspection_depth"]')?.value || "basis";
+    const selected = inspectionDepths[depth];
+    const amount = row?.querySelector('[data-quote-item-field="amount"]');
+    const summary = row?.querySelector("[data-quote-depth-summary]");
+    if (amount) amount.value = String(selected.price);
+    if (summary) summary.textContent = `${selected.label} · ${Object.keys(selected.coverage).join(", ")}.`;
+  }
+
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
@@ -286,7 +339,7 @@
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
       backend.listInspections(),
@@ -296,6 +349,7 @@
       backend.listTasks(),
       backend.listQuoteItems(),
       backend.listReports(),
+      backend.listUpgradeRequests(),
     ]);
     liveOrganizations = customers;
     liveAppointments = appointments;
@@ -304,6 +358,7 @@
     liveQuoteItems = quoteItems;
     liveTasks = tasks;
     liveReports = reports;
+    liveUpgradeRequests = upgrades;
     renderCustomers(customers);
     renderRoles(profiles);
     renderInspections(inspections);
@@ -806,6 +861,7 @@
     const invoices = liveInvoices.filter((item) => item.organization_id === organizationId);
     const appointments = liveAppointments.filter((item) => item.organization_id === organizationId);
     const tasks = liveTasks.filter((item) => item.organization_id === organizationId && !["completed", "cancelled"].includes(item.status));
+    const upgrades = liveUpgradeRequests.filter((item) => item.organization_id === organizationId && !["activated", "cancelled"].includes(item.status));
     const reports = liveReports.filter((item) => item.organization_id === organizationId);
     customerDossierOverview.innerHTML = [
       dossierItems("Objecten", properties.map((item) => `<strong>${escapeHtml(item.name)}</strong><small>${escapeHtml([item.address, item.postcode, item.city].filter(Boolean).join(", "))}</small>`), "Geen objecten."),
@@ -813,7 +869,7 @@
       dossierItems("Inspecties & rapporten", inspections.map((item) => `<strong>${escapeHtml(item.properties?.name || "Object")}</strong><small>${escapeHtml(item.scope || "Inspectie")} · ${escapeHtml(item.status)}</small>`).concat(reports.map((item) => `<strong>${escapeHtml(item.title)}</strong><small>Rapport · ${escapeHtml(item.status)}</small>`)), "Geen inspecties of rapporten."),
       dossierItems("Planning", appointments.map((item) => `<strong>${escapeHtml(formatPortalDate(item.starts_at))}</strong><small>${escapeHtml(item.title || "Afspraak")}</small>`), "Niets gepland."),
       dossierItems("Facturen", invoices.map((item) => `<strong>${escapeHtml(formatMoney(item.amount))}</strong><small>${escapeHtml(item.status || "concept")}</small>`), "Geen facturen."),
-      dossierItems("Open acties", tasks.map((item) => `<strong>${escapeHtml(item.title)}</strong><small>${escapeHtml([item.priority, item.due_at ? formatPortalDate(item.due_at) : ""].filter(Boolean).join(" · "))}</small>`), "Geen open acties."),
+      dossierItems("Open acties", tasks.map((item) => `<strong>${escapeHtml(item.title)}</strong><small>${escapeHtml([item.priority, item.due_at ? formatPortalDate(item.due_at) : ""].filter(Boolean).join(" · "))}</small>`).concat(upgrades.map((item) => `<strong>Upgrade ${escapeHtml(inspectionDepths[item.requested_depth]?.label || item.requested_depth)}</strong><small>${escapeHtml(item.quote_items?.properties?.name || "Object")} · ${escapeHtml(formatMoney(item.price_ex_vat))} excl. btw</small><button class="inline-button" data-admin-action="activate-upgrade" data-upgrade-id="${escapeHtml(item.id)}" data-quote-item-id="${escapeHtml(item.quote_item_id)}" data-inspection-product="${escapeHtml(item.quote_items?.inspection_product || "object_report")}" data-requested-depth="${escapeHtml(item.requested_depth)}">Betaling registreren en activeren</button>`)), "Geen open acties."),
     ].join("");
   }
 
@@ -856,7 +912,8 @@
     if (!list) return;
     const properties = organizationId ? await window.RoofSignalBackend.listOrganizationProperties(organizationId) : [];
     const products = '<option value="quickscan">Quickscan</option><option value="object_report" selected>Objectrapportage</option><option value="portfolio_scan">Portefeuillescan</option>';
-    list.innerHTML = properties.length ? properties.map((property) => `<article class="quote-object-row" data-quote-property="${escapeHtml(property.id)}"><label class="quote-object-select"><input type="checkbox" name="selected_property" value="${escapeHtml(property.id)}"><span><strong>${escapeHtml(property.name)}</strong><small>${escapeHtml([property.address, property.postcode, property.city].filter(Boolean).join(", "))}</small></span></label><label>Product<select data-quote-item-field="inspection_product">${products}</select></label><label>Scope<input data-quote-item-field="scope" placeholder="Bouwdelen en onderzoeksvraag"></label><label>Bedrag excl. btw<input data-quote-item-field="amount" type="number" min="0" step="0.01"></label></article>`).join("") : '<div class="empty-state">Deze klant heeft nog geen objecten. Voeg eerst een object toe.</div>';
+    const depths = '<option value="basis">Basis · €395</option><option value="plus">Plus · €595</option><option value="premium">Premium · €995</option>';
+    list.innerHTML = properties.length ? properties.map((property) => `<article class="quote-object-row" data-quote-property="${escapeHtml(property.id)}"><label class="quote-object-select"><input type="checkbox" name="selected_property" value="${escapeHtml(property.id)}"><span><strong>${escapeHtml(property.name)}</strong><small>${escapeHtml([property.address, property.postcode, property.city].filter(Boolean).join(", "))}</small></span></label><label>Variant<select data-quote-item-field="inspection_product">${products}</select></label><label>Diepte<select data-quote-item-field="inspection_depth">${depths}</select></label><label>Scope<input data-quote-item-field="scope" placeholder="Aanvullende onderzoeksvraag"></label><label>Bedrag excl. btw<input data-quote-item-field="amount" type="number" min="0" step="0.01" value="395"></label><p class="quote-depth-summary" data-quote-depth-summary>Basis · dak, gevels, 20-40 bewijsfoto's en aandachtspunten.</p></article>`).join("") : '<div class="empty-state">Deze klant heeft nog geen objecten. Voeg eerst een object toe.</div>';
   }
 
   async function submitQuote(event) {
@@ -865,7 +922,7 @@
     const status = quoteForm.querySelector("[data-quote-create-status]");
     const selectedRows = [...quoteForm.querySelectorAll("[data-quote-property]")].filter((row) => row.querySelector('[name="selected_property"]').checked);
     if (!selectedRows.length) return setWorkflowStatus(status, "Selecteer minimaal één object.", "error");
-    const itemValues = selectedRows.map((row) => ({ property_id: row.dataset.quoteProperty, inspection_product: row.querySelector('[data-quote-item-field="inspection_product"]').value, scope: row.querySelector('[data-quote-item-field="scope"]').value.trim() || null, amount: Number(row.querySelector('[data-quote-item-field="amount"]').value || 0) }));
+    const itemValues = selectedRows.map((row) => { const inspection_product = row.querySelector('[data-quote-item-field="inspection_product"]').value; const inspection_depth = row.querySelector('[data-quote-item-field="inspection_depth"]').value; return { property_id: row.dataset.quoteProperty, inspection_product, inspection_depth, scope: row.querySelector('[data-quote-item-field="scope"]').value.trim() || null, amount: Number(row.querySelector('[data-quote-item-field="amount"]').value || 0), scope_snapshot: depthSnapshot(inspection_product, inspection_depth) }; });
     if (itemValues.some((item) => item.amount <= 0)) return setWorkflowStatus(status, "Vul voor ieder geselecteerd object een bedrag in.", "error");
     const total = itemValues.reduce((sum, item) => sum + item.amount, 0);
     const result = await window.RoofSignalBackend.createQuote({ organization_id: data.get("organization_id"), title: String(data.get("title") || "").trim(), amount: total, status: "draft" });
@@ -891,7 +948,7 @@
     quoteScheduleForm.hidden = false;
     const select = quoteScheduleForm.querySelector('[name="quote_item_id"]');
     const unscheduled = liveQuoteItems.filter((item) => item.quote_id === id && !liveInspections.some((inspection) => inspection.quote_item_id === item.id));
-    select.innerHTML = '<option value="">Selecteer object</option>' + unscheduled.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.properties?.name || "Object")} · ${escapeHtml(productLabel(item.inspection_product))}</option>`).join("");
+    select.innerHTML = '<option value="">Selecteer object</option>' + unscheduled.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.properties?.name || "Object")} · ${escapeHtml(productLabel(item.inspection_product))} · ${escapeHtml(inspectionDepths[item.inspection_depth]?.label || "Basis")}</option>`).join("");
     if (quoteScheduleTitle) quoteScheduleTitle.textContent = `${activeQuote.organizations?.name || "Klant"} · inspectie plannen`;
     quoteScheduleForm.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -904,9 +961,10 @@
     const status = quoteScheduleForm.querySelector("[data-quote-schedule-status]");
     const quoteItem = liveQuoteItems.find((item) => item.id === data.get("quote_item_id"));
     if (!quoteItem) return setWorkflowStatus(status, "Selecteer een object uit de offerte.", "error");
-    const appointment = await window.RoofSignalBackend.createAppointment({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, title: `${productLabel(quoteItem.inspection_product)} · ${quoteItem.properties?.name || "Object"}`, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "planned" });
+    const depthLabel = inspectionDepths[quoteItem.inspection_depth]?.label || "Basis";
+    const appointment = await window.RoofSignalBackend.createAppointment({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, title: `${productLabel(quoteItem.inspection_product)} ${depthLabel} · ${quoteItem.properties?.name || "Object"}`, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "planned" });
     if (!appointment.ok) return setWorkflowStatus(status, appointment.error?.message || "Planning opslaan is mislukt.", "error");
-    const inspection = await window.RoofSignalBackend.createInspection({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, appointment_id: appointment.data.id, scope: [productLabel(quoteItem.inspection_product), quoteItem.scope].filter(Boolean).join(" · "), scheduled_at: startsAt.toISOString(), status: "planned" });
+    const inspection = await window.RoofSignalBackend.createInspection({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, appointment_id: appointment.data.id, scope: [`${productLabel(quoteItem.inspection_product)} ${depthLabel}`, quoteItem.scope].filter(Boolean).join(" · "), scheduled_at: startsAt.toISOString(), status: "planned" });
     if (!inspection.ok) return setWorkflowStatus(status, inspection.error?.message || "Inspectie aanmaken is mislukt.", "error");
     quoteScheduleForm.reset(); quoteScheduleForm.hidden = true;
     setPortalNotice("De datum is gepland en de inspectie is aangemaakt.", "success");
@@ -962,7 +1020,7 @@
   async function submitFinding(event) {
     event.preventDefault(); if (!activeInspection) return;
     const data = new FormData(findingForm);
-    const result = await window.RoofSignalBackend.createFinding({ organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, title: String(data.get("title") || "").trim(), building_element: String(data.get("building_element") || "").trim() || null, priority: data.get("priority"), condition_score: data.get("condition_score") ? Number(data.get("condition_score")) : null, recommendation: String(data.get("recommendation") || "").trim() || null, source: "manual" });
+    const result = await window.RoofSignalBackend.createFinding({ organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, title: String(data.get("title") || "").trim(), building_element: String(data.get("building_element") || "").trim() || null, priority: data.get("priority"), required_depth: data.get("required_depth") || "basis", condition_score: data.get("condition_score") ? Number(data.get("condition_score")) : null, recommendation: String(data.get("recommendation") || "").trim() || null, source: "manual" });
     if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Bevinding opslaan is mislukt.", "error");
     findingForm.reset(); renderFindings(await window.RoofSignalBackend.listFindings(activeInspection.id));
     setWorkflowStatus(inspectionWorkspaceStatus, "Bevinding is vastgelegd.", "success");
@@ -1307,6 +1365,33 @@
     if (conditionBody) conditionBody.innerHTML = findings.length ? findings.map((finding) => `<tr><th>${escapeHtml(finding.building_element || "Bevinding")}</th><td>${escapeHtml(finding.condition_score || finding.priority || "Vastgelegd")}</td></tr>`).join("") : '<tr><td colspan="2">Geen conditiedata beschikbaar.</td></tr>';
   }
 
+  function renderCustomerEntitlements(quoteItems = []) {
+    const list = document.querySelector(".entitlement-list");
+    if (!list) return;
+    const prices = { basis: 395, plus: 595, premium: 995 };
+    list.innerHTML = quoteItems.length ? quoteItems.map((item) => {
+      const current = item.inspection_depth || "basis";
+      const upgrades = current === "basis" ? [["plus", 200], ["premium", 600]] : current === "plus" ? [["premium", 400]] : [];
+      return `<article class="entitlement-card"><span class="status-pill demo">${escapeHtml(inspectionDepths[current]?.label || "Basis")}</span><strong>${escapeHtml(item.properties?.name || "Object")}</strong><p>${escapeHtml(productLabel(item.inspection_product))} · gekocht voor ${escapeHtml(formatMoney(prices[current]))} excl. btw</p><small>De inspectie is op Premium-niveau opgenomen. U ziet alleen de gekochte datalaag.</small>${upgrades.length ? `<div class="entitlement-actions">${upgrades.map(([depth, price]) => `<button class="inline-button" type="button" data-portal-action="request-upgrade" data-quote-item-id="${escapeHtml(item.id)}" data-current-depth="${escapeHtml(current)}" data-requested-depth="${depth}" data-upgrade-price="${price}">Ontgrendel ${inspectionDepths[depth].label} · ${formatMoney(price)} excl. btw</button>`).join("")}</div>` : '<div class="entitlement-complete">Premium-data volledig ontgrendeld</div>'}</article>`;
+    }).join("") : emptyState("Nog geen inspectieproduct gekoppeld.");
+  }
+
+  async function requestUpgrade(target) {
+    const result = await window.RoofSignalBackend.createUpgradeRequest({ organization_id: portalAccess?.profile?.organization_id, quote_item_id: target.dataset.quoteItemId, current_depth: target.dataset.currentDepth, requested_depth: target.dataset.requestedDepth, price_ex_vat: Number(target.dataset.upgradePrice) });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Upgrade aanvragen is mislukt.", "error");
+    target.disabled = true;
+    setPortalNotice(`Upgrade naar ${inspectionDepths[target.dataset.requestedDepth]?.label} is aangevraagd. RoofSignal neemt contact op voor betaling en activatie.`, "success");
+  }
+
+  async function activateUpgrade(target) {
+    if (!confirm("Bevestig dat de betaling is ontvangen en activeer deze datalaag.")) return;
+    const result = await window.RoofSignalBackend.activateUpgradeRequest(target.dataset.upgradeId, target.dataset.quoteItemId, target.dataset.requestedDepth, depthSnapshot(target.dataset.inspectionProduct, target.dataset.requestedDepth));
+    if (!result.ok) return setPortalNotice(result.error?.message || "Upgrade activeren is mislukt.", "error");
+    setPortalNotice("Betaling is geregistreerd en de extra datalaag is geactiveerd.", "success");
+    await loadLiveAdminData();
+    if (activeObjectCustomerRow) await renderCustomerDossier(activeObjectCustomerRow.dataset.customerId);
+  }
+
   function renderCustomerAppointments(appointments) {
     const list = document.querySelector("#planning .timeline-list");
     if (!list || !appointments.length) return;
@@ -1351,17 +1436,19 @@
       if (account) account.textContent = organization.name;
     }
 
-    const [properties, inspections, invoices, appointments, reports] = await Promise.all([
+    const [properties, inspections, invoices, appointments, reports, quoteItems] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
       backend.listInspections(organizationId),
       backend.listOrganizationInvoices(organizationId),
       backend.listOrganizationAppointments(organizationId),
       backend.listOrganizationReports(organizationId),
+      backend.listQuoteItems(),
     ]);
     const findings = (await Promise.all(inspections.map((inspection) => backend.listFindings(inspection.id)))).flat();
     renderCustomerProperties(properties);
     renderCustomerInspections(inspections, properties, reports);
     renderCustomerFindings(findings);
+    renderCustomerEntitlements(quoteItems.filter((item) => item.organization_id === organizationId));
     renderCustomerInvoices(invoices);
     renderCustomerAppointments(appointments);
     const customerMetrics = [...document.querySelectorAll("#dashboard article")];
@@ -1460,6 +1547,10 @@
     const portalTarget = event.target.closest("[data-portal-action]");
     if (portalTarget) {
       event.preventDefault();
+      if (portalTarget.dataset.portalAction === "request-upgrade") {
+        requestUpgrade(portalTarget);
+        return;
+      }
       handlePortalAction(portalTarget.dataset.portalAction);
       return;
     }
@@ -1483,6 +1574,7 @@
     if (action === "accept-quote") acceptQuote(target.dataset.quoteId);
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
+    if (action === "activate-upgrade") activateUpgrade(target);
     if (action === "manage-objects") manageObjects(rowFor(target));
     if (action === "save-object") saveObject(target.closest("[data-property-id]"));
     if (action === "delete-object") deleteObject(target.closest("[data-property-id]"));
@@ -1500,6 +1592,9 @@
   inspectionForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadInspectionObjects(event.target.value));
   inspectionForm?.addEventListener("submit", createInspection);
   quoteForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadQuoteObjects(event.target.value));
+  quoteForm?.addEventListener("change", (event) => {
+    if (event.target.matches('[data-quote-item-field="inspection_depth"]')) updateQuoteDepth(event.target.closest("[data-quote-property]"));
+  });
   quoteForm?.addEventListener("submit", submitQuote);
   quoteScheduleForm?.addEventListener("submit", submitQuoteSchedule);
   taskForm?.addEventListener("submit", submitTask);

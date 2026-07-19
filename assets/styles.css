@@ -1781,7 +1781,7 @@ button { cursor: pointer; }
 .quote-object-list { display: grid; gap: 10px; }
 .quote-object-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, .8fr) minmax(220px, 1.2fr) minmax(140px, .55fr);
+  grid-template-columns: minmax(220px, 1.2fr) minmax(160px, .7fr) minmax(150px, .65fr) minmax(210px, 1fr) minmax(140px, .55fr);
   gap: 12px;
   align-items: end;
   padding: 14px;
@@ -1789,6 +1789,7 @@ button { cursor: pointer; }
   border-radius: var(--rs-radius);
   background: #fff;
 }
+.quote-depth-summary { grid-column: 2 / -1; margin: 0; color: var(--rs-graphite-600); font-size: 13px; }
 .quote-object-select { display: flex !important; grid-template-columns: none !important; align-items: center; gap: 10px !important; }
 .quote-object-select input { width: auto; }
 .quote-object-select span,
@@ -2649,6 +2650,15 @@ button { cursor: pointer; }
 .entitlement-list div:last-child {
   border-bottom: 0;
 }
+
+.entitlement-card { padding: 16px; border: 1px solid var(--rs-line); border-radius: var(--rs-radius); background: #fff; }
+.entitlement-card + .entitlement-card { margin-top: 10px; }
+.entitlement-card > strong,
+.entitlement-card > small { display: block; }
+.entitlement-card > p { margin: 5px 0; }
+.entitlement-card > small { color: var(--rs-graphite-600); }
+.entitlement-list .entitlement-actions { display: grid; justify-content: stretch; align-items: start; gap: 8px; margin-top: 14px; padding: 12px 0 0; border-top: 1px solid var(--rs-line); border-bottom: 0; }
+.entitlement-list .entitlement-complete { margin-top: 12px; padding: 10px 0 0; color: var(--rs-green); font-weight: 900; border: 0; border-top: 1px solid var(--rs-line); }
 
 .media-stack img {
   width: 100%;

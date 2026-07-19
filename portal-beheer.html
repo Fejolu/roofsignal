@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal14">
+  <link rel="stylesheet" href="assets/styles.css?v=portal15">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
@@ -159,6 +159,7 @@
           <label>Bouwdeel<input name="building_element" placeholder="Dakbedekking, HWA, gevel..."></label>
           <label>Bevinding<input name="title" required placeholder="Feitelijke waarneming"></label>
           <label>Prioriteit<select name="priority"><option>normal</option><option>low</option><option>high</option><option>urgent</option></select></label>
+          <label>Zichtbaar vanaf<select name="required_depth"><option value="basis">Basis</option><option value="plus">Plus</option><option value="premium">Premium</option></select></label>
           <label>Conditie 1-6<input name="condition_score" type="number" min="1" max="6" step="0.1"></label>
           <label class="wide-field">Advies<textarea name="recommendation" rows="3"></textarea></label>
           <button class="btn" type="submit">Bevinding toevoegen</button>
@@ -225,7 +226,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=11" defer></script>
-<script src="assets/portal-admin.js?v=8" defer></script>
+<script src="assets/supabase-app.js?v=12" defer></script>
+<script src="assets/portal-admin.js?v=9" defer></script>
 </body>
 </html>

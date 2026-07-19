@@ -298,6 +298,31 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function createUpgradeRequest(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("upgrade_requests").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listUpgradeRequests(organizationId = "") {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    let query = supabase.from("upgrade_requests").select("*,quote_items(properties(name),inspection_product)").order("created_at", { ascending: false });
+    if (organizationId) query = query.eq("organization_id", organizationId);
+    const { data, error } = await query;
+    return error ? [] : data || [];
+  }
+
+  async function activateUpgradeRequest(requestId, quoteItemId, requestedDepth, scopeSnapshot) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { error: itemError } = await supabase.from("quote_items").update({ inspection_depth: requestedDepth, scope_snapshot: scopeSnapshot }).eq("id", quoteItemId);
+    if (itemError) return { ok: false, error: itemError };
+    const { data, error } = await supabase.from("upgrade_requests").update({ status: "activated" }).eq("id", requestId).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   async function listTasks(organizationId = "") {
     const supabase = await getClient();
     if (!supabase) return [];
@@ -525,6 +550,9 @@
     updateQuote,
     createAppointment,
     createInvoice,
+    createUpgradeRequest,
+    listUpgradeRequests,
+    activateUpgradeRequest,
     listTasks,
     createTask,
     createOrganization,

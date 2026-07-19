@@ -106,6 +106,29 @@ def test_quotes_support_multiple_objects_and_three_products():
     assert "quote_item_id" in migration
 
 
+def test_quote_items_store_inspection_depth_and_scope_snapshot():
+    script = read("assets/portal-admin.js")
+    migration = read("supabase/migrations/20260719234500_quote_inspection_depth.sql")
+    for depth, price in (("basis", "395"), ("plus", "595"), ("premium", "995")):
+        assert f'{depth}:' in script
+        assert f"price: {price}" in script
+        assert depth in migration
+    assert "scope_snapshot jsonb" in migration
+    assert "depthSnapshot" in script
+
+
+def test_premium_capture_is_filtered_by_purchased_entitlement():
+    migration = read("supabase/migrations/20260719235500_premium_capture_entitlements.sql")
+    script = read("assets/portal-admin.js")
+    assert "capture_depth text not null default 'premium'" in migration
+    assert "required_depth text not null default 'basis'" in migration
+    assert '"findings visible within purchased depth"' in migration
+    assert "qi.inspection_depth" in migration
+    assert "renderCustomerEntitlements" in script
+    assert "createUpgradeRequest" in read("assets/supabase-app.js")
+    assert "activateUpgradeRequest" in read("assets/supabase-app.js")
+
+
 def test_selected_customer_opens_complete_dossier():
     portal = read("portal-beheer.html")
     script = read("assets/portal-admin.js")
