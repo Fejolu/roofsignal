@@ -222,37 +222,37 @@
     };
     const objects = readObjects(data);
     customer.notes = buildNotes(customer, objects);
+    const properties = objects.map((object) => ({
+      name: object.name,
+      address: object.address || customer.address,
+      postcode: object.postcode || null,
+      city: object.city || null,
+      status: "active",
+    }));
 
     const button = form.querySelector("button[type='submit']");
     button.disabled = true;
-    setStatus("Klant wordt aangemaakt...", "");
+    setStatus("Klant wordt aangemaakt en activatiemail wordt verstuurd...", "");
 
     let syncedId = "";
     let syncWarning = "";
     try {
       if (window.RoofSignalBackend?.isConfigured) {
-        const result = await window.RoofSignalBackend.createOrganization(customer);
+        const result = await window.RoofSignalBackend.createPortalCustomer(customer, properties);
         if (result.ok) {
-          syncedId = result.data?.id || "";
-          if (syncedId && objects.length) {
-            const properties = objects.map((object) => ({
-              organization_id: syncedId,
-              name: object.name,
-              address: object.address || customer.address,
-              postcode: object.postcode || null,
-              city: object.city || null,
-              status: "active",
-            }));
-            const propertyResult = await window.RoofSignalBackend.createProperties(properties);
-            if (!propertyResult.ok) syncWarning = " Objecten konden nog niet naar Supabase worden geschreven.";
-          }
+          syncedId = result.data?.organization?.id || "";
         } else {
-          syncWarning = " Supabase-sync is niet gelukt; de klant staat lokaal in deze backoffice-sessie.";
+          throw new Error(result.error?.message || "Klant kon niet volledig worden aangemaakt.");
         }
+      } else {
+        syncWarning = " Supabase-sync is niet actief; er is geen activatiemail verstuurd.";
       }
 
       appendLocalCustomer(customer, objects, syncedId);
-      setStatus(`${customer.name} is aangemaakt.${syncWarning}`, syncWarning ? "error" : "success");
+      setStatus(syncWarning
+        ? `${customer.name} staat lokaal in deze sessie.${syncWarning}`
+        : `${customer.name} is aangemaakt en de activatiemail is verstuurd.`,
+      syncWarning ? "error" : "success");
       window.setTimeout(() => {
         window.location.href = "portal-beheer.html#klanten";
       }, 650);

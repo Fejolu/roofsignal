@@ -127,11 +127,14 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("organizations")
-      .select("id,name,segment,contact_name,contact_email,contact_phone,address,kvk_number,bank_account,status,notes,created_at")
+      .select("id,name,segment,contact_name,contact_email,contact_phone,address,kvk_number,bank_account,status,notes,created_at,properties(id)")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
     if (error) return [];
-    return data || [];
+    return (data || []).map((organization) => ({
+      ...organization,
+      objects: Array.isArray(organization.properties) ? organization.properties.length : 0,
+    }));
   }
 
   async function createOrganization(payload) {
@@ -152,6 +155,19 @@
       .from("properties")
       .insert(properties)
       .select("id,organization_id,name,address,status,created_at");
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createPortalCustomer(customer, properties = []) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+    const { data, error } = await supabase.functions.invoke("create-portal-customer", {
+      body: {
+        customer,
+        properties,
+        redirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
+      },
+    });
     return error ? { ok: false, error } : { ok: true, data };
   }
 
@@ -215,6 +231,7 @@
     listOrganizations,
     createOrganization,
     createProperties,
+    createPortalCustomer,
     updateOrganization,
     deleteOrganization,
     listProfiles,
