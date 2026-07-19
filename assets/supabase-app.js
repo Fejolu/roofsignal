@@ -55,6 +55,35 @@
     return { ok: true };
   }
 
+  async function readFunctionError(error) {
+    const fallback = error?.message || "De serveractie is mislukt.";
+    const response = error?.context;
+    if (!response || typeof response.clone !== "function") {
+      return { message: fallback };
+    }
+
+    try {
+      const body = await response.clone().json();
+      return {
+        message: body?.error || body?.message || fallback,
+        status: response.status,
+      };
+    } catch (_jsonError) {
+      try {
+        const text = await response.clone().text();
+        return {
+          message: text || fallback,
+          status: response.status,
+        };
+      } catch (_textError) {
+        return {
+          message: fallback,
+          status: response.status,
+        };
+      }
+    }
+  }
+
   async function signIn(email, password = "") {
     const supabase = await getClient();
     if (!supabase) return { ok: false, fallback: true };
@@ -170,7 +199,7 @@
         redirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
       },
     });
-    return error ? { ok: false, error } : { ok: true, data };
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
   }
 
   async function listOrganizationProperties(organizationId) {

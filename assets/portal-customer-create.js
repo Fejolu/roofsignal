@@ -474,11 +474,20 @@
     let syncWarning = "";
     try {
       if (window.RoofSignalBackend?.isConfigured) {
+        const session = await window.RoofSignalBackend.getSession?.();
+        if (!session) {
+          throw new Error("Uw beheerderssessie is verlopen. Log opnieuw in via het RoofSignal Portaal en maak daarna de klant aan.");
+        }
+
         const result = await window.RoofSignalBackend.createPortalCustomer(customer, properties);
         if (result.ok) {
           syncedId = result.data?.organization?.id || "";
         } else {
-          throw new Error(result.error?.message || "Klant kon niet volledig worden aangemaakt.");
+          const message = result.error?.message || "Klant kon niet volledig worden aangemaakt.";
+          const authError = result.error?.status === 401 || /session|authorization|allowed/i.test(message);
+          throw new Error(authError
+            ? "Uw beheerderssessie is verlopen of heeft onvoldoende rechten. Log opnieuw in als beheerder en probeer het opnieuw."
+            : message);
         }
       } else {
         syncWarning = " Supabase-sync is niet actief; er is geen activatiemail verstuurd.";
