@@ -1717,6 +1717,56 @@ button { cursor: pointer; }
   border-top: 1px solid var(--rs-line);
 }
 
+.inspection-workspace {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid rgba(255, 77, 20, .28);
+  border-radius: 20px;
+  background: #fffaf7;
+}
+
+.inspection-workspace form,
+.compact-workflow-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+  align-items: end;
+}
+
+.inspection-workspace label,
+.compact-workflow-form label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.inspection-workspace input,
+.inspection-workspace select,
+.inspection-workspace textarea,
+.compact-workflow-form input,
+.compact-workflow-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dedbd7;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
+
+.inspection-workspace .wide-field,
+.inspection-workspace form label:has(textarea) { grid-column: span 2; }
+.finding-list { display: grid; gap: 10px; margin: 16px 0; }
+.finding-list article { padding: 14px; border: 1px solid #e6e2de; border-radius: 12px; background: #fff; }
+.finding-list article span { display: block; color: #666; margin-top: 4px; }
+
+@media (max-width: 900px) {
+  .inspection-workspace form,
+  .compact-workflow-form { grid-template-columns: 1fr; }
+  .inspection-workspace .wide-field,
+  .inspection-workspace form label:has(textarea) { grid-column: auto; }
+}
+
 .inspection-create-form .form-section-head,
 .inspection-create-form .form-note {
   grid-column: 1 / -1;

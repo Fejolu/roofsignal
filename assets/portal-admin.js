@@ -35,8 +35,20 @@
   const inspectionForm = document.querySelector("[data-inspection-create-form]");
   const inspectionStatus = document.querySelector("[data-inspection-create-status]");
   const inspectionBody = document.querySelector(".inspection-table tbody");
+  const inspectionWorkspace = document.querySelector("[data-inspection-workspace]");
+  const inspectionWorkspaceTitle = document.querySelector("[data-inspection-workspace-title]");
+  const inspectionWorkspaceStatus = document.querySelector("[data-inspection-workspace-status]");
+  const inspectionStatusForm = document.querySelector("[data-inspection-status-form]");
+  const findingForm = document.querySelector("[data-finding-create-form]");
+  const findingList = document.querySelector("[data-finding-list]");
+  const reportForm = document.querySelector("[data-report-create-form]");
+  const quoteForm = document.querySelector("[data-quote-create-form]");
+  const taskForm = document.querySelector("[data-task-create-form]");
   let activeObjectCustomerRow = null;
   let activeCustomerObjects = [];
+  let liveOrganizations = [];
+  let liveInspections = [];
+  let activeInspection = null;
   let portalAccess = null;
 
   function saveState() {
@@ -174,13 +186,26 @@
   }
 
   function renderInspections(inspections = []) {
+    liveInspections = inspections;
     renderReportPipeline(inspections);
     if (!inspectionBody) return;
     if (!inspections.length) {
       inspectionBody.innerHTML = '<tr data-empty-row><td colspan="6">Nog geen inspecties.</td></tr>';
       return;
     }
-    inspectionBody.innerHTML = inspections.map((inspection) => `<tr><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td>${escapeHtml(inspection.scope || "-")}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td>${escapeHtml(formatPortalDate(inspection.scheduled_at))}</td></tr>`).join("");
+    inspectionBody.innerHTML = inspections.map((inspection) => `<tr><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td>${escapeHtml(inspection.scope || "-")}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><button class="inline-button" type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Open</button></td></tr>`).join("");
+  }
+
+  function populateWorkflowOrganizations(organizations) {
+    [quoteForm, taskForm].forEach((form) => {
+      const select = form?.querySelector('[name="organization_id"]');
+      if (select) select.innerHTML = '<option value="">Selecteer klant</option>' + organizations.map((organization) => `<option value="${escapeHtml(organization.id)}">${escapeHtml(organization.name)}</option>`).join("");
+    });
+  }
+
+  function renderTasks(tasks = []) {
+    if (!supportGrid) return;
+    supportGrid.innerHTML = tasks.length ? tasks.map((task) => `<div><strong>${escapeHtml(task.title)}</strong><span>${escapeHtml([task.organizations?.name, task.priority, task.status, task.due_at ? formatPortalDate(task.due_at) : ""].filter(Boolean).join(" · "))}</span></div>`).join("") : '<div data-empty-row><strong>Geen supporttaken</strong><span>Er zijn geen klantvragen of taken geladen.</span></div>';
   }
 
   function populateInspectionOrganizations(organizations) {
@@ -214,13 +239,14 @@
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
   }
 
-  function renderAdminMetrics(customers, inspections, invoices, quotes) {
+  function renderAdminMetrics(customers, inspections, invoices, quotes, tasks = []) {
     const cards = [...document.querySelectorAll("#dashboard article")];
     const openInspections = inspections.filter((inspection) => !["delivered", "cancelled"].includes(inspection.status)).length;
     const openInvoices = invoices.filter((invoice) => !["paid", "cancelled", "credited"].includes(invoice.status));
     const openAmount = openInvoices.reduce((total, invoice) => total + Number(invoice.amount || 0), 0);
-    const values = [customers.length, openInspections, 0, formatMoney(openAmount), quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status)).length];
-    const notes = ["Live uit klantdata.", "Niet geleverd of geannuleerd.", "Takenworkflow nog niet actief.", "Niet betaald of gecrediteerd.", "Nog niet afgerond."];
+    const openTasks = tasks.filter((task) => !["completed", "cancelled"].includes(task.status)).length;
+    const values = [customers.length, openInspections, openTasks, formatMoney(openAmount), quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status)).length];
+    const notes = ["Live uit klantdata.", "Niet geleverd of geannuleerd.", "Open interne taken.", "Niet betaald of gecrediteerd.", "Nog niet afgerond."];
     cards.forEach((card, index) => {
       if (card.querySelector("strong")) card.querySelector("strong").textContent = String(values[index] ?? 0);
       if (card.querySelector("p")) card.querySelector("p").textContent = notes[index] || "";
@@ -230,22 +256,26 @@
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, inspections, invoices, quotes, appointments] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments, tasks] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
       backend.listInspections(),
       backend.listInvoices(),
       backend.listQuotes(),
       backend.listAppointments(),
+      backend.listTasks(),
     ]);
+    liveOrganizations = customers;
     renderCustomers(customers);
     renderRoles(profiles);
     renderInspections(inspections);
     renderInvoices(invoices);
     renderQuotes(quotes);
     renderAppointments(appointments);
-    renderAdminMetrics(customers, inspections, invoices, quotes);
+    renderTasks(tasks);
+    renderAdminMetrics(customers, inspections, invoices, quotes, tasks);
     populateInspectionOrganizations(customers);
+    populateWorkflowOrganizations(customers);
     syncCustomerOwnedData();
   }
 
@@ -564,6 +594,7 @@
   }
 
   function objectEditCard(property) {
+    const building = property.building_data || {};
     return [
       `<article class="object-edit-card" data-property-id="${escapeHtml(property.id || "")}">`,
       '<div class="object-edit-fields">',
@@ -571,6 +602,11 @@
       `<label>Adres<input data-object-field="address" value="${escapeHtml(property.address || "")}" placeholder="Straat en huisnummer"></label>`,
       `<label>Postcode<input data-object-field="postcode" value="${escapeHtml(property.postcode || "")}" placeholder="7311 AA"></label>`,
       `<label>Plaats<input data-object-field="city" value="${escapeHtml(property.city || "")}" placeholder="Apeldoorn"></label>`,
+      `<label>Gebouwtype<input data-object-field="building_type" value="${escapeHtml(building.building_type || "")}" placeholder="Kantoor, bedrijfshal..."></label>`,
+      `<label>Bouwjaar<input data-object-field="construction_year" type="number" value="${escapeHtml(building.construction_year || "")}" placeholder="1998"></label>`,
+      `<label>Bruto vloeroppervlak (m²)<input data-object-field="gross_floor_area" type="number" step="0.01" value="${escapeHtml(building.gross_floor_area || "")}"></label>`,
+      `<label>Dakoppervlak (m²)<input data-object-field="roof_area" type="number" step="0.01" value="${escapeHtml(building.roof_area || "")}"></label>`,
+      `<label>Geveloppervlak (m²)<input data-object-field="facade_area" type="number" step="0.01" value="${escapeHtml(building.facade_area || "")}"></label>`,
       '<label>Status<select data-object-field="status">',
       ["active", "concept", "paused"].map((status) => {
         const labels = { active: "Actief", concept: "Concept", paused: "Gepauzeerd" };
@@ -623,12 +659,20 @@
 
   function propertyPayloadFromCard(card) {
     const value = (field) => card.querySelector(`[data-object-field="${field}"]`)?.value.trim() || "";
+    const number = (field) => value(field) ? Number(value(field)) : null;
     return {
       name: value("name") || "Object",
       address: value("address") || null,
       postcode: value("postcode") || null,
       city: value("city") || null,
       status: value("status") || "active",
+      building_data: {
+        building_type: value("building_type") || null,
+        construction_year: number("construction_year"),
+        gross_floor_area: number("gross_floor_area"),
+        roof_area: number("roof_area"),
+        facade_area: number("facade_area"),
+      },
     };
   }
 
@@ -701,11 +745,92 @@
   }
 
   function createOffer() {
-    setPortalNotice("Offertes aanmaken wordt pas geactiveerd wanneer de databaseworkflow gereed is.", "info");
+    quoteForm?.scrollIntoView({ behavior: "smooth", block: "center" });
+    quoteForm?.querySelector('[name="organization_id"]')?.focus();
   }
 
   function createSupportTask() {
-    setPortalNotice("Supporttaken worden pas geactiveerd wanneer de takenworkflow gereed is.", "info");
+    taskForm?.scrollIntoView({ behavior: "smooth", block: "center" });
+    taskForm?.querySelector('[name="organization_id"]')?.focus();
+  }
+
+  function setWorkflowStatus(element, message, tone = "") {
+    if (!element) return;
+    element.textContent = message;
+    element.dataset.statusTone = tone;
+  }
+
+  async function loadQuoteObjects(organizationId) {
+    const select = quoteForm?.querySelector('[name="property_id"]');
+    if (!select) return;
+    const properties = organizationId ? await window.RoofSignalBackend.listOrganizationProperties(organizationId) : [];
+    select.innerHTML = '<option value="">Geen specifiek object</option>' + properties.map((property) => `<option value="${escapeHtml(property.id)}">${escapeHtml(property.name)}</option>`).join("");
+    select.disabled = !organizationId;
+  }
+
+  async function submitQuote(event) {
+    event.preventDefault();
+    const data = new FormData(quoteForm);
+    const result = await window.RoofSignalBackend.createQuote({ organization_id: data.get("organization_id"), property_id: data.get("property_id") || null, title: String(data.get("title") || "").trim(), amount: Number(data.get("amount") || 0), status: "draft" });
+    const status = quoteForm.querySelector("[data-quote-create-status]");
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Offerte opslaan is mislukt.", "error");
+    quoteForm.reset(); await loadQuoteObjects("");
+    setWorkflowStatus(status, "Conceptofferte is opgeslagen.", "success");
+    renderQuotes(await window.RoofSignalBackend.listQuotes());
+  }
+
+  async function submitTask(event) {
+    event.preventDefault();
+    const data = new FormData(taskForm);
+    const result = await window.RoofSignalBackend.createTask({ organization_id: data.get("organization_id"), title: String(data.get("title") || "").trim(), priority: data.get("priority"), due_at: data.get("due_at") ? new Date(String(data.get("due_at"))).toISOString() : null, task_type: "support", status: "open", created_by: portalAccess?.profile?.id || null });
+    const status = taskForm.querySelector("[data-task-create-status]");
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Taak opslaan is mislukt.", "error");
+    taskForm.reset(); setWorkflowStatus(status, "Interne taak is opgeslagen.", "success");
+    renderTasks(await window.RoofSignalBackend.listTasks());
+  }
+
+  function renderFindings(findings = []) {
+    if (!findingList) return;
+    findingList.innerHTML = findings.length ? findings.map((finding) => `<article><strong>${escapeHtml(finding.title)}</strong><span>${escapeHtml([finding.building_element, finding.priority, finding.seriousness].filter(Boolean).join(" · "))}</span><p>${escapeHtml(finding.description || "")}</p></article>`).join("") : '<div class="empty-state">Nog geen bevindingen vastgelegd.</div>';
+  }
+
+  async function openInspection(id) {
+    activeInspection = liveInspections.find((inspection) => inspection.id === id);
+    if (!activeInspection || !inspectionWorkspace) return;
+    inspectionWorkspace.hidden = false;
+    if (inspectionWorkspaceTitle) inspectionWorkspaceTitle.textContent = `${activeInspection.reference || "Inspectie"} · ${activeInspection.properties?.name || "Object"}`;
+    inspectionStatusForm.elements.status.value = activeInspection.status || "intake";
+    inspectionStatusForm.elements.summary.value = activeInspection.summary || "";
+    renderFindings(await window.RoofSignalBackend.listFindings(id));
+    inspectionWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function submitInspectionStatus(event) {
+    event.preventDefault(); if (!activeInspection) return;
+    const data = new FormData(inspectionStatusForm);
+    const result = await window.RoofSignalBackend.updateInspection(activeInspection.id, { status: data.get("status"), summary: String(data.get("summary") || "").trim() || null });
+    if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Inspectie bijwerken is mislukt.", "error");
+    setWorkflowStatus(inspectionWorkspaceStatus, "Inspectie is bijgewerkt.", "success");
+    renderInspections(await window.RoofSignalBackend.listInspections()); activeInspection = result.data;
+  }
+
+  async function submitFinding(event) {
+    event.preventDefault(); if (!activeInspection) return;
+    const data = new FormData(findingForm);
+    const result = await window.RoofSignalBackend.createFinding({ organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, title: String(data.get("title") || "").trim(), building_element: String(data.get("building_element") || "").trim() || null, priority: data.get("priority"), condition_score: data.get("condition_score") ? Number(data.get("condition_score")) : null, recommendation: String(data.get("recommendation") || "").trim() || null, source: "manual" });
+    if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Bevinding opslaan is mislukt.", "error");
+    findingForm.reset(); renderFindings(await window.RoofSignalBackend.listFindings(activeInspection.id));
+    setWorkflowStatus(inspectionWorkspaceStatus, "Bevinding is vastgelegd.", "success");
+  }
+
+  async function submitReport(event) {
+    event.preventDefault(); if (!activeInspection) return;
+    const data = new FormData(reportForm);
+    const result = await window.RoofSignalBackend.createReport({ organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, title: String(data.get("title") || "").trim(), summary: inspectionStatusForm.elements.summary.value.trim() || null, report_url: String(data.get("report_url") || "").trim() || null, status: "published", published_at: new Date().toISOString() });
+    if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Rapport publiceren is mislukt.", "error");
+    await window.RoofSignalBackend.updateInspection(activeInspection.id, { status: "delivered", inspected_at: activeInspection.inspected_at || new Date().toISOString() });
+    reportForm.reset(); setWorkflowStatus(inspectionWorkspaceStatus, "Rapport is gepubliceerd in het klantenportaal.", "success");
+    renderInspections(await window.RoofSignalBackend.listInspections());
   }
 
   function setAiAnswer(title, body) {
@@ -999,22 +1124,42 @@
       `<tr><th>Objectstatus</th><td>${escapeHtml(first.status || "Actief")}</td></tr>`,
       '<tr><th>Inspectiestatus</th><td>Nog niet geïnspecteerd</td></tr>',
     ].join("");
+    const building = first.building_data || {};
+    const buildingBody = document.querySelector("#objectdossier .object-dossier-grid > div:nth-child(2) tbody");
+    const buildingRows = [
+      ["Gebouwtype", building.building_type], ["Bouwjaar", building.construction_year],
+      ["Bruto vloeroppervlak", building.gross_floor_area != null ? `${building.gross_floor_area} m²` : ""],
+      ["Dakoppervlak", building.roof_area != null ? `${building.roof_area} m²` : ""],
+      ["Geveloppervlak", building.facade_area != null ? `${building.facade_area} m²` : ""],
+    ].filter(([, value]) => value !== null && value !== undefined && value !== "");
+    if (buildingBody) buildingBody.innerHTML = buildingRows.length ? buildingRows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join("") : '<tr><td colspan="2">Nog geen gebouwdata vastgelegd.</td></tr>';
   }
 
-  function renderCustomerInspections(inspections, properties) {
+  function renderCustomerInspections(inspections, properties, reports = []) {
     const body = document.querySelector("#inspecties tbody");
     if (!body || !inspections.length) return;
     const propertyNames = new Map(properties.map((property) => [property.id, property.name]));
-    body.innerHTML = inspections.map((inspection) => [
+    const reportByInspection = new Map(reports.map((report) => [report.inspection_id, report]));
+    body.innerHTML = inspections.map((inspection) => {
+      const report = reportByInspection.get(inspection.id);
+      const reportLink = report?.report_url ? `<a href="${escapeHtml(report.report_url)}" target="_blank" rel="noopener">Open rapport</a>` : report ? "Gepubliceerd" : "-";
+      return [
       "<tr>",
       `<td>${escapeHtml(formatPortalDate(inspection.inspected_at || inspection.scheduled_at || inspection.created_at))}</td>`,
       `<td>${escapeHtml(propertyNames.get(inspection.property_id) || inspection.properties?.name || "Object")}</td>`,
       `<td>${escapeHtml(inspection.scope || "Inspectie")}</td>`,
       `<td>${escapeHtml(inspection.summary || "Nog geen gebouwdata vastgelegd")}</td>`,
       `<td>${statusCell(escapeHtml(inspection.status || "Intake"), inspection.status === "delivered" ? "green" : "yellow")}</td>`,
-      '<td>-</td>',
+      `<td>${reportLink}</td>`,
       "</tr>",
-    ].join("")).join("");
+    ].join(""); }).join("");
+  }
+
+  function renderCustomerFindings(findings = []) {
+    const feed = document.querySelector(".intelligence-feed");
+    const conditionBody = document.querySelector("#objectdossier .object-dossier-grid > div:nth-child(3) tbody");
+    if (feed) feed.innerHTML = findings.length ? findings.map((finding) => `<article><strong>${escapeHtml(finding.title)}</strong><p>${escapeHtml([finding.building_element, finding.condition_score ? `conditie ${finding.condition_score}` : "", finding.recommendation].filter(Boolean).join(" · "))}</p></article>`).join("") : emptyState("Nog geen Property Intelligence beschikbaar.");
+    if (conditionBody) conditionBody.innerHTML = findings.length ? findings.map((finding) => `<tr><th>${escapeHtml(finding.building_element || "Bevinding")}</th><td>${escapeHtml(finding.condition_score || finding.priority || "Vastgelegd")}</td></tr>`).join("") : '<tr><td colspan="2">Geen conditiedata beschikbaar.</td></tr>';
   }
 
   function renderCustomerAppointments(appointments) {
@@ -1061,14 +1206,17 @@
       if (account) account.textContent = organization.name;
     }
 
-    const [properties, inspections, invoices, appointments] = await Promise.all([
+    const [properties, inspections, invoices, appointments, reports] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
       backend.listInspections(organizationId),
       backend.listOrganizationInvoices(organizationId),
       backend.listOrganizationAppointments(organizationId),
+      backend.listOrganizationReports(organizationId),
     ]);
+    const findings = (await Promise.all(inspections.map((inspection) => backend.listFindings(inspection.id)))).flat();
     renderCustomerProperties(properties);
-    renderCustomerInspections(inspections, properties);
+    renderCustomerInspections(inspections, properties, reports);
+    renderCustomerFindings(findings);
     renderCustomerInvoices(invoices);
     renderCustomerAppointments(appointments);
 
@@ -1161,6 +1309,7 @@
     if (action === "focus-role-builder") focusRoleBuilder();
     if (action === "create-offer") createOffer();
     if (action === "create-support-task") createSupportTask();
+    if (action === "open-inspection") openInspection(target.dataset.inspectionId);
     if (action === "manage-objects") manageObjects(rowFor(target));
     if (action === "save-object") saveObject(target.closest("[data-property-id]"));
     if (action === "delete-object") deleteObject(target.closest("[data-property-id]"));
@@ -1177,4 +1326,10 @@
   customerSearchInput?.addEventListener("input", filterCustomers);
   inspectionForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadInspectionObjects(event.target.value));
   inspectionForm?.addEventListener("submit", createInspection);
+  quoteForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadQuoteObjects(event.target.value));
+  quoteForm?.addEventListener("submit", submitQuote);
+  taskForm?.addEventListener("submit", submitTask);
+  inspectionStatusForm?.addEventListener("submit", submitInspectionStatus);
+  findingForm?.addEventListener("submit", submitFinding);
+  reportForm?.addEventListener("submit", submitReport);
 })();

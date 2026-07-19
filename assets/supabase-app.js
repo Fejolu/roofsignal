@@ -221,6 +221,63 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function updateInspection(id, payload) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase.from("inspections").update(payload).eq("id", id).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listFindings(inspectionId) {
+    const supabase = await getClient();
+    if (!supabase || !inspectionId) return [];
+    const { data, error } = await supabase.from("findings").select("*").eq("inspection_id", inspectionId).order("created_at");
+    return error ? [] : data || [];
+  }
+
+  async function createFinding(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("findings").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createReport(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("reports").insert(payload).select("*").single();
+    if (error) return { ok: false, error };
+    if (payload.inspection_id) {
+      const { error: findingError } = await supabase.from("findings").update({ report_id: data.id }).eq("inspection_id", payload.inspection_id);
+      if (findingError) return { ok: false, error: findingError };
+    }
+    return { ok: true, data };
+  }
+
+  async function createQuote(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("quotes").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listTasks(organizationId = "") {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    let query = supabase.from("tasks").select("*,organizations(name),properties(name),inspections(reference)").order("created_at", { ascending: false });
+    if (organizationId) query = query.eq("organization_id", organizationId);
+    const { data, error } = await query;
+    return error ? [] : data || [];
+  }
+
+  async function createTask(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const session = await getSession();
+    const { data, error } = await supabase.from("tasks").insert({ ...payload, created_by: session?.user?.id || null }).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   async function createOrganization(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false, fallback: true };
@@ -273,7 +330,7 @@
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("reports")
-      .select("id,organization_id,property_id,title,summary,status,report_url,published_at,created_at,updated_at")
+      .select("id,organization_id,property_id,inspection_id,title,summary,status,report_url,published_at,created_at,updated_at")
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false });
     if (error) return [];
@@ -344,7 +401,7 @@
       .from("properties")
       .update(payload)
       .eq("id", id)
-      .select("id,organization_id,name,address,postcode,city,status,created_at")
+      .select("id,organization_id,name,address,postcode,city,status,building_data,created_at")
       .single();
     return error ? { ok: false, error } : { ok: true, data };
   }
@@ -421,6 +478,13 @@
     listReports,
     listInspections,
     createInspection,
+    updateInspection,
+    listFindings,
+    createFinding,
+    createReport,
+    createQuote,
+    listTasks,
+    createTask,
     createOrganization,
     createProperties,
     createPortalCustomer,

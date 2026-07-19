@@ -51,3 +51,24 @@ def test_browser_storage_is_not_used_as_operational_system_of_record():
     assert "localStorage.setItem(stateKey" not in admin_script
     assert "localStorage.setItem(stateKey" not in create_script
     assert "Browser storage is not a system of record" in admin_script
+
+
+def test_operational_workflows_are_database_backed():
+    admin = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260719223000_portal_operational_workflows.sql")
+    for marker in ("data-inspection-status-form", "data-finding-create-form", "data-report-create-form", "data-quote-create-form", "data-task-create-form"):
+        assert marker in admin
+    for method in ("createFinding", "createReport", "createQuote", "createTask", "updateInspection"):
+        assert method in backend
+        assert method in script
+    assert "create table if not exists public.tasks" in migration
+    assert "add column if not exists inspection_id" in migration
+
+
+def test_customer_portal_renders_building_data_and_published_reports():
+    script = read("assets/portal-admin.js")
+    assert "building.gross_floor_area" in script
+    assert "report.inspection_id" in script
+    assert "renderCustomerFindings" in script

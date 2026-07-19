@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal10">
+  <link rel="stylesheet" href="assets/styles.css?v=portal11">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
@@ -135,9 +135,32 @@
         <p class="form-note" data-inspection-create-status>Een inspectie wordt altijd aan één klant en object gekoppeld.</p>
       </form>
       <table class="portal-table inspection-table">
-        <thead><tr><th>Referentie</th><th>Klant</th><th>Object</th><th>Scope</th><th>Status</th><th>Planning</th></tr></thead>
+        <thead><tr><th>Referentie</th><th>Klant</th><th>Object</th><th>Scope</th><th>Status</th><th>Actie</th></tr></thead>
         <tbody><tr data-empty-row><td colspan="6">Nog geen inspecties.</td></tr></tbody>
       </table>
+      <div class="inspection-workspace" data-inspection-workspace hidden>
+        <div class="form-section-head"><span class="eyebrow orange">Inspectiedossier</span><h3 data-inspection-workspace-title>Inspectie</h3></div>
+        <form data-inspection-status-form>
+          <label>Status<select name="status"><option>intake</option><option>planned</option><option>captured</option><option>analysis</option><option>review</option><option>delivered</option><option>cancelled</option></select></label>
+          <label>Samenvatting<textarea name="summary" rows="3" placeholder="Feitelijke inspectiesamenvatting"></textarea></label>
+          <button class="btn ghost-dark" type="submit">Inspectie bijwerken</button>
+        </form>
+        <form data-finding-create-form>
+          <label>Bouwdeel<input name="building_element" placeholder="Dakbedekking, HWA, gevel..."></label>
+          <label>Bevinding<input name="title" required placeholder="Feitelijke waarneming"></label>
+          <label>Prioriteit<select name="priority"><option>normal</option><option>low</option><option>high</option><option>urgent</option></select></label>
+          <label>Conditie 1-6<input name="condition_score" type="number" min="1" max="6" step="0.1"></label>
+          <label class="wide-field">Advies<textarea name="recommendation" rows="3"></textarea></label>
+          <button class="btn" type="submit">Bevinding toevoegen</button>
+        </form>
+        <div class="finding-list" data-finding-list></div>
+        <form data-report-create-form>
+          <label>Rapporttitel<input name="title" required placeholder="Inspectierapport gebouwschil"></label>
+          <label>Rapportbestand URL<input name="report_url" type="url" placeholder="https://..."></label>
+          <button class="btn" type="submit">Rapport publiceren</button>
+        </form>
+        <p class="form-note" data-inspection-workspace-status></p>
+      </div>
     </div>
 
     <div class="portal-panel" id="facturen">
@@ -154,6 +177,14 @@
       <div><span class="eyebrow orange">Offertes</span><h2>Offertes maken en opvolgen</h2></div>
       <a href="#offertes" data-admin-action="create-offer">Nieuwe offerte</a>
     </div>
+    <form class="compact-workflow-form" data-quote-create-form>
+      <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
+      <label>Object<select name="property_id" disabled><option value="">Optioneel object</option></select></label>
+      <label>Titel<input name="title" required placeholder="Inspectie en rapportage"></label>
+      <label>Bedrag excl. btw<input name="amount" type="number" min="0" step="0.01"></label>
+      <button class="btn" type="submit">Conceptofferte opslaan</button>
+      <p class="form-note" data-quote-create-status></p>
+    </form>
     <div class="support-grid admin-support">
       <div><strong>Concept opbouwen</strong><span>Klant, objecten, scope, begaanbaarheid, reisafstand, rapportdiepte en prijsregels combineren.</span></div>
       <div><strong>Verzenden</strong><span>Offerte per klantcontact versturen en status zichtbaar houden in het dossier.</span></div>
@@ -171,11 +202,19 @@
       <div><span class="eyebrow orange">Support</span><h2>Klantvragen</h2></div>
       <a href="#support" data-admin-action="create-support-task">Nieuwe interne taak</a>
     </div>
+    <form class="compact-workflow-form" data-task-create-form>
+      <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
+      <label>Titel<input name="title" required placeholder="Opvolgactie"></label>
+      <label>Prioriteit<select name="priority"><option>normal</option><option>low</option><option>high</option><option>urgent</option></select></label>
+      <label>Vervaldatum<input name="due_at" type="datetime-local"></label>
+      <button class="btn" type="submit">Taak opslaan</button>
+      <p class="form-note" data-task-create-status></p>
+    </form>
     <div class="support-grid admin-support"><div data-empty-row><strong>Geen supporttaken</strong><span>Er zijn geen klantvragen of taken geladen.</span></div></div>
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=9" defer></script>
-<script src="assets/portal-admin.js?v=5" defer></script>
+<script src="assets/supabase-app.js?v=10" defer></script>
+<script src="assets/portal-admin.js?v=6" defer></script>
 </body>
 </html>
