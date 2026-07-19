@@ -1296,6 +1296,8 @@ button { cursor: pointer; }
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 34px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .portal-nav {
@@ -1355,7 +1357,14 @@ button { cursor: pointer; }
   padding: 34px;
   display: grid;
   gap: 24px;
+  max-width: 1720px;
 }
+
+.portal-body.admin .metrics {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.portal-body.admin #rechten { order: 20; }
 
 .portal-topbar {
   display: flex;
@@ -1457,6 +1466,7 @@ button { cursor: pointer; }
 
 .portal-panel {
   padding: 22px;
+  min-width: 0;
 }
 
 .portal-panel.wide {
@@ -1728,11 +1738,18 @@ button { cursor: pointer; }
 .inspection-workspace form,
 .compact-workflow-form {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 14px;
   margin: 18px 0;
   align-items: end;
 }
+
+.compact-workflow-form > label { grid-column: span 3; }
+.compact-workflow-form > .btn { grid-column: span 3; }
+.compact-workflow-form > .form-note { grid-column: span 9; align-self: center; margin: 0; }
+.inspection-workspace form > label { grid-column: span 3; }
+.inspection-workspace form > label:has(textarea) { grid-column: span 6; }
+.inspection-workspace form > .btn { grid-column: span 3; }
 
 .inspection-workspace label,
 .compact-workflow-form label {
@@ -1763,6 +1780,11 @@ button { cursor: pointer; }
 @media (max-width: 900px) {
   .inspection-workspace form,
   .compact-workflow-form { grid-template-columns: 1fr; }
+  .compact-workflow-form > label,
+  .compact-workflow-form > .btn,
+  .compact-workflow-form > .form-note,
+  .inspection-workspace form > label,
+  .inspection-workspace form > .btn,
   .inspection-workspace .wide-field,
   .inspection-workspace form label:has(textarea) { grid-column: auto; }
 }
@@ -2178,6 +2200,9 @@ button { cursor: pointer; }
   font-size: 14px;
 }
 
+.portal-table tbody tr:hover { background: #fffaf7; }
+.portal-table tbody tr:last-child td { border-bottom: 0; }
+
 .portal-table th,
 .portal-table td {
   text-align: left;
@@ -2341,7 +2366,7 @@ button { cursor: pointer; }
 }
 
 .platform-metrics {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .object-command {
@@ -2647,6 +2672,7 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 980px) and (min-width: 701px) {
+  .portal-body.admin .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .site-header {
     padding: 0 24px;
     gap: 14px;
@@ -2924,6 +2950,7 @@ button { cursor: pointer; }
     margin-left: 0;
     padding: 22px;
   }
+  .portal-body.admin .metrics { grid-template-columns: 1fr; }
   .portal-topbar {
     display: grid;
     align-items: start;

@@ -1219,12 +1219,31 @@
     renderCustomerFindings(findings);
     renderCustomerInvoices(invoices);
     renderCustomerAppointments(appointments);
+    const customerMetrics = [...document.querySelectorAll("#dashboard article")];
+    const metricValues = [properties.length, inspections.length, reports.length, findings.length];
+    const metricNotes = [
+      properties.length ? `${properties.length} gekoppeld object${properties.length === 1 ? "" : "en"}.` : "Geen objecten gekoppeld.",
+      inspections.length ? `${inspections.length} inspectie${inspections.length === 1 ? "" : "s"} in het dossier.` : "Nog geen inspecties.",
+      reports.length ? `${reports.length} gepubliceerd${reports.length === 1 ? " rapport" : "e rapporten"}.` : "Nog geen rapporten.",
+      findings.length ? `${findings.length} vastgelegde bevinding${findings.length === 1 ? "" : "en"}.` : "Nog geen bevindingen.",
+    ];
+    customerMetrics.forEach((card, index) => {
+      if (card.querySelector("strong")) card.querySelector("strong").textContent = String(metricValues[index] || 0);
+      if (card.querySelector("p")) card.querySelector("p").textContent = metricNotes[index] || "";
+    });
+  }
 
-    const objectMetric = document.querySelector("#dashboard article:first-child");
-    if (objectMetric) {
-      objectMetric.querySelector("strong").textContent = String(properties.length);
-      objectMetric.querySelector("p").textContent = properties.length ? `${properties.length} gekoppeld object${properties.length === 1 ? "" : "en"}.` : "Geen objecten gekoppeld.";
-    }
+  function initializePortalNavigation() {
+    const links = [...document.querySelectorAll(".portal-nav a[href^='#']")];
+    const sections = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+    if (!links.length || !sections.length) return;
+    const activate = (id) => links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${id}`));
+    links.forEach((link) => link.addEventListener("click", () => activate(link.hash.slice(1))));
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) activate(visible.target.id);
+    }, { rootMargin: "-20% 0px -65%", threshold: [0, .2, .5] });
+    sections.forEach((section) => observer.observe(section));
   }
 
   function deleteCurrentCustomer() {
@@ -1276,6 +1295,7 @@
   }
 
   bootstrapPortal();
+  initializePortalNavigation();
 
   document.addEventListener("click", (event) => {
     const signOut = event.target.closest(".portal-account a[href^='portal-login']");

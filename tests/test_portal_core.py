@@ -72,3 +72,12 @@ def test_customer_portal_renders_building_data_and_published_reports():
     assert "building.gross_floor_area" in script
     assert "report.inspection_id" in script
     assert "renderCustomerFindings" in script
+
+
+def test_customer_portal_uses_customer_focused_dashboard_and_copy():
+    portal = read("portal-klant.html")
+    assert "interne bedrijfssturing" not in portal
+    assert "Platform v2" not in portal
+    assert "Nieuw object toevoegen" not in portal
+    for label in ("Objecten", "Inspecties", "Rapporten", "Bevindingen"):
+        assert f"<span>{label}</span>" in portal
