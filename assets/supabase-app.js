@@ -151,6 +151,24 @@
     return data;
   }
 
+  function isInternalProfile(profile, email = "") {
+    return String(email || profile?.email || "").toLowerCase().endsWith("@roofsignal.nl")
+      || ["support", "planning", "finance", "reportage", "owner_admin"].includes(profile?.role);
+  }
+
+  async function requirePortalAccess(surface) {
+    const session = await getSession();
+    if (!session?.user) return { ok: false, reason: "signed_out" };
+    const profile = await getProfile();
+    if (!profile) return { ok: false, reason: "profile_missing" };
+    const internal = isInternalProfile(profile, session.user.email);
+    if (surface === "internal" && !internal) return { ok: false, reason: "customer_only", profile, internal };
+    if (surface === "customer" && !internal && !profile.organization_id) {
+      return { ok: false, reason: "organization_missing", profile, internal };
+    }
+    return { ok: true, profile, session, internal };
+  }
+
   async function listOrganizations() {
     const supabase = await getClient();
     if (!supabase) return [];
@@ -177,6 +195,30 @@
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
+  }
+
+  async function listInspections(organizationId = "") {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    let query = supabase
+      .from("inspections")
+      .select("id,organization_id,property_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at,properties(name,address,postcode,city),organizations(name)")
+      .order("created_at", { ascending: false });
+    if (organizationId) query = query.eq("organization_id", organizationId);
+    const { data, error } = await query;
+    if (error) return [];
+    return data || [];
+  }
+
+  async function createInspection(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+    const { data, error } = await supabase
+      .from("inspections")
+      .insert(payload)
+      .select("id,organization_id,property_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at")
+      .single();
+    return error ? { ok: false, error } : { ok: true, data };
   }
 
   async function createOrganization(payload) {
@@ -218,7 +260,7 @@
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("properties")
-      .select("id,organization_id,name,address,postcode,city,status,created_at")
+      .select("id,organization_id,name,address,postcode,city,status,building_data,created_at")
       .eq("organization_id", organizationId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -257,6 +299,39 @@
       .from("appointments")
       .select("id,organization_id,property_id,title,starts_at,ends_at,status,notes,created_at")
       .eq("organization_id", organizationId)
+      .order("starts_at", { ascending: true });
+    if (error) return [];
+    return data || [];
+  }
+
+  async function listInvoices() {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("id,organization_id,invoice_number,amount,status,due_date,created_at,organizations(name)")
+      .order("created_at", { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+
+  async function listQuotes() {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from("quotes")
+      .select("id,organization_id,quote_number,title,amount,status,valid_until,created_at,organizations(name)")
+      .order("created_at", { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+
+  async function listAppointments() {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("id,organization_id,property_id,title,starts_at,ends_at,status,notes,created_at,organizations(name),properties(name)")
       .order("starts_at", { ascending: true });
     if (error) return [];
     return data || [];
@@ -341,8 +416,11 @@
     signOut,
     getSession,
     getProfile,
+    requirePortalAccess,
     listOrganizations,
     listReports,
+    listInspections,
+    createInspection,
     createOrganization,
     createProperties,
     createPortalCustomer,
@@ -350,6 +428,9 @@
     listOrganizationReports,
     listOrganizationInvoices,
     listOrganizationAppointments,
+    listInvoices,
+    listQuotes,
+    listAppointments,
     updateProperty,
     deleteProperty,
     updateOrganization,

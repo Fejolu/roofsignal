@@ -1,5 +1,4 @@
 (() => {
-  const stateKey = "roofsignal-admin-html";
   const form = document.querySelector("#customer-detail-form");
   const status = document.querySelector("[data-customer-detail-status]");
   const objectList = document.querySelector("[data-object-entry-list]");
@@ -19,34 +18,10 @@
       .replace(/'/g, "&#39;");
   }
 
-  function customerKey(name) {
-    return String(name || "").trim().toLowerCase();
-  }
-
-  function statusCell(label, tone = "yellow") {
-    return `<span class="status-dot ${tone}">${escapeHtml(label)}</span>`;
-  }
-
-  function customerActions() {
-    return '<div class="table-actions"><a href="portal-klant.html">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
-  }
-
   function setStatus(message, tone = "") {
     if (!status) return;
     status.textContent = message;
     status.dataset.statusTone = tone;
-  }
-
-  function readState() {
-    try {
-      return JSON.parse(localStorage.getItem(stateKey) || "{}");
-    } catch {
-      return {};
-    }
-  }
-
-  function writeState(state) {
-    localStorage.setItem(stateKey, JSON.stringify(state));
   }
 
   function formatAddress(parts) {
@@ -304,39 +279,6 @@
     ].filter(Boolean).join("\n\n");
   }
 
-  function appendLocalCustomer(customer, objects, syncedId = "") {
-    const state = readState();
-    const name = customer.name;
-    const objectCount = objects.length;
-    const searchText = [
-      customer.name,
-      customer.segment,
-      customer.contact_name,
-      customer.contact_email,
-      customer.contact_phone,
-      customer.address,
-      customer.kvk_number,
-      customer.bank_account,
-      objects.map(objectSummary).join(" "),
-      customer.notes,
-    ].filter(Boolean).join(" ");
-    const row = [
-      `<tr${syncedId ? ` data-customer-id="${escapeHtml(syncedId)}"` : ""} data-customer-key="${escapeHtml(customerKey(name))}" data-search="${escapeHtml(searchText)}">`,
-      `<td>${escapeHtml(name)}</td>`,
-      `<td>${escapeHtml(customer.segment || "Klant")}</td>`,
-      `<td>${objectCount}</td>`,
-      `<td>${escapeHtml([customer.contact_name, customer.contact_email, customer.contact_phone].filter(Boolean).join(" / "))}</td>`,
-      `<td>${statusCell("Prospect", "yellow")}</td>`,
-      `<td>${customerActions()}</td>`,
-      "</tr>",
-    ].join("");
-
-    const currentRows = String(state.customers || "")
-      .replace(/<tr[^>]*data-empty-row[^>]*>[\s\S]*?<\/tr>/g, "");
-    state.customers = `${row}${currentRows}`;
-    writeState(state);
-  }
-
   function updateObjectCardTitle(entry) {
     const key = entry.dataset.objectKey;
     const name = entry.querySelector(`[name="object_${key}_name"]`)?.value.trim();
@@ -522,7 +464,6 @@
         syncWarning = " Supabase-sync is niet actief; er is geen activatiemail verstuurd.";
       }
 
-      appendLocalCustomer(customer, objects, syncedId);
       setStatus(syncWarning
         ? `${customer.name} staat lokaal in deze sessie.${syncWarning}`
         : `${customer.name} is aangemaakt en de activatiemail is verstuurd.`,
@@ -536,8 +477,22 @@
     }
   }
 
-  addObjectButton?.addEventListener("click", () => addObjectEntry());
-  customerAddressLookupState = initAddressLookup(form?.querySelector(".address-grid"));
-  if (objectList && !objectList.children.length) addObjectEntry();
-  form?.addEventListener("submit", submitCustomer);
+  async function bootstrapCustomerCreate() {
+    const access = await window.RoofSignalBackend?.requirePortalAccess("internal");
+    if (!access?.ok) {
+      window.location.replace(access?.reason === "customer_only" ? "portal-klant.html" : "portal-login.html");
+      return;
+    }
+    if (!access.internal || !["owner_admin", "support"].includes(access.profile?.role)) {
+      window.location.replace("portal-beheer.html");
+      return;
+    }
+    document.body.classList.remove("portal-auth-pending");
+    addObjectButton?.addEventListener("click", () => addObjectEntry());
+    customerAddressLookupState = initAddressLookup(form?.querySelector(".address-grid"));
+    if (objectList && !objectList.children.length) addObjectEntry();
+    form?.addEventListener("submit", submitCustomer);
+  }
+
+  bootstrapCustomerCreate();
 })();

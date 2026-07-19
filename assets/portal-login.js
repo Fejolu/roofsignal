@@ -2,27 +2,6 @@ const loginForm = document.querySelector("#portal-login-form");
 const resetRequestButton = document.querySelector("[data-password-reset-request]");
 const resetPasswordForm = document.querySelector("#password-reset-form");
 
-const fullAccessEmails = new Set([
-  "admin@roofsignal.nl",
-  "ferry@roofsignal.nl",
-]);
-
-function getPortalTarget(email) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const isRoofSignalUser = normalizedEmail.endsWith("@roofsignal.nl");
-
-  if (!isRoofSignalUser) {
-    return "portal-klant.html";
-  }
-
-  const params = new URLSearchParams({
-    role: fullAccessEmails.has(normalizedEmail) ? "owner-admin" : "support",
-    user: normalizedEmail,
-  });
-
-  return `portal-beheer.html?${params.toString()}`;
-}
-
 function routeForRole(email, profile) {
   const normalizedEmail = email.trim().toLowerCase();
   const role = profile?.role || "";
@@ -143,7 +122,7 @@ loginForm?.addEventListener("submit", async (event) => {
     return;
   }
 
-  window.location.href = getPortalTarget(email);
+  setStatus(loginForm, "Inloggen is tijdelijk niet beschikbaar. Probeer het later opnieuw of neem contact op met RoofSignal.", "error");
 });
 
 resetRequestButton?.addEventListener("click", async () => {

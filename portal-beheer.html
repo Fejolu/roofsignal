@@ -19,9 +19,9 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal7">
+  <link rel="stylesheet" href="assets/styles.css?v=portal10">
 </head>
-<body class="portal-body admin">
+<body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
   <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
   <nav class="portal-nav">
@@ -55,11 +55,11 @@
   </header>
 
   <section id="dashboard" class="portal-grid metrics">
-    <article><span>Actieve klanten</span><strong>24</strong><p>8 VvE, 11 vastgoed, 5 bedrijf.</p></article>
-    <article><span>Open beoordelingen</span><strong>9</strong><p>3 wachten op rapportage.</p></article>
-    <article><span>Support</span><strong>6</strong><p>2 vragen met hoge prioriteit.</p></article>
-    <article><span>Omzet open</span><strong>EUR 7.850</strong><p>Facturen nog niet betaald.</p></article>
-    <article><span>Offertes</span><strong>5</strong><p>2 concepten wachten op akkoord.</p></article>
+    <article><span>Actieve klanten</span><strong>0</strong><p>Geen klantdata.</p></article>
+    <article><span>Open inspecties</span><strong>0</strong><p>Geen inspectiedata.</p></article>
+    <article><span>Support</span><strong>0</strong><p>Nog niet gekoppeld.</p></article>
+    <article><span>Omzet open</span><strong>EUR 0</strong><p>Geen factuurdata.</p></article>
+    <article><span>Offertes</span><strong>0</strong><p>Geen offertedata.</p></article>
   </section>
 
   <section class="portal-panel" id="rechten">
@@ -73,18 +73,13 @@
       <div><strong>Finance</strong><span>Facturen, offertes, betaalstatus, herinneringen en omzetoverzicht.</span></div>
     </div>
     <div class="role-builder">
-      <label>E-mailadres<input value="planner@roofsignal.nl" aria-label="E-mailadres teamlid"></label>
+      <label>E-mailadres<input placeholder="naam@roofsignal.nl" aria-label="E-mailadres teamlid"></label>
       <label>Rol<select aria-label="Rol teamlid"><option>Owner admin</option><option selected>Support</option><option>Planning</option><option>Finance</option><option>Rapportage</option></select></label>
       <button class="btn" type="button" data-admin-action="assign-role">Rol toewijzen</button>
     </div>
     <table class="portal-table compact role-table">
       <thead><tr><th>Teamlid</th><th>Rol</th><th>Rechten</th><th>Status</th><th>Acties</th></tr></thead>
-      <tbody>
-        <tr><td>admin@roofsignal.nl</td><td><span class="role-pill owner">Owner admin</span></td><td>Alles</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Intrekken</a></div></td></tr>
-        <tr><td>ferry@roofsignal.nl</td><td><span class="role-pill owner">Owner admin</span></td><td>Alles + accountbeheer</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Intrekken</a></div></td></tr>
-        <tr><td>support@roofsignal.nl</td><td><span class="role-pill">Support</span></td><td>Support, meekijken, dossiers</td><td><span class="status-dot yellow">Uitnodiging</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
-        <tr><td>planning@roofsignal.nl</td><td><span class="role-pill">Planning</span></td><td>Agenda, beoordelingen, toegang</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>
-      </tbody>
+      <tbody><tr data-empty-row><td colspan="5">Geen teamleden geladen.</td></tr></tbody>
     </table>
   </section>
 
@@ -100,13 +95,7 @@
       </div>
       <table class="portal-table">
         <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Contact / activiteit</th><th>Status</th><th>Acties</th></tr></thead>
-        <tbody>
-          <tr><td>VvE Parkzicht</td><td>VvE beheer</td><td>1</td><td>Rapport geopend</td><td><span class="status-dot red">Actie nodig</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-          <tr><td>Nieuw account zonder rapport</td><td>VvE beheer</td><td>0</td><td>Demo-data klaargezet</td><td><span class="status-dot yellow">Testdata</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-          <tr><td>Ten Hag Vastgoedbeheer</td><td>Vastgoedbeheer</td><td>12</td><td>Portefeuillescan aangevraagd</td><td><span class="status-dot yellow">Intake</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-          <tr><td>Logistiek Centrum Noord</td><td>Bedrijfspand</td><td>3</td><td>Beoordeling gepland</td><td><span class="status-dot green">Actief</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-          <tr><td>MVGM VvE Beheer</td><td>VvE beheer</td><td>7</td><td>Offerte verzonden</td><td><span class="status-dot yellow">Opvolgen</span></td><td><div class="table-actions"><a href="portal-klant">Overnemen</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div></td></tr>
-        </tbody>
+        <tbody><tr data-empty-row><td colspan="6">Geen klanten geladen.</td></tr></tbody>
       </table>
       <div class="customer-object-manager" data-object-manager hidden>
         <div class="panel-head compact-head">
@@ -123,11 +112,7 @@
 
     <aside class="portal-panel" id="planning">
       <div class="panel-head"><div><span class="eyebrow orange">Vandaag</span><h2>Operationeel</h2></div></div>
-      <div class="timeline-list">
-        <div><span>09:30</span><strong>Rapportcontrole</strong><p>VvE Parkzicht definitief maken.</p></div>
-        <div><span>11:00</span><strong>Nieuwe klant onboarden</strong><p>Account aanmaken en testdata toevoegen als er nog geen rapport is.</p></div>
-        <div><span>14:30</span><strong>Drone-opname voorbereiden</strong><p>Weer, toegang en scope controleren.</p></div>
-      </div>
+      <div class="timeline-list"><div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div></div>
     </aside>
   </section>
 
@@ -140,17 +125,26 @@
         <article data-pipeline-stage="analysis"><span>Analyse</span><strong>0</strong><p>Foto's en bevindingen verwerken.</p></article>
         <article data-pipeline-stage="delivered"><span>Geleverd</span><strong>0</strong><p>Afgeronde rapporten.</p></article>
       </div>
+      <form class="inspection-create-form" data-inspection-create-form>
+        <div class="form-section-head"><span class="eyebrow orange">Nieuwe inspectie</span><h3>Inspectie voorbereiden</h3></div>
+        <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
+        <label>Object<select name="property_id" required disabled><option value="">Selecteer eerst een klant</option></select></label>
+        <label>Scope<input name="scope" placeholder="Bijvoorbeeld gebouwschil + PV" required></label>
+        <label>Geplande datum<input name="scheduled_at" type="datetime-local"></label>
+        <button class="btn" type="submit">Inspectie aanmaken</button>
+        <p class="form-note" data-inspection-create-status>Een inspectie wordt altijd aan één klant en object gekoppeld.</p>
+      </form>
+      <table class="portal-table inspection-table">
+        <thead><tr><th>Referentie</th><th>Klant</th><th>Object</th><th>Scope</th><th>Status</th><th>Planning</th></tr></thead>
+        <tbody><tr data-empty-row><td colspan="6">Nog geen inspecties.</td></tr></tbody>
+      </table>
     </div>
 
     <div class="portal-panel" id="facturen">
       <div class="panel-head"><div><span class="eyebrow orange">Facturen</span><h2>Betaalstatus</h2></div></div>
       <table class="portal-table compact">
         <thead><tr><th>Klant</th><th>Bedrag</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>VvE Parkzicht</td><td>EUR 1.250</td><td><span class="status-dot yellow">Open</span></td></tr>
-          <tr><td>Logistiek Centrum Noord</td><td>EUR 2.200</td><td><span class="status-dot green">Betaald</span></td></tr>
-          <tr><td>MVGM VvE Beheer</td><td>EUR 4.400</td><td><span class="status-dot red">Herinnering</span></td></tr>
-        </tbody>
+        <tbody><tr data-empty-row><td colspan="3">Geen facturen.</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -168,11 +162,7 @@
     </div>
     <table class="portal-table compact offer-table">
       <thead><tr><th>Klant</th><th>Scope</th><th>Bedrag</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>Ten Hag Vastgoedbeheer</td><td>Portefeuillescan 12 objecten</td><td>EUR 6.800</td><td><span class="status-dot yellow">Concept</span></td></tr>
-        <tr><td>MVGM VvE Beheer</td><td>Gebouwschilrapportage</td><td>EUR 4.400</td><td><span class="status-dot green">Verzonden</span></td></tr>
-        <tr><td>Logistiek Centrum Noord</td><td>Dak + PV-controle</td><td>EUR 2.200</td><td><span class="status-dot yellow">Akkoord verwacht</span></td></tr>
-      </tbody>
+      <tbody><tr data-empty-row><td colspan="4">Geen offertes.</td></tr></tbody>
     </table>
   </section>
 
@@ -181,16 +171,11 @@
       <div><span class="eyebrow orange">Support</span><h2>Klantvragen</h2></div>
       <a href="#support" data-admin-action="create-support-task">Nieuwe interne taak</a>
     </div>
-    <div class="support-grid admin-support">
-      <div><strong>VvE Parkzicht</strong><span>PV-hotspot koppelen aan installateur en desnoods klantaccount overnemen tijdens supportcall.</span></div>
-      <div><strong>Ten Hag Vastgoedbeheer</strong><span>Objectlijst controleren op dubbele adressen en afspraakvoorstel in agenda zetten.</span></div>
-      <div><strong>MVGM VvE Beheer</strong><span>Offerte opvolgen, portaaltoegang sturen en factuurstatus controleren.</span></div>
-      <div><strong>Logistiek Centrum Noord</strong><span>Planning bevestigen met facilitair manager en interne taak toewijzen.</span></div>
-    </div>
+    <div class="support-grid admin-support"><div data-empty-row><strong>Geen supporttaken</strong><span>Er zijn geen klantvragen of taken geladen.</span></div></div>
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=8" defer></script>
-<script src="assets/portal-admin.js?v=4" defer></script>
+<script src="assets/supabase-app.js?v=9" defer></script>
+<script src="assets/portal-admin.js?v=5" defer></script>
 </body>
 </html>

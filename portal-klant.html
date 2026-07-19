@@ -19,9 +19,9 @@
   <meta name="twitter:title" content="RoofSignal Portaal | RoofSignal">
   <meta name="twitter:description" content="Objectgericht RoofSignal Portaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal5">
+  <link rel="stylesheet" href="assets/styles.css?v=portal10">
 </head>
-<body class="portal-body">
+<body class="portal-body portal-auth-pending" data-portal-surface="customer">
 <aside class="portal-sidebar">
   <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
   <nav class="portal-nav">
@@ -32,10 +32,8 @@
     <a href="#inspecties">Inspecties</a>
     <a href="#media">Media</a>
     <a href="#ai">AI</a>
-    <a href="#management">Management</a>
-    <a href="#finance-hub">Finance Hub</a>
     <a href="#planning">Planning</a>
-    <a href="#financieel">Financieel</a>
+    <a href="#financieel">Facturen</a>
   </nav>
   <div class="portal-account">
     <span>Ingelogd als</span>
@@ -79,7 +77,7 @@
     <article><span>Abonnement</span><strong>EUR 0</strong><p>Geen gegevens beschikbaar.</p></article>
   </section>
 
-  <section class="portal-panel management-command" id="management">
+  <section class="portal-panel management-command" id="management" hidden>
     <div class="panel-head">
       <div><span class="eyebrow orange">Administrator</span><h2>Managementdashboard</h2></div>
       <a href="#finance-hub">Open Finance Hub</a>
@@ -230,7 +228,7 @@
     </div>
   </section>
 
-  <section class="portal-layout finance-command" id="finance-hub">
+  <section class="portal-layout finance-command" id="finance-hub" hidden>
     <div class="portal-panel wide">
       <div class="panel-head">
         <div><span class="eyebrow orange">Administrator / Finance</span><h2>Finance Hub</h2></div>
@@ -260,7 +258,7 @@
     </aside>
   </section>
 
-  <section class="portal-layout">
+  <section class="portal-layout" hidden>
     <div class="portal-panel wide" id="accountant-export">
       <div class="panel-head">
         <div><span class="eyebrow orange">Accountant export</span><h2>BTW, jaarrekening en belasting</h2></div>
@@ -298,7 +296,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=8" defer></script>
-<script src="assets/portal-admin.js?v=4" defer></script>
+<script src="assets/supabase-app.js?v=9" defer></script>
+<script src="assets/portal-admin.js?v=5" defer></script>
 </body>
 </html>

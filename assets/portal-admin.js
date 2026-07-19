@@ -32,36 +32,19 @@
   const objectManagerTitle = document.querySelector("[data-object-manager-title]");
   const objectManagerStatus = document.querySelector("[data-object-manager-status]");
   const objectEditList = document.querySelector("[data-object-edit-list]");
+  const inspectionForm = document.querySelector("[data-inspection-create-form]");
+  const inspectionStatus = document.querySelector("[data-inspection-create-status]");
+  const inspectionBody = document.querySelector(".inspection-table tbody");
   let activeObjectCustomerRow = null;
   let activeCustomerObjects = [];
+  let portalAccess = null;
 
   function saveState() {
-    localStorage.setItem(stateKey, JSON.stringify({
-      customers: customersBody?.innerHTML || "",
-      roles: rolesBody?.innerHTML || "",
-      offers: offersBody?.innerHTML || "",
-      invoices: invoicesBody?.innerHTML || "",
-      support: supportGrid?.innerHTML || "",
-      planning: planningList?.innerHTML || "",
-    }));
-  }
-
-  function hasState(state, key) {
-    return Object.prototype.hasOwnProperty.call(state, key);
+    // Operational data lives in Supabase. Browser storage is not a system of record.
   }
 
   function loadState() {
-    try {
-      const state = JSON.parse(localStorage.getItem(stateKey) || "{}");
-      if (hasState(state, "customers") && customersBody) customersBody.innerHTML = state.customers;
-      if (hasState(state, "roles") && rolesBody) rolesBody.innerHTML = state.roles;
-      if (hasState(state, "offers") && offersBody) offersBody.innerHTML = state.offers;
-      if (hasState(state, "invoices") && invoicesBody) invoicesBody.innerHTML = state.invoices;
-      if (hasState(state, "support") && supportGrid) supportGrid.innerHTML = state.support;
-      if (hasState(state, "planning") && planningList) planningList.innerHTML = state.planning;
-    } catch {
-      localStorage.removeItem(stateKey);
-    }
+    localStorage.removeItem(stateKey);
   }
 
   function statusCell(label, tone = "green") {
@@ -158,7 +141,11 @@
   }
 
   function renderRoles(profiles) {
-    if (!rolesBody || !profiles.length) return;
+    if (!rolesBody) return;
+    if (!profiles.length) {
+      rolesBody.innerHTML = '<tr data-empty-row><td colspan="5">Geen teamleden gevonden.</td></tr>';
+      return;
+    }
     rolesBody.innerHTML = profiles.map((profile) => {
       const role = roleLabels[profile.role] || profile.role;
       return `<tr><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
@@ -168,7 +155,7 @@
   function reportPipelineStage(status) {
     const normalized = String(status || "draft").trim().toLowerCase().replace(/[ -]+/g, "_");
     if (["delivered", "published", "complete", "completed", "geleverd", "afgerond"].includes(normalized)) return "delivered";
-    if (["analysis", "analyse", "review", "in_review", "processing", "reporting"].includes(normalized)) return "analysis";
+    if (["captured", "analysis", "analyse", "review", "in_review", "processing", "reporting"].includes(normalized)) return "analysis";
     if (["planned", "scheduled", "gepland", "appointment"].includes(normalized)) return "planned";
     return "intake";
   }
@@ -186,18 +173,122 @@
     });
   }
 
+  function renderInspections(inspections = []) {
+    renderReportPipeline(inspections);
+    if (!inspectionBody) return;
+    if (!inspections.length) {
+      inspectionBody.innerHTML = '<tr data-empty-row><td colspan="6">Nog geen inspecties.</td></tr>';
+      return;
+    }
+    inspectionBody.innerHTML = inspections.map((inspection) => `<tr><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td>${escapeHtml(inspection.scope || "-")}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td>${escapeHtml(formatPortalDate(inspection.scheduled_at))}</td></tr>`).join("");
+  }
+
+  function populateInspectionOrganizations(organizations) {
+    const select = inspectionForm?.querySelector('[name="organization_id"]');
+    if (!select) return;
+    select.innerHTML = '<option value="">Selecteer klant</option>' + organizations.map((organization) => `<option value="${escapeHtml(organization.id)}">${escapeHtml(organization.name)}</option>`).join("");
+  }
+
+  function formatMoney(value) {
+    return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(Number(value || 0));
+  }
+
+  function renderInvoices(invoices = []) {
+    if (!invoicesBody) return;
+    invoicesBody.innerHTML = invoices.length
+      ? invoices.map((invoice) => `<tr><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td></tr>`).join("")
+      : '<tr data-empty-row><td colspan="3">Geen facturen.</td></tr>';
+  }
+
+  function renderQuotes(quotes = []) {
+    if (!offersBody) return;
+    offersBody.innerHTML = quotes.length
+      ? quotes.map((quote) => `<tr><td>${escapeHtml(quote.organizations?.name || "-")}</td><td>${escapeHtml(quote.title || quote.quote_number || "Offerte")}</td><td>${escapeHtml(formatMoney(quote.amount))}</td><td>${statusCell(escapeHtml(quote.status || "Concept"), quote.status === "accepted" ? "green" : "yellow")}</td></tr>`).join("")
+      : '<tr data-empty-row><td colspan="4">Geen offertes.</td></tr>';
+  }
+
+  function renderAppointments(appointments = []) {
+    if (!planningList) return;
+    planningList.innerHTML = appointments.length
+      ? appointments.map((appointment) => `<div><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.status].filter(Boolean).join(" · "))}</p></div>`).join("")
+      : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
+  }
+
+  function renderAdminMetrics(customers, inspections, invoices, quotes) {
+    const cards = [...document.querySelectorAll("#dashboard article")];
+    const openInspections = inspections.filter((inspection) => !["delivered", "cancelled"].includes(inspection.status)).length;
+    const openInvoices = invoices.filter((invoice) => !["paid", "cancelled", "credited"].includes(invoice.status));
+    const openAmount = openInvoices.reduce((total, invoice) => total + Number(invoice.amount || 0), 0);
+    const values = [customers.length, openInspections, 0, formatMoney(openAmount), quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status)).length];
+    const notes = ["Live uit klantdata.", "Niet geleverd of geannuleerd.", "Takenworkflow nog niet actief.", "Niet betaald of gecrediteerd.", "Nog niet afgerond."];
+    cards.forEach((card, index) => {
+      if (card.querySelector("strong")) card.querySelector("strong").textContent = String(values[index] ?? 0);
+      if (card.querySelector("p")) card.querySelector("p").textContent = notes[index] || "";
+    });
+  }
+
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, reports] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
-      backend.listReports(),
+      backend.listInspections(),
+      backend.listInvoices(),
+      backend.listQuotes(),
+      backend.listAppointments(),
     ]);
     renderCustomers(customers);
     renderRoles(profiles);
-    renderReportPipeline(reports);
+    renderInspections(inspections);
+    renderInvoices(invoices);
+    renderQuotes(quotes);
+    renderAppointments(appointments);
+    renderAdminMetrics(customers, inspections, invoices, quotes);
+    populateInspectionOrganizations(customers);
     syncCustomerOwnedData();
+  }
+
+  async function loadInspectionObjects(organizationId) {
+    const select = inspectionForm?.querySelector('[name="property_id"]');
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = '<option value="">Objecten laden...</option>';
+    if (!organizationId) {
+      select.innerHTML = '<option value="">Selecteer eerst een klant</option>';
+      return;
+    }
+    const properties = await window.RoofSignalBackend.listOrganizationProperties(organizationId);
+    select.innerHTML = '<option value="">Selecteer object</option>' + properties.map((property) => `<option value="${escapeHtml(property.id)}">${escapeHtml(property.name)}</option>`).join("");
+    select.disabled = !properties.length;
+    if (!properties.length) select.innerHTML = '<option value="">Deze klant heeft nog geen objecten</option>';
+  }
+
+  async function createInspection(event) {
+    event.preventDefault();
+    if (!inspectionForm) return;
+    const formData = new FormData(inspectionForm);
+    const payload = {
+      organization_id: String(formData.get("organization_id") || ""),
+      property_id: String(formData.get("property_id") || ""),
+      scope: String(formData.get("scope") || "").trim(),
+      scheduled_at: formData.get("scheduled_at") ? new Date(String(formData.get("scheduled_at"))).toISOString() : null,
+      status: formData.get("scheduled_at") ? "planned" : "intake",
+    };
+    if (!payload.organization_id || !payload.property_id || !payload.scope) return;
+    const button = inspectionForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    if (inspectionStatus) inspectionStatus.textContent = "Inspectie wordt aangemaakt...";
+    const result = await window.RoofSignalBackend.createInspection(payload);
+    button.disabled = false;
+    if (!result.ok) {
+      if (inspectionStatus) inspectionStatus.textContent = result.error?.message || "Inspectie aanmaken is mislukt.";
+      return;
+    }
+    inspectionForm.reset();
+    await loadInspectionObjects("");
+    if (inspectionStatus) inspectionStatus.textContent = "Inspectie is aangemaakt en aan het object gekoppeld.";
+    renderInspections(await window.RoofSignalBackend.listInspections());
   }
 
   async function editCustomer(row) {
@@ -206,14 +297,11 @@
     if (!name) return;
     const segment = prompt("Segment", cells[1].textContent.trim());
     if (!segment) return;
-    const objects = prompt("Aantal objecten", cells[2].textContent.trim());
-    if (objects === null) return;
     const activity = prompt("Laatste activiteit", cells[3].textContent.trim());
     if (!activity) return;
 
     cells[0].textContent = name;
     cells[1].textContent = segment;
-    cells[2].textContent = objects;
     cells[3].textContent = activity;
     row.dataset.customerKey = customerKey(name);
     if (window.RoofSignalBackend?.isConfigured && row.dataset.customerId) {
@@ -613,59 +701,11 @@
   }
 
   function createOffer() {
-    if (!offersBody) return;
-    if (!customerKeys().size) {
-      setPortalNotice("Maak eerst een klant aan voordat je een offerte aanmaakt.", "error");
-      focusCustomerForm();
-      return;
-    }
-    const customer = prompt("Klant voor deze offerte", "Nieuwe klant")?.trim();
-    if (!customer) return;
-    if (!hasCustomer(customer)) {
-      setPortalNotice("Maak eerst de klant aan voordat je een offerte aanmaakt.", "error");
-      focusCustomerForm();
-      return;
-    }
-    const scope = prompt("Scope", "Dakinspectie en gebouwschilrapportage")?.trim();
-    if (!scope) return;
-    const amount = prompt("Bedrag", "EUR 1.250")?.trim();
-    if (!amount) return;
-
-    const row = document.createElement("tr");
-    row.dataset.customerKey = customerKey(customer);
-    row.innerHTML = `<td>${escapeHtml(customer)}</td><td>${escapeHtml(scope)}</td><td>${escapeHtml(amount)}</td><td>${statusCell("Concept", "yellow")}</td>`;
-    offersBody.prepend(row);
-    syncCustomerOwnedData();
-    saveState();
-    setPortalNotice(`Conceptofferte voor ${customer} is aangemaakt in Offertes.`, "success");
-    document.querySelector("#offertes")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setPortalNotice("Offertes aanmaken wordt pas geactiveerd wanneer de databaseworkflow gereed is.", "info");
   }
 
   function createSupportTask() {
-    if (!supportGrid) return;
-    if (!customerKeys().size) {
-      setPortalNotice("Maak eerst een klant aan voordat je een supporttaak toevoegt.", "error");
-      focusCustomerForm();
-      return;
-    }
-    const customer = prompt("Klant of dossier", "Nieuwe klant")?.trim();
-    if (!customer) return;
-    if (!hasCustomer(customer)) {
-      setPortalNotice("Maak eerst de klant aan voordat je een supporttaak toevoegt.", "error");
-      focusCustomerForm();
-      return;
-    }
-    const task = prompt("Interne taak", "Portaaltoegang controleren en opvolging klaarzetten")?.trim();
-    if (!task) return;
-
-    const item = document.createElement("div");
-    item.dataset.customerKey = customerKey(customer);
-    item.innerHTML = `<strong>${escapeHtml(customer)}</strong><span>${escapeHtml(task)}</span>`;
-    supportGrid.prepend(item);
-    syncCustomerOwnedData();
-    saveState();
-    setPortalNotice(`Interne taak voor ${customer} is toegevoegd aan Support.`, "success");
-    document.querySelector("#support")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setPortalNotice("Supporttaken worden pas geactiveerd wanneer de takenworkflow gereed is.", "info");
   }
 
   function setAiAnswer(title, body) {
@@ -810,10 +850,7 @@
   }
 
   function removeRole(row) {
-    const email = row.querySelector("td")?.textContent.trim() || "dit teamlid";
-    if (!confirm(`Rol van ${email} intrekken?`)) return;
-    row.remove();
-    saveState();
+    setPortalNotice("Toegang intrekken wordt pas beschikbaar zodra de Auth-intrekkingsworkflow gereed is.", "info");
   }
 
   async function assignRole() {
@@ -964,18 +1001,18 @@
     ].join("");
   }
 
-  function renderCustomerReports(reports, properties) {
+  function renderCustomerInspections(inspections, properties) {
     const body = document.querySelector("#inspecties tbody");
-    if (!body || !reports.length) return;
+    if (!body || !inspections.length) return;
     const propertyNames = new Map(properties.map((property) => [property.id, property.name]));
-    body.innerHTML = reports.map((report) => [
+    body.innerHTML = inspections.map((inspection) => [
       "<tr>",
-      `<td>${escapeHtml(formatPortalDate(report.published_at || report.created_at))}</td>`,
-      `<td>${escapeHtml(propertyNames.get(report.property_id) || "Object")}</td>`,
-      `<td>${escapeHtml(report.title || "Rapport")}</td>`,
-      '<td>Gekoppelde rapportdata</td>',
-      `<td>${statusCell(escapeHtml(report.status || "Concept"), report.status === "published" ? "green" : "yellow")}</td>`,
-      `<td>${report.report_url ? `<a href="${escapeHtml(report.report_url)}">Open</a>` : "-"}</td>`,
+      `<td>${escapeHtml(formatPortalDate(inspection.inspected_at || inspection.scheduled_at || inspection.created_at))}</td>`,
+      `<td>${escapeHtml(propertyNames.get(inspection.property_id) || inspection.properties?.name || "Object")}</td>`,
+      `<td>${escapeHtml(inspection.scope || "Inspectie")}</td>`,
+      `<td>${escapeHtml(inspection.summary || "Nog geen gebouwdata vastgelegd")}</td>`,
+      `<td>${statusCell(escapeHtml(inspection.status || "Intake"), inspection.status === "delivered" ? "green" : "yellow")}</td>`,
+      '<td>-</td>',
       "</tr>",
     ].join("")).join("");
   }
@@ -1004,7 +1041,9 @@
     resetCustomerPortalData();
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured) return;
-    let organizationId = localStorage.getItem("roofsignal-current-customer-id");
+    let organizationId = portalAccess?.internal
+      ? localStorage.getItem("roofsignal-current-customer-id")
+      : portalAccess?.profile?.organization_id;
     if (!organizationId) organizationId = (await backend.getProfile())?.organization_id || "";
     if (!organizationId) {
       const currentName = customerKey(localStorage.getItem("roofsignal-current-customer"));
@@ -1014,14 +1053,22 @@
     }
     if (!organizationId) return;
 
-    const [properties, reports, invoices, appointments] = await Promise.all([
+    const organization = (await backend.listOrganizations()).find((item) => item.id === organizationId);
+    if (organization) {
+      const heading = document.querySelector(".portal-topbar h1");
+      const account = document.querySelector(".portal-account strong");
+      if (heading) heading.textContent = organization.name;
+      if (account) account.textContent = organization.name;
+    }
+
+    const [properties, inspections, invoices, appointments] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
-      backend.listOrganizationReports(organizationId),
+      backend.listInspections(organizationId),
       backend.listOrganizationInvoices(organizationId),
       backend.listOrganizationAppointments(organizationId),
     ]);
     renderCustomerProperties(properties);
-    renderCustomerReports(reports, properties);
+    renderCustomerInspections(inspections, properties);
     renderCustomerInvoices(invoices);
     renderCustomerAppointments(appointments);
 
@@ -1041,11 +1088,46 @@
     localStorage.removeItem("roofsignal-current-customer-id");
   }
 
-  loadState();
-  loadCurrentCustomer();
-  loadCustomerPortalData();
-  loadLiveAdminData();
-  syncCustomerOwnedData();
+  function applyInternalRole(role) {
+    if (!document.body.matches('[data-portal-surface="internal"]')) return;
+    const allowed = {
+      owner_admin: ["dashboard", "klanten", "inspecties", "planning", "facturen", "offertes", "support", "rechten"],
+      support: ["dashboard", "klanten", "inspecties", "support"],
+      planning: ["dashboard", "klanten", "inspecties", "planning"],
+      finance: ["dashboard", "klanten", "facturen", "offertes"],
+      reportage: ["dashboard", "klanten", "inspecties"],
+    }[role] || [];
+    ["dashboard", "klanten", "inspecties", "planning", "facturen", "offertes", "support", "rechten"].forEach((id) => {
+      const visible = allowed.includes(id);
+      const section = document.getElementById(id);
+      const link = document.querySelector(`.portal-nav a[href="#${id}"]`);
+      if (section) section.hidden = !visible;
+      if (link) link.hidden = !visible;
+    });
+  }
+
+  async function bootstrapPortal() {
+    const surface = document.body.dataset.portalSurface;
+    const backend = window.RoofSignalBackend;
+    if (!surface || !backend?.isConfigured) {
+      window.location.replace("portal-login.html");
+      return;
+    }
+    portalAccess = await backend.requirePortalAccess(surface);
+    if (!portalAccess.ok) {
+      window.location.replace(portalAccess.reason === "customer_only" ? "portal-klant.html" : "portal-login.html");
+      return;
+    }
+    if (surface === "internal") applyInternalRole(portalAccess.profile.role);
+    document.body.classList.remove("portal-auth-pending");
+    loadState();
+    loadCurrentCustomer();
+    if (surface === "customer") await loadCustomerPortalData();
+    if (surface === "internal") await loadLiveAdminData();
+    syncCustomerOwnedData();
+  }
+
+  bootstrapPortal();
 
   document.addEventListener("click", (event) => {
     const signOut = event.target.closest(".portal-account a[href^='portal-login']");
@@ -1093,4 +1175,6 @@
 
   customerCreateForm?.addEventListener("submit", createCustomer);
   customerSearchInput?.addEventListener("input", filterCustomers);
+  inspectionForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadInspectionObjects(event.target.value));
+  inspectionForm?.addEventListener("submit", createInspection);
 })();

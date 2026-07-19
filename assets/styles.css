@@ -30,6 +30,11 @@
   display: none !important;
 }
 
+.portal-auth-pending .portal-sidebar,
+.portal-auth-pending .portal-main {
+  visibility: hidden;
+}
+
 body {
   margin: 0;
   font-family: Inter, Arial, sans-serif;
@@ -1703,6 +1708,40 @@ button { cursor: pointer; }
   max-width: 980px;
 }
 
+.inspection-create-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rs-line);
+}
+
+.inspection-create-form .form-section-head,
+.inspection-create-form .form-note {
+  grid-column: 1 / -1;
+}
+
+.inspection-create-form label {
+  display: grid;
+  gap: 7px;
+  font-weight: 900;
+}
+
+.inspection-create-form input,
+.inspection-create-form select {
+  min-height: 48px;
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 12px 14px;
+  background: #fff;
+  font: inherit;
+}
+
+.inspection-table {
+  margin-top: 18px;
+}
+
 .form-section-head,
 .customer-detail-form .wide-field,
 .customer-detail-form .form-actions,
@@ -2862,6 +2901,7 @@ button { cursor: pointer; }
   .role-builder,
   .customer-create-form,
   .customer-detail-form,
+  .inspection-create-form,
   .admin-toolbar {
     grid-template-columns: 1fr;
   }
