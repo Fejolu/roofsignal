@@ -160,14 +160,26 @@ resetRequestButton?.addEventListener("click", async () => {
   }
 
   if (!backend?.isConfigured) {
-    setStatus(loginForm, "Wachtwoordherstel is tijdelijk niet beschikbaar. Mail info@roofsignal.nl voor toegang.");
+    setStatus(loginForm, "Wachtwoordherstel is tijdelijk niet beschikbaar. Mail info@roofsignal.nl voor toegang.", "error");
     return;
   }
 
-  const result = await backend.resetPassword(email);
-  setStatus(loginForm, result.ok
-    ? "Als dit e-mailadres bekend is, ontvangt u een link om uw wachtwoord opnieuw in te stellen."
-    : result.error?.message || "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang.");
+  resetRequestButton.disabled = true;
+  resetRequestButton.textContent = "Resetmail versturen...";
+  setStatus(loginForm, "We controleren of dit e-mailadres toegang heeft tot het klantenportaal.", "info");
+
+  try {
+    const result = await backend.resetPassword(email);
+    setStatus(loginForm, result.ok
+      ? "Als dit e-mailadres bekend is, ontvangt u een link om uw wachtwoord opnieuw in te stellen."
+      : result.error?.message || "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang.",
+    result.ok ? "success" : "error");
+  } catch (error) {
+    setStatus(loginForm, error?.message || "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang.", "error");
+  } finally {
+    resetRequestButton.disabled = false;
+    resetRequestButton.textContent = "Wachtwoord vergeten?";
+  }
 });
 
 resetPasswordForm?.addEventListener("submit", async (event) => {
@@ -198,5 +210,5 @@ resetPasswordForm?.addEventListener("submit", async (event) => {
   resetPasswordForm.reset();
   resetPasswordForm.hidden = true;
   loginForm.hidden = false;
-  setStatus(loginForm, "Wachtwoord opgeslagen. U kunt nu opnieuw inloggen.");
+  setStatus(loginForm, "Wachtwoord opgeslagen. U kunt nu opnieuw inloggen.", "success");
 });

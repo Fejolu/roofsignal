@@ -53,10 +53,33 @@
       <label>Contactpersoon<input name="contact_name" placeholder="Naam contactpersoon"></label>
       <label>E-mailadres<input name="contact_email" type="email" placeholder="contact@organisatie.nl" required></label>
       <label>Telefoonnummer<input name="contact_phone" type="tel" placeholder="085 21 28 019"></label>
-      <label class="wide-field">Adres<textarea name="address" rows="3" placeholder="Straat, huisnummer, postcode, plaats"></textarea></label>
+      <div class="form-section-head">
+        <span class="eyebrow orange">NAW</span>
+        <h2>Klantadres</h2>
+      </div>
+      <div class="address-grid wide-field">
+        <label>Straat<input name="street" autocomplete="address-line1" placeholder="Straatnaam"></label>
+        <label>Huisnummer<input name="house_number" autocomplete="address-line2" placeholder="12A"></label>
+        <label>Postcode<input name="postcode" autocomplete="postal-code" placeholder="7311 AA"></label>
+        <label>Plaats<input name="city" autocomplete="address-level2" placeholder="Apeldoorn"></label>
+      </div>
       <label>KvK<input name="kvk_number" placeholder="KvK-nummer"></label>
       <label>Bankrekening<input name="bank_account" placeholder="IBAN"></label>
-      <label class="wide-field">Objecten<textarea name="objects" rows="6" placeholder="Een object per regel, bijvoorbeeld: Parkzicht Hoofdgebouw - Parkzichtlaan 12-48, Apeldoorn"></textarea></label>
+      <div class="object-builder wide-field" data-object-builder>
+        <div class="form-section-head inline-head">
+          <div>
+            <span class="eyebrow orange">Objecten</span>
+            <h2>Objecten per adres</h2>
+          </div>
+          <button class="icon-add-button" type="button" data-add-object aria-label="Object toevoegen" title="Object toevoegen">+</button>
+        </div>
+        <div class="object-entry-list" data-object-entry-list></div>
+        <div class="object-inspection-preview" data-object-preview>
+          <span class="eyebrow orange">Inspectie</span>
+          <strong>Selecteer een object</strong>
+          <p>Kies een object om de inspectievoorbereiding voor dat onderdeel te zien.</p>
+        </div>
+      </div>
       <div class="form-actions">
         <button class="btn" type="submit">Klant aanmaken</button>
         <a class="btn ghost-dark" href="portal-beheer#klanten">Annuleren</a>

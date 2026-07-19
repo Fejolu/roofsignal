@@ -83,18 +83,20 @@ async function sendBrevoEmail(apiKey: string, fromEmail: string, fromName: strin
   return body;
 }
 
-async function sendEmail(to: string, actionLink: string) {
-  const resendApiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
-  const brevoApiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
-  const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || Deno.env.get("FROM_EMAIL") || "noreply@roofsignal.nl";
-  const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
-  const subject = "Uw inloglink voor RoofSignal";
-  const escapedLink = escapeHtml(actionLink);
+type EmailMode = "magiclink" | "password_reset";
+
+function buildPortalEmail(mode: EmailMode, actionLink: string) {
+  const isPasswordReset = mode === "password_reset";
+  const title = isPasswordReset ? "Wachtwoord opnieuw instellen" : "Uw inloglink staat klaar";
+  const subject = isPasswordReset ? "Wachtwoord opnieuw instellen | RoofSignal" : "Uw inloglink voor RoofSignal";
+  const intro = isPasswordReset
+    ? "Gebruik deze link om op de RoofSignal-website een nieuw wachtwoord in te stellen. De link is tijdelijk geldig en kan maar een keer worden gebruikt."
+    : "Gebruik deze link om veilig in te loggen in het RoofSignal klantenportaal. De link is tijdelijk geldig en kan maar een keer worden gebruikt.";
+  const buttonLabel = isPasswordReset ? "Nieuw wachtwoord instellen" : "Log in bij RoofSignal";
   const text = [
-    "Uw inloglink voor RoofSignal",
+    subject,
     "",
-    "Gebruik onderstaande link om in te loggen in het klantenportaal.",
-    "De link is tijdelijk geldig en kan maar een keer worden gebruikt.",
+    intro,
     "",
     actionLink,
     "",
@@ -103,6 +105,7 @@ async function sendEmail(to: string, actionLink: string) {
     "RoofSignal",
     "info@roofsignal.nl",
   ].join("\n");
+  const escapedLink = escapeHtml(actionLink);
   const html = `<!doctype html>
 <html lang="nl">
   <body style="margin:0;background:#f4f5f3;font-family:Arial,Helvetica,sans-serif;color:#111816;">
@@ -118,10 +121,10 @@ async function sendEmail(to: string, actionLink: string) {
             </tr>
             <tr>
               <td style="padding:30px 28px 10px;">
-                <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#111816;">Uw inloglink staat klaar</h1>
-                <p style="margin:0 0 20px;font-size:16px;line-height:1.55;color:#34413b;">Gebruik deze link om veilig in te loggen in het RoofSignal klantenportaal. De link is tijdelijk geldig en kan maar een keer worden gebruikt.</p>
+                <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#111816;">${title}</h1>
+                <p style="margin:0 0 20px;font-size:16px;line-height:1.55;color:#34413b;">${intro}</p>
                 <p style="margin:0 0 26px;">
-                  <a href="${escapedLink}" style="display:inline-block;background:#ff5a1f;color:#ffffff;text-decoration:none;font-weight:700;border-radius:6px;padding:14px 20px;">Log in bij RoofSignal</a>
+                  <a href="${escapedLink}" style="display:inline-block;background:#ff5a1f;color:#ffffff;text-decoration:none;font-weight:700;border-radius:6px;padding:14px 20px;">${buttonLabel}</a>
                 </p>
                 <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#5c6862;">Werkt de knop niet? Kopieer deze link naar uw browser:<br><a href="${escapedLink}" style="color:#ff5a1f;word-break:break-all;">${escapedLink}</a></p>
               </td>
@@ -137,6 +140,16 @@ async function sendEmail(to: string, actionLink: string) {
     </table>
   </body>
 </html>`;
+
+  return { subject, text, html };
+}
+
+async function sendEmail(to: string, actionLink: string, mode: EmailMode) {
+  const resendApiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
+  const brevoApiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
+  const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || Deno.env.get("FROM_EMAIL") || "noreply@roofsignal.nl";
+  const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
+  const { subject, text, html } = buildPortalEmail(mode, actionLink);
 
   if (resendApiKey) return sendResendEmail(resendApiKey, fromEmail, fromName, to, subject, text, html);
   if (brevoApiKey) return sendBrevoEmail(brevoApiKey, fromEmail, fromName, to, subject, text, html);
@@ -162,6 +175,7 @@ serve(async (req) => {
   const payload = await req.json().catch(() => ({}));
   const email = normalizeEmail(payload.email);
   const redirectTo = safeRedirectTo(payload.redirectTo);
+  const mode: EmailMode = payload.action === "password_reset" ? "password_reset" : "magiclink";
   const genericResponse = new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -191,7 +205,7 @@ serve(async (req) => {
   }
 
   const { data, error } = await supabase.auth.admin.generateLink({
-    type: "magiclink",
+    type: mode === "password_reset" ? "recovery" : "magiclink",
     email,
     options: {
       redirectTo,
@@ -205,10 +219,10 @@ serve(async (req) => {
   }
 
   try {
-    await sendEmail(email, actionLink);
+    await sendEmail(email, actionLink, mode);
   } catch (error) {
-    console.error("Login link email failed", error);
-    return new Response(JSON.stringify({ error: "Login link could not be sent." }), { status: 500, headers: corsHeaders });
+    console.error("Portal auth email failed", error);
+    return new Response(JSON.stringify({ error: "Portal email could not be sent." }), { status: 500, headers: corsHeaders });
   }
 
   return genericResponse;

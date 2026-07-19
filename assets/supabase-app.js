@@ -80,8 +80,12 @@
     const supabase = await getClient();
     if (!supabase) return { ok: false, fallback: true };
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
+    const { error } = await supabase.functions.invoke("send-portal-login-link", {
+      body: {
+        email,
+        action: "password_reset",
+        redirectTo: config.loginRedirectUrl || `${window.location.origin}/portal-login.html`,
+      },
     });
 
     return error ? { ok: false, error } : { ok: true };
