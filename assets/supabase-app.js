@@ -226,6 +226,42 @@
     return data || [];
   }
 
+  async function listOrganizationReports(organizationId) {
+    const supabase = await getClient();
+    if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase
+      .from("reports")
+      .select("id,organization_id,property_id,title,summary,status,report_url,published_at,created_at,updated_at")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+
+  async function listOrganizationInvoices(organizationId) {
+    const supabase = await getClient();
+    if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("id,organization_id,invoice_number,amount,status,due_date,created_at")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+
+  async function listOrganizationAppointments(organizationId) {
+    const supabase = await getClient();
+    if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("id,organization_id,property_id,title,starts_at,ends_at,status,notes,created_at")
+      .eq("organization_id", organizationId)
+      .order("starts_at", { ascending: true });
+    if (error) return [];
+    return data || [];
+  }
+
   async function updateProperty(id, payload) {
     const supabase = await getClient();
     if (!supabase || !id) return { ok: false };
@@ -311,6 +347,9 @@
     createProperties,
     createPortalCustomer,
     listOrganizationProperties,
+    listOrganizationReports,
+    listOrganizationInvoices,
+    listOrganizationAppointments,
     updateProperty,
     deleteProperty,
     updateOrganization,

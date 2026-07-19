@@ -599,8 +599,9 @@
   }
 
   function impersonateCustomer(row) {
-    const name = row?.querySelector("td")?.textContent.trim() || "VvE Parkzicht";
+    const name = row?.querySelector("td")?.textContent.trim() || "Klant";
     localStorage.setItem("roofsignal-current-customer", name);
+    if (row?.dataset.customerId) localStorage.setItem("roofsignal-current-customer-id", row.dataset.customerId);
     window.location.href = "portal-klant.html";
   }
 
@@ -728,6 +729,18 @@
   }
 
   function handlePortalAction(action) {
+    if (document.querySelector(".property-platform") && [
+      "explain-intelligence", "ai-crack", "ai-do-nothing", "compare-inspections", "ai-mjop", "ai-actions",
+    ].includes(action)) {
+      setAiAnswer("Geen analyse beschikbaar", "Er is nog geen inspectiedata om deze analyse uit te voeren.");
+      return;
+    }
+    if (document.querySelector(".property-platform") && [
+      "plan-reinspection", "request-inspection", "add-object", "unlock-modules", "prepare-accountant-export",
+    ].includes(action)) {
+      setPortalNotice("Deze actie wordt beschikbaar zodra de bijbehorende klantdata en workflow zijn vastgelegd.", "info");
+      return;
+    }
     const answers = {
       "explain-intelligence": [
         "Toelichting op intelligence",
@@ -832,7 +845,7 @@
 
   function editCurrentCustomer() {
     const heading = document.querySelector(".portal-topbar h1");
-    const current = heading?.textContent.trim().replace(/\.$/, "") || "VvE Parkzicht";
+    const current = heading?.textContent.trim().replace(/\.$/, "") || "Klant";
     const name = prompt("Klantnaam", current);
     if (!name || !heading) return;
     heading.textContent = `${name}.`;
@@ -844,8 +857,179 @@
     if (!name || !document.querySelector(".property-platform")) return;
     const heading = document.querySelector(".portal-topbar h1");
     const account = document.querySelector(".portal-account strong");
+    const subscription = document.querySelector(".portal-account strong + span");
     if (heading) heading.textContent = name;
     if (account) account.textContent = name;
+    if (subscription) subscription.textContent = "Abonnement: niet ingesteld";
+  }
+
+  function emptyState(message) {
+    return `<div class="empty-state">${escapeHtml(message)}</div>`;
+  }
+
+  function resetCustomerPortalData() {
+    if (!document.querySelector(".property-platform")) return;
+
+    document.querySelectorAll("#dashboard article").forEach((card) => {
+      const value = card.querySelector("strong");
+      const note = card.querySelector("p");
+      if (value) value.textContent = card.querySelector("span")?.textContent === "Datawaarde" ? "0%" : card.querySelector("span")?.textContent === "Abonnement" ? "EUR 0" : "0";
+      if (note) note.textContent = "Geen gegevens beschikbaar.";
+    });
+
+    document.querySelectorAll("#management .management-grid article").forEach((card) => {
+      const value = card.querySelector("strong");
+      const note = card.querySelector("p");
+      if (value) value.textContent = "0";
+      if (note) note.textContent = "Geen gegevens beschikbaar.";
+    });
+
+    const replacements = [
+      [".object-list", "Geen objecten gekoppeld aan deze klant."],
+      [".object-command aside .timeline-list", "Geen waarschuwingen of signalen."],
+      [".intelligence-feed", "Nog geen Property Intelligence beschikbaar."],
+      [".entitlement-list", "Geen pakket of modules vastgelegd."],
+      ["#media .media-stack", "Nog geen inspectiemedia beschikbaar."],
+      ["#planning .timeline-list", "Geen afspraken gepland."],
+      ["#finance-hub aside .timeline-list", "Geen betalingsherinneringen."],
+      ["#accountant-export + aside .support-grid", "Geen financiële data om te controleren."],
+      ["#financieel + .portal-panel .support-grid", "Geen supporttaken of opvolging."],
+    ];
+    replacements.forEach(([selector, message]) => {
+      const element = document.querySelector(selector);
+      if (element) element.innerHTML = emptyState(message);
+    });
+
+    document.querySelectorAll("#objectdossier .object-dossier-grid > div").forEach((section) => {
+      const tableBody = section.querySelector("tbody");
+      if (tableBody) tableBody.innerHTML = '<tr><td colspan="2">Geen objectgegevens beschikbaar.</td></tr>';
+    });
+    const dossierTitle = document.querySelector("#objectdossier h2");
+    if (dossierTitle) dossierTitle.textContent = "Geen object geselecteerd";
+    const reportLink = document.querySelector("#objectdossier .panel-head > a");
+    if (reportLink) reportLink.hidden = true;
+
+    const inspectionsBody = document.querySelector("#inspecties tbody");
+    if (inspectionsBody) inspectionsBody.innerHTML = '<tr><td colspan="6">Nog geen inspecties of rapporten.</td></tr>';
+    const invoicesBody = document.querySelector("#financieel tbody");
+    if (invoicesBody) invoicesBody.innerHTML = '<tr><td colspan="3">Geen facturen of abonnementen.</td></tr>';
+    const financeAdminBody = document.querySelector("#finance-hub tbody");
+    if (financeAdminBody) financeAdminBody.innerHTML = '<tr><td colspan="4">Geen financiële administratie beschikbaar.</td></tr>';
+
+    document.querySelectorAll("#finance-hub .finance-kpi-grid article").forEach((card) => {
+      const value = card.querySelector("strong");
+      const note = card.querySelector("p");
+      if (value) value.textContent = card.querySelector("span")?.textContent === "Churn" ? "0%" : "EUR 0";
+      if (note) note.textContent = "Geen financiële data.";
+    });
+
+    const aiPrompts = document.querySelector("#ai .ai-prompt-list");
+    if (aiPrompts) aiPrompts.innerHTML = emptyState("AI-acties worden beschikbaar zodra inspectiedata bestaat.");
+    const aiAnswer = document.querySelector("#ai .ai-answer");
+    if (aiAnswer) aiAnswer.innerHTML = "<strong>Geen analyse beschikbaar</strong><p>Er is nog geen inspectiedata om te analyseren.</p>";
+    const complexity = document.querySelector("#planning .complexity-score");
+    if (complexity) complexity.innerHTML = "<span>Inspection Complexity Score</span><strong>0 / 5</strong><p>Nog niet berekend.</p>";
+  }
+
+  function formatPortalDate(value) {
+    if (!value) return "-";
+    return new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
+  }
+
+  function renderCustomerProperties(properties) {
+    const objectList = document.querySelector(".object-list");
+    if (!objectList || !properties.length) return;
+    objectList.innerHTML = properties.map((property) => [
+      '<article class="object-card">',
+      '<div>',
+      `<span class="status-pill demo">${escapeHtml(property.status || "Actief")}</span>`,
+      `<h3>${escapeHtml(property.name || "Object")}</h3>`,
+      `<p>${escapeHtml([property.address, property.postcode, property.city].filter(Boolean).join(", ") || "Adres niet vastgelegd.")}</p>`,
+      '</div>',
+      '<dl>',
+      `<div><dt>Object-ID</dt><dd>${escapeHtml(property.id)}</dd></div>`,
+      '<div><dt>Laatste inspectie</dt><dd>Nog niet geïnspecteerd</dd></div>',
+      '</dl>',
+      '</article>',
+    ].join("")).join("");
+
+    const first = properties[0];
+    const dossierTitle = document.querySelector("#objectdossier h2");
+    if (dossierTitle) dossierTitle.textContent = first.name || "Object";
+    const firstBody = document.querySelector("#objectdossier .object-dossier-grid > div:first-child tbody");
+    if (firstBody) firstBody.innerHTML = [
+      `<tr><th>Adres</th><td>${escapeHtml([first.address, first.postcode, first.city].filter(Boolean).join(", ") || "Niet vastgelegd")}</td></tr>`,
+      `<tr><th>Objectstatus</th><td>${escapeHtml(first.status || "Actief")}</td></tr>`,
+      '<tr><th>Inspectiestatus</th><td>Nog niet geïnspecteerd</td></tr>',
+    ].join("");
+  }
+
+  function renderCustomerReports(reports, properties) {
+    const body = document.querySelector("#inspecties tbody");
+    if (!body || !reports.length) return;
+    const propertyNames = new Map(properties.map((property) => [property.id, property.name]));
+    body.innerHTML = reports.map((report) => [
+      "<tr>",
+      `<td>${escapeHtml(formatPortalDate(report.published_at || report.created_at))}</td>`,
+      `<td>${escapeHtml(propertyNames.get(report.property_id) || "Object")}</td>`,
+      `<td>${escapeHtml(report.title || "Rapport")}</td>`,
+      '<td>Gekoppelde rapportdata</td>',
+      `<td>${statusCell(escapeHtml(report.status || "Concept"), report.status === "published" ? "green" : "yellow")}</td>`,
+      `<td>${report.report_url ? `<a href="${escapeHtml(report.report_url)}">Open</a>` : "-"}</td>`,
+      "</tr>",
+    ].join("")).join("");
+  }
+
+  function renderCustomerAppointments(appointments) {
+    const list = document.querySelector("#planning .timeline-list");
+    if (!list || !appointments.length) return;
+    list.innerHTML = appointments.map((appointment) => [
+      "<div>",
+      `<span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span>`,
+      `<strong>${escapeHtml(appointment.title || "Afspraak")}</strong>`,
+      `<p>${escapeHtml(appointment.notes || appointment.status || "Gepland")}</p>`,
+      "</div>",
+    ].join("")).join("");
+  }
+
+  function renderCustomerInvoices(invoices) {
+    const body = document.querySelector("#financieel tbody");
+    if (!body || !invoices.length) return;
+    const money = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
+    body.innerHTML = invoices.map((invoice) => `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td></tr>`).join("");
+  }
+
+  async function loadCustomerPortalData() {
+    if (!document.querySelector(".property-platform")) return;
+    resetCustomerPortalData();
+    const backend = window.RoofSignalBackend;
+    if (!backend?.isConfigured) return;
+    let organizationId = localStorage.getItem("roofsignal-current-customer-id");
+    if (!organizationId) organizationId = (await backend.getProfile())?.organization_id || "";
+    if (!organizationId) {
+      const currentName = customerKey(localStorage.getItem("roofsignal-current-customer"));
+      const organization = (await backend.listOrganizations()).find((item) => customerKey(item.name) === currentName);
+      organizationId = organization?.id || "";
+      if (organizationId) localStorage.setItem("roofsignal-current-customer-id", organizationId);
+    }
+    if (!organizationId) return;
+
+    const [properties, reports, invoices, appointments] = await Promise.all([
+      backend.listOrganizationProperties(organizationId),
+      backend.listOrganizationReports(organizationId),
+      backend.listOrganizationInvoices(organizationId),
+      backend.listOrganizationAppointments(organizationId),
+    ]);
+    renderCustomerProperties(properties);
+    renderCustomerReports(reports, properties);
+    renderCustomerInvoices(invoices);
+    renderCustomerAppointments(appointments);
+
+    const objectMetric = document.querySelector("#dashboard article:first-child");
+    if (objectMetric) {
+      objectMetric.querySelector("strong").textContent = String(properties.length);
+      objectMetric.querySelector("p").textContent = properties.length ? `${properties.length} gekoppeld object${properties.length === 1 ? "" : "en"}.` : "Geen objecten gekoppeld.";
+    }
   }
 
   function deleteCurrentCustomer() {
@@ -854,10 +1038,12 @@
     if (!confirm(`${name} verwijderen uit het RoofSignal Portaal?`)) return;
     document.querySelector(".admin-toolbar p").textContent = "Deze klant is gemarkeerd voor verwijdering. In de live versie wordt dit doorgevoerd in de database en auditlog.";
     localStorage.removeItem("roofsignal-current-customer");
+    localStorage.removeItem("roofsignal-current-customer-id");
   }
 
   loadState();
   loadCurrentCustomer();
+  loadCustomerPortalData();
   loadLiveAdminData();
   syncCustomerOwnedData();
 
