@@ -1513,7 +1513,10 @@ button { cursor: pointer; }
 
 .role-builder input,
 .role-builder select {
+  width: 100%;
+  height: 48px;
   min-height: 48px;
+  box-sizing: border-box;
   border: 1px solid var(--rs-line);
   border-radius: var(--rs-radius);
   padding: 12px 14px;
