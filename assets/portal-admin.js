@@ -165,15 +165,38 @@
     }).join("");
   }
 
+  function reportPipelineStage(status) {
+    const normalized = String(status || "draft").trim().toLowerCase().replace(/[ -]+/g, "_");
+    if (["delivered", "published", "complete", "completed", "geleverd", "afgerond"].includes(normalized)) return "delivered";
+    if (["analysis", "analyse", "review", "in_review", "processing", "reporting"].includes(normalized)) return "analysis";
+    if (["planned", "scheduled", "gepland", "appointment"].includes(normalized)) return "planned";
+    return "intake";
+  }
+
+  function renderReportPipeline(reports = []) {
+    if (!pipeline) return;
+    const counts = { intake: 0, planned: 0, analysis: 0, delivered: 0 };
+    reports.forEach((report) => {
+      counts[reportPipelineStage(report.status)] += 1;
+    });
+    pipeline.querySelectorAll("[data-pipeline-stage]").forEach((article) => {
+      const stage = article.dataset.pipelineStage;
+      const value = article.querySelector("strong");
+      if (value) value.textContent = String(counts[stage] || 0);
+    });
+  }
+
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles] = await Promise.all([
+    const [customers, profiles, reports] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
+      backend.listReports(),
     ]);
     renderCustomers(customers);
     renderRoles(profiles);
+    renderReportPipeline(reports);
     syncCustomerOwnedData();
   }
 
@@ -302,14 +325,7 @@
       if (value) value.textContent = String(customerCount);
     }
 
-    if (pipeline && !hasCustomers) {
-      pipeline.querySelectorAll("article").forEach((article) => {
-        const value = article.querySelector("strong");
-        const note = article.querySelector("p");
-        if (value) value.textContent = "0";
-        if (note) note.textContent = "Geen klantdata.";
-      });
-    }
+    if (pipeline && !hasCustomers) renderReportPipeline([]);
   }
 
   function syncCustomerOwnedData() {

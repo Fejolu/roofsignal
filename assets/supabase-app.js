@@ -168,6 +168,17 @@
     }));
   }
 
+  async function listReports() {
+    const supabase = await getClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from("reports")
+      .select("id,organization_id,property_id,title,status,published_at,created_at,updated_at")
+      .order("created_at", { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+
   async function createOrganization(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false, fallback: true };
@@ -295,6 +306,7 @@
     getSession,
     getProfile,
     listOrganizations,
+    listReports,
     createOrganization,
     createProperties,
     createPortalCustomer,
