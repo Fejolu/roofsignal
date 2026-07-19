@@ -310,11 +310,33 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
-  async function createUpgradeRequest(payload) {
+  async function createUpgradeRequest(quoteItemId, requestedDepth) {
     const supabase = await getClient();
     if (!supabase) return { ok: false };
-    const { data, error } = await supabase.from("upgrade_requests").insert(payload).select("*").single();
+    const { data, error } = await supabase.rpc("request_inspection_upgrade", {
+      p_quote_item_id: quoteItemId,
+      p_requested_depth: requestedDepth,
+    });
     return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createCustomerRequest(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false };
+    const session = await getSession();
+    const { data, error } = await supabase.from("customer_requests")
+      .insert({ ...payload, created_by: session?.user?.id })
+      .select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listCustomerRequests(organizationId) {
+    const supabase = await getClient();
+    if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase.from("customer_requests")
+      .select("*,properties(name)").eq("organization_id", organizationId)
+      .order("created_at", { ascending: false });
+    return error ? [] : data || [];
   }
 
   async function listUpgradeRequests(organizationId = "") {
@@ -694,6 +716,8 @@
     createInvoice,
     updateInvoice,
     createUpgradeRequest,
+    createCustomerRequest,
+    listCustomerRequests,
     listUpgradeRequests,
     activateUpgradeRequest,
     listTasks,

@@ -2535,6 +2535,35 @@ button { cursor: pointer; }
   font-weight: 800;
 }
 
+.customer-object-choice {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.customer-object-choice:hover,
+.customer-object-choice:focus-visible,
+.customer-object-choice.selected {
+  border-color: var(--rs-orange);
+  background: #fff8f4;
+  box-shadow: 0 0 0 2px rgba(255, 90, 20, .1);
+}
+
+.portal-request-form label:has(textarea),
+.portal-request-form button,
+.portal-request-form .form-note {
+  grid-column: 1 / -1;
+}
+
+.customer-request-list { display: grid; gap: 10px; }
+.request-history-item { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px; border: 1px solid var(--rs-line); border-radius: 10px; }
+.request-history-item strong,
+.request-history-item p { display: block; margin: 5px 0 0; }
+.request-history-item p,
+.unavailable-label { color: var(--rs-graphite-600); }
+
 .object-dossier-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

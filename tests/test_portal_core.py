@@ -160,3 +160,34 @@ def test_selected_customer_opens_complete_dossier():
     assert "data-customer-dossier-overview" in portal
     for section in ("Objecten", "Offertes", "Inspecties & rapporten", "Planning", "Facturen", "Open acties"):
         assert f'dossierItems("{section}"' in script
+
+
+def test_customer_portal_requests_are_persisted_and_create_internal_work():
+    portal = read("portal-klant.html")
+    script = read("assets/portal-admin.js")
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260720010000_customer_portal_requests_and_secure_upgrades.sql")
+    assert 'data-customer-request-form="inspection"' in portal
+    assert 'data-customer-request-form="support"' in portal
+    assert "createCustomerRequest" in backend and "listCustomerRequests" in backend
+    assert "submitCustomerRequest" in script
+    assert "create table if not exists public.customer_requests" in migration
+    assert "create_task_for_customer_request" in migration
+
+
+def test_upgrade_price_is_calculated_server_side():
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260720010000_customer_portal_requests_and_secure_upgrades.sql")
+    assert 'rpc("request_inspection_upgrade"' in backend
+    assert "p_requested_depth" in migration
+    assert "target_price - current_price" in migration
+    assert 'drop policy if exists "customers request own upgrades"' in migration
+
+
+def test_customer_can_select_each_object_and_download_invoice_document():
+    portal = read("portal-klant.html")
+    script = read("assets/portal-admin.js")
+    assert "data-customer-property-id" in script
+    assert "selectCustomerProperty" in script
+    assert "Download factuur" in script
+    assert '<th>Actie</th>' in portal

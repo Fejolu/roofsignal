@@ -107,6 +107,7 @@
   let liveReports = [];
   let liveUpgradeRequests = [];
   let portalAccess = null;
+  let customerPortalState = null;
 
   function saveState() {
     // Operational data lives in Supabase. Browser storage is not a system of record.
@@ -1226,7 +1227,7 @@
       return;
     }
     if (document.querySelector(".property-platform") && [
-      "plan-reinspection", "request-inspection", "add-object", "unlock-modules", "prepare-accountant-export",
+      "add-object", "unlock-modules", "prepare-accountant-export",
     ].includes(action)) {
       setPortalNotice("Deze actie wordt beschikbaar zodra de bijbehorende klantdata en workflow zijn vastgelegd.", "info");
       return;
@@ -1259,11 +1260,15 @@
     };
 
     if (action === "plan-reinspection") {
-      addPlanningItem("Nieuw", "Herinspectie plannen", "Voorstel klaarzetten op basis van weer, toegang en herstelstatus.");
+      const form = document.querySelector('[data-customer-request-form="inspection"]');
+      if (form) form.elements.request_type.value = "reinspection";
+      document.querySelector("#aanvragen")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     if (action === "request-inspection") {
-      addPlanningItem("Aanvraag", "Nieuwe inspectie aangevraagd", "Backoffice plant scope, toegang en gewenste dataset met de klant.");
+      const form = document.querySelector('[data-customer-request-form="inspection"]');
+      if (form) form.elements.request_type.value = "inspection";
+      document.querySelector("#aanvragen")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     if (action === "add-object") {
@@ -1399,7 +1404,7 @@
     const inspectionsBody = document.querySelector("#inspecties tbody");
     if (inspectionsBody) inspectionsBody.innerHTML = '<tr><td colspan="6">Nog geen inspecties of rapporten.</td></tr>';
     const invoicesBody = document.querySelector("#financieel tbody");
-    if (invoicesBody) invoicesBody.innerHTML = '<tr><td colspan="3">Geen facturen of abonnementen.</td></tr>';
+    if (invoicesBody) invoicesBody.innerHTML = '<tr><td colspan="4">Geen facturen of abonnementen.</td></tr>';
     const financeAdminBody = document.querySelector("#finance-hub tbody");
     if (financeAdminBody) financeAdminBody.innerHTML = '<tr><td colspan="4">Geen financiële administratie beschikbaar.</td></tr>';
 
@@ -1423,31 +1428,39 @@
     return new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
   }
 
-  function renderCustomerProperties(properties) {
+  function renderCustomerProperties(properties, inspections = [], findings = []) {
     const objectList = document.querySelector(".object-list");
     if (!objectList || !properties.length) return;
     objectList.innerHTML = properties.map((property) => [
-      '<article class="object-card">',
+      `<button type="button" class="object-card customer-object-choice" data-customer-property-id="${escapeHtml(property.id)}">`,
       '<div>',
       `<span class="status-pill demo">${escapeHtml(property.status || "Actief")}</span>`,
       `<h3>${escapeHtml(property.name || "Object")}</h3>`,
       `<p>${escapeHtml([property.address, property.postcode, property.city].filter(Boolean).join(", ") || "Adres niet vastgelegd.")}</p>`,
       '</div>',
       '<dl>',
-      `<div><dt>Object-ID</dt><dd>${escapeHtml(property.id)}</dd></div>`,
-      '<div><dt>Laatste inspectie</dt><dd>Nog niet geïnspecteerd</dd></div>',
+      `<div><dt>Inspecties</dt><dd>${inspections.filter((item) => item.property_id === property.id).length}</dd></div>`,
+      `<div><dt>Bevindingen</dt><dd>${findings.filter((item) => inspections.some((inspection) => inspection.id === item.inspection_id && inspection.property_id === property.id)).length}</dd></div>`,
       '</dl>',
-      '</article>',
+      '<span class="inline-button">Open dossier</span>',
+      '</button>',
     ].join("")).join("");
+    selectCustomerProperty(properties[0].id, false);
+  }
 
-    const first = properties[0];
+  function selectCustomerProperty(propertyId, shouldScroll = true) {
+    if (!customerPortalState) return;
+    const { properties, inspections, findings, reports } = customerPortalState;
+    const first = properties.find((property) => property.id === propertyId);
+    if (!first) return;
+    document.querySelectorAll("[data-customer-property-id]").forEach((card) => card.classList.toggle("selected", card.dataset.customerPropertyId === propertyId));
     const dossierTitle = document.querySelector("#objectdossier h2");
     if (dossierTitle) dossierTitle.textContent = first.name || "Object";
     const firstBody = document.querySelector("#objectdossier .object-dossier-grid > div:first-child tbody");
     if (firstBody) firstBody.innerHTML = [
       `<tr><th>Adres</th><td>${escapeHtml([first.address, first.postcode, first.city].filter(Boolean).join(", ") || "Niet vastgelegd")}</td></tr>`,
       `<tr><th>Objectstatus</th><td>${escapeHtml(first.status || "Actief")}</td></tr>`,
-      '<tr><th>Inspectiestatus</th><td>Nog niet geïnspecteerd</td></tr>',
+      `<tr><th>Inspecties</th><td>${inspections.filter((item) => item.property_id === first.id).length}</td></tr>`,
     ].join("");
     const building = first.building_data || {};
     const buildingBody = document.querySelector("#objectdossier .object-dossier-grid > div:nth-child(2) tbody");
@@ -1458,6 +1471,15 @@
       ["Geveloppervlak", building.facade_area != null ? `${building.facade_area} m²` : ""],
     ].filter(([, value]) => value !== null && value !== undefined && value !== "");
     if (buildingBody) buildingBody.innerHTML = buildingRows.length ? buildingRows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join("") : '<tr><td colspan="2">Nog geen gebouwdata vastgelegd.</td></tr>';
+    const inspectionIds = new Set(inspections.filter((item) => item.property_id === first.id).map((item) => item.id));
+    renderCustomerFindings(findings.filter((finding) => inspectionIds.has(finding.inspection_id)), true);
+    const report = reports.find((item) => item.property_id === first.id && item.status === "published");
+    const reportLink = document.querySelector("#objectdossier .panel-head > a");
+    if (reportLink) {
+      reportLink.hidden = !report?.report_url;
+      if (report?.report_url) reportLink.href = report.report_url;
+    }
+    if (shouldScroll) document.querySelector("#objectdossier")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderCustomerInspections(inspections, properties, reports = [], documents = []) {
@@ -1481,10 +1503,10 @@
     ].join(""); }).join("");
   }
 
-  function renderCustomerFindings(findings = []) {
+  function renderCustomerFindings(findings = [], dossierOnly = false) {
     const feed = document.querySelector(".intelligence-feed");
     const conditionBody = document.querySelector("#objectdossier .object-dossier-grid > div:nth-child(3) tbody");
-    if (feed) feed.innerHTML = findings.length ? findings.map((finding) => `<article><strong>${escapeHtml(finding.title)}</strong><p>${escapeHtml([finding.building_element, finding.condition_score ? `conditie ${finding.condition_score}` : "", finding.recommendation].filter(Boolean).join(" · "))}</p></article>`).join("") : emptyState("Nog geen Property Intelligence beschikbaar.");
+    if (feed && !dossierOnly) feed.innerHTML = findings.length ? findings.map((finding) => `<article><strong>${escapeHtml(finding.title)}</strong><p>${escapeHtml([finding.building_element, finding.condition_score ? `conditie ${finding.condition_score}` : "", finding.recommendation].filter(Boolean).join(" · "))}</p></article>`).join("") : emptyState("Nog geen Property Intelligence beschikbaar.");
     if (conditionBody) conditionBody.innerHTML = findings.length ? findings.map((finding) => `<tr><th>${escapeHtml(finding.building_element || "Bevinding")}</th><td>${escapeHtml(finding.condition_score || finding.priority || "Vastgelegd")}</td></tr>`).join("") : '<tr><td colspan="2">Geen conditiedata beschikbaar.</td></tr>';
   }
 
@@ -1506,7 +1528,7 @@
   }
 
   async function requestUpgrade(target) {
-    const result = await window.RoofSignalBackend.createUpgradeRequest({ organization_id: portalAccess?.profile?.organization_id, quote_item_id: target.dataset.quoteItemId, current_depth: target.dataset.currentDepth, requested_depth: target.dataset.requestedDepth, price_ex_vat: Number(target.dataset.upgradePrice) });
+    const result = await window.RoofSignalBackend.createUpgradeRequest(target.dataset.quoteItemId, target.dataset.requestedDepth);
     if (!result.ok) return setPortalNotice(result.error?.message || "Upgrade aanvragen is mislukt.", "error");
     target.disabled = true;
     setPortalNotice(`Upgrade naar ${inspectionDepths[target.dataset.requestedDepth]?.label} is aangevraagd. RoofSignal neemt contact op voor betaling en activatie.`, "success");
@@ -1533,11 +1555,49 @@
     ].join("")).join("");
   }
 
-  function renderCustomerInvoices(invoices) {
+  function renderCustomerInvoices(invoices, documents = []) {
     const body = document.querySelector("#financieel tbody");
     if (!body || !invoices.length) return;
     const money = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
-    body.innerHTML = invoices.map((invoice) => `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td></tr>`).join("");
+    body.innerHTML = invoices.map((invoice) => {
+      const document = documents.find((item) => item.invoice_id === invoice.id && item.signed_url);
+      const action = document ? `<a href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">Download factuur</a>` : '<span class="unavailable-label">Nog niet beschikbaar</span>';
+      return `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td>${action}</td></tr>`;
+    }).join("");
+  }
+
+  function fillCustomerRequestForms(properties) {
+    document.querySelectorAll("[data-customer-request-form] select[name='property_id']").forEach((select) => {
+      const first = select.querySelector("option")?.outerHTML || '<option value="">Kies een object</option>';
+      select.innerHTML = first + properties.map((property) => `<option value="${escapeHtml(property.id)}">${escapeHtml(property.name)}</option>`).join("");
+    });
+  }
+
+  function renderCustomerRequests(requests = []) {
+    const list = document.querySelector(".customer-request-list");
+    if (!list) return;
+    const labels = { inspection: "Inspectie", reinspection: "Herinspectie", support: "Support" };
+    list.innerHTML = requests.length ? requests.map((request) => `<article class="request-history-item"><div><span class="status-pill">${escapeHtml(labels[request.request_type] || request.request_type)}</span><strong>${escapeHtml(request.subject)}</strong><p>${escapeHtml(request.properties?.name || "Algemeen")} · ${escapeHtml(formatPortalDate(request.created_at))}</p></div><span>${escapeHtml(request.status)}</span></article>`).join("") : emptyState("Nog geen aanvragen ingediend.");
+  }
+
+  async function submitCustomerRequest(form) {
+    const status = form.querySelector("[data-request-status]");
+    const data = new FormData(form);
+    const requestType = form.dataset.customerRequestForm === "support" ? "support" : String(data.get("request_type") || "inspection");
+    const property = customerPortalState?.properties.find((item) => item.id === data.get("property_id"));
+    const subject = requestType === "support" ? String(data.get("subject") || "").trim() : `${requestType === "reinspection" ? "Herinspectie" : "Inspectie"} ${property?.name || "object"}`;
+    const result = await window.RoofSignalBackend.createCustomerRequest({
+      organization_id: portalAccess.profile.organization_id,
+      property_id: data.get("property_id") || null,
+      request_type: requestType,
+      subject,
+      message: String(data.get("message") || "").trim() || null,
+      preferred_date: data.get("preferred_date") || null,
+    });
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Aanvraag versturen is mislukt.", "error");
+    form.reset();
+    setWorkflowStatus(status, "Uw aanvraag is ontvangen. RoofSignal neemt contact met u op.", "success");
+    renderCustomerRequests(await window.RoofSignalBackend.listCustomerRequests(portalAccess.profile.organization_id));
   }
 
   async function loadCustomerPortalData() {
@@ -1569,7 +1629,7 @@
       if (account) account.textContent = organization.name;
     }
 
-    const [properties, inspections, invoices, appointments, reports, quoteItems, documents] = await Promise.all([
+    const [properties, inspections, invoices, appointments, reports, quoteItems, documents, requests] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
       backend.listInspections(organizationId),
       backend.listOrganizationInvoices(organizationId),
@@ -1577,16 +1637,20 @@
       backend.listOrganizationReports(organizationId),
       backend.listQuoteItems(),
       backend.listOrganizationDocuments(organizationId),
+      backend.listCustomerRequests(organizationId),
     ]);
     const findings = (await Promise.all(inspections.map((inspection) => backend.listFindings(inspection.id)))).flat();
     const media = (await Promise.all(inspections.map((inspection) => backend.listInspectionMedia(inspection.id)))).flat();
-    renderCustomerProperties(properties);
-    renderCustomerInspections(inspections, properties, reports, documents);
+    customerPortalState = { properties, inspections, findings, reports, documents };
     renderCustomerFindings(findings);
+    renderCustomerProperties(properties, inspections, findings);
+    renderCustomerInspections(inspections, properties, reports, documents);
     renderCustomerMedia(media);
     renderCustomerEntitlements(quoteItems.filter((item) => item.organization_id === organizationId));
-    renderCustomerInvoices(invoices);
+    renderCustomerInvoices(invoices, documents);
     renderCustomerAppointments(appointments);
+    fillCustomerRequestForms(properties);
+    renderCustomerRequests(requests);
     const customerMetrics = [...document.querySelectorAll("#dashboard article")];
     const metricValues = [properties.length, inspections.length, reports.length, findings.length];
     const metricNotes = [
@@ -1680,6 +1744,13 @@
       return;
     }
 
+    const customerProperty = event.target.closest("[data-customer-property-id]");
+    if (customerProperty) {
+      event.preventDefault();
+      selectCustomerProperty(customerProperty.dataset.customerPropertyId);
+      return;
+    }
+
     const portalTarget = event.target.closest("[data-portal-action]");
     if (portalTarget) {
       event.preventDefault();
@@ -1765,4 +1836,8 @@
     const result = await window.RoofSignalBackend.completeCustomerProfile(String(data.get("full_name") || "").trim(), String(data.get("phone") || "").trim());
     setWorkflowStatus(status, result.ok ? "Contactgegevens zijn opgeslagen." : result.error?.message || "Opslaan is mislukt.", result.ok ? "success" : "error");
   });
+  document.querySelectorAll("[data-customer-request-form]").forEach((form) => form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitCustomerRequest(form);
+  }));
 })();
