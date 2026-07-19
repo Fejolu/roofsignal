@@ -235,6 +235,16 @@
     return state;
   }
 
+  function removeAddressLookup(container) {
+    for (let index = addressLookupStates.length - 1; index >= 0; index -= 1) {
+      const state = addressLookupStates[index];
+      if (state.container !== container) continue;
+      window.clearTimeout(state.timer);
+      state.controller?.abort();
+      addressLookupStates.splice(index, 1);
+    }
+  }
+
   async function validateAddressLookups() {
     for (const state of addressLookupStates) {
       const address = readAddressFromFields(state.fields);
@@ -356,11 +366,36 @@
     ].join("");
   }
 
+  function renderEmptyObjectPreview() {
+    if (!objectPreview) return;
+    objectPreview.innerHTML = [
+      '<span class="eyebrow orange">Inspectie</span>',
+      '<strong>Selecteer een object</strong>',
+      '<p>Kies een object om de inspectievoorbereiding voor dat onderdeel te zien.</p>',
+    ].join("");
+  }
+
   function selectObject(entry) {
     objectList?.querySelectorAll("[data-object-entry]").forEach((item) => {
       item.classList.toggle("is-selected", item === entry);
     });
     updateObjectCardTitle(entry);
+  }
+
+  function removeObjectEntry(entry) {
+    if (!entry || !objectList) return;
+    const title = entry.querySelector("[data-object-title]")?.textContent.trim() || "dit object";
+    if (!confirm(`${title} verwijderen uit deze klantaanmaak?`)) return;
+    const wasSelected = entry.classList.contains("is-selected");
+    removeAddressLookup(entry.querySelector(".object-entry-fields"));
+    entry.remove();
+    if (!wasSelected) return;
+    const nextEntry = objectList.querySelector("[data-object-entry]");
+    if (nextEntry) {
+      selectObject(nextEntry);
+    } else {
+      renderEmptyObjectPreview();
+    }
   }
 
   function addObjectEntry(initial = {}) {
@@ -382,12 +417,14 @@
       `<label>Huisnummer<input name="object_${key}_house_number" placeholder="12-48" value="${escapeHtml(initial.house_number || "")}"></label>`,
       `<label>Postcode<input name="object_${key}_postcode" placeholder="7311 AA" value="${escapeHtml(initial.postcode || "")}"></label>`,
       `<label>Plaats<input name="object_${key}_city" placeholder="Apeldoorn" value="${escapeHtml(initial.city || "")}"></label>`,
+      '<div class="object-entry-actions"><button class="inline-button text-danger" type="button" data-remove-object>Object verwijderen</button></div>',
       '</div>',
     ].join("");
     objectList.append(entry);
     initAddressLookup(entry.querySelector(".object-entry-fields"), `object_${key}`);
     entry.addEventListener("input", () => updateObjectCardTitle(entry));
     entry.querySelector("[data-select-object]")?.addEventListener("click", () => selectObject(entry));
+    entry.querySelector("[data-remove-object]")?.addEventListener("click", () => removeObjectEntry(entry));
     selectObject(entry);
   }
 

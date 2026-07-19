@@ -1906,6 +1906,12 @@ button { cursor: pointer; }
   grid-column: 2 / -1;
 }
 
+.object-entry-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .object-inspection-preview {
   display: grid;
   gap: 8px;
