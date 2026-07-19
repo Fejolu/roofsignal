@@ -129,6 +129,31 @@ def test_premium_capture_is_filtered_by_purchased_entitlement():
     assert "activateUpgradeRequest" in read("assets/supabase-app.js")
 
 
+def test_operational_backbone_covers_missing_core_domains():
+    migration = read("supabase/migrations/20260720001000_operational_backbone.sql")
+    for table in ("organization_contacts", "customer_activities", "product_catalog", "quote_versions", "order_confirmations", "inspection_checklist_items", "media_assets", "documents", "maintenance_actions", "invoice_lines", "invoice_events"):
+        assert f"create table if not exists public.{table}" in migration
+    assert "inspection-media" in migration
+    assert "portal-documents" in migration
+
+
+def test_inspection_completion_requires_premium_checklist():
+    portal = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    assert "data-inspection-checklist" in portal
+    assert "premiumChecklistRows" in script
+    assert "Rapport kan nog niet worden gepubliceerd" in script
+    assert "data-media-upload-form" in portal
+
+
+def test_invoice_followup_is_idempotent_and_creates_call_task():
+    migration = read("supabase/migrations/20260720003000_invoice_followup_automation.sql")
+    assert "process_invoice_followups" in migration
+    assert "reminder_1" in migration and "reminder_2" in migration
+    assert "Bel klant over tweede betalingsherinnering" in migration
+    assert "not exists" in migration.lower()
+
+
 def test_selected_customer_opens_complete_dossier():
     portal = read("portal-beheer.html")
     script = read("assets/portal-admin.js")

@@ -151,6 +151,12 @@
     return data;
   }
 
+  async function completeCustomerProfile(fullName, phone) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.rpc("complete_customer_profile", { p_full_name: fullName, p_phone: phone });
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   function isInternalProfile(profile, email = "") {
     return String(email || profile?.email || "").toLowerCase().endsWith("@roofsignal.nl")
       || ["support", "planning", "finance", "reportage", "owner_admin"].includes(profile?.role);
@@ -298,6 +304,12 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function updateInvoice(id, payload) {
+    const supabase = await getClient(); if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase.from("invoices").update(payload).eq("id", id).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   async function createUpgradeRequest(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false };
@@ -338,6 +350,135 @@
     const session = await getSession();
     const { data, error } = await supabase.from("tasks").insert({ ...payload, created_by: session?.user?.id || null }).select("*").single();
     return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listOrganizationContacts(organizationId) {
+    const supabase = await getClient(); if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase.from("organization_contacts").select("*").eq("organization_id", organizationId).order("is_primary", { ascending: false }).order("created_at");
+    return error ? [] : data || [];
+  }
+
+  async function createOrganizationContact(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("organization_contacts").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listCustomerActivities(organizationId) {
+    const supabase = await getClient(); if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase.from("customer_activities").select("*,organization_contacts(first_name,last_name)").eq("organization_id", organizationId).order("occurred_at", { ascending: false });
+    return error ? [] : data || [];
+  }
+
+  async function createCustomerActivity(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const session = await getSession();
+    const { data, error } = await supabase.from("customer_activities").insert({ ...payload, created_by: session?.user?.id || null }).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listMaintenanceActions(organizationId) {
+    const supabase = await getClient(); if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase.from("maintenance_actions").select("*,properties(name)").eq("organization_id", organizationId).order("created_at", { ascending: false });
+    return error ? [] : data || [];
+  }
+
+  async function createMaintenanceAction(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("maintenance_actions").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function updateMaintenanceAction(id, payload) {
+    const supabase = await getClient(); if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase.from("maintenance_actions").update(payload).eq("id", id).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listInspectionChecklist(inspectionId) {
+    const supabase = await getClient(); if (!supabase || !inspectionId) return [];
+    const { data, error } = await supabase.from("inspection_checklist_items").select("*").eq("inspection_id", inspectionId).order("created_at");
+    return error ? [] : data || [];
+  }
+
+  async function createInspectionChecklist(items) {
+    const supabase = await getClient(); if (!supabase || !items?.length) return { ok: false };
+    const { data, error } = await supabase.from("inspection_checklist_items").insert(items).select("*");
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function updateChecklistItem(id, payload) {
+    const supabase = await getClient(); if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase.from("inspection_checklist_items").update(payload).eq("id", id).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createQuoteVersion(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("quote_versions").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createOrderConfirmation(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("order_confirmations").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createInvoiceLines(lines) {
+    const supabase = await getClient(); if (!supabase || !lines?.length) return { ok: false };
+    const { data, error } = await supabase.from("invoice_lines").insert(lines).select("*");
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createInvoiceEvent(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("invoice_events").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  function safeFileName(name) {
+    return String(name || "bestand").normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  async function uploadInspectionMedia(file, payload) {
+    const supabase = await getClient(); if (!supabase || !file) return { ok: false };
+    const path = `${payload.organization_id}/${payload.property_id}/${payload.inspection_id}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+    const { error: uploadError } = await supabase.storage.from("inspection-media").upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) return { ok: false, error: uploadError };
+    const { data, error } = await supabase.from("media_assets").insert({ ...payload, storage_path: path, file_name: file.name, mime_type: file.type, byte_size: file.size }).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listInspectionMedia(inspectionId) {
+    const supabase = await getClient(); if (!supabase || !inspectionId) return [];
+    const { data, error } = await supabase.from("media_assets").select("*").eq("inspection_id", inspectionId).order("created_at", { ascending: false });
+    if (error) return [];
+    return Promise.all((data || []).map(async (asset) => {
+      const { data: signed } = await supabase.storage.from("inspection-media").createSignedUrl(asset.storage_path, 3600);
+      return { ...asset, signed_url: signed?.signedUrl || null };
+    }));
+  }
+
+  async function uploadPortalDocument(file, payload) {
+    const supabase = await getClient(); if (!supabase || !file) return { ok: false };
+    const path = `${payload.organization_id}/${payload.property_id || "general"}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+    const { error: uploadError } = await supabase.storage.from("portal-documents").upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) return { ok: false, error: uploadError };
+    const { data, error } = await supabase.from("documents").insert({ ...payload, storage_path: path }).select("*").single();
+    if (error) return { ok: false, error };
+    const { data: signed, error: signedError } = await supabase.storage.from("portal-documents").createSignedUrl(path, 60 * 60 * 24 * 7);
+    return signedError ? { ok: false, error: signedError } : { ok: true, data, signedUrl: signed.signedUrl };
+  }
+
+  async function listOrganizationDocuments(organizationId) {
+    const supabase = await getClient(); if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase.from("documents").select("*").eq("organization_id", organizationId).eq("customer_visible", true).order("created_at", { ascending: false });
+    if (error) return [];
+    return Promise.all((data || []).map(async (document) => {
+      const { data: signed } = await supabase.storage.from("portal-documents").createSignedUrl(document.storage_path, 3600);
+      return { ...document, signed_url: signed?.signedUrl || null };
+    }));
   }
 
   async function createOrganization(payload) {
@@ -535,6 +676,7 @@
     signOut,
     getSession,
     getProfile,
+    completeCustomerProfile,
     requirePortalAccess,
     listOrganizations,
     listReports,
@@ -550,11 +692,30 @@
     updateQuote,
     createAppointment,
     createInvoice,
+    updateInvoice,
     createUpgradeRequest,
     listUpgradeRequests,
     activateUpgradeRequest,
     listTasks,
     createTask,
+    listOrganizationContacts,
+    createOrganizationContact,
+    listCustomerActivities,
+    createCustomerActivity,
+    listMaintenanceActions,
+    createMaintenanceAction,
+    updateMaintenanceAction,
+    listInspectionChecklist,
+    createInspectionChecklist,
+    updateChecklistItem,
+    createQuoteVersion,
+    createOrderConfirmation,
+    createInvoiceLines,
+    createInvoiceEvent,
+    uploadInspectionMedia,
+    listInspectionMedia,
+    uploadPortalDocument,
+    listOrganizationDocuments,
     createOrganization,
     createProperties,
     createPortalCustomer,

@@ -2251,6 +2251,24 @@ button { cursor: pointer; }
 .customer-dossier-overview small { display: block; }
 .customer-dossier-overview small,
 .customer-dossier-overview section > p { color: var(--rs-graphite-600); }
+.customer-dossier-tools { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.customer-mini-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; padding: 14px; border: 1px solid var(--rs-line); border-radius: var(--rs-radius); background: #fff; }
+.customer-mini-form h4,
+.customer-mini-form .wide-field { grid-column: 1 / -1; }
+.customer-mini-form h4 { margin: 0; }
+.customer-mini-form label { display: grid; gap: 6px; font-weight: 800; }
+.customer-mini-form input,
+.customer-mini-form select,
+.customer-mini-form textarea { width: 100%; padding: 10px; border: 1px solid var(--rs-line); border-radius: 9px; font: inherit; }
+.customer-mini-form .check { display: flex; align-items: center; }
+.customer-mini-form .check input { width: auto; }
+.inspection-checklist { display: grid; gap: 7px; margin: 18px 0; max-height: 520px; overflow: auto; padding-right: 6px; }
+.checklist-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; padding: 12px; border-radius: 10px; background: var(--rs-graphite-950); color: #fff; }
+.inspection-checklist > label { display: grid; grid-template-columns: 1fr 180px; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--rs-line); border-radius: 10px; background: #fff; }
+.inspection-checklist small { display: block; color: var(--rs-graphite-600); }
+.inspection-media-list { display: grid; gap: 8px; }
+.inspection-media-list article { padding: 10px 12px; border: 1px solid var(--rs-line); border-radius: 10px; }
+.inspection-media-list span { display: block; color: var(--rs-graphite-600); }
 .workflow-form[hidden],
 .customer-workspace[hidden] { display: none; }
 
@@ -2258,6 +2276,11 @@ button { cursor: pointer; }
   .customer-workspace { grid-template-columns: 1fr; }
   .customer-workspace-actions { justify-content: flex-start; }
   .customer-dossier-overview { grid-template-columns: 1fr; }
+  .customer-dossier-tools,
+  .customer-mini-form { grid-template-columns: 1fr; }
+  .customer-mini-form h4,
+  .customer-mini-form .wide-field { grid-column: auto; }
+  .inspection-checklist > label { grid-template-columns: 1fr; }
 }
 
 .portal-table th,
