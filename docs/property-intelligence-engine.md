@@ -301,6 +301,28 @@ Future capture platform requirements:
 
 Professional hardware may be rented when needed. This lowers startup risk for thermal drones, enterprise drones and specialised payloads. The main early bottleneck is customer acquisition, not hardware ownership.
 
+## NEN 2767-Aligned Operations
+
+RoofSignal should use NEN 2767 as the baseline language for condition assessment, data capture and report structure.
+
+NEN 2767 alignment means:
+
+- Assess defects per building element.
+- Record seriousness, extent and intensity.
+- Translate observations into an indicative 1-6 condition score.
+- Keep condition score, risk, priority and recommendation separate.
+- Make each score explainable from evidence.
+- Store the result as structured data, not only as report text.
+
+Default commercial posture:
+
+- Quickscan: NEN 2767-aligned observation structure, limited scope.
+- Object report: NEN 2767-aligned condition overview for selected building elements.
+- Portfolio scan: NEN 2767-aligned comparison and prioritisation across objects.
+- Full condition measurement: explicit NEN 2767 scope only when sold, staffed and reviewed as such.
+
+See `docs/nen-2767-operating-standard.md` for the internal operating baseline.
+
 ## Automation Roadmap
 
 Do not build the future platform first, but preserve the path.
@@ -360,6 +382,10 @@ Example fields:
 - Inspection date.
 - Defect category.
 - Severity.
+- Seriousness.
+- Extent.
+- Intensity.
+- Indicative NEN 2767 condition score.
 - Priority.
 - Confidence.
 - Estimated cost range.

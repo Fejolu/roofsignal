@@ -87,6 +87,27 @@ This requires:
 - Repeatable image capture standards.
 - Minimum evidence requirements per building element.
 
+## NEN 2767 Alignment
+
+RoofSignal should work NEN 2767-aligned from day one.
+
+This means every inspection workflow, report template and data model should capture defects per building element using:
+
+- Seriousness.
+- Extent.
+- Intensity.
+- Indicative condition score.
+- Maintenance priority.
+- Evidence and confidence.
+
+Do not overclaim. A quickscan or object report may use NEN 2767-aligned condition thinking without being sold as a full certified NEN 2767 condition measurement. A full NEN 2767 product tier can be added once scope, training, QA and liability coverage support it.
+
+Strategic rule:
+
+> Competitors can claim the norm. RoofSignal should operationalise the norm as reusable structured data.
+
+See also: `docs/nen-2767-operating-standard.md`.
+
 ## Full Dataset Capture
 
 While on-site, capture the maximum useful dataset whenever operationally reasonable.
