@@ -724,7 +724,6 @@
     if (action !== "assign-role") event.preventDefault();
 
     if (action === "assign-role") assignRole();
-    if (action === "start-impersonation") impersonateCustomer(customersBody?.querySelector("tr"));
     if (action === "focus-customer-form") focusCustomerForm();
     if (action === "focus-role-builder") focusRoleBuilder();
     if (action === "create-offer") createOffer();
