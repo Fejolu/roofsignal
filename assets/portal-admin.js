@@ -686,7 +686,7 @@
   function deleteCurrentCustomer() {
     const heading = document.querySelector(".portal-topbar h1");
     const name = heading?.textContent.trim().replace(/\.$/, "") || "deze klant";
-    if (!confirm(`${name} verwijderen uit het klantportaal?`)) return;
+    if (!confirm(`${name} verwijderen uit het RoofSignal Portaal?`)) return;
     document.querySelector(".admin-toolbar p").textContent = "Deze klant is gemarkeerd voor verwijdering. In de live versie wordt dit doorgevoerd in de database en auditlog.";
     localStorage.removeItem("roofsignal-current-customer");
   }

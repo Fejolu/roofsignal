@@ -129,7 +129,7 @@ loginForm?.addEventListener("submit", async (event) => {
     if (result.ok) {
       if (!password) {
         setSubmitState(loginForm, false, "Inloglink opnieuw versturen");
-        setStatus(loginForm, "Inloglink verstuurd. Check uw mailbox en open de link om het klantenportaal te gebruiken.", "success");
+        setStatus(loginForm, "Inloglink verstuurd. Check uw mailbox en open de link om het RoofSignal Portaal te gebruiken.", "success");
         return;
       }
 
@@ -166,7 +166,7 @@ resetRequestButton?.addEventListener("click", async () => {
 
   resetRequestButton.disabled = true;
   resetRequestButton.textContent = "Resetmail versturen...";
-  setStatus(loginForm, "We controleren of dit e-mailadres toegang heeft tot het klantenportaal.", "info");
+  setStatus(loginForm, "We controleren of dit e-mailadres toegang heeft tot het RoofSignal Portaal.", "info");
 
   try {
     const result = await backend.resetPassword(email);

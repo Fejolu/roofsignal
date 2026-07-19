@@ -1507,6 +1507,7 @@ button { cursor: pointer; }
 
 .role-builder label {
   display: grid;
+  grid-template-rows: auto 48px;
   gap: 7px;
   font-weight: 900;
 }
@@ -1522,6 +1523,18 @@ button { cursor: pointer; }
   padding: 12px 14px;
   font: inherit;
   background: #fff;
+}
+
+.role-builder select {
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  line-height: 1.2;
+  padding-right: 38px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--rs-graphite-700) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
+    linear-gradient(135deg, var(--rs-graphite-700) 50%, transparent 50%) calc(100% - 12px) 50% / 6px 6px no-repeat,
+    #fff;
 }
 
 .customer-create-form {
