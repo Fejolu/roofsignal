@@ -19,7 +19,7 @@ def test_cloudflare_has_a_real_not_found_page():
 def test_homepage_targets_the_primary_service_and_audience():
     content = read("index.html")
     assert "Gebouwschilinspectie voor VvE en vastgoed" in content
-    assert "Inspectie van de gebouwschil voor VvE en vastgoed." in content
+    assert "Inspectie van de gebouwschil voor al uw vastgoed." in content
     assert "Onafhankelijk onderhoud prioriteren" in content
 
 
