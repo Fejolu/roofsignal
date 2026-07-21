@@ -256,6 +256,13 @@ section {
   overflow-wrap: break-word;
 }
 
+.hero h1 {
+  font-size: clamp(44px, 5.4vw, 72px);
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
 .lead {
   font-size: 21px;
   max-width: 680px;
