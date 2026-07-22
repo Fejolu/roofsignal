@@ -3,6 +3,6 @@
   <title>RoofSignal</title>
   <desc>RoofSignal brand mark for authenticated email</desc>
   <rect width="512" height="512" fill="#111315"/>
-  <rect x="82" y="82" width="348" height="348" rx="74" fill="#111315" stroke="#f47b20" stroke-width="34"/>
-  <path fill="#ffffff" d="M137 256 256 148l119 108-25 28-18-16v101h-63v-79h-66v79h-63V268l-18 16-25-28Zm66 5h106l-53-48-53 48Z"/>
+  <rect x="76" y="76" width="360" height="360" rx="78" fill="none" stroke="#ff5a1f" stroke-width="20"/>
+  <path d="M174 249 256 174l82 75v101H174V249Z" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
