@@ -251,7 +251,11 @@
       inspectionBody.innerHTML = '<tr data-empty-row><td colspan="6">Nog geen inspecties.</td></tr>';
       return;
     }
-    inspectionBody.innerHTML = inspections.map((inspection) => `<tr><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td>${escapeHtml(inspection.scope || "-")}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><button class="inline-button" type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Open</button></td></tr>`).join("");
+    inspectionBody.innerHTML = inspections.map((inspection) => {
+      const productAndDepth = `${productLabel(inspection.inspection_product)} · ${inspectionDepths[inspection.inspection_depth]?.label || "Basis"}`;
+      const scope = inspection.scope ? `<small>${escapeHtml(inspection.scope)}</small>` : "";
+      return `<tr><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td><strong>${escapeHtml(productAndDepth)}</strong>${scope}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><button class="inline-button" type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Open</button></td></tr>`;
+    }).join("");
   }
 
   function populateWorkflowOrganizations(organizations) {
@@ -426,11 +430,13 @@
     const payload = {
       organization_id: String(formData.get("organization_id") || ""),
       property_id: String(formData.get("property_id") || ""),
-      scope: String(formData.get("scope") || "").trim(),
+      inspection_product: String(formData.get("inspection_product") || ""),
+      inspection_depth: String(formData.get("inspection_depth") || ""),
+      scope: String(formData.get("scope") || "").trim() || null,
       scheduled_at: formData.get("scheduled_at") ? new Date(String(formData.get("scheduled_at"))).toISOString() : null,
       status: formData.get("scheduled_at") ? "planned" : "intake",
     };
-    if (!payload.organization_id || !payload.property_id || !payload.scope) return;
+    if (!payload.organization_id || !payload.property_id || !payload.inspection_product || !payload.inspection_depth) return;
     const button = inspectionForm.querySelector('button[type="submit"]');
     button.disabled = true;
     if (inspectionStatus) inspectionStatus.textContent = "Inspectie wordt aangemaakt...";
@@ -1031,7 +1037,7 @@
     const depthLabel = inspectionDepths[quoteItem.inspection_depth]?.label || "Basis";
     const appointment = await window.RoofSignalBackend.createAppointment({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, title: `${productLabel(quoteItem.inspection_product)} ${depthLabel} · ${quoteItem.properties?.name || "Object"}`, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "planned" });
     if (!appointment.ok) return setWorkflowStatus(status, appointment.error?.message || "Planning opslaan is mislukt.", "error");
-    const inspection = await window.RoofSignalBackend.createInspection({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, appointment_id: appointment.data.id, scope: [`${productLabel(quoteItem.inspection_product)} ${depthLabel}`, quoteItem.scope].filter(Boolean).join(" · "), scheduled_at: startsAt.toISOString(), status: "planned" });
+    const inspection = await window.RoofSignalBackend.createInspection({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, appointment_id: appointment.data.id, inspection_product: quoteItem.inspection_product, inspection_depth: quoteItem.inspection_depth, scope: quoteItem.scope || null, scheduled_at: startsAt.toISOString(), status: "planned" });
     if (!inspection.ok) return setWorkflowStatus(status, inspection.error?.message || "Inspectie aanmaken is mislukt.", "error");
     quoteScheduleForm.reset(); quoteScheduleForm.hidden = true;
     setPortalNotice("De datum is gepland en de inspectie is aangemaakt.", "success");

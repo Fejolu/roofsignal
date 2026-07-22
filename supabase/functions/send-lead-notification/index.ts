@@ -56,17 +56,18 @@ async function sendBrevoEmail(apiKey: string, fromEmail: string, fromName: strin
 }
 
 async function sendEmail(fromEmail: string, fromName: string, to: string, subject: string, text: string, html: string, replyTo: string) {
+  const emailProvider = (Deno.env.get("EMAIL_PROVIDER") || "brevo").trim().toLowerCase();
   const resendApiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
-  if (resendApiKey) {
+  if (emailProvider === "resend" && resendApiKey) {
     return sendResendEmail(resendApiKey, fromEmail, fromName, to, subject, text, html, replyTo);
   }
 
   const brevoApiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
-  if (brevoApiKey) {
+  if (emailProvider === "brevo" && brevoApiKey) {
     return sendBrevoEmail(brevoApiKey, fromEmail, fromName, to, subject, text, html, replyTo);
   }
 
-  throw new Error("No email provider is configured.");
+  throw new Error(`Configured email provider is unavailable: ${emailProvider}`);
 }
 
 function escapeHtml(value: string | null | undefined): string {

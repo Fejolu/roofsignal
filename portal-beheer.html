@@ -154,13 +154,15 @@
         <div class="form-section-head"><span class="eyebrow orange">Nieuwe inspectie</span><h3>Inspectie voorbereiden</h3></div>
         <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
         <label>Object<select name="property_id" required disabled><option value="">Selecteer eerst een klant</option></select></label>
-        <label>Scope<input name="scope" placeholder="Bijvoorbeeld gebouwschil + PV" required></label>
+        <label>Product<select name="inspection_product" required><option value="">Selecteer product</option><option value="quickscan">Quickscan</option><option value="object_report">Objectrapportage</option><option value="portfolio_scan">Portefeuillescan</option></select></label>
+        <label>Niveau<select name="inspection_depth" required><option value="">Selecteer niveau</option><option value="basis">Basis</option><option value="plus">Plus</option><option value="premium">Premium</option></select></label>
+        <label>Aanvullende scope of toelichting<input name="scope" placeholder="Optioneel, bijvoorbeeld extra aandacht voor PV"></label>
         <label>Geplande datum<input name="scheduled_at" type="datetime-local"></label>
         <button class="btn" type="submit">Inspectie aanmaken</button>
         <p class="form-note" data-inspection-create-status>Een inspectie wordt altijd aan één klant en object gekoppeld.</p>
       </form>
       <table class="portal-table inspection-table">
-        <thead><tr><th>Referentie</th><th>Klant</th><th>Object</th><th>Scope</th><th>Status</th><th>Actie</th></tr></thead>
+        <thead><tr><th>Referentie</th><th>Klant</th><th>Object</th><th>Product en niveau</th><th>Status</th><th>Actie</th></tr></thead>
         <tbody><tr data-empty-row><td colspan="6">Nog geen inspecties.</td></tr></tbody>
       </table>
       <div class="inspection-workspace" data-inspection-workspace hidden>

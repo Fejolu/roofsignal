@@ -37,12 +37,27 @@ def test_inspections_are_object_and_customer_owned():
     assert '"inspections visible by membership or internal"' in migration
 
 
-def test_admin_inspection_form_requires_customer_object_and_scope():
+def test_admin_inspection_form_requires_customer_object_product_and_depth():
     content = read("portal-beheer.html")
     assert 'data-inspection-create-form' in content
     assert 'name="organization_id" required' in content
     assert 'name="property_id" required' in content
+    assert 'name="inspection_product" required' in content
+    assert 'name="inspection_depth" required' in content
     assert 'name="scope"' in content
+    for product in ("quickscan", "object_report", "portfolio_scan"):
+        assert f'value="{product}"' in content
+    for depth in ("basis", "plus", "premium"):
+        assert f'value="{depth}"' in content
+
+
+def test_inspections_store_product_and_depth_separately():
+    migration = read("supabase/migrations/20260722090000_inspection_product_and_depth.sql")
+    assert "inspection_product" in migration
+    assert "inspection_depth" in migration
+    assert "quickscan" in migration
+    assert "object_report" in migration
+    assert "portfolio_scan" in migration
 
 
 def test_browser_storage_is_not_used_as_operational_system_of_record():

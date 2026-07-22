@@ -145,16 +145,17 @@ function buildPortalEmail(mode: EmailMode, actionLink: string) {
 }
 
 async function sendEmail(to: string, actionLink: string, mode: EmailMode) {
+  const emailProvider = (Deno.env.get("EMAIL_PROVIDER") || "brevo").trim().toLowerCase();
   const resendApiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
   const brevoApiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
   const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || Deno.env.get("FROM_EMAIL") || "noreply@roofsignal.nl";
   const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
   const { subject, text, html } = buildPortalEmail(mode, actionLink);
 
-  if (resendApiKey) return sendResendEmail(resendApiKey, fromEmail, fromName, to, subject, text, html);
-  if (brevoApiKey) return sendBrevoEmail(brevoApiKey, fromEmail, fromName, to, subject, text, html);
+  if (emailProvider === "brevo" && brevoApiKey) return sendBrevoEmail(brevoApiKey, fromEmail, fromName, to, subject, text, html);
+  if (emailProvider === "resend" && resendApiKey) return sendResendEmail(resendApiKey, fromEmail, fromName, to, subject, text, html);
 
-  throw new Error("No email provider is configured.");
+  throw new Error(`Configured email provider is unavailable: ${emailProvider}`);
 }
 
 serve(async (req) => {

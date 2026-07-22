@@ -97,8 +97,19 @@ Deze function gebruikt `SUPABASE_SERVICE_ROLE_KEY` om een Supabase Auth magic li
 
 Benodigde secrets:
 
+- `EMAIL_PROVIDER=brevo` (expliciete transactionele verzendroute; voorkom impliciete providerwissels)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY` of `BREVO_API_KEY`
 - `BREVO_FROM_EMAIL` of `FROM_EMAIL`
 - `BREVO_FROM_NAME`
+
+## 7. Afzenderlogo in Apple Mail en andere BIMI-clients
+
+Het inboxlogo wordt niet door de HTML-template bepaald. Gebruik hiervoor Branded Mail in Apple Business Connect en BIMI.
+
+- Publieke logoasset: `https://www.roofsignal.nl/assets/roofsignal-bimi.svg`
+- BIMI-hostnaam: `default._bimi.roofsignal.nl`
+- BIMI TXT-waarde zonder certificaat: `v=BIMI1; l=https://www.roofsignal.nl/assets/roofsignal-bimi.svg; a=`
+- DMARC moet op `p=quarantine` of `p=reject` blijven staan en alle transactionele mail moet DKIM-aligned verzonden worden.
+- Rond de bedrijfs- en merkverificatie af in Apple Business Connect en koppel `roofsignal.nl` aan Branded Mail. Apple kan aanvullende verificatie of een BIMI Evidence Document verlangen voordat het logo wordt getoond.

@@ -208,7 +208,7 @@
     if (!supabase) return [];
     let query = supabase
       .from("inspections")
-      .select("id,organization_id,property_id,quote_id,quote_item_id,appointment_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at,properties(name,address,postcode,city),organizations(name)")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,appointment_id,reference,inspection_product,inspection_depth,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at,properties(name,address,postcode,city),organizations(name)")
       .order("created_at", { ascending: false });
     if (organizationId) query = query.eq("organization_id", organizationId);
     const { data, error } = await query;
@@ -222,7 +222,7 @@
     const { data, error } = await supabase
       .from("inspections")
       .insert(payload)
-      .select("id,organization_id,property_id,quote_id,quote_item_id,appointment_id,reference,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,appointment_id,reference,inspection_product,inspection_depth,scope,status,scheduled_at,inspected_at,summary,created_at,updated_at")
       .single();
     return error ? { ok: false, error } : { ok: true, data };
   }
