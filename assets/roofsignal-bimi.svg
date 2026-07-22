@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 512 512">
   <title>RoofSignal</title>
   <desc>RoofSignal brand mark for authenticated email</desc>
-  <rect width="512" height="512" fill="#111315"/>
-  <rect x="76" y="76" width="360" height="360" rx="78" fill="none" stroke="#ff5a1f" stroke-width="20"/>
-  <path d="M174 249 256 174l82 75v101H174V249Z" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="512" height="512" fill="#050908"/>
+  <rect x="76" y="76" width="360" height="360" rx="83" fill="none" stroke="#ff5a14" stroke-width="14"/>
+  <path d="M157 0V634L618 1153L1080 634V0ZM238 81H999V600L618 1027L238 600Z" transform="translate(164 342) scale(.14874 -.14874)" fill="#ffffff" fill-rule="evenodd"/>
 </svg>
