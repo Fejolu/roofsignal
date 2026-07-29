@@ -1065,6 +1065,11 @@
       if (!updated.ok) return setPortalNotice(updated.error?.message || "Offertebedrag bijwerken is mislukt.", "error");
       const items = liveQuoteItems.filter((item) => item.quote_id === id);
       const firstItem = items[0] || {};
+      if (items.length === 1) {
+        const updatedItem = await window.RoofSignalBackend.updateQuoteItem(firstItem.id, { amount });
+        if (!updatedItem.ok) return setPortalNotice(updatedItem.error?.message || "Offertebedrag is bijgewerkt, maar de objectregel niet.", "error");
+        firstItem.amount = amount;
+      }
       const uploaded = await window.RoofSignalBackend.uploadPortalDocument(file, {
         organization_id: quote.organization_id,
         property_id: firstItem.property_id || null,

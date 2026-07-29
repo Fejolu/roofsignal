@@ -290,6 +290,13 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function updateQuoteItem(id, payload) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase.from("quote_items").update(payload).eq("id", id).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   async function createAppointment(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false };
@@ -735,6 +742,7 @@
     createQuoteItems,
     listQuoteItems,
     updateQuote,
+    updateQuoteItem,
     createAppointment,
     createInvoice,
     updateInvoice,
