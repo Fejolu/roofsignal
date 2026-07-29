@@ -982,11 +982,27 @@
     const itemValues = selectedRows.map((row) => { const inspection_product = row.querySelector('[data-quote-item-field="inspection_product"]').value; const inspection_depth = row.querySelector('[data-quote-item-field="inspection_depth"]').value; return { property_id: row.dataset.quoteProperty, inspection_product, inspection_depth, scope: row.querySelector('[data-quote-item-field="scope"]').value.trim() || null, amount: Number(row.querySelector('[data-quote-item-field="amount"]').value || 0), scope_snapshot: depthSnapshot(inspection_product, inspection_depth) }; });
     if (itemValues.some((item) => item.amount <= 0)) return setWorkflowStatus(status, "Vul voor ieder geselecteerd object een bedrag in.", "error");
     const total = itemValues.reduce((sum, item) => sum + item.amount, 0);
-    const result = await window.RoofSignalBackend.createQuote({ organization_id: data.get("organization_id"), title: String(data.get("title") || "").trim(), amount: total, status: "draft" });
+    const result = await window.RoofSignalBackend.createQuote({ organization_id: data.get("organization_id"), title: String(data.get("title") || "").trim(), amount: total, status: "draft", valid_until: data.get("valid_until") });
     if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Offerte opslaan is mislukt.", "error");
     const items = await window.RoofSignalBackend.createQuoteItems(itemValues.map((item) => ({ ...item, quote_id: result.data.id, organization_id: data.get("organization_id") })));
     if (!items.ok) return setWorkflowStatus(status, items.error?.message || "Objectregels opslaan is mislukt.", "error");
     await window.RoofSignalBackend.createQuoteVersion({ quote_id: result.data.id, version: 1, status: "draft", snapshot: { quote: result.data, items: items.data } });
+    const quoteFile = quoteForm.elements.quote_file.files?.[0];
+    if (quoteFile) {
+      const firstProperty = itemValues[0]?.property_id || null;
+      const uploaded = await window.RoofSignalBackend.uploadPortalDocument(quoteFile, {
+        organization_id: data.get("organization_id"),
+        property_id: firstProperty,
+        quote_id: result.data.id,
+        document_type: "quote",
+        title: quoteFile.name,
+        version: 1,
+        customer_visible: true,
+        required_depth: "basis",
+        metadata: { quote_number: result.data.quote_number, source: "quote_workflow" },
+      });
+      if (!uploaded.ok) return setWorkflowStatus(status, uploaded.error?.message || "Offerte is opgeslagen, maar de PDF-upload is mislukt.", "error");
+    }
     quoteForm.reset(); await loadQuoteObjects("");
     setWorkflowStatus(status, `Conceptofferte met ${itemValues.length} object${itemValues.length === 1 ? "" : "en"} is opgeslagen.`, "success");
     await loadLiveAdminData();
@@ -1006,12 +1022,11 @@
 
   async function sendQuote(id) {
     const quote = liveQuotes.find((item) => item.id === id); if (!quote) return;
-    const items = liveQuoteItems.filter((item) => item.quote_id === id); const sentAt = new Date().toISOString();
-    const result = await window.RoofSignalBackend.updateQuote(id, { status: "sent" });
+    setPortalNotice("Offerte en beveiligde akkoordlink worden verzonden…");
+    const result = await window.RoofSignalBackend.sendQuoteEmail(id);
     if (!result.ok) return setPortalNotice(result.error?.message || "Offerte verzenden is mislukt.", "error");
-    await window.RoofSignalBackend.createQuoteVersion({ quote_id: id, version: 2, status: "sent", sent_at: sentAt, snapshot: { quote: { ...quote, status: "sent" }, items } });
-    await window.RoofSignalBackend.createCustomerActivity({ organization_id: quote.organization_id, activity_type: "system", subject: `Offerte verzonden: ${quote.title}`, body: `Bedrag ${formatMoney(quote.amount)} excl. btw.` });
-    setPortalNotice("Offerte is als verzonden geregistreerd en staat klaar voor klantakkoord.", "success"); await loadLiveAdminData();
+    setPortalNotice(`Offerte is verzonden naar ${result.data.recipient}. Akkoord wordt automatisch teruggekoppeld.`, "success");
+    await loadLiveAdminData();
   }
 
   function openQuoteSchedule(id) {
@@ -1572,6 +1587,21 @@
     }).join("");
   }
 
+  function renderCustomerQuotes(quotes = [], documents = []) {
+    const list = document.querySelector(".customer-quote-list");
+    if (!list) return;
+    if (!quotes.length) {
+      list.innerHTML = '<div class="empty-state">Nog geen offertes beschikbaar.</div>';
+      return;
+    }
+    list.innerHTML = quotes.map((quote) => {
+      const document = documents.find((item) => item.quote_id === quote.id && item.document_type === "quote");
+      const action = document?.signed_url ? `<a class="inline-button" href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">PDF bekijken</a>` : "";
+      const accepted = quote.status === "accepted" ? ` · geaccepteerd${quote.accepted_by_name ? ` door ${quote.accepted_by_name}` : ""}` : "";
+      return `<article class="customer-quote-card"><div><strong>${escapeHtml(quote.quote_number || quote.title)}</strong><span>${escapeHtml(formatMoney(quote.amount))} excl. btw · ${escapeHtml(quote.status)}${escapeHtml(accepted)}</span></div>${action}</article>`;
+    }).join("");
+  }
+
   function fillCustomerRequestForms(properties) {
     document.querySelectorAll("[data-customer-request-form] select[name='property_id']").forEach((select) => {
       const first = select.querySelector("option")?.outerHTML || '<option value="">Kies een object</option>';
@@ -1635,7 +1665,7 @@
       if (account) account.textContent = organization.name;
     }
 
-    const [properties, inspections, invoices, appointments, reports, quoteItems, documents, requests] = await Promise.all([
+    const [properties, inspections, invoices, appointments, reports, quoteItems, documents, requests, quotes] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
       backend.listInspections(organizationId),
       backend.listOrganizationInvoices(organizationId),
@@ -1644,6 +1674,7 @@
       backend.listQuoteItems(),
       backend.listOrganizationDocuments(organizationId),
       backend.listCustomerRequests(organizationId),
+      backend.listOrganizationQuotes(organizationId),
     ]);
     const findings = (await Promise.all(inspections.map((inspection) => backend.listFindings(inspection.id)))).flat();
     const media = (await Promise.all(inspections.map((inspection) => backend.listInspectionMedia(inspection.id)))).flat();
@@ -1654,6 +1685,7 @@
     renderCustomerMedia(media);
     renderCustomerEntitlements(quoteItems.filter((item) => item.organization_id === organizationId));
     renderCustomerInvoices(invoices, documents);
+    renderCustomerQuotes(quotes, documents);
     renderCustomerAppointments(appointments);
     fillCustomerRequestForms(properties);
     renderCustomerRequests(requests);

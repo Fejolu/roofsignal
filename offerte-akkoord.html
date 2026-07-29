@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Offerte bekijken en akkoord geven | RoofSignal</title>
+  <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css?v=portal18">
+</head>
+<body class="quote-acceptance-page">
+  <main class="quote-acceptance-shell">
+    <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+    <section class="quote-acceptance-card" data-quote-acceptance>
+      <p class="eyebrow orange">Digitale offerte</p>
+      <h1>Offerte veilig bekijken.</h1>
+      <p data-quote-status>De offertegegevens worden opgehaald…</p>
+      <div data-quote-summary hidden></div>
+      <form data-quote-accept-form hidden>
+        <label>Uw naam<input name="actor_name" autocomplete="name" required></label>
+        <label>Uw e-mailadres<input name="actor_email" type="email" autocomplete="email" required></label>
+        <label class="quote-confirm-check">
+          <input name="confirmed" type="checkbox" required>
+          <span>Ik heb deze offerte en de bijbehorende voorwaarden gelezen en ga hiermee akkoord.</span>
+        </label>
+        <button class="btn" type="submit">Akkoord bevestigen</button>
+        <p class="form-note" data-accept-status></p>
+      </form>
+    </section>
+    <p class="quote-acceptance-help">Vragen? Mail <a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a> of bel 085 21 28 019.</p>
+  </main>
+  <script src="assets/supabase-config.js"></script>
+  <script src="assets/quote-acceptance.js?v=1" defer></script>
+</body>
+</html>

@@ -216,6 +216,8 @@
     <form class="compact-workflow-form workflow-form" data-quote-create-form hidden>
       <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
       <label>Titel<input name="title" required placeholder="Inspecties en rapportage"></label>
+      <label>Geldig tot<input name="valid_until" type="date" required></label>
+      <label>PDF-offerte<input name="quote_file" type="file" accept="application/pdf" required></label>
       <div class="quote-object-list" data-quote-object-list><div class="empty-state">Selecteer eerst een klant.</div></div>
       <button class="btn" type="submit">Conceptofferte opslaan</button>
       <p class="form-note" data-quote-create-status></p>
@@ -251,7 +253,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=13" defer></script>
-<script src="assets/portal-admin.js?v=10" defer></script>
+<script src="assets/supabase-app.js?v=15" defer></script>
+<script src="assets/portal-admin.js?v=12" defer></script>
 </body>
 </html>

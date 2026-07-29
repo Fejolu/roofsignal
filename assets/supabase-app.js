@@ -441,6 +441,24 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function sendQuoteEmail(quoteId, testRecipient = "") {
+    const supabase = await getClient(); if (!supabase || !quoteId) return { ok: false };
+    const { data, error } = await supabase.functions.invoke("send-quote-email", {
+      body: { quoteId, testRecipient: testRecipient || undefined },
+    });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
+  }
+
+  async function listOrganizationQuotes(organizationId) {
+    const supabase = await getClient(); if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase
+      .from("quotes")
+      .select("id,organization_id,quote_number,title,amount,status,valid_until,sent_at,accepted_at,accepted_by_name,quote_items(id,inspection_product,inspection_depth,scope,amount,properties(name,address,postcode,city))")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false });
+    return error ? [] : data || [];
+  }
+
   async function createOrderConfirmation(payload) {
     const supabase = await getClient(); if (!supabase) return { ok: false };
     const { data, error } = await supabase.from("order_confirmations").insert(payload).select("*").single();
@@ -733,6 +751,8 @@
     createInspectionChecklist,
     updateChecklistItem,
     createQuoteVersion,
+    sendQuoteEmail,
+    listOrganizationQuotes,
     createOrderConfirmation,
     createInvoiceLines,
     createInvoiceEvent,
