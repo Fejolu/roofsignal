@@ -329,7 +329,7 @@
     const inspections = liveInspections.filter((item) => item.quote_id === quote.id);
     const invoice = liveInvoices.find((item) => item.quote_id === quote.id);
     if (quote.status === "draft") return `<button class="inline-button" data-admin-action="send-quote" data-quote-id="${escapeHtml(quote.id)}">Offerte verzenden</button>`;
-    if (quote.status === "sent") return `<button class="inline-button" data-admin-action="accept-quote" data-quote-id="${escapeHtml(quote.id)}">Akkoord registreren</button>`;
+    if (quote.status === "sent") return `<div class="table-actions"><button class="inline-button" data-admin-action="accept-quote" data-quote-id="${escapeHtml(quote.id)}">Akkoord registreren</button><button class="inline-button" data-admin-action="send-quote-custom" data-quote-id="${escapeHtml(quote.id)}">Opnieuw e-mailen</button></div>`;
     if (quote.status !== "accepted") return "-";
     const unscheduled = items.filter((item) => !inspections.some((inspection) => inspection.quote_item_id === item.id));
     if (unscheduled.length) return `<button class="inline-button" data-admin-action="schedule-quote" data-quote-id="${escapeHtml(quote.id)}">${unscheduled.length} object${unscheduled.length === 1 ? "" : "en"} plannen</button>`;
@@ -1026,6 +1026,21 @@
     const result = await window.RoofSignalBackend.sendQuoteEmail(id);
     if (!result.ok) return setPortalNotice(result.error?.message || "Offerte verzenden is mislukt.", "error");
     setPortalNotice(`Offerte is verzonden naar ${result.data.recipient}. Akkoord wordt automatisch teruggekoppeld.`, "success");
+    await loadLiveAdminData();
+  }
+
+  async function sendQuoteCustom(id) {
+    const quote = liveQuotes.find((item) => item.id === id); if (!quote) return;
+    const recipient = window.prompt("Ontvanger", quote.organizations?.contact_email || "");
+    if (!recipient) return;
+    const ccRecipient = window.prompt("Cc (optioneel)", "");
+    setPortalNotice("Offerte en beveiligde akkoordlink worden verzonden…");
+    const result = await window.RoofSignalBackend.sendQuoteEmail(id, "", {
+      recipientOverride: recipient.trim(),
+      ccRecipient: String(ccRecipient || "").trim(),
+    });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Offerte verzenden is mislukt.", "error");
+    setPortalNotice(`Offerte is verzonden naar ${result.data.recipient}${result.data.ccRecipient ? ` met cc aan ${result.data.ccRecipient}` : ""}.`, "success");
     await loadLiveAdminData();
   }
 
@@ -1818,6 +1833,7 @@
     if (action === "open-inspection") openInspection(target.dataset.inspectionId);
     if (action === "accept-quote") acceptQuote(target.dataset.quoteId);
     if (action === "send-quote") sendQuote(target.dataset.quoteId);
+    if (action === "send-quote-custom") sendQuoteCustom(target.dataset.quoteId);
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
     if (action === "activate-upgrade") activateUpgrade(target);
