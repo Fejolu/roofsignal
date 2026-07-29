@@ -329,7 +329,7 @@
     const inspections = liveInspections.filter((item) => item.quote_id === quote.id);
     const invoice = liveInvoices.find((item) => item.quote_id === quote.id);
     if (quote.status === "draft") return `<button class="inline-button" data-admin-action="send-quote" data-quote-id="${escapeHtml(quote.id)}">Offerte verzenden</button>`;
-    if (quote.status === "sent") return `<div class="table-actions"><button class="inline-button" data-admin-action="accept-quote" data-quote-id="${escapeHtml(quote.id)}">Akkoord registreren</button><button class="inline-button" data-admin-action="send-quote-custom" data-quote-id="${escapeHtml(quote.id)}">Opnieuw e-mailen</button></div>`;
+    if (quote.status === "sent") return `<div class="table-actions"><button class="inline-button" data-admin-action="edit-sent-quote" data-quote-id="${escapeHtml(quote.id)}">Offerte aanpassen</button><button class="inline-button" data-admin-action="accept-quote" data-quote-id="${escapeHtml(quote.id)}">Akkoord registreren</button><button class="inline-button" data-admin-action="send-quote-custom" data-quote-id="${escapeHtml(quote.id)}">Opnieuw e-mailen</button></div>`;
     if (quote.status !== "accepted") return "-";
     const unscheduled = items.filter((item) => !inspections.some((inspection) => inspection.quote_item_id === item.id));
     if (unscheduled.length) return `<button class="inline-button" data-admin-action="schedule-quote" data-quote-id="${escapeHtml(quote.id)}">${unscheduled.length} object${unscheduled.length === 1 ? "" : "en"} plannen</button>`;
@@ -1042,6 +1042,46 @@
     if (!result.ok) return setPortalNotice(result.error?.message || "Offerte verzenden is mislukt.", "error");
     setPortalNotice(`Offerte is verzonden naar ${result.data.recipient}${result.data.ccRecipient ? ` met cc aan ${result.data.ccRecipient}` : ""}.`, "success");
     await loadLiveAdminData();
+  }
+
+  async function editSentQuote(id) {
+    const quote = liveQuotes.find((item) => item.id === id); if (!quote) return;
+    const amountInput = window.prompt("Nieuw bedrag excl. btw", Number(quote.amount || 0).toFixed(2));
+    if (amountInput === null) return;
+    const amount = Number(String(amountInput).replace(",", "."));
+    if (!Number.isFinite(amount) || amount <= 0) return setPortalNotice("Vul een geldig bedrag excl. btw in.", "error");
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "application/pdf,.pdf";
+    fileInput.hidden = true;
+    document.body.append(fileInput);
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files?.[0];
+      fileInput.remove();
+      if (!file) return;
+      setPortalNotice("Offertebedrag en PDF worden bijgewerkt…");
+      const updated = await window.RoofSignalBackend.updateQuote(id, { amount });
+      if (!updated.ok) return setPortalNotice(updated.error?.message || "Offertebedrag bijwerken is mislukt.", "error");
+      const items = liveQuoteItems.filter((item) => item.quote_id === id);
+      const firstItem = items[0] || {};
+      const uploaded = await window.RoofSignalBackend.uploadPortalDocument(file, {
+        organization_id: quote.organization_id,
+        property_id: firstItem.property_id || null,
+        quote_id: id,
+        document_type: "quote",
+        title: file.name,
+        version: 2,
+        customer_visible: true,
+        required_depth: "basis",
+        metadata: { quote_number: quote.quote_number, source: "quote_revision" },
+      });
+      if (!uploaded.ok) return setPortalNotice(uploaded.error?.message || "Bedrag is bijgewerkt, maar de PDF-upload is mislukt.", "error");
+      await window.RoofSignalBackend.createQuoteVersion({ quote_id: id, version: 2, status: quote.status, snapshot: { quote: { ...quote, amount }, items } });
+      setPortalNotice("Offertebedrag en nieuwe PDF zijn bijgewerkt.", "success");
+      await loadLiveAdminData();
+    }, { once: true });
+    fileInput.click();
   }
 
   function openQuoteSchedule(id) {
@@ -1834,6 +1874,7 @@
     if (action === "accept-quote") acceptQuote(target.dataset.quoteId);
     if (action === "send-quote") sendQuote(target.dataset.quoteId);
     if (action === "send-quote-custom") sendQuoteCustom(target.dataset.quoteId);
+    if (action === "edit-sent-quote") editSentQuote(target.dataset.quoteId);
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
     if (action === "activate-upgrade") activateUpgrade(target);
