@@ -26,14 +26,21 @@
   }
 
   function renderQuote(quote) {
+    const documentCard = quote.documentUrl
+      ? `<a class="quote-document-link" href="${escapeHtml(quote.documentUrl)}" target="_blank" rel="noopener" aria-label="Bekijk offerte ${escapeHtml(quote.quoteNumber || quote.title)} als PDF">
+          <span>Offerte</span>
+          <strong>${escapeHtml(quote.quoteNumber || quote.title)}</strong>
+          <small>Bekijk offerte (PDF) <b aria-hidden="true">→</b></small>
+        </a>`
+      : `<div><dt>Offerte</dt><dd>${escapeHtml(quote.quoteNumber || quote.title)}</dd></div>`;
     const items = (quote.items || []).map((item) => {
       const property = item.properties || {};
       const address = [property.address, property.postcode, property.city].filter(Boolean).join(", ");
       return `<article><strong>${escapeHtml(property.name || address || "Object")}</strong><span>${escapeHtml(product(item.inspection_product))} ${escapeHtml(depth(item.inspection_depth))}</span><small>${escapeHtml(address)}</small><b>${escapeHtml(money(item.amount))} excl. btw</b></article>`;
     }).join("");
     summary.innerHTML = `
-      <dl>
-        <div><dt>Offerte</dt><dd>${escapeHtml(quote.quoteNumber || quote.title)}</dd></div>
+      <dl class="quote-acceptance-summary">
+        ${documentCard}
         <div><dt>Klant</dt><dd>${escapeHtml(quote.organizationName || "-")}</dd></div>
         <div><dt>Totaal</dt><dd>${escapeHtml(money(quote.amount))} excl. btw</dd></div>
         <div><dt>Geldig tot</dt><dd>${escapeHtml(date(quote.validUntil))}</dd></div>

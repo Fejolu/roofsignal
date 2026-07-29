@@ -72,6 +72,18 @@ serve(async (req) => {
   if (expired) return new Response(JSON.stringify({ error: "Deze offertelink is verlopen. Vraag RoofSignal om een nieuwe link." }), { status: 410, headers });
 
   if (action === "view") {
+    const { data: document } = await service
+      .from("documents")
+      .select("title,storage_path")
+      .eq("quote_id", quote.id)
+      .eq("document_type", "quote")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const { data: signedDocument } = document?.storage_path
+      ? await service.storage.from("portal-documents").createSignedUrl(document.storage_path, 15 * 60)
+      : { data: null };
+
     await service.from("quote_acceptance_events").insert({
       quote_id: quote.id,
       organization_id: quote.organization_id,
@@ -90,6 +102,8 @@ serve(async (req) => {
         acceptedByName: quote.accepted_by_name,
         organizationName: quote.organizations?.name,
         items: quote.quote_items,
+        documentUrl: signedDocument?.signedUrl || null,
+        documentTitle: document?.title || null,
       },
     }), { headers });
   }
