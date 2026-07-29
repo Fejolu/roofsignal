@@ -62,7 +62,9 @@ serve(async (req) => {
   const service = createClient(url, serviceKey, { auth: { persistSession: false } });
   const body = await req.json().catch(() => ({}));
   const quoteId = String(body.quoteId || "");
-  const recipientOverride = String(body.testRecipient || "").trim().toLowerCase();
+  const testRecipient = String(body.testRecipient || "").trim().toLowerCase();
+  const recipientOverride = String(body.recipientOverride || "").trim().toLowerCase();
+  const ccRecipient = String(body.ccRecipient || "").trim().toLowerCase();
   const { data: quote, error } = await service
     .from("quotes")
     .select("id,organization_id,quote_number,title,amount,status,valid_until,organizations(name,contact_name,contact_email),quote_items(id,inspection_product,inspection_depth,scope,amount,properties(name,address,postcode,city))")
@@ -71,12 +73,15 @@ serve(async (req) => {
   if (error || !quote) return new Response(JSON.stringify({ error: "Offerte niet gevonden." }), { status: 404, headers: cors });
   if (!["draft", "sent"].includes(quote.status)) return new Response(JSON.stringify({ error: "Alleen een concept of verzonden offerte kan worden verstuurd." }), { status: 400, headers: cors });
 
-  const recipient = recipientOverride || String(quote.organizations?.contact_email || "").trim().toLowerCase();
+  const recipient = testRecipient || recipientOverride || String(quote.organizations?.contact_email || "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
     return new Response(JSON.stringify({ error: "De klant heeft geen geldig contact-e-mailadres." }), { status: 400, headers: cors });
   }
-  if (recipientOverride && recipientOverride !== "ferry@roofsignal.nl") {
+  if (testRecipient && testRecipient !== "ferry@roofsignal.nl") {
     return new Response(JSON.stringify({ error: "Alleen ferry@roofsignal.nl is toegestaan als testontvanger." }), { status: 400, headers: cors });
+  }
+  if (ccRecipient && ccRecipient !== "ferry@roofsignal.nl") {
+    return new Response(JSON.stringify({ error: "Alleen ferry@roofsignal.nl is toegestaan als cc-ontvanger." }), { status: 400, headers: cors });
   }
 
   const { data: document } = await service
@@ -101,7 +106,7 @@ serve(async (req) => {
   const acceptanceUrl = `https://www.roofsignal.nl/offerte-akkoord?token=${encodeURIComponent(token)}`;
   const property = quote.quote_items?.[0]?.properties;
   const address = [property?.address, property?.postcode, property?.city].filter(Boolean).join(", ");
-  const subject = `${recipientOverride ? "[TEST] " : ""}Uw offerte ${quote.title} – ${property?.name || address || quote.quote_number || "RoofSignal"}`;
+  const subject = `${testRecipient ? "[TEST] " : ""}Uw offerte ${quote.title} – ${property?.name || address || quote.quote_number || "RoofSignal"}`;
   const salutation = quote.organizations?.contact_name ? `Beste ${quote.organizations.contact_name},` : "Geachte heer/mevrouw,";
   const text = [
     salutation, "",
@@ -118,6 +123,7 @@ serve(async (req) => {
     const result = await sendBrevo({
       sender: { email: fromEmail, name: fromName },
       to: [{ email: recipient, name: quote.organizations?.contact_name || quote.organizations?.name }],
+      ...(ccRecipient ? { cc: [{ email: ccRecipient, name: "RoofSignal" }] } : {}),
       replyTo: { email: "info@roofsignal.nl", name: "RoofSignal" },
       headers: { "X-Mailin-Track": "0" },
       subject,
@@ -137,17 +143,17 @@ serve(async (req) => {
       version,
       status: "sent",
       sent_at: sentAt.toISOString(),
-      snapshot: { quote, document_id: document.id, recipient },
+      snapshot: { quote, document_id: document.id, recipient, cc_recipient: ccRecipient || null },
       created_by: userData.user.id,
     });
     await service.from("customer_activities").insert({
       organization_id: quote.organization_id,
       activity_type: "email",
       subject: `Offerte verzonden: ${quote.quote_number || quote.title}`,
-      body: `Offerteversie ${version} verzonden naar ${recipient}.`,
+      body: `Offerteversie ${version} verzonden naar ${recipient}${ccRecipient ? ` met cc aan ${ccRecipient}` : ""}.`,
       created_by: userData.user.id,
     });
-    return new Response(JSON.stringify({ success: true, recipient, version, messageId: result?.messageId || null }), { headers: cors });
+    return new Response(JSON.stringify({ success: true, recipient, ccRecipient: ccRecipient || null, version, messageId: result?.messageId || null }), { headers: cors });
   } catch (sendError) {
     return new Response(JSON.stringify({ error: sendError instanceof Error ? sendError.message : "Verzenden is mislukt." }), { status: 500, headers: cors });
   }

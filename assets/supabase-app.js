@@ -441,10 +441,15 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
-  async function sendQuoteEmail(quoteId, testRecipient = "") {
+  async function sendQuoteEmail(quoteId, testRecipient = "", options = {}) {
     const supabase = await getClient(); if (!supabase || !quoteId) return { ok: false };
     const { data, error } = await supabase.functions.invoke("send-quote-email", {
-      body: { quoteId, testRecipient: testRecipient || undefined },
+      body: {
+        quoteId,
+        testRecipient: testRecipient || undefined,
+        recipientOverride: options.recipientOverride || undefined,
+        ccRecipient: options.ccRecipient || undefined,
+      },
     });
     return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
   }
