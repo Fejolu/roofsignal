@@ -99,6 +99,7 @@
   let liveInspections = [];
   let activeInspection = null;
   let liveAppointments = [];
+  let liveProfiles = [];
   let liveInvoices = [];
   let liveQuotes = [];
   let liveQuoteItems = [];
@@ -218,7 +219,8 @@
     }
     rolesBody.innerHTML = profiles.map((profile) => {
       const role = roleLabels[profile.role] || profile.role;
-      return `<tr><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
+      const calendarAction = profile.role !== "customer" ? `<a href="#rechten" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</a>` : "";
+      return `<tr><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions">${calendarAction}<a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
     }).join("");
   }
 
@@ -349,7 +351,7 @@
   function renderAppointments(appointments = []) {
     if (!planningList) return;
     planningList.innerHTML = appointments.length
-      ? appointments.map((appointment) => `<div><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.status].filter(Boolean).join(" · "))}</p></div>`).join("")
+      ? appointments.map((appointment) => `<div><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, appointment.status].filter(Boolean).join(" · "))}</p><div class="table-actions"><button class="inline-button" data-admin-action="test-appointment-email" data-appointment-id="${escapeHtml(appointment.id)}">Test afspraakmail</button></div></div>`).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
   }
 
@@ -383,6 +385,7 @@
       backend.listUpgradeRequests(),
     ]);
     liveOrganizations = customers;
+    liveProfiles = profiles;
     liveAppointments = appointments;
     liveInvoices = invoices;
     liveQuotes = quotes;
@@ -1107,6 +1110,9 @@
     const select = quoteScheduleForm.querySelector('[name="quote_item_id"]');
     const unscheduled = liveQuoteItems.filter((item) => item.quote_id === id && !liveInspections.some((inspection) => inspection.quote_item_id === item.id));
     select.innerHTML = '<option value="">Selecteer object</option>' + unscheduled.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.properties?.name || "Object")} · ${escapeHtml(productLabel(item.inspection_product))} · ${escapeHtml(inspectionDepths[item.inspection_depth]?.label || "Basis")}</option>`).join("");
+    const inspectorSelect = quoteScheduleForm.querySelector('[name="inspector_id"]');
+    const inspectors = liveProfiles.filter((profile) => profile.role !== "customer");
+    inspectorSelect.innerHTML = '<option value="">Selecteer inspecteur</option>' + inspectors.map((profile) => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.full_name || profile.email)} · ${escapeHtml(roleLabels[profile.role] || profile.role)}</option>`).join("");
     if (quoteScheduleTitle) quoteScheduleTitle.textContent = `${activeQuote.organizations?.name || "Klant"} · inspectie plannen`;
     quoteScheduleForm.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -1120,13 +1126,29 @@
     const quoteItem = liveQuoteItems.find((item) => item.id === data.get("quote_item_id"));
     if (!quoteItem) return setWorkflowStatus(status, "Selecteer een object uit de offerte.", "error");
     const depthLabel = inspectionDepths[quoteItem.inspection_depth]?.label || "Basis";
-    const appointment = await window.RoofSignalBackend.createAppointment({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, title: `${productLabel(quoteItem.inspection_product)} ${depthLabel} · ${quoteItem.properties?.name || "Object"}`, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "planned" });
+    const appointment = await window.RoofSignalBackend.createAppointment({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, inspector_id: data.get("inspector_id"), title: `${productLabel(quoteItem.inspection_product)} ${depthLabel} · ${quoteItem.properties?.name || "Object"}`, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "planned" });
     if (!appointment.ok) return setWorkflowStatus(status, appointment.error?.message || "Planning opslaan is mislukt.", "error");
     const inspection = await window.RoofSignalBackend.createInspection({ organization_id: activeQuote.organization_id, property_id: quoteItem.property_id, quote_id: activeQuote.id, quote_item_id: quoteItem.id, appointment_id: appointment.data.id, inspection_product: quoteItem.inspection_product, inspection_depth: quoteItem.inspection_depth, scope: quoteItem.scope || null, scheduled_at: startsAt.toISOString(), status: "planned" });
     if (!inspection.ok) return setWorkflowStatus(status, inspection.error?.message || "Inspectie aanmaken is mislukt.", "error");
+    const notification = await window.RoofSignalBackend.sendAppointmentEmail(appointment.data.id);
+    if (!notification.ok) setPortalNotice("Afspraak is gepland, maar de bevestigingsmail kon niet worden verzonden.", "error");
     quoteScheduleForm.reset(); quoteScheduleForm.hidden = true;
     setPortalNotice("De datum is gepland en de inspectie is aangemaakt.", "success");
     await loadLiveAdminData();
+  }
+
+  async function testAppointmentEmail(id) {
+    setPortalNotice("Test-afspraakbevestiging wordt verzonden…");
+    const result = await window.RoofSignalBackend.sendAppointmentEmail(id, "ferry@roofsignal.nl");
+    if (!result.ok) return setPortalNotice(result.error?.message || "Testmail verzenden is mislukt.", "error");
+    setPortalNotice("Test-afspraakbevestiging is verzonden naar ferry@roofsignal.nl.", "success");
+  }
+
+  async function createCalendarFeed(profileId) {
+    const result = await window.RoofSignalBackend.createStaffCalendarFeed(profileId);
+    if (!result.ok) return setPortalNotice(result.error?.message || "Agenda-abonnement aanmaken is mislukt.", "error");
+    await navigator.clipboard.writeText(result.data.webcalUrl || result.data.feedUrl);
+    setPortalNotice("Persoonlijke agenda-abonnementslink is gekopieerd. Een nieuwe link vervangt een eerdere link.", "success");
   }
 
   async function invoiceQuote(id) {
@@ -1891,6 +1913,8 @@
     if (action === "send-quote-custom") sendQuoteCustom(target.dataset.quoteId);
     if (action === "edit-sent-quote") editSentQuote(target.dataset.quoteId);
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
+    if (action === "test-appointment-email") testAppointmentEmail(target.dataset.appointmentId);
+    if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
     if (action === "activate-upgrade") activateUpgrade(target);

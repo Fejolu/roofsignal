@@ -304,6 +304,20 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function sendAppointmentEmail(appointmentId, testRecipient = "") {
+    const supabase = await getClient(); if (!supabase || !appointmentId) return { ok: false };
+    const { data, error } = await supabase.functions.invoke("send-appointment-email", {
+      body: { appointmentId, testRecipient: testRecipient || undefined },
+    });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
+  }
+
+  async function createStaffCalendarFeed(profileId) {
+    const supabase = await getClient(); if (!supabase || !profileId) return { ok: false };
+    const { data, error } = await supabase.functions.invoke("staff-calendar", { body: { profileId } });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
+  }
+
   async function createInvoice(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false };
@@ -643,7 +657,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id,organization_id,property_id,quote_id,quote_item_id,title,starts_at,ends_at,status,notes,created_at,organizations(name),properties(name)")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,inspector_id,title,starts_at,ends_at,status,notes,customer_notified_at,inspector_notified_at,created_at,organizations(name),properties(name),profiles!appointments_inspector_id_fkey(full_name,email)")
       .order("starts_at", { ascending: true });
     if (error) return [];
     return data || [];
@@ -744,6 +758,8 @@
     updateQuote,
     updateQuoteItem,
     createAppointment,
+    sendAppointmentEmail,
+    createStaffCalendarFeed,
     createInvoice,
     updateInvoice,
     createUpgradeRequest,
