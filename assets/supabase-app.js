@@ -657,10 +657,15 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id,organization_id,property_id,quote_id,quote_item_id,inspector_id,title,starts_at,ends_at,status,notes,customer_notified_at,inspector_notified_at,created_at,organizations(name),properties(name),profiles!appointments_inspector_id_fkey(full_name,email)")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,inspector_id,title,starts_at,ends_at,status,notes,customer_notified_at,inspector_notified_at,created_at,organizations(name),properties(name)")
       .order("starts_at", { ascending: true });
     if (error) return [];
-    return data || [];
+    const appointments = data || [];
+    const inspectorIds = [...new Set(appointments.map((item) => item.inspector_id).filter(Boolean))];
+    if (!inspectorIds.length) return appointments;
+    const { data: inspectors } = await supabase.from("profiles").select("id,full_name,email").in("id", inspectorIds);
+    const inspectorMap = new Map((inspectors || []).map((profile) => [profile.id, profile]));
+    return appointments.map((appointment) => ({ ...appointment, profiles: inspectorMap.get(appointment.inspector_id) || null }));
   }
 
   async function updateProperty(id, payload) {
