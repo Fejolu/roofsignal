@@ -31,6 +31,15 @@ function setSubmitState(form, isLoading, label) {
   button.textContent = label || button.dataset.defaultLabel;
 }
 
+function friendlyAuthError(error, fallback) {
+  const message = String(error?.message || "").toLowerCase();
+  if (message.includes("invalid login credentials")) return "E-mailadres of wachtwoord is niet juist.";
+  if (message.includes("email not confirmed")) return "Dit account is nog niet geactiveerd. Gebruik de ontvangen activatielink.";
+  if (message.includes("rate limit") || message.includes("too many requests")) return "Er zijn te veel pogingen gedaan. Wacht enkele minuten en probeer het opnieuw.";
+  if (message.includes("expired") || message.includes("invalid token")) return "Deze beveiligde link is verlopen of al gebruikt. Vraag een nieuwe link aan.";
+  return fallback;
+}
+
 function wait(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -118,7 +127,7 @@ loginForm?.addEventListener("submit", async (event) => {
     }
 
     setSubmitState(loginForm, false);
-    setStatus(loginForm, result.error?.message || "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang.", "error");
+    setStatus(loginForm, friendlyAuthError(result.error, "Inloggen is niet gelukt. Controleer uw gegevens of vraag RoofSignal om toegang."), "error");
     return;
   }
 
@@ -151,7 +160,7 @@ resetRequestButton?.addEventListener("click", async () => {
     const result = await backend.resetPassword(email);
     setStatus(loginForm, result.ok
       ? "Als dit e-mailadres bekend is, ontvangt u een link om uw wachtwoord opnieuw in te stellen."
-      : result.error?.message || "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang.",
+      : friendlyAuthError(result.error, "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang."),
     result.ok ? "success" : "error");
   } catch (error) {
     setStatus(loginForm, error?.message || "Wachtwoordherstel is niet gelukt. Mail info@roofsignal.nl voor toegang.", "error");
@@ -181,7 +190,7 @@ resetPasswordForm?.addEventListener("submit", async (event) => {
 
   const result = await backend.updatePassword(password);
   if (!result.ok) {
-    setStatus(resetPasswordForm, result.error?.message || "Wachtwoord opslaan is niet gelukt.");
+    setStatus(resetPasswordForm, friendlyAuthError(result.error, "Wachtwoord opslaan is niet gelukt."));
     return;
   }
 

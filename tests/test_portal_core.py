@@ -225,3 +225,19 @@ def test_prioritized_portal_improvements_are_kept_consistent():
     assert 'accepted: { label: "Akkoord"' in script
     assert "item.amount" in script
     assert "properties(name,address,postcode,city)" in backend
+
+
+def test_portal_auth_mail_and_routing_are_role_aware():
+    page = read("portal-login.html")
+    login = read("assets/portal-login.js")
+    auth_function = read("supabase/functions/send-portal-login-link/index.ts")
+    backend = read("assets/supabase-app.js")
+    assert "klanten en medewerkers" in page
+    assert 'name="remember"' not in page
+    assert "friendlyAuthError" in login
+    assert 'type PortalAudience = "customer" | "employee"' in auth_function
+    assert 'role")' in auth_function
+    assert 'audience: PortalAudience' in auth_function
+    assert "Beheerportaal" in auth_function and "Klantenportaal" in auth_function
+    assert 'action: "password_reset"' in backend
+    assert "updatePassword" in backend

@@ -84,17 +84,23 @@ async function sendBrevoEmail(apiKey: string, fromEmail: string, fromName: strin
 }
 
 type EmailMode = "magiclink" | "password_reset";
+type PortalAudience = "customer" | "employee";
 
-function buildPortalEmail(mode: EmailMode, actionLink: string) {
+function buildPortalEmail(mode: EmailMode, actionLink: string, audience: PortalAudience, fullName = "") {
   const isPasswordReset = mode === "password_reset";
+  const isEmployee = audience === "employee";
+  const portalLabel = isEmployee ? "Beheerportaal" : "Klantenportaal";
   const title = isPasswordReset ? "Wachtwoord opnieuw instellen" : "Uw inloglink staat klaar";
-  const subject = isPasswordReset ? "Wachtwoord opnieuw instellen | RoofSignal" : "Uw inloglink voor RoofSignal";
+  const subject = isPasswordReset ? "Wachtwoord opnieuw instellen | RoofSignal" : `Uw inloglink voor het RoofSignal ${portalLabel.toLowerCase()}`;
   const intro = isPasswordReset
-    ? "Gebruik deze link om op de RoofSignal-website een nieuw wachtwoord in te stellen. De link is tijdelijk geldig en kan maar een keer worden gebruikt."
-    : "Gebruik deze link om veilig in te loggen in het RoofSignal klantenportaal. De link is tijdelijk geldig en kan maar een keer worden gebruikt.";
+    ? `Gebruik deze link om een nieuw wachtwoord in te stellen voor uw RoofSignal ${portalLabel.toLowerCase()}. De link is tijdelijk geldig en kan maar één keer worden gebruikt.`
+    : `Gebruik deze link om veilig in te loggen in het RoofSignal ${portalLabel.toLowerCase()}. De link is tijdelijk geldig en kan maar één keer worden gebruikt.`;
   const buttonLabel = isPasswordReset ? "Nieuw wachtwoord instellen" : "Log in bij RoofSignal";
+  const greeting = fullName ? `Beste ${fullName},` : "Beste gebruiker,";
   const text = [
     subject,
+    "",
+    greeting,
     "",
     intro,
     "",
@@ -116,12 +122,13 @@ function buildPortalEmail(mode: EmailMode, actionLink: string) {
             <tr>
               <td style="background:#0c1210;padding:24px 28px;">
                 <div style="font-size:22px;font-weight:800;letter-spacing:.2px;color:#ffffff;">ROOF<span style="color:#ff5a1f;">SIGNAL</span></div>
-                <div style="margin-top:6px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#b7c0ba;">Klantenportaal</div>
+                <div style="margin-top:6px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#b7c0ba;">${portalLabel}</div>
               </td>
             </tr>
             <tr>
               <td style="padding:30px 28px 10px;">
                 <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#111816;">${title}</h1>
+                <p style="margin:0 0 12px;font-size:16px;line-height:1.55;color:#34413b;">${escapeHtml(greeting)}</p>
                 <p style="margin:0 0 20px;font-size:16px;line-height:1.55;color:#34413b;">${intro}</p>
                 <p style="margin:0 0 26px;">
                   <a href="${escapedLink}" style="display:inline-block;background:#ff5a1f;color:#ffffff;text-decoration:none;font-weight:700;border-radius:6px;padding:14px 20px;">${buttonLabel}</a>
@@ -144,13 +151,13 @@ function buildPortalEmail(mode: EmailMode, actionLink: string) {
   return { subject, text, html };
 }
 
-async function sendEmail(to: string, actionLink: string, mode: EmailMode) {
+async function sendEmail(to: string, actionLink: string, mode: EmailMode, audience: PortalAudience, fullName = "") {
   const emailProvider = (Deno.env.get("EMAIL_PROVIDER") || "brevo").trim().toLowerCase();
   const resendApiKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
   const brevoApiKey = (Deno.env.get("BREVO_API_KEY") || "").trim();
   const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || Deno.env.get("FROM_EMAIL") || "noreply@roofsignal.nl";
   const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
-  const { subject, text, html } = buildPortalEmail(mode, actionLink);
+  const { subject, text, html } = buildPortalEmail(mode, actionLink, audience, fullName);
 
   if (emailProvider === "brevo" && brevoApiKey) return sendBrevoEmail(brevoApiKey, fromEmail, fromName, to, subject, text, html);
   if (emailProvider === "resend" && resendApiKey) return sendResendEmail(resendApiKey, fromEmail, fromName, to, subject, text, html);
@@ -192,7 +199,7 @@ serve(async (req) => {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id,email")
+    .select("id,email,full_name,role")
     .eq("email", email)
     .maybeSingle();
 
@@ -204,6 +211,9 @@ serve(async (req) => {
   if (!profile) {
     return genericResponse;
   }
+
+  const internalRoles = new Set(["support", "planning", "finance", "reportage", "owner_admin"]);
+  const audience: PortalAudience = email.endsWith("@roofsignal.nl") || internalRoles.has(profile.role) ? "employee" : "customer";
 
   const { data, error } = await supabase.auth.admin.generateLink({
     type: mode === "password_reset" ? "recovery" : "magiclink",
@@ -220,7 +230,7 @@ serve(async (req) => {
   }
 
   try {
-    await sendEmail(email, actionLink, mode);
+    await sendEmail(email, actionLink, mode, audience, profile.full_name || "");
   } catch (error) {
     console.error("Portal auth email failed", error);
     return new Response(JSON.stringify({ error: "Portal email could not be sent." }), { status: 500, headers: corsHeaders });

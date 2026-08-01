@@ -19,11 +19,11 @@
   <meta name="twitter:title" content="RoofSignal Portaal | RoofSignal">
   <meta name="twitter:description" content="Log in op het RoofSignal Portaal voor rapporten, adviezen, facturen en planning.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/heroes/portal-login.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal10">
+  <link rel="stylesheet" href="assets/styles.css?v=portal18">
   <script src="assets/supabase-config.js"></script>
   <script src="assets/supabase-app.js?v=9" defer></script>
   <script src="assets/lead-capture.js?v=9" defer></script>
-  <script src="assets/portal-login.js?v=5" defer></script>
+  <script src="assets/portal-login.js?v=6" defer></script>
 </head>
 <body>
 <header class="site-header">
@@ -41,7 +41,7 @@
   <section class="page-hero page-hero-portal">
     <p class="eyebrow">RoofSignal Portaal</p>
     <h1>Toegang tot rapporten, adviezen en planning.</h1>
-    <p>Het portaal is bedoeld voor klanten met een actief RoofSignal-dossier. Accounts worden standaard door RoofSignal aangemaakt, zodat toegang gecontroleerd blijft.</p>
+    <p>Het portaal is bedoeld voor klanten met een actief RoofSignal-dossier en voor geautoriseerde RoofSignal-medewerkers. Accounts worden door RoofSignal aangemaakt, zodat toegang gecontroleerd blijft.</p>
   </section>
 
   <section class="section contact-grid portal-entry">
@@ -61,10 +61,7 @@
       <form class="portal-form" id="portal-login-form">
         <label>E-mailadres<input type="email" name="email" placeholder="naam@organisatie.nl" required></label>
         <label>Wachtwoord<input type="password" name="password" placeholder="Wachtwoord of leeg laten voor inloglink"></label>
-        <div class="form-row">
-          <label class="check"><input type="checkbox" name="remember"> Ingelogd blijven</label>
-          <button class="inline-button" type="button" data-password-reset-request>Wachtwoord vergeten?</button>
-        </div>
+        <div class="form-row portal-login-help"><span>Beveiligde toegang voor klanten en medewerkers</span><button class="inline-button" type="button" data-password-reset-request>Wachtwoord vergeten?</button></div>
         <button class="btn" type="submit">Log in</button>
         <p class="portal-route-note">Gebruik uw wachtwoord of laat het veld leeg om een inloglink te ontvangen.</p>
       </form>
