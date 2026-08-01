@@ -272,3 +272,13 @@ def test_customer_self_service_journeys_are_real_and_scoped():
     assert "customer_respond_appointment" in migration
     assert "public.is_org_member" in migration
     assert "payment_url" in migration
+
+
+def test_customer_portal_uses_one_control_and_alignment_system():
+    styles = read("assets/styles.css")
+    assert "--portal-control-height: 48px" in styles
+    assert ".portal-body select" in styles
+    assert "height: var(--portal-control-height)" in styles
+    assert ".portal-layout > .portal-panel:only-child" in styles
+    assert ".timeline-list .appointment-actions" in styles
+    assert ".request-history-item .request-thread" in styles

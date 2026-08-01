@@ -3290,3 +3290,224 @@ button { cursor: pointer; }
 /* Portal workflow and customer-preview clarity */
 .customer-preview-banner{display:flex;align-items:center;gap:12px;margin:0 0 22px;padding:12px 16px;border:1px solid rgba(255,90,25,.28);border-radius:12px;background:#fff8f4;color:#26332e;font-size:14px}.customer-preview-banner[hidden]{display:none}.customer-preview-banner strong{color:#ff5a19}.customer-preview-banner a{margin-left:auto;font-weight:800;color:#ff5a19}.dossier-workflow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin:0 0 28px;border:1px solid #dfe5e2;border-radius:14px;overflow:hidden;background:#fff}.dossier-workflow a{display:flex;align-items:center;gap:10px;min-height:76px;padding:14px;border-right:1px solid #dfe5e2;color:#17231f;text-decoration:none}.dossier-workflow a:last-child{border-right:0}.dossier-workflow a:hover{background:#fff8f4}.dossier-workflow i{width:28px;height:28px;display:grid;place-items:center;flex:0 0 28px;border:2px solid #bdc8c3;border-radius:50%;font-style:normal;font-size:12px;font-weight:900}.dossier-workflow .done i{background:#19734d;border-color:#19734d;color:#fff}.dossier-workflow span{display:grid;font-weight:800}.dossier-workflow small{margin-top:3px;color:#6c7772;font-weight:500;line-height:1.25}.customer-appointment-card{position:relative;padding-right:110px!important}.customer-appointment-card .status-dot{position:absolute;right:14px;top:14px}.customer-appointment-card small{display:block;margin-top:5px;color:#6c7772}@media(max-width:900px){.dossier-workflow{display:flex;overflow-x:auto}.dossier-workflow a{min-width:170px}.customer-preview-banner span{display:none}}@media(max-width:620px){.customer-preview-banner a{margin-left:0}.customer-preview-banner{align-items:flex-start;flex-direction:column}.customer-appointment-card{padding-right:14px!important}.customer-appointment-card .status-dot{position:static;margin-top:8px}}
 .object-add-button{width:42px;height:42px;border:0;border-radius:50%;background:#ff5a1f;color:#fff;font-size:28px;line-height:1;cursor:pointer}.portal-dialog{border:0;border-radius:18px;padding:0;max-width:620px;width:calc(100% - 32px);box-shadow:0 24px 80px rgba(0,0,0,.28)}.portal-dialog::backdrop{background:rgba(7,12,10,.65)}.portal-dialog-card{padding:28px;display:grid;gap:16px}.dialog-close{border:0;background:transparent;font-size:30px;cursor:pointer}.dialog-actions,.customer-object-actions,.appointment-actions,.quote-actions{display:flex;gap:10px;flex-wrap:wrap}.customer-object-actions{margin-top:12px}.portal-notification-list{display:grid;gap:10px}.portal-notification{display:flex;justify-content:space-between;gap:18px;padding:16px;border:1px solid #dfe4e1;border-radius:12px}.portal-notification.unread{border-left:4px solid #ff5a1f;background:#fff8f4}.portal-notification p{margin:4px 0}.nav-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#ff5a1f;color:#fff;font-size:12px}.request-thread{margin-top:12px;padding-top:12px;border-top:1px solid #dfe4e1}.request-thread-messages{display:grid;gap:8px;margin-bottom:10px}.request-message{padding:10px 12px;border-radius:10px;background:#f3f5f4}.request-message.customer{background:#fff1ea}.change-card{padding:14px;border-left:4px solid #ff5a1f;background:#f7f8f7;margin-bottom:10px}
+
+/* Portal UI system: one control height, one spacing rhythm and predictable alignment. */
+.portal-body {
+  --portal-control-height: 48px;
+  --portal-control-radius: 10px;
+  --portal-field-border: #cfd6d2;
+}
+
+.portal-body *,
+.portal-body *::before,
+.portal-body *::after {
+  box-sizing: border-box;
+}
+
+.portal-body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.portal-body select,
+.portal-body button.btn,
+.portal-body a.btn {
+  min-height: var(--portal-control-height);
+}
+
+.portal-body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.portal-body select,
+.portal-body textarea {
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--portal-field-border);
+  border-radius: var(--portal-control-radius);
+  background: #fff;
+  color: var(--rs-graphite-900);
+  font: inherit;
+  line-height: 1.35;
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.portal-body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.portal-body select {
+  height: var(--portal-control-height);
+  padding: 0 14px;
+}
+
+.portal-body select {
+  appearance: none;
+  padding-right: 42px;
+  background-image: linear-gradient(45deg,transparent 50%,#66716c 50%),linear-gradient(135deg,#66716c 50%,transparent 50%);
+  background-position: calc(100% - 19px) 21px,calc(100% - 14px) 21px;
+  background-size: 5px 5px,5px 5px;
+  background-repeat: no-repeat;
+}
+
+.portal-body textarea {
+  min-height: 112px;
+  padding: 13px 14px;
+  resize: vertical;
+}
+
+.portal-body input:focus,
+.portal-body select:focus,
+.portal-body textarea:focus {
+  border-color: var(--rs-orange);
+  box-shadow: 0 0 0 3px rgba(255,90,31,.12);
+}
+
+.portal-body .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.portal-body .inline-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 0;
+  line-height: 1.25;
+}
+
+.customer-mini-form,
+.portal-dialog-card {
+  gap: 16px;
+}
+
+.customer-mini-form label,
+.portal-dialog-card label {
+  align-content: start;
+  gap: 8px;
+}
+
+.customer-mini-form .form-note,
+.portal-dialog-card .form-note {
+  min-height: 0;
+  margin: 0;
+}
+
+.portal-layout > .wide:only-child,
+.portal-layout > .portal-panel:only-child {
+  grid-column: 1 / -1;
+}
+
+.portal-table.compact th {
+  width: 34%;
+  padding-right: 20px;
+  white-space: nowrap;
+}
+
+.portal-table.compact td {
+  overflow-wrap: anywhere;
+}
+
+.request-history-item {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: start;
+}
+
+.request-history-item .request-thread {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.timeline-list .customer-appointment-card {
+  padding: 14px 16px;
+  border: 1px solid var(--rs-line);
+  border-left: 4px solid var(--rs-orange);
+  border-radius: var(--portal-control-radius);
+  background: #fff;
+}
+
+.timeline-list .appointment-actions {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+}
+
+.appointment-actions .inline-button,
+.customer-object-actions .inline-button,
+.quote-actions .inline-button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--rs-line);
+  border-radius: 9px;
+  background: #fff;
+  text-decoration: none;
+}
+
+.appointment-actions .inline-button:hover,
+.customer-object-actions .inline-button:hover,
+.quote-actions .inline-button:hover {
+  border-color: var(--rs-orange);
+  background: #fff8f4;
+}
+
+.customer-quote-card {
+  gap: 18px;
+  padding: 18px;
+}
+
+.customer-quote-card > div:first-child {
+  min-width: 0;
+}
+
+.quote-actions {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.portal-notification {
+  align-items: center;
+}
+
+.portal-notification > div {
+  min-width: 0;
+}
+
+.panel-head {
+  align-items: center;
+}
+
+.panel-head > div {
+  min-width: 0;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .portal-body .btn,
+  .dialog-actions .btn {
+    width: 100%;
+  }
+  .form-row,
+  .portal-notification,
+  .customer-quote-card {
+    align-items: stretch;
+  }
+  .portal-notification,
+  .customer-quote-card {
+    grid-template-columns: 1fr;
+  }
+  .portal-notification {
+    display: grid;
+  }
+  .quote-actions,
+  .dialog-actions {
+    justify-content: stretch;
+  }
+  .quote-actions > *,
+  .dialog-actions > * {
+    flex: 1 1 100%;
+  }
+  .portal-table.compact th {
+    width: 42%;
+    white-space: normal;
+  }
+}
