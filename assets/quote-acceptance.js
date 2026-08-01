@@ -72,7 +72,7 @@
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    formStatus.textContent = "Uw akkoord wordt veilig geregistreerd…";
+    formStatus.textContent = "Uw akkoord wordt geregistreerd…";
     form.querySelector("button").disabled = true;
     try {
       await request("accept", {

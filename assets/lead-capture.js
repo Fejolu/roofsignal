@@ -158,7 +158,7 @@
       if (status) {
         status.className = "form-note form-status pending";
         status.setAttribute("role", "status");
-        status.textContent = "Aanvraag wordt veilig verzonden...";
+        status.textContent = "Aanvraag wordt verzonden...";
       }
 
       let completed = false;

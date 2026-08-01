@@ -94,7 +94,7 @@ function buildPortalEmail(mode: EmailMode, actionLink: string, audience: PortalA
   const subject = isPasswordReset ? "Wachtwoord opnieuw instellen | RoofSignal" : `Uw inloglink voor het RoofSignal ${portalLabel.toLowerCase()}`;
   const intro = isPasswordReset
     ? `Gebruik deze link om een nieuw wachtwoord in te stellen voor uw RoofSignal ${portalLabel.toLowerCase()}. De link is tijdelijk geldig en kan maar één keer worden gebruikt.`
-    : `Gebruik deze link om veilig in te loggen in het RoofSignal ${portalLabel.toLowerCase()}. De link is tijdelijk geldig en kan maar één keer worden gebruikt.`;
+    : `Gebruik deze link om in te loggen in het RoofSignal ${portalLabel.toLowerCase()}. De link is tijdelijk geldig en kan maar één keer worden gebruikt.`;
   const buttonLabel = isPasswordReset ? "Nieuw wachtwoord instellen" : "Log in bij RoofSignal";
   const greeting = fullName ? `Beste ${fullName},` : "Beste gebruiker,";
   const text = [

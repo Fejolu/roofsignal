@@ -1037,7 +1037,7 @@
 
   async function sendQuote(id) {
     const quote = liveQuotes.find((item) => item.id === id); if (!quote) return;
-    setPortalNotice("Offerte en beveiligde akkoordlink worden verzonden…");
+    setPortalNotice("Offerte en akkoordlink worden verzonden…");
     const result = await window.RoofSignalBackend.sendQuoteEmail(id);
     if (!result.ok) return setPortalNotice(result.error?.message || "Offerte verzenden is mislukt.", "error");
     setPortalNotice(`Offerte is verzonden naar ${result.data.recipient}. Akkoord wordt automatisch teruggekoppeld.`, "success");
@@ -1049,7 +1049,7 @@
     const recipient = window.prompt("Ontvanger", quote.organizations?.contact_email || "");
     if (!recipient) return;
     const ccRecipient = window.prompt("Cc (optioneel)", "");
-    setPortalNotice("Offerte en beveiligde akkoordlink worden verzonden…");
+    setPortalNotice("Offerte en akkoordlink worden verzonden…");
     const result = await window.RoofSignalBackend.sendQuoteEmail(id, "", {
       recipientOverride: recipient.trim(),
       ccRecipient: String(ccRecipient || "").trim(),

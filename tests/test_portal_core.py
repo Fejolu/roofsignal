@@ -241,3 +241,18 @@ def test_portal_auth_mail_and_routing_are_role_aware():
     assert "Beheerportaal" in auth_function and "Klantenportaal" in auth_function
     assert 'action: "password_reset"' in backend
     assert "updatePassword" in backend
+
+
+def test_veilig_is_not_used_as_generic_portal_or_marketing_copy():
+    generic_copy_files = [
+        "index.html",
+        "werkwijze.html",
+        "drone-dakinspectie.html",
+        "portal-login.html",
+        "assets/lead-capture.js",
+        "assets/portal-login.js",
+        "assets/quote-acceptance.js",
+        "supabase/functions/send-portal-login-link/index.ts",
+    ]
+    for path in generic_copy_files:
+        assert "veilig" not in read(path).lower()

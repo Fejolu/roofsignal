@@ -36,7 +36,7 @@ function friendlyAuthError(error, fallback) {
   if (message.includes("invalid login credentials")) return "E-mailadres of wachtwoord is niet juist.";
   if (message.includes("email not confirmed")) return "Dit account is nog niet geactiveerd. Gebruik de ontvangen activatielink.";
   if (message.includes("rate limit") || message.includes("too many requests")) return "Er zijn te veel pogingen gedaan. Wacht enkele minuten en probeer het opnieuw.";
-  if (message.includes("expired") || message.includes("invalid token")) return "Deze beveiligde link is verlopen of al gebruikt. Vraag een nieuwe link aan.";
+  if (message.includes("expired") || message.includes("invalid token")) return "Deze link is verlopen of al gebruikt. Vraag een nieuwe link aan.";
   return fallback;
 }
 
@@ -110,7 +110,7 @@ loginForm?.addEventListener("submit", async (event) => {
     setSubmitState(loginForm, true, password ? "Inloggen..." : "Inloglink versturen...");
     setStatus(loginForm, password
       ? "We controleren uw inloggegevens."
-      : "We versturen een beveiligde inloglink naar uw e-mailadres.",
+      : "We versturen een inloglink naar uw e-mailadres.",
     "info");
 
     const result = await backend.signIn(email, password);
