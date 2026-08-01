@@ -1402,6 +1402,11 @@
       ],
     };
 
+    if (action === "explain-intelligence") {
+      answerObjectQuestion("Wat is veranderd bij de laatste inspectie?");
+      document.querySelector("#ai")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     if (action === "plan-reinspection") {
       const form = document.querySelector('[data-customer-request-form="inspection"]');
       if (form) form.elements.request_type.value = "reinspection";
@@ -1559,9 +1564,9 @@
     });
 
     const aiPrompts = document.querySelector("#ai .ai-prompt-list");
-    if (aiPrompts) aiPrompts.innerHTML = emptyState("AI-acties worden beschikbaar zodra inspectiedata bestaat.");
+    if (aiPrompts) aiPrompts.innerHTML = "";
     const aiAnswer = document.querySelector("#ai .ai-answer");
-    if (aiAnswer) aiAnswer.innerHTML = "<strong>Geen analyse beschikbaar</strong><p>Er is nog geen inspectiedata om te analyseren.</p>";
+    if (aiAnswer) aiAnswer.innerHTML = "<strong>Vraag het dossier</strong><p>Het antwoord wordt samengesteld uit de actuele gegevens die voor uw organisatie in RoofSignal zijn vastgelegd.</p>";
     const complexity = document.querySelector("#planning .complexity-score");
     if (complexity) complexity.innerHTML = "<span>Inspection Complexity Score</span><strong>0 / 5</strong><p>Nog niet berekend.</p>";
   }
@@ -1840,7 +1845,8 @@
 
   function answerObjectQuestion(question) {
     const state = customerPortalState || {}; const q = question.toLowerCase(); let answer;
-    if (/aandacht|prioriteit|eerst/.test(q)) { const urgent = (state.findings || []).filter((item) => ["p1","p2","urgent","high"].includes(String(item.priority || item.severity).toLowerCase())); answer = urgent.length ? `Er zijn ${urgent.length} bevindingen met verhoogde prioriteit. Begin met ${urgent.slice(0,3).map((item) => item.title).join(", ")}.` : "Er zijn momenteel geen bevindingen met verhoogde prioriteit vastgelegd."; }
+    if (/verander|gewijzigd|verschil/.test(q)) answer = (state.inspections || []).length < 2 ? "Er is nog maar één inspectie vastgelegd. Na een volgende inspectie kan RoofSignal veranderingen per gebouwdeel vergelijken." : "De vergelijking tussen de laatste twee inspecties staat bij ‘Wat is veranderd?’. Alleen vastgelegde wijzigingen worden daar genoemd.";
+    else if (/aandacht|prioriteit|eerst/.test(q)) { const urgent = (state.findings || []).filter((item) => ["p1","p2","urgent","high"].includes(String(item.priority || item.severity).toLowerCase())); answer = urgent.length ? `Er zijn ${urgent.length} bevindingen met verhoogde prioriteit. Begin met ${urgent.slice(0,3).map((item) => item.title).join(", ")}.` : "Er zijn momenteel geen bevindingen met verhoogde prioriteit vastgelegd."; }
     else if (/afspraak|wanneer|planning/.test(q)) { const next = (state.appointments || []).find((item) => new Date(item.starts_at) >= new Date()); answer = next ? `De eerstvolgende afspraak is ${formatPortalDateTime(next.starts_at)} voor ${next.properties?.name || "uw object"}.` : "Er staat momenteel geen toekomstige afspraak gepland."; }
     else if (/factuur|betaal/.test(q)) { const open = (state.invoices || []).filter((item) => !["paid","credited","cancelled"].includes(item.status)); answer = open.length ? `Er ${open.length === 1 ? "staat" : "staan"} ${open.length} openstaande factuur${open.length === 1 ? "" : "en"}.` : "Er zijn geen openstaande facturen."; }
     else if (/rapport|document/.test(q)) answer = `In het dossier ${state.reports?.length === 1 ? "staat" : "staan"} ${state.reports?.length || 0} rapport${state.reports?.length === 1 ? "" : "en"} en ${state.documents?.length || 0} document${state.documents?.length === 1 ? "" : "en"}.`;
