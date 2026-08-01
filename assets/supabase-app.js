@@ -623,7 +623,7 @@
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id,organization_id,property_id,title,starts_at,ends_at,status,notes,created_at")
+      .select("id,organization_id,property_id,inspector_id,title,starts_at,ends_at,status,notes,created_at,properties(name,address,postcode,city)")
       .eq("organization_id", organizationId)
       .order("starts_at", { ascending: true });
     if (error) return [];

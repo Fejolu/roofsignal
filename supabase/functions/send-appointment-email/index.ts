@@ -76,7 +76,16 @@ serve(async (req) => {
   const inspector = appointment.inspector_id
     ? (await service.from("profiles").select("full_name,email").eq("id", appointment.inspector_id).maybeSingle()).data
     : null;
-  const address = [property?.address, property?.postcode, property?.city].filter(Boolean).join(", ");
+  const propertyAddress = String(property?.address || "").trim();
+  const postcode = String(property?.postcode || "").trim();
+  const city = String(property?.city || "").trim();
+  const addressHasPostcode = postcode && propertyAddress.toLowerCase().includes(postcode.toLowerCase());
+  const addressHasCity = city && propertyAddress.toLowerCase().includes(city.toLowerCase());
+  const address = [
+    propertyAddress,
+    addressHasPostcode ? "" : postcode,
+    addressHasCity ? "" : city,
+  ].filter(Boolean).join(", ");
   const when = new Intl.DateTimeFormat("nl-NL", { dateStyle: "full", timeStyle: "short", timeZone: "Europe/Amsterdam" }).format(new Date(appointment.starts_at));
   const ics = calendarEvent(appointment, address);
   const attachment = [{ name: "RoofSignal-inspectie.ics", content: bytesToBase64(new TextEncoder().encode(ics)) }];
@@ -84,10 +93,17 @@ serve(async (req) => {
   const sender = { email: fromEmail, name: Deno.env.get("BREVO_FROM_NAME") || "RoofSignal" };
   const replyTo = { email: "info@roofsignal.nl", name: "RoofSignal" };
   const messages: Array<{ type: string; recipient: string; result: any }> = [];
+  const customerMessage = {
+    type: "customer",
+    email: String(organization?.contact_email || "").toLowerCase(),
+    name: organization?.contact_name || organization?.name,
+    heading: "Uw RoofSignal-inspectie is gepland",
+    intro: "De afspraak voor de inspectie van uw pand is bevestigd.",
+  };
   const recipients = testRecipient
-    ? [{ type: "customer_test", email: testRecipient, name: "Ferry Joosten", heading: "[TEST] Afspraakbevestiging", intro: `De inspectie voor ${organization?.name || "de klant"} is gepland.` }]
+    ? [{ ...customerMessage, type: "customer_test", email: testRecipient }]
     : [
-      { type: "customer", email: String(organization?.contact_email || "").toLowerCase(), name: organization?.contact_name || organization?.name, heading: "Uw RoofSignal-inspectie is gepland", intro: "De afspraak voor uw gebouwschilinspectie is bevestigd." },
+      customerMessage,
       { type: "inspector", email: String(inspector?.email || "").toLowerCase(), name: inspector?.full_name || "Inspecteur", heading: "Nieuwe RoofSignal-inspectie", intro: "Er is een inspectie aan u toegewezen." },
     ];
   for (const message of recipients) {

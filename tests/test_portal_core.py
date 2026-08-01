@@ -206,3 +206,22 @@ def test_customer_can_select_each_object_and_download_invoice_document():
     assert "selectCustomerProperty" in script
     assert "Download factuur" in script
     assert '<th>Actie</th>' in portal
+
+
+def test_prioritized_portal_improvements_are_kept_consistent():
+    customer = read("portal-klant.html")
+    admin = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    backend = read("assets/supabase-app.js")
+    nav = customer.split('<nav class="portal-nav">', 1)[1].split("</nav>", 1)[0]
+    for label in ("Overzicht", "Mijn objecten", "Afspraken", "Documenten", "Aanvragen & contact", "Account"):
+        assert label in nav
+    for internal_label in ("Intelligence", "Media", ">AI<"):
+        assert internal_label not in nav
+    for step in ("Klant", "Offerte", "Planning", "Inspectie", "Rapport", "Factuur"):
+        assert f"<span>{step}<small>" in admin
+    assert "propertyAddress" in script
+    assert "formatPortalDateTime" in script
+    assert 'accepted: { label: "Akkoord"' in script
+    assert "item.amount" in script
+    assert "properties(name,address,postcode,city)" in backend

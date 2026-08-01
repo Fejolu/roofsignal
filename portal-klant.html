@@ -19,23 +19,17 @@
   <meta name="twitter:title" content="RoofSignal Portaal | RoofSignal">
   <meta name="twitter:description" content="Objectgericht RoofSignal Portaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal17">
+  <link rel="stylesheet" href="assets/styles.css?v=portal18">
 </head>
 <body class="portal-body portal-auth-pending" data-portal-surface="customer">
 <aside class="portal-sidebar">
   <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
   <nav class="portal-nav">
-    <a class="active" href="#dashboard">Dashboard</a>
-    <a href="#objecten">Objecten</a>
-    <a href="#objectdossier">Objectdossier</a>
-    <a href="#intelligence">Intelligence</a>
-    <a href="#inspecties">Inspecties</a>
-    <a href="#media">Media</a>
-    <a href="#ai">AI</a>
-    <a href="#planning">Planning</a>
-    <a href="#offertes">Offertes</a>
-    <a href="#aanvragen">Aanvragen & support</a>
-    <a href="#financieel">Facturen</a>
+    <a class="active" href="#dashboard">Overzicht</a>
+    <a href="#objecten">Mijn objecten</a>
+    <a href="#planning">Afspraken</a>
+    <a href="#offertes">Documenten</a>
+    <a href="#aanvragen">Aanvragen & contact</a>
     <a href="#account">Account</a>
   </nav>
   <div class="portal-account">
@@ -47,6 +41,7 @@
 </aside>
 
 <main class="portal-main property-platform">
+  <div class="customer-preview-banner" data-customer-preview-banner hidden><strong>Klantweergave</strong><span>U bekijkt het portaal zoals deze klant het ziet.</span><a href="portal-beheer.html#klanten">Terug naar beheer</a></div>
   <header class="portal-topbar">
     <div>
       <p class="eyebrow orange">RoofSignal Portaal</p>
@@ -54,8 +49,8 @@
       <p>Uw objecten, gebouwdata, inspecties, rapporten, planning en facturen in één doorlopend vastgoeddossier.</p>
     </div>
     <div class="topbar-actions">
-      <a class="btn ghost-dark" href="#objectdossier">Open objectdossier</a>
-      <a class="btn" href="#planning" data-portal-action="plan-reinspection">Plan herinspectie</a>
+      <a class="btn ghost-dark" href="#offertes">Bekijk documenten</a>
+      <a class="btn" href="#planning">Bekijk afspraak</a>
     </div>
   </header>
 
@@ -324,6 +319,6 @@
 </main>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/supabase-app.js?v=15" defer></script>
-<script src="assets/portal-admin.js?v=12" defer></script>
+<script src="assets/portal-admin.js?v=14" defer></script>
 </body>
 </html>

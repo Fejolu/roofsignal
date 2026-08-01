@@ -19,14 +19,14 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal16">
+  <link rel="stylesheet" href="assets/styles.css?v=portal18">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
   <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
   <nav class="portal-nav">
-    <a class="active" href="#dashboard">Dashboard</a>
-    <a href="#klanten">Klanten</a>
+    <a class="active" href="#klanten">Klanten</a>
+    <a href="#dashboard">Dashboard</a>
     <a href="#inspecties">Beoordelingen</a>
     <a href="#planning">Planning</a>
     <a href="#facturen">Facturen</a>
@@ -53,6 +53,15 @@
       <a class="btn" href="portal-klant-aanmaken.html">Nieuwe klant</a>
     </div>
   </header>
+
+  <nav class="dossier-workflow" aria-label="Stappen in het klantdossier">
+    <a class="done" href="#klanten"><i>✓</i><span>Klant<small>Selecteren of aanmaken</small></span></a>
+    <a href="#offertes"><i>2</i><span>Offerte<small>Opstellen en akkoord</small></span></a>
+    <a href="#planning"><i>3</i><span>Planning<small>Datum en inspecteur</small></span></a>
+    <a href="#inspecties"><i>4</i><span>Inspectie<small>Uitvoering en bevindingen</small></span></a>
+    <a href="#inspecties"><i>5</i><span>Rapport<small>Concept, voorbeeld, publicatie</small></span></a>
+    <a href="#facturen"><i>6</i><span>Factuur<small>Na oplevering</small></span></a>
+  </nav>
 
   <section id="dashboard" class="portal-grid metrics">
     <article><span>Actieve klanten</span><strong>0</strong><p>Geen klantdata.</p></article>
@@ -255,6 +264,6 @@
 </main>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/supabase-app.js?v=16" defer></script>
-<script src="assets/portal-admin.js?v=13" defer></script>
+<script src="assets/portal-admin.js?v=14" defer></script>
 </body>
 </html>

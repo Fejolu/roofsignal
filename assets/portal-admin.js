@@ -119,7 +119,8 @@
   }
 
   function statusCell(label, tone = "green") {
-    return `<span class="status-dot ${tone}">${label}</span>`;
+    const meta = statusMeta(label);
+    return `<span class="status-dot ${tone === "green" && meta.tone !== "green" ? meta.tone : tone}">${escapeHtml(meta.label)}</span>`;
   }
 
   function escapeHtml(value) {
@@ -140,6 +141,17 @@
       testdata: { label: "Testdata", tone: "yellow" },
       "actie nodig": { label: "Actie nodig", tone: "red" },
       deleted: { label: "Verwijderd", tone: "red" },
+      accepted: { label: "Akkoord", tone: "green" },
+      sent: { label: "Verzonden", tone: "yellow" },
+      draft: { label: "Concept", tone: "yellow" },
+      planned: { label: "Gepland", tone: "yellow" },
+      scheduled: { label: "Gepland", tone: "yellow" },
+      delivered: { label: "Opgeleverd", tone: "green" },
+      published: { label: "Gepubliceerd", tone: "green" },
+      paid: { label: "Betaald", tone: "green" },
+      open: { label: "Open", tone: "yellow" },
+      overdue: { label: "Te laat", tone: "red" },
+      rejected: { label: "Niet akkoord", tone: "red" },
     };
     return statuses[String(status || "").toLowerCase()] || { label: status || "Actief", tone: "green" };
   }
@@ -1541,6 +1553,20 @@
     return new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
   }
 
+  function formatPortalDateTime(value) {
+    if (!value) return "-";
+    return new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+  }
+
+  function propertyAddress(property = {}) {
+    const street = String(property.address || "").trim();
+    const postcode = String(property.postcode || "").trim();
+    const city = String(property.city || "").trim();
+    const suffix = [postcode, city].filter(Boolean).join(" ");
+    if (suffix && street.toLowerCase().includes(suffix.toLowerCase())) return street;
+    return [street, suffix].filter(Boolean).join(", ");
+  }
+
   function renderCustomerProperties(properties, inspections = [], findings = []) {
     const objectList = document.querySelector(".object-list");
     if (!objectList || !properties.length) return;
@@ -1549,7 +1575,7 @@
       '<div>',
       `<span class="status-pill demo">${escapeHtml(property.status || "Actief")}</span>`,
       `<h3>${escapeHtml(property.name || "Object")}</h3>`,
-      `<p>${escapeHtml([property.address, property.postcode, property.city].filter(Boolean).join(", ") || "Adres niet vastgelegd.")}</p>`,
+      `<p>${escapeHtml(propertyAddress(property) || "Adres niet vastgelegd.")}</p>`,
       '</div>',
       '<dl>',
       `<div><dt>Inspecties</dt><dd>${inspections.filter((item) => item.property_id === property.id).length}</dd></div>`,
@@ -1571,7 +1597,7 @@
     if (dossierTitle) dossierTitle.textContent = first.name || "Object";
     const firstBody = document.querySelector("#objectdossier .object-dossier-grid > div:first-child tbody");
     if (firstBody) firstBody.innerHTML = [
-      `<tr><th>Adres</th><td>${escapeHtml([first.address, first.postcode, first.city].filter(Boolean).join(", ") || "Niet vastgelegd")}</td></tr>`,
+      `<tr><th>Adres</th><td>${escapeHtml(propertyAddress(first) || "Niet vastgelegd")}</td></tr>`,
       `<tr><th>Objectstatus</th><td>${escapeHtml(first.status || "Actief")}</td></tr>`,
       `<tr><th>Inspecties</th><td>${inspections.filter((item) => item.property_id === first.id).length}</td></tr>`,
     ].join("");
@@ -1635,8 +1661,11 @@
     const prices = { basis: 395, plus: 595, premium: 995 };
     list.innerHTML = quoteItems.length ? quoteItems.map((item) => {
       const current = item.inspection_depth || "basis";
-      const upgrades = current === "basis" ? [["plus", 200], ["premium", 600]] : current === "plus" ? [["premium", 400]] : [];
-      return `<article class="entitlement-card"><span class="status-pill demo">${escapeHtml(inspectionDepths[current]?.label || "Basis")}</span><strong>${escapeHtml(item.properties?.name || "Object")}</strong><p>${escapeHtml(productLabel(item.inspection_product))} · gekocht voor ${escapeHtml(formatMoney(prices[current]))} excl. btw</p><small>De inspectie is op Premium-niveau opgenomen. U ziet alleen de gekochte datalaag.</small>${upgrades.length ? `<div class="entitlement-actions">${upgrades.map(([depth, price]) => `<button class="inline-button" type="button" data-portal-action="request-upgrade" data-quote-item-id="${escapeHtml(item.id)}" data-current-depth="${escapeHtml(current)}" data-requested-depth="${depth}" data-upgrade-price="${price}">Ontgrendel ${inspectionDepths[depth].label} · ${formatMoney(price)} excl. btw</button>`).join("")}</div>` : '<div class="entitlement-complete">Premium-data volledig ontgrendeld</div>'}</article>`;
+      const actualPrice = Number(item.amount || 0);
+      const isCustomPrice = actualPrice > 0 && Math.abs(actualPrice - prices[current]) > 0.01;
+      const upgrades = isCustomPrice ? [] : current === "basis" ? [["plus", 200], ["premium", 600]] : current === "plus" ? [["premium", 400]] : [];
+      const upgradeCopy = isCustomPrice ? '<div class="entitlement-complete">Voor uitbreiding van deze maatwerkofferte kunt u contact opnemen.</div>' : upgrades.length ? `<div class="entitlement-actions">${upgrades.map(([depth, price]) => `<button class="inline-button" type="button" data-portal-action="request-upgrade" data-quote-item-id="${escapeHtml(item.id)}" data-current-depth="${escapeHtml(current)}" data-requested-depth="${depth}" data-upgrade-price="${price}">Ontgrendel ${inspectionDepths[depth].label} · ${formatMoney(price)} excl. btw</button>`).join("")}</div>` : '<div class="entitlement-complete">Alle afgesproken datalagen zijn beschikbaar</div>';
+      return `<article class="entitlement-card"><span class="status-pill demo">${escapeHtml(inspectionDepths[current]?.label || "Basis")}</span><strong>${escapeHtml(item.properties?.name || "Object")}</strong><p>${escapeHtml(productLabel(item.inspection_product))} · overeengekomen voor ${escapeHtml(formatMoney(actualPrice || prices[current]))} excl. btw</p><small>Uw offerte en de daarin afgesproken scope zijn leidend.</small>${upgradeCopy}</article>`;
     }).join("") : emptyState("Nog geen inspectieproduct gekoppeld.");
   }
 
@@ -1660,10 +1689,12 @@
     const list = document.querySelector("#planning .timeline-list");
     if (!list || !appointments.length) return;
     list.innerHTML = appointments.map((appointment) => [
-      "<div>",
-      `<span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span>`,
+      '<div class="customer-appointment-card">',
+      `<span>${escapeHtml(formatPortalDateTime(appointment.starts_at))}</span>`,
       `<strong>${escapeHtml(appointment.title || "Afspraak")}</strong>`,
-      `<p>${escapeHtml(appointment.notes || appointment.status || "Gepland")}</p>`,
+      `<p>${escapeHtml(propertyAddress(appointment.properties) || appointment.notes || "Inspectieadres wordt bevestigd.")}</p>`,
+      `${appointment.ends_at ? `<small>Verwachte eindtijd: ${escapeHtml(new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date(appointment.ends_at)))}</small>` : ""}`,
+      `<span class="status-dot yellow">${escapeHtml(statusMeta(appointment.status || "planned").label)}</span>`,
       "</div>",
     ].join("")).join("");
   }
@@ -1689,8 +1720,8 @@
     list.innerHTML = quotes.map((quote) => {
       const document = documents.find((item) => item.quote_id === quote.id && item.document_type === "quote");
       const action = document?.signed_url ? `<a class="inline-button" href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">PDF bekijken</a>` : "";
-      const accepted = quote.status === "accepted" ? ` · geaccepteerd${quote.accepted_by_name ? ` door ${quote.accepted_by_name}` : ""}` : "";
-      return `<article class="customer-quote-card"><div><strong>${escapeHtml(quote.quote_number || quote.title)}</strong><span>${escapeHtml(formatMoney(quote.amount))} excl. btw · ${escapeHtml(quote.status)}${escapeHtml(accepted)}</span></div>${action}</article>`;
+      const accepted = quote.status === "accepted" ? ` · akkoord${quote.accepted_by_name ? ` door ${quote.accepted_by_name}` : ""}` : "";
+      return `<article class="customer-quote-card"><div><strong>${escapeHtml(quote.quote_number || quote.title)}</strong><span>${escapeHtml(formatMoney(quote.amount))} excl. btw · ${escapeHtml(statusMeta(quote.status).label)}${escapeHtml(accepted)}</span></div>${action}</article>`;
     }).join("");
   }
 
@@ -1744,7 +1775,7 @@
       if (organizationId) localStorage.setItem("roofsignal-current-customer-id", organizationId);
     }
     if (!organizationId) return;
-    if (customerProfileForm && portalAccess?.profile) {
+    if (customerProfileForm && portalAccess?.profile && !portalAccess.internal) {
       customerProfileForm.elements.full_name.value = portalAccess.profile.full_name || "";
       customerProfileForm.elements.phone.value = portalAccess.profile.phone || "";
     }
@@ -1756,6 +1787,8 @@
       if (heading) heading.textContent = organization.name;
       if (account) account.textContent = organization.name;
     }
+    const previewBanner = document.querySelector("[data-customer-preview-banner]");
+    if (previewBanner) previewBanner.hidden = !portalAccess?.internal;
 
     const [properties, inspections, invoices, appointments, reports, quoteItems, documents, requests, quotes] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
