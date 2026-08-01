@@ -284,6 +284,13 @@
     supportGrid.innerHTML = tasks.length ? tasks.map((task) => `<div><strong>${escapeHtml(task.title)}</strong><span>${escapeHtml([task.organizations?.name, task.priority, task.status, task.due_at ? formatPortalDate(task.due_at) : ""].filter(Boolean).join(" · "))}</span></div>`).join("") : '<div data-empty-row><strong>Geen supporttaken</strong><span>Er zijn geen klantvragen of taken geladen.</span></div>';
   }
 
+  function renderAdminSupport(requests = [], messages = [], tasks = []) {
+    if (!supportGrid) return;
+    const requestCards = requests.map((request) => { const thread = messages.filter((item) => item.request_id === request.id); return `<article class="admin-request-card"><strong>${escapeHtml(request.subject)}</strong><span>${escapeHtml(request.organizations?.name || "Klant")} · ${escapeHtml(request.status)}</span><div class="request-thread-messages">${thread.map((item) => `<div class="request-message ${escapeHtml(item.author_type)}"><strong>${item.author_type === "staff" ? "RoofSignal" : "Klant"}</strong><p>${escapeHtml(item.message)}</p></div>`).join("")}</div><form class="customer-mini-form" data-admin-request-message-form data-request-id="${escapeHtml(request.id)}" data-organization-id="${escapeHtml(request.organization_id)}"><label>Antwoord<textarea name="message" required rows="2"></textarea></label><button class="inline-button" type="submit">Antwoord versturen</button><span class="form-note"></span></form></article>`; });
+    const taskCards = tasks.map((task) => `<div><strong>${escapeHtml(task.title)}</strong><span>${escapeHtml([task.organizations?.name, task.priority, task.status].filter(Boolean).join(" · "))}</span></div>`);
+    supportGrid.innerHTML = [...requestCards, ...taskCards].join("") || '<div data-empty-row><strong>Geen supporttaken</strong><span>Er zijn geen klantvragen of taken geladen.</span></div>';
+  }
+
   function populateInspectionOrganizations(organizations) {
     const select = inspectionForm?.querySelector('[name="organization_id"]');
     if (!select) return;
@@ -315,7 +322,7 @@
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
-      ? invoices.map((invoice) => { const action = invoice.status === "draft" ? "send-invoice" : ["sent","open","overdue"].includes(invoice.status) ? "pay-invoice" : ""; const label = invoice.status === "draft" ? "Verzenden" : action ? "Betaald registreren" : "-"; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${action ? `<button class="inline-button" data-admin-action="${action}" data-invoice-id="${escapeHtml(invoice.id)}">${label}</button>` : label}${credit}</div></td></tr>`; }).join("")
+      ? invoices.map((invoice) => { const action = invoice.status === "draft" ? "send-invoice" : ["sent","open","overdue"].includes(invoice.status) ? "pay-invoice" : ""; const label = invoice.status === "draft" ? "Verzenden" : action ? "Betaald registreren" : "-"; const paymentLink = !["paid","credited","cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : ""; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${action ? `<button class="inline-button" data-admin-action="${action}" data-invoice-id="${escapeHtml(invoice.id)}">${label}</button>` : label}${paymentLink}${credit}</div></td></tr>`; }).join("")
       : '<tr data-empty-row><td colspan="4">Geen facturen.</td></tr>';
   }
 
@@ -326,6 +333,15 @@
     if (!result.ok) return setPortalNotice(result.error?.message || "Factuur bijwerken is mislukt.", "error");
     await window.RoofSignalBackend.createInvoiceEvent({ invoice_id: id, organization_id: invoice.organization_id, event_type: status === "sent" ? "sent" : "payment", amount: invoice.amount });
     setPortalNotice(status === "sent" ? "Factuur is als verzonden geregistreerd." : "Betaling is geregistreerd.", "success"); await loadLiveAdminData();
+  }
+
+  async function setInvoicePaymentLink(id) {
+    const invoice = liveInvoices.find((item) => item.id === id); if (!invoice) return;
+    const paymentUrl = prompt("Volledige betaallink van de betaalprovider", invoice.payment_url || ""); if (paymentUrl === null) return;
+    if (paymentUrl && !/^https:\/\//i.test(paymentUrl)) return setPortalNotice("Gebruik een volledige https-betaallink.", "error");
+    const result = await window.RoofSignalBackend.updateInvoice(id, { payment_url: paymentUrl || null });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Betaallink opslaan is mislukt.", "error");
+    setPortalNotice(paymentUrl ? "Betaallink is zichtbaar voor de klant." : "Betaallink is verwijderd.", "success"); await loadLiveAdminData();
   }
 
   async function creditInvoice(id) {
@@ -384,7 +400,7 @@
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades, requests, requestMessages] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
       backend.listInspections(),
@@ -395,6 +411,8 @@
       backend.listQuoteItems(),
       backend.listReports(),
       backend.listUpgradeRequests(),
+      backend.listCustomerRequests(),
+      backend.listRequestMessages(),
     ]);
     liveOrganizations = customers;
     liveProfiles = profiles;
@@ -411,7 +429,7 @@
     renderInvoices(invoices);
     renderQuotes(quotes);
     renderAppointments(appointments);
-    renderTasks(tasks);
+    renderAdminSupport(requests, requestMessages, tasks);
     renderAdminMetrics(customers, inspections, invoices, quotes, tasks);
     populateInspectionOrganizations(customers);
     populateWorkflowOrganizations(customers);
@@ -1569,9 +1587,10 @@
 
   function renderCustomerProperties(properties, inspections = [], findings = []) {
     const objectList = document.querySelector(".object-list");
-    if (!objectList || !properties.length) return;
+    if (!objectList) return;
+    if (!properties.length) { objectList.innerHTML = emptyState("Nog geen objecten. Voeg uw eerste object toe met de plusknop."); return; }
     objectList.innerHTML = properties.map((property) => [
-      `<button type="button" class="object-card customer-object-choice" data-customer-property-id="${escapeHtml(property.id)}">`,
+      `<article class="object-card customer-object-choice" data-customer-property-id="${escapeHtml(property.id)}">`,
       '<div>',
       `<span class="status-pill demo">${escapeHtml(property.status || "Actief")}</span>`,
       `<h3>${escapeHtml(property.name || "Object")}</h3>`,
@@ -1581,8 +1600,8 @@
       `<div><dt>Inspecties</dt><dd>${inspections.filter((item) => item.property_id === property.id).length}</dd></div>`,
       `<div><dt>Bevindingen</dt><dd>${findings.filter((item) => inspections.some((inspection) => inspection.id === item.inspection_id && inspection.property_id === property.id)).length}</dd></div>`,
       '</dl>',
-      '<span class="inline-button">Open dossier</span>',
-      '</button>',
+      `<div class="customer-object-actions"><button class="inline-button" type="button" data-portal-action="open-customer-object" data-property-id="${escapeHtml(property.id)}">Open dossier</button><button class="inline-button" type="button" data-portal-action="edit-customer-object" data-property-id="${escapeHtml(property.id)}">Aanpassen</button><button class="inline-button text-danger" type="button" data-portal-action="delete-customer-object" data-property-id="${escapeHtml(property.id)}">Verwijderen</button></div>`,
+      '</article>',
     ].join("")).join("");
     selectCustomerProperty(properties[0].id, false);
   }
@@ -1600,6 +1619,7 @@
       `<tr><th>Adres</th><td>${escapeHtml(propertyAddress(first) || "Niet vastgelegd")}</td></tr>`,
       `<tr><th>Objectstatus</th><td>${escapeHtml(first.status || "Actief")}</td></tr>`,
       `<tr><th>Inspecties</th><td>${inspections.filter((item) => item.property_id === first.id).length}</td></tr>`,
+      `<tr><th>Opmerkingen</th><td>${escapeHtml(first.customer_notes || "Geen opmerkingen")}</td></tr>`,
     ].join("");
     const building = first.building_data || {};
     const buildingBody = document.querySelector("#objectdossier .object-dossier-grid > div:nth-child(2) tbody");
@@ -1687,7 +1707,8 @@
 
   function renderCustomerAppointments(appointments) {
     const list = document.querySelector("#planning .timeline-list");
-    if (!list || !appointments.length) return;
+    if (!list) return;
+    if (!appointments.length) { list.innerHTML = emptyState("Geen afspraken gepland."); return; }
     list.innerHTML = appointments.map((appointment) => [
       '<div class="customer-appointment-card">',
       `<span>${escapeHtml(formatPortalDateTime(appointment.starts_at))}</span>`,
@@ -1695,6 +1716,7 @@
       `<p>${escapeHtml(propertyAddress(appointment.properties) || appointment.notes || "Inspectieadres wordt bevestigd.")}</p>`,
       `${appointment.ends_at ? `<small>Verwachte eindtijd: ${escapeHtml(new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date(appointment.ends_at)))}</small>` : ""}`,
       `<span class="status-dot yellow">${escapeHtml(statusMeta(appointment.status || "planned").label)}</span>`,
+      appointment.customer_response ? `<small>Uw reactie: ${escapeHtml({confirmed:"Bevestigd",reschedule_requested:"Verzoek tot verplaatsen ingediend",cancellation_requested:"Verzoek tot annuleren ingediend"}[appointment.customer_response] || appointment.customer_response)}</small>` : `<div class="appointment-actions"><button class="inline-button" data-portal-action="appointment-response" data-appointment-id="${escapeHtml(appointment.id)}" data-response="confirmed">Bevestigen</button><button class="inline-button" data-portal-action="appointment-response" data-appointment-id="${escapeHtml(appointment.id)}" data-response="reschedule_requested">Verplaatsen</button><button class="inline-button text-danger" data-portal-action="appointment-response" data-appointment-id="${escapeHtml(appointment.id)}" data-response="cancellation_requested">Annuleren</button></div>`,
       "</div>",
     ].join("")).join("");
   }
@@ -1705,7 +1727,9 @@
     const money = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
     body.innerHTML = invoices.map((invoice) => {
       const document = documents.find((item) => item.invoice_id === invoice.id && item.signed_url);
-      const action = document ? `<a href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">Download factuur</a>` : '<span class="unavailable-label">Nog niet beschikbaar</span>';
+      const download = document ? `<a href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">Download factuur</a>` : '<span class="unavailable-label">Nog niet beschikbaar</span>';
+      const payment = invoice.payment_url && !["paid","credited","cancelled"].includes(invoice.status) ? `<a class="inline-button" href="${escapeHtml(invoice.payment_url)}" target="_blank" rel="noopener">Online betalen</a>` : "";
+      const action = `<div class="quote-actions">${download}${payment}</div>`;
       return `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td>${action}</td></tr>`;
     }).join("");
   }
@@ -1721,7 +1745,9 @@
       const document = documents.find((item) => item.quote_id === quote.id && item.document_type === "quote");
       const action = document?.signed_url ? `<a class="inline-button" href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">PDF bekijken</a>` : "";
       const accepted = quote.status === "accepted" ? ` · akkoord${quote.accepted_by_name ? ` door ${quote.accepted_by_name}` : ""}` : "";
-      return `<article class="customer-quote-card"><div><strong>${escapeHtml(quote.quote_number || quote.title)}</strong><span>${escapeHtml(formatMoney(quote.amount))} excl. btw · ${escapeHtml(statusMeta(quote.status).label)}${escapeHtml(accepted)}</span></div>${action}</article>`;
+      const canAccept = ["sent","viewed","open"].includes(quote.status) && (!quote.valid_until || new Date(`${quote.valid_until}T23:59:59`) >= new Date());
+      const accept = canAccept ? `<button class="btn" type="button" data-portal-action="accept-customer-quote" data-quote-id="${escapeHtml(quote.id)}">Offerte goedkeuren</button>` : "";
+      return `<article class="customer-quote-card"><div><strong>${escapeHtml(quote.quote_number || quote.title)}</strong><span>${escapeHtml(formatMoney(quote.amount))} excl. btw · ${escapeHtml(statusMeta(quote.status).label)}${escapeHtml(accepted)}</span></div><div class="quote-actions">${action}${accept}</div></article>`;
     }).join("");
   }
 
@@ -1732,11 +1758,11 @@
     });
   }
 
-  function renderCustomerRequests(requests = []) {
+  function renderCustomerRequests(requests = [], messages = []) {
     const list = document.querySelector(".customer-request-list");
     if (!list) return;
     const labels = { inspection: "Inspectie", reinspection: "Herinspectie", support: "Support" };
-    list.innerHTML = requests.length ? requests.map((request) => `<article class="request-history-item"><div><span class="status-pill">${escapeHtml(labels[request.request_type] || request.request_type)}</span><strong>${escapeHtml(request.subject)}</strong><p>${escapeHtml(request.properties?.name || "Algemeen")} · ${escapeHtml(formatPortalDate(request.created_at))}</p></div><span>${escapeHtml(request.status)}</span></article>`).join("") : emptyState("Nog geen aanvragen ingediend.");
+    list.innerHTML = requests.length ? requests.map((request) => { const thread = messages.filter((item) => item.request_id === request.id); return `<article class="request-history-item"><div><span class="status-pill">${escapeHtml(labels[request.request_type] || request.request_type)}</span><strong>${escapeHtml(request.subject)}</strong><p>${escapeHtml(request.properties?.name || "Algemeen")} · ${escapeHtml(formatPortalDate(request.created_at))}</p></div><span>${escapeHtml(request.status)}</span><div class="request-thread"><div class="request-thread-messages">${thread.length ? thread.map((item) => `<div class="request-message ${escapeHtml(item.author_type)}"><strong>${item.author_type === "staff" ? "RoofSignal" : "U"}</strong><p>${escapeHtml(item.message)}</p><small>${escapeHtml(formatPortalDateTime(item.created_at))}</small></div>`).join("") : "<small>Nog geen berichten in dit gesprek.</small>"}</div><form class="customer-mini-form" data-request-message-form data-request-id="${escapeHtml(request.id)}"><label>Reageren<textarea name="message" required rows="2"></textarea></label><button class="inline-button" type="submit">Bericht versturen</button><span class="form-note"></span></form></div></article>`; }).join("") : emptyState("Nog geen aanvragen ingediend.");
   }
 
   async function submitCustomerRequest(form) {
@@ -1756,7 +1782,81 @@
     if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Aanvraag versturen is mislukt.", "error");
     form.reset();
     setWorkflowStatus(status, "Uw aanvraag is ontvangen. RoofSignal neemt contact met u op.", "success");
-    renderCustomerRequests(await window.RoofSignalBackend.listCustomerRequests(portalAccess.profile.organization_id));
+    const requests = await window.RoofSignalBackend.listCustomerRequests(portalAccess.profile.organization_id);
+    renderCustomerRequests(requests, await window.RoofSignalBackend.listRequestMessages(portalAccess.profile.organization_id));
+  }
+
+  function openCustomerObjectDialog(property = null) {
+    const dialog = document.querySelector("[data-customer-object-dialog]");
+    const form = dialog?.querySelector("[data-customer-object-form]");
+    if (!dialog || !form) return;
+    form.reset(); form.elements.id.value = property?.id || ""; form.elements.name.value = property?.name || "";
+    form.elements.address.value = property?.address || ""; form.elements.postcode.value = property?.postcode || "";
+    form.elements.city.value = property?.city || ""; form.elements.customer_notes.value = property?.customer_notes || "";
+    dialog.querySelector("[data-customer-object-form-title]").textContent = property ? "Object aanpassen" : "Object toevoegen";
+    dialog.showModal();
+  }
+
+  async function submitCustomerObject(form) {
+    const data = new FormData(form); const status = form.querySelector("[data-customer-object-status]");
+    const result = await window.RoofSignalBackend.saveCustomerProperty(Object.fromEntries(data.entries()));
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Object opslaan is mislukt.", "error");
+    form.closest("dialog")?.close(); setPortalNotice("Object is opgeslagen.", "success"); await loadCustomerPortalData();
+  }
+
+  async function deleteCustomerObject(id) {
+    const property = customerPortalState?.properties.find((item) => item.id === id); if (!property) return;
+    if (!confirm(`${property.name} uit uw portaal verwijderen? Het bestaande dossier blijft bij RoofSignal bewaard.`)) return;
+    const result = await window.RoofSignalBackend.archiveCustomerProperty(id);
+    if (!result.ok) return setPortalNotice(result.error?.message || "Object verwijderen is mislukt.", "error");
+    setPortalNotice("Object is verwijderd uit uw actieve portfolio.", "success"); await loadCustomerPortalData();
+  }
+
+  async function acceptCustomerQuote(id) {
+    const quote = customerPortalState?.quotes?.find((item) => item.id === id); if (!quote) return;
+    if (!confirm(`Offerte ${quote.quote_number || quote.title} voor ${formatMoney(quote.amount)} excl. btw goedkeuren?`)) return;
+    const result = await window.RoofSignalBackend.acceptCustomerQuote(id, portalAccess?.profile?.full_name || "");
+    if (!result.ok) return setPortalNotice(result.error?.message || "Offerte goedkeuren is mislukt.", "error");
+    setPortalNotice("Dank u. De offerte is goedgekeurd en RoofSignal ontvangt hiervan bericht.", "success"); await loadCustomerPortalData();
+  }
+
+  async function respondToCustomerAppointment(id, response) {
+    let note = "";
+    if (response !== "confirmed") { note = prompt(response === "reschedule_requested" ? "Welke datum of periode heeft uw voorkeur?" : "Wilt u de reden of een toelichting meegeven?", "") || ""; if (!note.trim()) return; }
+    const result = await window.RoofSignalBackend.respondToAppointment(id, response, note);
+    if (!result.ok) return setPortalNotice(result.error?.message || "Uw reactie kon niet worden opgeslagen.", "error");
+    setPortalNotice(response === "confirmed" ? "De afspraak is bevestigd." : "Uw verzoek is ontvangen. RoofSignal neemt contact met u op.", "success"); await loadCustomerPortalData();
+  }
+
+  function renderCustomerChanges(inspections, findings) {
+    const feed = document.querySelector("#intelligence .intelligence-feed"); if (!feed) return;
+    const dated = inspections.filter((item) => item.inspected_at || item.scheduled_at).sort((a,b) => new Date(b.inspected_at || b.scheduled_at) - new Date(a.inspected_at || a.scheduled_at));
+    if (dated.length < 2) { feed.innerHTML = emptyState("Na een volgende inspectie vergelijken we veranderingen per gebouwdeel."); return; }
+    const latest = findings.filter((item) => item.inspection_id === dated[0].id); const previous = findings.filter((item) => item.inspection_id === dated[1].id);
+    const prior = new Map(previous.map((item) => [String(item.building_element || item.title).toLowerCase(), item]));
+    const changes = latest.map((item) => { const old = prior.get(String(item.building_element || item.title).toLowerCase()); if (!old) return { title: item.title, text: "Nieuw vastgelegd bij de laatste inspectie." }; const now = Number(item.condition_score || 0), before = Number(old.condition_score || 0); if (now && before && now !== before) return { title: item.building_element || item.title, text: `Conditie gewijzigd van ${before} naar ${now}.` }; return null; }).filter(Boolean);
+    feed.innerHTML = changes.length ? changes.map((item) => `<article class="change-card"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p></article>`).join("") : emptyState("Geen vastgelegde conditiewijzigingen tussen de laatste twee inspecties.");
+  }
+
+  function answerObjectQuestion(question) {
+    const state = customerPortalState || {}; const q = question.toLowerCase(); let answer;
+    if (/aandacht|prioriteit|eerst/.test(q)) { const urgent = (state.findings || []).filter((item) => ["p1","p2","urgent","high"].includes(String(item.priority || item.severity).toLowerCase())); answer = urgent.length ? `Er zijn ${urgent.length} bevindingen met verhoogde prioriteit. Begin met ${urgent.slice(0,3).map((item) => item.title).join(", ")}.` : "Er zijn momenteel geen bevindingen met verhoogde prioriteit vastgelegd."; }
+    else if (/afspraak|wanneer|planning/.test(q)) { const next = (state.appointments || []).find((item) => new Date(item.starts_at) >= new Date()); answer = next ? `De eerstvolgende afspraak is ${formatPortalDateTime(next.starts_at)} voor ${next.properties?.name || "uw object"}.` : "Er staat momenteel geen toekomstige afspraak gepland."; }
+    else if (/factuur|betaal/.test(q)) { const open = (state.invoices || []).filter((item) => !["paid","credited","cancelled"].includes(item.status)); answer = open.length ? `Er ${open.length === 1 ? "staat" : "staan"} ${open.length} openstaande factuur${open.length === 1 ? "" : "en"}.` : "Er zijn geen openstaande facturen."; }
+    else if (/rapport|document/.test(q)) answer = `In het dossier ${state.reports?.length === 1 ? "staat" : "staan"} ${state.reports?.length || 0} rapport${state.reports?.length === 1 ? "" : "en"} en ${state.documents?.length || 0} document${state.documents?.length === 1 ? "" : "en"}.`;
+    else answer = `Uw dossier bevat ${state.properties?.length || 0} objecten, ${state.inspections?.length || 0} inspecties en ${state.findings?.length || 0} bevindingen. Stel een vraag over aandachtspunten, planning, facturen of rapporten voor een gerichter antwoord.`;
+    const box = document.querySelector("#ai .ai-answer"); if (box) box.innerHTML = `<strong>Antwoord uit uw dossier</strong><p>${escapeHtml(answer)}</p>`;
+  }
+
+  function renderPortalNotifications(databaseNotifications = []) {
+    const state = customerPortalState || {}; const generated = [];
+    (state.quotes || []).filter((q) => ["sent","viewed","open"].includes(q.status)).forEach((q) => generated.push({ id:`quote-${q.id}`,title:"Offerte klaar voor goedkeuring",body:q.title,link:"#offertes",kind:"action",read_by:[] }));
+    (state.invoices || []).filter((i) => !["paid","credited","cancelled","draft"].includes(i.status)).forEach((i) => generated.push({ id:`invoice-${i.id}`,title:"Openstaande factuur",body:i.invoice_number || "Factuur",link:"#financieel",kind:"action",read_by:[] }));
+    (state.appointments || []).filter((a) => new Date(a.starts_at) >= new Date() && !a.customer_response).forEach((a) => generated.push({ id:`appointment-${a.id}`,title:"Afspraak wacht op uw reactie",body:a.title,link:"#planning",kind:"action",read_by:[] }));
+    const localRead = new Set(JSON.parse(localStorage.getItem("roofsignal-read-notifications") || "[]"));
+    const userId = portalAccess?.profile?.id; const items = [...databaseNotifications, ...generated].map((item) => ({ ...item, locallyRead: localRead.has(item.id) })); const list = document.querySelector(".portal-notification-list"); const count = document.querySelector("[data-notification-count]");
+    const unread = items.filter((item) => !item.locallyRead && !item.read_by?.includes(userId)); if (count) { count.textContent = unread.length; count.hidden = !unread.length; }
+    if (list) list.innerHTML = items.length ? items.map((item) => `<article class="portal-notification ${item.locallyRead || item.read_by?.includes(userId) ? "" : "unread"}"><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body || "")}</p></div><a class="inline-button" href="${escapeHtml(item.link || "#dashboard")}" data-notification-id="${escapeHtml(item.id)}">Bekijken</a></article>`).join("") : emptyState("Geen nieuwe meldingen.");
   }
 
   async function loadCustomerPortalData() {
@@ -1790,7 +1890,7 @@
     const previewBanner = document.querySelector("[data-customer-preview-banner]");
     if (previewBanner) previewBanner.hidden = !portalAccess?.internal;
 
-    const [properties, inspections, invoices, appointments, reports, quoteItems, documents, requests, quotes] = await Promise.all([
+    const [properties, inspections, invoices, appointments, reports, quoteItems, documents, requests, quotes, requestMessages, notifications] = await Promise.all([
       backend.listOrganizationProperties(organizationId),
       backend.listInspections(organizationId),
       backend.listOrganizationInvoices(organizationId),
@@ -1800,10 +1900,12 @@
       backend.listOrganizationDocuments(organizationId),
       backend.listCustomerRequests(organizationId),
       backend.listOrganizationQuotes(organizationId),
+      backend.listRequestMessages(organizationId),
+      backend.listPortalNotifications(organizationId),
     ]);
     const findings = (await Promise.all(inspections.map((inspection) => backend.listFindings(inspection.id)))).flat();
     const media = (await Promise.all(inspections.map((inspection) => backend.listInspectionMedia(inspection.id)))).flat();
-    customerPortalState = { properties, inspections, findings, reports, documents };
+    customerPortalState = { organizationId, properties, inspections, findings, reports, documents, invoices, appointments, quotes, requests, requestMessages, notifications };
     renderCustomerFindings(findings);
     renderCustomerProperties(properties, inspections, findings);
     renderCustomerInspections(inspections, properties, reports, documents);
@@ -1812,8 +1914,10 @@
     renderCustomerInvoices(invoices, documents);
     renderCustomerQuotes(quotes, documents);
     renderCustomerAppointments(appointments);
+    renderCustomerChanges(inspections, findings);
+    renderPortalNotifications(notifications);
     fillCustomerRequestForms(properties);
-    renderCustomerRequests(requests);
+    renderCustomerRequests(requests, requestMessages);
     const customerMetrics = [...document.querySelectorAll("#dashboard article")];
     const metricValues = [properties.length, inspections.length, reports.length, findings.length];
     const metricNotes = [
@@ -1893,6 +1997,8 @@
   initializePortalNavigation();
 
   document.addEventListener("click", (event) => {
+    const dialogClose = event.target.closest("[data-dialog-close]");
+    if (dialogClose) { event.preventDefault(); dialogClose.closest("dialog")?.close(); return; }
     const signOut = event.target.closest(".portal-account a[href^='portal-login']");
     if (signOut) {
       event.preventDefault();
@@ -1908,7 +2014,7 @@
     }
 
     const customerProperty = event.target.closest("[data-customer-property-id]");
-    if (customerProperty) {
+    if (customerProperty && !event.target.closest("[data-portal-action]")) {
       event.preventDefault();
       selectCustomerProperty(customerProperty.dataset.customerPropertyId);
       return;
@@ -1917,13 +2023,24 @@
     const portalTarget = event.target.closest("[data-portal-action]");
     if (portalTarget) {
       event.preventDefault();
-      if (portalTarget.dataset.portalAction === "request-upgrade") {
+      const portalAction = portalTarget.dataset.portalAction;
+      if (portalAction === "request-upgrade") {
         requestUpgrade(portalTarget);
         return;
       }
-      handlePortalAction(portalTarget.dataset.portalAction);
+      if (portalAction === "add-customer-object") return openCustomerObjectDialog();
+      if (portalAction === "open-customer-object") return selectCustomerProperty(portalTarget.dataset.propertyId);
+      if (portalAction === "edit-customer-object") return openCustomerObjectDialog(customerPortalState?.properties.find((item) => item.id === portalTarget.dataset.propertyId));
+      if (portalAction === "delete-customer-object") return deleteCustomerObject(portalTarget.dataset.propertyId);
+      if (portalAction === "accept-customer-quote") return acceptCustomerQuote(portalTarget.dataset.quoteId);
+      if (portalAction === "appointment-response") return respondToCustomerAppointment(portalTarget.dataset.appointmentId, portalTarget.dataset.response);
+      if (portalAction === "mark-all-notifications-read") { const ids = [...document.querySelectorAll("[data-notification-id]")].map((item) => item.dataset.notificationId); localStorage.setItem("roofsignal-read-notifications", JSON.stringify(ids)); document.querySelectorAll(".portal-notification").forEach((item) => item.classList.remove("unread")); const count = document.querySelector("[data-notification-count]"); if (count) count.hidden = true; return; }
+      handlePortalAction(portalAction);
       return;
     }
+
+    const notificationLink = event.target.closest("[data-notification-id]");
+    if (notificationLink) { const id = notificationLink.dataset.notificationId; const read = new Set(JSON.parse(localStorage.getItem("roofsignal-read-notifications") || "[]")); read.add(id); localStorage.setItem("roofsignal-read-notifications", JSON.stringify([...read])); if (!/^(quote|invoice|appointment)-/.test(id)) window.RoofSignalBackend.markPortalNotificationRead(id); }
 
     const target = event.target.closest("[data-admin-action]");
     if (!target) return;
@@ -1954,6 +2071,7 @@
     if (action === "finding-to-maintenance") findingToMaintenance(target);
     if (action === "send-invoice") changeInvoiceStatus(target.dataset.invoiceId, "sent");
     if (action === "pay-invoice") changeInvoiceStatus(target.dataset.invoiceId, "paid");
+    if (action === "set-payment-link") setInvoicePaymentLink(target.dataset.invoiceId);
     if (action === "credit-invoice") creditInvoice(target.dataset.invoiceId);
     if (action === "complete-maintenance") completeMaintenance(target);
     if (action === "verify-maintenance") verifyMaintenance(target);
@@ -2008,4 +2126,20 @@
     event.preventDefault();
     submitCustomerRequest(form);
   }));
+  document.querySelector("[data-customer-object-form]")?.addEventListener("submit", (event) => { event.preventDefault(); submitCustomerObject(event.currentTarget); });
+  document.querySelector("[data-object-assistant-form]")?.addEventListener("submit", (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); answerObjectQuestion(String(data.get("question") || "")); });
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-request-message-form]"); if (!form) return; event.preventDefault();
+    const status = form.querySelector(".form-note"); const message = String(new FormData(form).get("message") || "").trim();
+    const result = await window.RoofSignalBackend.createRequestMessage(form.dataset.requestId, customerPortalState.organizationId, message);
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Bericht versturen is mislukt.", "error");
+    form.reset(); customerPortalState.requestMessages = await window.RoofSignalBackend.listRequestMessages(customerPortalState.organizationId); renderCustomerRequests(customerPortalState.requests, customerPortalState.requestMessages);
+  });
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-admin-request-message-form]"); if (!form) return; event.preventDefault();
+    const status = form.querySelector(".form-note"); const message = String(new FormData(form).get("message") || "").trim();
+    const result = await window.RoofSignalBackend.createRequestMessage(form.dataset.requestId, form.dataset.organizationId, message, "staff");
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Antwoord versturen is mislukt.", "error");
+    form.reset(); setWorkflowStatus(status, "Antwoord is zichtbaar in het klantenportaal.", "success"); await loadLiveAdminData();
+  });
 })();

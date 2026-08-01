@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="RoofSignal Portaal | RoofSignal">
   <meta name="twitter:description" content="Objectgericht RoofSignal Portaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal18">
+  <link rel="stylesheet" href="assets/styles.css?v=portal19">
 </head>
 <body class="portal-body portal-auth-pending" data-portal-surface="customer">
 <aside class="portal-sidebar">
@@ -29,6 +29,7 @@
     <a href="#objecten">Mijn objecten</a>
     <a href="#planning">Afspraken</a>
     <a href="#offertes">Documenten</a>
+    <a href="#notificaties">Meldingen <span class="nav-count" data-notification-count hidden>0</span></a>
     <a href="#aanvragen">Aanvragen & contact</a>
     <a href="#account">Account</a>
   </nav>
@@ -137,6 +138,7 @@
     <div class="portal-panel wide" id="objecten">
       <div class="panel-head">
         <div><span class="eyebrow orange">Portfolio</span><h2>Objecten</h2></div>
+        <button class="object-add-button" type="button" data-portal-action="add-customer-object" aria-label="Object toevoegen" title="Object toevoegen">+</button>
       </div>
       <div class="object-list"><div class="empty-state">Geen objecten gekoppeld aan deze klant.</div></div>
     </div>
@@ -145,6 +147,24 @@
       <div class="panel-head"><div><span class="eyebrow orange">Waarschuwingen</span><h2>Nu relevant</h2></div></div>
       <div class="timeline-list"><div class="empty-state">Geen waarschuwingen of signalen.</div></div>
     </aside>
+  </section>
+
+  <dialog class="portal-dialog" data-customer-object-dialog>
+    <form method="dialog" class="portal-dialog-card" data-customer-object-form>
+      <div class="panel-head"><div><span class="eyebrow orange">Object</span><h2 data-customer-object-form-title>Object toevoegen</h2></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div>
+      <input type="hidden" name="id">
+      <label>Objectnaam<input name="name" required placeholder="Bijvoorbeeld Hoofdgebouw"></label>
+      <label>Adres<input name="address" required placeholder="Straat en huisnummer"></label>
+      <div class="form-row"><label>Postcode<input name="postcode" required placeholder="1234 AB"></label><label>Plaats<input name="city" required></label></div>
+      <label>Opmerkingen<textarea name="customer_notes" rows="4" placeholder="Bijvoorbeeld toegang, contactpersoon op locatie of bijzonderheden"></textarea></label>
+      <p class="form-note" data-customer-object-status></p>
+      <div class="dialog-actions"><button class="btn ghost-dark" type="button" data-dialog-close>Annuleren</button><button class="btn" type="submit">Opslaan</button></div>
+    </form>
+  </dialog>
+
+  <section class="portal-panel" id="notificaties">
+    <div class="panel-head"><div><span class="eyebrow orange">Actueel</span><h2>Meldingen en acties</h2></div><button class="inline-button" type="button" data-portal-action="mark-all-notifications-read">Alles gelezen</button></div>
+    <div class="portal-notification-list"><div class="empty-state">Geen nieuwe meldingen.</div></div>
   </section>
 
   <section class="portal-panel" id="objectdossier">
@@ -224,8 +244,10 @@
 
   <section class="portal-layout">
     <div class="portal-panel" id="ai">
-      <div class="panel-head"><div><span class="eyebrow orange">AI</span><h2>Objectassistent</h2></div></div>
-      <div class="ai-prompt-list"><div class="empty-state">AI-acties worden beschikbaar zodra inspectiedata bestaat.</div></div>
+      <div class="panel-head"><div><span class="eyebrow orange">Dossierhulp</span><h2>Objectassistent</h2></div></div>
+      <p>Stel een vraag over de objecten, inspecties, bevindingen, planning of documenten in uw dossier.</p>
+      <form class="customer-mini-form" data-object-assistant-form><label>Uw vraag<input name="question" required placeholder="Wat vraagt als eerste aandacht?"></label><button class="btn" type="submit">Beantwoord uit dossier</button></form>
+      <div class="ai-prompt-list"></div>
       <div class="ai-answer">
         <strong>Geen analyse beschikbaar</strong>
         <p>Er is nog geen inspectiedata om te analyseren.</p>
@@ -318,7 +340,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=15" defer></script>
-<script src="assets/portal-admin.js?v=15" defer></script>
+<script src="assets/supabase-app.js?v=17" defer></script>
+<script src="assets/portal-admin.js?v=16" defer></script>
 </body>
 </html>

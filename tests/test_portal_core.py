@@ -256,3 +256,19 @@ def test_veilig_is_not_used_as_generic_portal_or_marketing_copy():
     ]
     for path in generic_copy_files:
         assert "veilig" not in read(path).lower()
+
+
+def test_customer_self_service_journeys_are_real_and_scoped():
+    page = read("portal-klant.html")
+    portal = read("assets/portal-admin.js")
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260801160000_customer_self_service.sql")
+    for marker in ["add-customer-object", "accept-customer-quote", "appointment-response", "data-request-message-form", "portal-notification-list", "data-object-assistant-form"]:
+        assert marker in page or marker in portal
+    for method in ["saveCustomerProperty", "archiveCustomerProperty", "acceptCustomerQuote", "respondToAppointment", "createRequestMessage", "listPortalNotifications"]:
+        assert method in backend
+    assert "customer_save_property" in migration
+    assert "customer_accept_quote" in migration
+    assert "customer_respond_appointment" in migration
+    assert "public.is_org_member" in migration
+    assert "payment_url" in migration

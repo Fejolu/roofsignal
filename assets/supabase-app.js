@@ -353,10 +353,10 @@
 
   async function listCustomerRequests(organizationId) {
     const supabase = await getClient();
-    if (!supabase || !organizationId) return [];
-    const { data, error } = await supabase.from("customer_requests")
-      .select("*,properties(name)").eq("organization_id", organizationId)
-      .order("created_at", { ascending: false });
+    if (!supabase) return [];
+    let query = supabase.from("customer_requests").select("*,properties(name),organizations(name)").order("created_at", { ascending: false });
+    if (organizationId) query = query.eq("organization_id", organizationId);
+    const { data, error } = await query;
     return error ? [] : data || [];
   }
 
@@ -581,12 +581,66 @@
     return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
   }
 
+  async function saveCustomerProperty(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.rpc("customer_save_property", {
+      p_id: payload.id || null, p_name: payload.name, p_address: payload.address || "",
+      p_postcode: payload.postcode || "", p_city: payload.city || "", p_notes: payload.customer_notes || "",
+    });
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function archiveCustomerProperty(id) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { error } = await supabase.rpc("customer_archive_property", { p_id: id });
+    return error ? { ok: false, error } : { ok: true };
+  }
+
+  async function acceptCustomerQuote(id, name) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.rpc("customer_accept_quote", { p_quote_id: id, p_name: name || "" });
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function respondToAppointment(id, action, note = "") {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.rpc("customer_respond_appointment", { p_appointment_id: id, p_action: action, p_note: note });
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listRequestMessages(organizationId) {
+    const supabase = await getClient(); if (!supabase) return [];
+    let query = supabase.from("customer_request_messages").select("*").order("created_at");
+    if (organizationId) query = query.eq("organization_id", organizationId);
+    const { data, error } = await query;
+    return error ? [] : data || [];
+  }
+
+  async function createRequestMessage(requestId, organizationId, message, authorType = "customer") {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error } = await supabase.from("customer_request_messages").insert({ request_id: requestId, organization_id: organizationId, author_id: session?.user?.id, author_type: authorType, message }).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function listPortalNotifications(organizationId) {
+    const supabase = await getClient(); if (!supabase || !organizationId) return [];
+    const { data, error } = await supabase.from("portal_notifications").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false });
+    return error ? [] : data || [];
+  }
+
+  async function markPortalNotificationRead(id) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { error } = await supabase.rpc("customer_mark_notification_read", { p_notification_id: id });
+    return error ? { ok: false, error } : { ok: true };
+  }
+
   async function listOrganizationProperties(organizationId) {
     const supabase = await getClient();
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("properties")
-      .select("id,organization_id,name,address,postcode,city,status,building_data,created_at")
+      .select("id,organization_id,name,address,postcode,city,status,building_data,customer_notes,created_at")
       .eq("organization_id", organizationId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -611,7 +665,7 @@
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("invoices")
-      .select("id,organization_id,invoice_number,amount,status,due_date,created_at")
+      .select("id,organization_id,invoice_number,amount,status,due_date,payment_url,created_at")
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false });
     if (error) return [];
@@ -623,7 +677,7 @@
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id,organization_id,property_id,inspector_id,title,starts_at,ends_at,status,notes,created_at,properties(name,address,postcode,city)")
+      .select("id,organization_id,property_id,inspector_id,title,starts_at,ends_at,status,notes,customer_response,customer_response_at,customer_note,created_at,properties(name,address,postcode,city)")
       .eq("organization_id", organizationId)
       .order("starts_at", { ascending: true });
     if (error) return [];
@@ -635,7 +689,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("invoices")
-      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,created_at,organizations(name)")
+      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,payment_url,created_at,organizations(name)")
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
@@ -797,6 +851,14 @@
     createOrganization,
     createProperties,
     createPortalCustomer,
+    saveCustomerProperty,
+    archiveCustomerProperty,
+    acceptCustomerQuote,
+    respondToAppointment,
+    listRequestMessages,
+    createRequestMessage,
+    listPortalNotifications,
+    markPortalNotificationRead,
     listOrganizationProperties,
     listOrganizationReports,
     listOrganizationInvoices,
