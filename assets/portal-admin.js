@@ -1989,8 +1989,10 @@
     loadState();
     loadCurrentCustomer();
     if (surface === "customer") await loadCustomerPortalData();
-    if (surface === "internal") await loadLiveAdminData();
-    syncCustomerOwnedData();
+    if (surface === "internal") {
+      await loadLiveAdminData();
+      syncCustomerOwnedData();
+    }
   }
 
   bootstrapPortal();
