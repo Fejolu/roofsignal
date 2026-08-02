@@ -109,6 +109,7 @@
   let liveUpgradeRequests = [];
   let portalAccess = null;
   let customerPortalState = null;
+  let resourceCalendarWeekOffset = 0;
 
   function saveState() {
     // Operational data lives in Supabase. Browser storage is not a system of record.
@@ -380,10 +381,46 @@
   }
 
   function renderAppointments(appointments = []) {
+    renderResourceCalendar(appointments);
     if (!planningList) return;
     planningList.innerHTML = appointments.length
       ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, appointment.status].filter(Boolean).join(" · "))}</p><div class="table-actions"><button class="inline-button" data-admin-action="test-appointment-email" data-appointment-id="${escapeHtml(appointment.id)}">Test afspraakmail</button></div></div>`).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
+  }
+
+  function startOfCalendarWeek(offset = 0) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    const day = date.getDay() || 7;
+    const mondayShift = day >= 6 ? 8 - day : 1 - day;
+    date.setDate(date.getDate() + mondayShift + (offset * 7));
+    return date;
+  }
+
+  function renderResourceCalendar(appointments = liveAppointments) {
+    const grid = document.querySelector("[data-resource-calendar-grid]");
+    const period = document.querySelector("[data-calendar-period]");
+    if (!grid) return;
+    const start = startOfCalendarWeek(resourceCalendarWeekOffset);
+    const days = Array.from({ length: 5 }, (_, index) => { const date = new Date(start); date.setDate(start.getDate() + index); return date; });
+    const end = new Date(days[4]); end.setHours(23, 59, 59, 999);
+    if (period) period.textContent = `${days[0].toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} – ${days[4].toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}`;
+    const inspectors = liveProfiles.filter((profile) => !["customer", "finance", "support"].includes(profile.role));
+    const resources = inspectors.length ? inspectors : [{ id: "unassigned", full_name: "Niet toegewezen" }];
+    const header = `<div class="calendar-corner"><span>Inspecteur</span></div>${days.map((date) => `<div class="calendar-day-head${date.toDateString() === new Date().toDateString() ? " today" : ""}"><strong>${date.toLocaleDateString("nl-NL", { weekday: "short" })}</strong><span>${date.getDate()} ${date.toLocaleDateString("nl-NL", { month: "short" })}</span></div>`).join("")}`;
+    const rows = resources.map((resource) => {
+      const name = resource.full_name || resource.email || "Inspecteur";
+      const cells = days.map((date) => {
+        const events = appointments.filter((appointment) => {
+          const when = new Date(appointment.starts_at);
+          const assigned = resource.id === "unassigned" ? !appointment.inspector_id && !appointment.profile_id : [appointment.inspector_id, appointment.profile_id, appointment.profiles?.id].includes(resource.id);
+          return assigned && when.toDateString() === date.toDateString() && when >= start && when <= end;
+        });
+        return `<div class="calendar-resource-cell${date.toDateString() === new Date().toDateString() ? " today" : ""}">${events.map((appointment) => `<button type="button" class="calendar-event-card record-clickable-row" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><time>${new Date(appointment.starts_at).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}</time><strong>${escapeHtml(appointment.organizations?.name || appointment.title || "Afspraak")}</strong><span>${escapeHtml(appointment.properties?.name || "")}</span></button>`).join("")}</div>`;
+      }).join("");
+      return `<div class="calendar-resource-name"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(roleLabels[resource.role] || "Inspecteur")}</span></div>${cells}`;
+    }).join("");
+    grid.innerHTML = header + rows;
   }
 
   function renderAdminMetrics(customers, inspections, invoices, quotes, tasks = []) {
@@ -2218,6 +2255,14 @@
   initializeCustomerGlobalSearch();
 
   document.addEventListener("click", (event) => {
+    const calendarNav = event.target.closest("[data-calendar-nav]");
+    if (calendarNav) {
+      resourceCalendarWeekOffset = calendarNav.dataset.calendarNav === "today" ? 0 : resourceCalendarWeekOffset + (calendarNav.dataset.calendarNav === "next" ? 1 : -1);
+      renderResourceCalendar();
+      return;
+    }
+    const calendarEvent = event.target.closest(".calendar-event-card");
+    if (calendarEvent) { openRecordContext(calendarEvent); return; }
     const dashboardPreview = event.target.closest("[data-dashboard-preview-kind]");
     if (dashboardPreview) { openDashboardPreview(dashboardPreview); return; }
     const customerRowTarget = event.target.closest(".customer-clickable-row");
