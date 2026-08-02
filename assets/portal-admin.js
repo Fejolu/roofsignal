@@ -212,7 +212,7 @@
       customer.bank_account,
       customer.notes,
     ].filter(Boolean).join(" ");
-    return `<tr${idAttribute}${customerAttribute} data-search="${escapeHtml(searchText)}"><td>${escapeHtml(customer.name || "-")}</td><td>${escapeHtml(customer.segment || "-")}</td><td>${escapeHtml(objects)}</td><td>${escapeHtml(activity)}</td><td>${statusCell(escapeHtml(meta.label), meta.tone)}</td><td>${customerActions()}</td></tr>`;
+    return `<tr${idAttribute}${customerAttribute} class="customer-clickable-row" data-search="${escapeHtml(searchText)}" role="link" tabindex="0" aria-label="Klantdossier van ${escapeHtml(customer.name || "klant")} openen"><td>${escapeHtml(customer.name || "-")}</td><td>${escapeHtml(customer.segment || "-")}</td><td>${escapeHtml(objects)}</td><td>${escapeHtml(activity)}</td><td>${statusCell(escapeHtml(meta.label), meta.tone)}</td><td>${customerActions()}</td></tr>`;
   }
 
   function renderCustomers(customers) {
@@ -2195,6 +2195,8 @@
   document.addEventListener("click", (event) => {
     const dashboardPreview = event.target.closest("[data-dashboard-preview-kind]");
     if (dashboardPreview) { openDashboardPreview(dashboardPreview); return; }
+    const customerRowTarget = event.target.closest(".customer-clickable-row");
+    if (customerRowTarget && !event.target.closest("a, button, input, select, textarea")) { openCustomer(customerRowTarget); return; }
     const dialogClose = event.target.closest("[data-dialog-close]");
     if (dialogClose) { event.preventDefault(); dialogClose.closest("dialog")?.close(); return; }
     const signOut = event.target.closest(".portal-account a[href^='portal-login']");
@@ -2283,6 +2285,13 @@
     if (action === "remove-role") removeRole(rowFor(target));
     if (action === "edit-current-customer") editCurrentCustomer();
     if (action === "delete-current-customer") deleteCurrentCustomer();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const customerRowTarget = event.target.closest?.(".customer-clickable-row");
+    if (!customerRowTarget || !["Enter", " "].includes(event.key)) return;
+    event.preventDefault();
+    openCustomer(customerRowTarget);
   });
 
   customerCreateForm?.addEventListener("submit", createCustomer);

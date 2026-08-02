@@ -53,6 +53,9 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .icon-actions { flex-wrap: nowrap; }
 .icon-actions a { display: inline-flex; align-items: center; justify-content: center; width: 36px; min-height: 36px; padding: 0; border: 1px solid var(--rs-line); border-radius: 8px; text-decoration: none; }
 .icon-actions a:hover { border-color: var(--rs-orange); background: #fff8f4; }
+.portal-table .customer-clickable-row { cursor: pointer; transition: background-color .16s ease, box-shadow .16s ease; }
+.portal-table .customer-clickable-row:hover, .portal-table .customer-clickable-row:focus-visible { background: #fff8f4; box-shadow: inset 4px 0 0 var(--rs-orange); outline: none; }
+.portal-table .customer-clickable-row:hover td:first-child, .portal-table .customer-clickable-row:focus-visible td:first-child { color: var(--rs-orange); }
 .offer-table th:nth-child(5), .offer-table td:nth-child(5) { min-width: 150px; }
 .admin-dashboard-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .metrics .metric-card-link { position: relative; cursor: pointer; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
