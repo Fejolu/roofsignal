@@ -1994,6 +1994,11 @@
       event.preventDefault();
       activate(link.dataset.adminViewLink, true);
     }));
+    document.querySelectorAll('[data-admin-view-link][role="link"]').forEach((link) => link.addEventListener("keydown", (event) => {
+      if (!["Enter", " "].includes(event.key)) return;
+      event.preventDefault();
+      activate(link.dataset.adminViewLink, true);
+    }));
     window.addEventListener("popstate", () => activate(window.location.hash.slice(1) || "dashboard"));
     window.addEventListener("hashchange", () => activate(window.location.hash.slice(1) || "dashboard"));
     window.RoofSignalAdminNavigate = (id) => activate(id, true);

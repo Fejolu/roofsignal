@@ -218,8 +218,9 @@ def test_prioritized_portal_improvements_are_kept_consistent():
         assert label in nav
     for internal_label in ("Intelligence", "Media", ">AI<"):
         assert internal_label not in nav
-    for step in ("Klant", "Offerte", "Planning", "Inspectie", "Rapport", "Factuur"):
-        assert f"<span>{step}<small>" in admin
+    assert 'class="dossier-workflow"' not in admin
+    for target in ("klanten", "inspecties", "support", "facturen", "offertes"):
+        assert f'data-admin-view-link="{target}"' in admin
     assert "propertyAddress" in script
     assert "formatPortalDateTime" in script
     assert 'accepted: { label: "Akkoord"' in script

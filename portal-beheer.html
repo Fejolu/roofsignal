@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal22">
+  <link rel="stylesheet" href="assets/styles.css?v=portal23">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
@@ -59,21 +59,12 @@
     </div>
   </header>
 
-  <nav class="dossier-workflow" aria-label="Stappen in het klantdossier">
-    <a class="done" href="#klanten"><i>✓</i><span>Klant<small>Selecteren of aanmaken</small></span></a>
-    <a href="#offertes"><i>2</i><span>Offerte<small>Opstellen en akkoord</small></span></a>
-    <a href="#planning"><i>3</i><span>Planning<small>Datum en inspecteur</small></span></a>
-    <a href="#inspecties"><i>4</i><span>Inspectie<small>Uitvoering en bevindingen</small></span></a>
-    <a href="#inspecties"><i>5</i><span>Rapport<small>Concept, voorbeeld, publicatie</small></span></a>
-    <a href="#facturen"><i>6</i><span>Factuur<small>Na oplevering</small></span></a>
-  </nav>
-
   <section id="dashboard" class="portal-grid metrics">
-    <article><span>Actieve klanten</span><strong>0</strong><p>Geen klantdata.</p></article>
-    <article><span>Open inspecties</span><strong>0</strong><p>Geen inspectiedata.</p></article>
-    <article><span>Support</span><strong>0</strong><p>Nog niet gekoppeld.</p></article>
-    <article><span>Omzet open</span><strong>EUR 0</strong><p>Geen factuurdata.</p></article>
-    <article><span>Offertes</span><strong>0</strong><p>Geen offertedata.</p></article>
+    <article class="metric-card-link" role="link" tabindex="0" data-admin-view-link="klanten" aria-label="Actieve klanten bekijken"><span>Actieve klanten</span><strong>0</strong><p>Geen klantdata.</p><i aria-hidden="true">→</i></article>
+    <article class="metric-card-link" role="link" tabindex="0" data-admin-view-link="inspecties" aria-label="Open inspecties bekijken"><span>Open inspecties</span><strong>0</strong><p>Geen inspectiedata.</p><i aria-hidden="true">→</i></article>
+    <article class="metric-card-link" role="link" tabindex="0" data-admin-view-link="support" aria-label="Open supporttaken bekijken"><span>Support</span><strong>0</strong><p>Nog niet gekoppeld.</p><i aria-hidden="true">→</i></article>
+    <article class="metric-card-link" role="link" tabindex="0" data-admin-view-link="facturen" aria-label="Openstaande omzet bekijken"><span>Omzet open</span><strong>EUR 0</strong><p>Geen factuurdata.</p><i aria-hidden="true">→</i></article>
+    <article class="metric-card-link" role="link" tabindex="0" data-admin-view-link="offertes" aria-label="Open offertes bekijken"><span>Offertes</span><strong>0</strong><p>Geen offertedata.</p><i aria-hidden="true">→</i></article>
   </section>
   <section class="admin-dashboard-previews" data-admin-dashboard-preview>
     <article class="portal-panel"><div class="panel-head"><div><span class="eyebrow orange">Recent</span><h2>Klanten</h2></div><a href="#klanten" data-admin-view-link="klanten">Alles bekijken</a></div><div class="admin-preview-list" data-dashboard-customers></div></article>
@@ -270,6 +261,6 @@
 </main>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/supabase-app.js?v=17" defer></script>
-<script src="assets/portal-admin.js?v=19" defer></script>
+<script src="assets/portal-admin.js?v=20" defer></script>
 </body>
 </html>

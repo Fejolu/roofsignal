@@ -54,6 +54,10 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .icon-actions a:hover { border-color: var(--rs-orange); background: #fff8f4; }
 .offer-table th:nth-child(5), .offer-table td:nth-child(5) { min-width: 150px; }
 .admin-dashboard-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.metrics .metric-card-link { position: relative; cursor: pointer; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+.metrics .metric-card-link > i { position: absolute; right: 20px; bottom: 18px; color: var(--rs-orange); font-size: 22px; font-style: normal; opacity: 0; transform: translateX(-5px); transition: opacity .16s ease, transform .16s ease; }
+.metrics .metric-card-link:hover, .metrics .metric-card-link:focus-visible { transform: translateY(-2px); border-color: rgba(255,90,20,.45); box-shadow: 0 16px 38px rgba(8,20,16,.09); outline: none; }
+.metrics .metric-card-link:hover > i, .metrics .metric-card-link:focus-visible > i { opacity: 1; transform: translateX(0); }
 .admin-preview-list { display: grid; }
 .admin-preview-list > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--rs-line); }
 .admin-preview-list > div:first-child { border-top: 0; }
