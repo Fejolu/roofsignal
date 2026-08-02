@@ -19,20 +19,20 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal21">
+  <link rel="stylesheet" href="assets/styles.css?v=portal22">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
   <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
   <nav class="portal-nav">
-    <a class="active" href="#klanten">Klanten</a>
-    <a href="#dashboard">Dashboard</a>
-    <a href="#inspecties">Beoordelingen</a>
-    <a href="#planning">Planning</a>
-    <a href="#facturen">Facturen</a>
-    <a href="#offertes">Offertes</a>
-    <a href="#support">Support</a>
-    <a href="#rechten">Rollen</a>
+    <a class="active" href="#dashboard"><span aria-hidden="true">⌂</span>Dashboard</a>
+    <a href="#klanten"><span aria-hidden="true">♙</span>Klanten</a>
+    <a href="#offertes"><span aria-hidden="true">▤</span>Offertes</a>
+    <a href="#planning"><span aria-hidden="true">□</span>Planning</a>
+    <a href="#inspecties"><span aria-hidden="true">⌕</span>Inspecties</a>
+    <a href="#facturen"><span aria-hidden="true">€</span>Facturen</a>
+    <a href="#support"><span aria-hidden="true">?</span>Support</a>
+    <a class="portal-nav-secondary" href="#rechten"><span aria-hidden="true">⚙</span>Team &amp; rechten</a>
   </nav>
   <div class="portal-account">
     <span>Beheerder</span>
@@ -49,8 +49,13 @@
       <h1>Klanten, objecten en opvolging.</h1>
       <p>Interne RoofSignal-omgeving voor support, klantbeheer, facturen, agenda’s, planning en meekijken met klantaccounts.</p>
     </div>
-    <div class="topbar-actions">
-      <a class="btn" href="portal-klant-aanmaken.html">Nieuwe klant</a>
+    <div class="topbar-actions admin-topbar-actions">
+      <div class="admin-global-search">
+        <label class="sr-only" for="admin-global-search">Zoeken in de backoffice</label>
+        <input id="admin-global-search" type="search" autocomplete="off" placeholder="Zoek klant, offerte, inspectie…" data-admin-global-search>
+        <div class="admin-search-results" data-admin-search-results hidden></div>
+      </div>
+      <a class="btn admin-create-button" href="portal-klant-aanmaken.html"><span aria-hidden="true">＋</span><span>Nieuwe klant</span></a>
     </div>
   </header>
 
@@ -73,12 +78,12 @@
 
   <section class="portal-panel" id="rechten">
     <div class="panel-head">
-      <div><span class="eyebrow orange">Rechtenmodel</span><h2>Team, rollen en rechten</h2></div><a href="#rechten" data-admin-action="focus-role-builder">Nieuw teamlid</a>
+      <div><span class="eyebrow orange">Rechtenmodel</span><h2>Team, rollen en rechten</h2></div><a href="#rechten" data-admin-action="focus-role-builder">＋ Nieuw teamlid</a>
     </div>
     <div class="support-grid admin-support">
       <div><strong>Owner admin</strong><span>Alle modules: klanten, rollen, offertes, facturen, planning, support en instellingen.</span></div>
       <div><strong>Support</strong><span>Klantvragen, dossiernotities, meekijken, rapportstatus en agenda-inzage.</span></div>
-      <div><strong>Planning</strong><span>Beoordelingen plannen, agenda's beheren, toegang en opnamevoorbereiding vastleggen.</span></div>
+      <div><strong>Planning</strong><span>Inspecties plannen, agenda's beheren, toegang en opnamevoorbereiding vastleggen.</span></div>
       <div><strong>Finance</strong><span>Facturen, offertes, betaalstatus, herinneringen en omzetoverzicht.</span></div>
     </div>
     <div class="role-builder">
@@ -97,10 +102,6 @@
       <div class="panel-head">
         <div><span class="eyebrow orange">CRM</span><h2>Klanten beheren</h2></div>
         <a href="portal-klant-aanmaken.html">Account aanmaken</a>
-      </div>
-      <div class="customer-search">
-        <label>Zoeken<input type="search" data-customer-search placeholder="Zoek op bedrijf, contactpersoon, e-mail, telefoon, adres, KvK, IBAN of object"></label>
-        <p class="form-note" data-customer-search-status>Zoeken gebruikt alle bekende klantvelden.</p>
       </div>
       <table class="portal-table">
         <thead><tr><th>Klant</th><th>Segment</th><th>Objecten</th><th>Contact / activiteit</th><th>Status</th><th>Acties</th></tr></thead>
@@ -152,7 +153,7 @@
 
   <section class="portal-layout">
     <div class="portal-panel" id="inspecties">
-      <div class="panel-head"><div><span class="eyebrow orange">Beoordelingen</span><h2>Rapportpijplijn</h2></div></div>
+      <div class="panel-head"><div><span class="eyebrow orange">Inspecties</span><h2>Inspecties en rapportage</h2></div></div>
       <div class="pipeline">
         <article data-pipeline-stage="intake"><span>Intake</span><strong>0</strong><p>Scope nog afstemmen.</p></article>
         <article data-pipeline-stage="planned"><span>Gepland</span><strong>0</strong><p>Opname staat in agenda.</p></article>
@@ -220,7 +221,7 @@
   <section class="portal-panel" id="offertes">
     <div class="panel-head">
       <div><span class="eyebrow orange">Offertes</span><h2>Offertes maken en opvolgen</h2></div>
-      <a href="#klanten">Start vanuit een klant</a>
+      <a href="#klanten" title="Nieuwe offerte aanmaken">＋ Nieuwe offerte</a>
     </div>
     <form class="compact-workflow-form workflow-form" data-quote-create-form hidden>
       <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
@@ -249,7 +250,7 @@
   <section class="portal-panel" id="support">
     <div class="panel-head">
       <div><span class="eyebrow orange">Support</span><h2>Klantvragen</h2></div>
-      <a href="#klanten">Start vanuit een klant</a>
+      <a href="#klanten" title="Nieuwe supportactie aanmaken">＋ Nieuwe supportactie</a>
     </div>
     <form class="compact-workflow-form workflow-form" data-task-create-form hidden>
       <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
@@ -264,6 +265,6 @@
 </main>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/supabase-app.js?v=17" defer></script>
-<script src="assets/portal-admin.js?v=18" defer></script>
+<script src="assets/portal-admin.js?v=19" defer></script>
 </body>
 </html>

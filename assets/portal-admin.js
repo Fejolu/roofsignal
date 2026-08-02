@@ -3,7 +3,7 @@
   const roleRights = {
     "Owner admin": "Alles",
     Support: "Support, meekijken, dossiers",
-    Planning: "Agenda, beoordelingen, toegang",
+    Planning: "Agenda, inspecties, toegang",
     Finance: "Facturen, offertes, betaalstatus",
     Rapportage: "Rapporten, objectdata, exports",
   };
@@ -120,7 +120,9 @@
 
   function statusCell(label, tone = "green") {
     const meta = statusMeta(label);
-    return `<span class="status-dot ${tone === "green" && meta.tone !== "green" ? meta.tone : tone}">${escapeHtml(meta.label)}</span>`;
+    const icons = { green: "✓", yellow: "○", red: "×" };
+    const resolvedTone = meta.tone || tone;
+    return `<span class="status-dot ${resolvedTone}"><span aria-hidden="true">${icons[resolvedTone] || "•"}</span>${escapeHtml(meta.label)}</span>`;
   }
 
   function escapeHtml(value) {
@@ -142,7 +144,8 @@
       "actie nodig": { label: "Actie nodig", tone: "red" },
       deleted: { label: "Verwijderd", tone: "red" },
       accepted: { label: "Akkoord", tone: "green" },
-      sent: { label: "Verzonden", tone: "yellow" },
+      sent: { label: "Wacht op akkoord", tone: "yellow" },
+      viewed: { label: "Wacht op akkoord", tone: "yellow" },
       draft: { label: "Concept", tone: "yellow" },
       planned: { label: "Gepland", tone: "yellow" },
       scheduled: { label: "Gepland", tone: "yellow" },
@@ -152,6 +155,7 @@
       open: { label: "Open", tone: "yellow" },
       overdue: { label: "Te laat", tone: "red" },
       rejected: { label: "Niet akkoord", tone: "red" },
+      expired: { label: "Verlopen", tone: "red" },
     };
     return statuses[String(status || "").toLowerCase()] || { label: status || "Actief", tone: "green" };
   }
@@ -186,7 +190,7 @@
   }
 
   function customerActions() {
-    return '<div class="table-actions"><a href="#klanten" data-admin-action="manage-customer">Open klant</a><a href="portal-klant.html">Klantweergave</a><a href="#klanten" data-admin-action="edit-customer">Bewerken</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer">Verwijderen</a></div>';
+    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" title="Klantweergave bekijken" aria-label="Klantweergave bekijken">◉</a><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant verwijderen" aria-label="Klant verwijderen">⌫</a></div>';
   }
 
   function customerRow(customer) {
@@ -1942,13 +1946,107 @@
     const links = [...document.querySelectorAll(".portal-nav a[href^='#']")];
     const sections = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
     if (!links.length || !sections.length) return;
-    const activate = (id) => links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${id}`));
-    links.forEach((link) => link.addEventListener("click", () => activate(link.hash.slice(1))));
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) activate(visible.target.id);
-    }, { rootMargin: "-20% 0px -65%", threshold: [0, .2, .5] });
-    sections.forEach((section) => observer.observe(section));
+    const viewCopy = {
+      dashboard: ["Overzicht en open acties.", "De belangrijkste cijfers en vervolgstappen van RoofSignal."],
+      klanten: ["Klanten en objecten.", "Zoek een klant, open het dossier of maak een nieuwe klant aan."],
+      offertes: ["Offertes maken en opvolgen.", "Van concept en verzending tot akkoord en planning."],
+      planning: ["Planning en afspraken.", "Bekijk inspectiedata, objecten en toegewezen inspecteurs."],
+      inspecties: ["Inspecties en rapportage.", "Volg de uitvoering, bevindingen en oplevering per object."],
+      facturen: ["Facturen en betalingen.", "Bekijk betaalstatus, betaallinks en openstaande acties."],
+      support: ["Support en klantvragen.", "Beantwoord vragen en volg interne taken per klantdossier."],
+      rechten: ["Team en rechten.", "Beheer medewerkers, rollen, toegang en agenda-abonnementen."]
+    };
+    const activate = (requestedId, updateHash = false) => {
+      const available = links.find((link) => link.hash === `#${requestedId}` && !link.hidden);
+      const id = (available || links.find((link) => !link.hidden))?.hash.slice(1);
+      if (!id) return;
+      sections.forEach((section) => { section.hidden = section.id !== id; });
+      links.forEach((link) => link.classList.toggle("active", link.hash === `#${id}`));
+      document.body.dataset.adminView = id;
+      const heading = document.querySelector(".portal-topbar h1");
+      const intro = document.querySelector(".portal-topbar h1 + p");
+      if (heading && viewCopy[id]) heading.textContent = viewCopy[id][0];
+      if (intro && viewCopy[id]) intro.textContent = viewCopy[id][1];
+      if (updateHash && window.location.hash !== `#${id}`) history.pushState(null, "", `#${id}`);
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    links.forEach((link) => link.addEventListener("click", (event) => {
+      event.preventDefault();
+      activate(link.hash.slice(1), true);
+    }));
+    window.addEventListener("popstate", () => activate(window.location.hash.slice(1) || "dashboard"));
+    window.addEventListener("hashchange", () => activate(window.location.hash.slice(1) || "dashboard"));
+    window.RoofSignalAdminNavigate = (id) => activate(id, true);
+    activate(window.location.hash.slice(1) || "dashboard");
+  }
+
+  function initializeAdminListTools() {
+    if (!document.body.matches('[data-portal-surface="internal"]')) return;
+    const collections = [
+      ["klanten", "table", "Zoek klant of object"], ["offertes", "table", "Zoek offerte"],
+      ["inspecties", "table", "Zoek inspectie"], ["facturen", "table", "Zoek factuur"],
+      ["rechten", "table", "Zoek teamlid of rol"], ["planning", ".timeline-list", "Zoek afspraak"],
+      ["support", ".admin-support", "Zoek klantvraag"]
+    ];
+    collections.forEach(([id, selector, placeholder]) => {
+      const section = document.getElementById(id);
+      const collection = section?.querySelector(selector);
+      if (!section || !collection || collection.dataset.listToolsReady) return;
+      collection.dataset.listToolsReady = "true";
+      const toolbar = document.createElement("div");
+      toolbar.className = "admin-list-toolbar";
+      toolbar.innerHTML = `<label><span class="sr-only">${placeholder}</span><input type="search" placeholder="${placeholder}" data-list-search></label><label class="admin-page-size"><span>Regels</span><select data-list-size><option>10</option><option>25</option><option>50</option></select></label><span data-list-count></span><div class="admin-list-pages"><button type="button" data-list-prev aria-label="Vorige pagina">‹</button><span data-list-page></span><button type="button" data-list-next aria-label="Volgende pagina">›</button></div>`;
+      collection.before(toolbar);
+      let page = 1;
+      const items = () => selector === "table" ? [...collection.querySelectorAll("tbody tr:not([data-empty-row])")] : [...collection.children].filter((item) => !item.dataset.emptyRow);
+      const update = () => {
+        const query = toolbar.querySelector("[data-list-search]").value.trim().toLowerCase();
+        const size = Number(toolbar.querySelector("[data-list-size]").value);
+        const all = items();
+        const matches = all.filter((item) => !query || item.textContent.toLowerCase().includes(query));
+        const pages = Math.max(1, Math.ceil(matches.length / size));
+        page = Math.min(Math.max(page, 1), pages);
+        all.forEach((item) => { item.hidden = true; });
+        matches.slice((page - 1) * size, page * size).forEach((item) => { item.hidden = false; });
+        toolbar.querySelector("[data-list-count]").textContent = `${matches.length} resultaat${matches.length === 1 ? "" : "en"}`;
+        toolbar.querySelector("[data-list-page]").textContent = `${page} / ${pages}`;
+        toolbar.querySelector("[data-list-prev]").disabled = page <= 1;
+        toolbar.querySelector("[data-list-next]").disabled = page >= pages;
+      };
+      toolbar.addEventListener("input", () => { page = 1; update(); });
+      toolbar.querySelector("[data-list-prev]").addEventListener("click", () => { page -= 1; update(); });
+      toolbar.querySelector("[data-list-next]").addEventListener("click", () => { page += 1; update(); });
+      new MutationObserver(update).observe(selector === "table" ? collection.querySelector("tbody") : collection, { childList: true });
+      update();
+    });
+  }
+
+  function initializeAdminGlobalSearch() {
+    const input = document.querySelector("[data-admin-global-search]");
+    const results = document.querySelector("[data-admin-search-results]");
+    if (!input || !results) return;
+    const moduleNames = { klanten: "Klanten", offertes: "Offertes", planning: "Planning", inspecties: "Inspecties", facturen: "Facturen", support: "Support", rechten: "Team & rechten" };
+    input.addEventListener("input", () => {
+      const query = input.value.trim().toLowerCase();
+      if (query.length < 2) { results.hidden = true; results.innerHTML = ""; return; }
+      const found = [];
+      Object.keys(moduleNames).forEach((id) => {
+        const section = document.getElementById(id);
+        const candidates = section ? [...section.querySelectorAll("tbody tr:not([data-empty-row]), .timeline-list > div:not([data-empty-row]), .admin-support > *:not([data-empty-row])")] : [];
+        candidates.filter((item) => item.textContent.toLowerCase().includes(query)).slice(0, 3).forEach((item) => found.push({ id, text: item.textContent.trim().replace(/\s+/g, " ") }));
+      });
+      results.innerHTML = found.length ? found.slice(0, 10).map((item) => `<button type="button" data-admin-view-target="${item.id}"><strong>${moduleNames[item.id]}</strong><span>${escapeHtml(item.text.slice(0, 110))}</span></button>`).join("") : '<p>Geen resultaten gevonden.</p>';
+      results.hidden = false;
+    });
+    results.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-admin-view-target]");
+      if (!target) return;
+      window.RoofSignalAdminNavigate?.(target.dataset.adminViewTarget);
+      const local = document.getElementById(target.dataset.adminViewTarget)?.querySelector("[data-list-search]");
+      if (local) { local.value = input.value; local.dispatchEvent(new Event("input", { bubbles: true })); }
+      results.hidden = true;
+    });
+    document.addEventListener("click", (event) => { if (!event.target.closest(".admin-global-search")) results.hidden = true; });
   }
 
   function deleteCurrentCustomer() {
@@ -1991,6 +2089,7 @@
       return;
     }
     if (surface === "internal") applyInternalRole(portalAccess.profile.role);
+    if (surface === "internal") window.RoofSignalAdminNavigate?.(window.location.hash.slice(1) || "dashboard");
     document.body.classList.remove("portal-auth-pending");
     loadState();
     loadCurrentCustomer();
@@ -2003,6 +2102,8 @@
 
   bootstrapPortal();
   initializePortalNavigation();
+  initializeAdminListTools();
+  initializeAdminGlobalSearch();
 
   document.addEventListener("click", (event) => {
     const dialogClose = event.target.closest("[data-dialog-close]");
