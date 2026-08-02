@@ -54,10 +54,8 @@ serve(async (req) => {
   });
   const { data: userData } = await userClient.auth.getUser();
   if (!userData.user) return new Response(JSON.stringify({ error: "Niet aangemeld." }), { status: 401, headers: cors });
-  const { data: profile } = await userClient.from("profiles").select("role,email").eq("id", userData.user.id).maybeSingle();
-  const internal = String(profile?.email || userData.user.email || "").endsWith("@roofsignal.nl")
-    || ["support", "planning", "finance", "reportage", "owner_admin"].includes(profile?.role);
-  if (!internal) return new Response(JSON.stringify({ error: "Geen toestemming." }), { status: 403, headers: cors });
+  const { data: internal } = await userClient.rpc("is_internal_user");
+  if (internal !== true) return new Response(JSON.stringify({ error: "Geen toestemming." }), { status: 403, headers: cors });
 
   const service = createClient(url, serviceKey, { auth: { persistSession: false } });
   const body = await req.json().catch(() => ({}));

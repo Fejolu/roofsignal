@@ -223,7 +223,7 @@
   }
 
   function customerActions() {
-    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" title="Klantweergave bekijken" aria-label="Klantweergave bekijken">◉</a><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant verwijderen" aria-label="Klant verwijderen">⌫</a></div>';
+    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" title="Klantweergave bekijken" aria-label="Klantweergave bekijken">◉</a><button type="button" data-admin-action="send-account-mail" title="Accountmail opnieuw versturen" aria-label="Accountmail opnieuw versturen">✉</button><button type="button" data-admin-action="send-password-mail" title="Wachtwoord opnieuw instellen" aria-label="Wachtwoord opnieuw instellen">⌁</button><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant verwijderen" aria-label="Klant verwijderen">⌫</a></div>';
   }
 
   function customerRow(customer) {
@@ -401,7 +401,7 @@
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
-      ? invoices.map((invoice) => { const action = invoice.status === "draft" ? "send-invoice" : ["sent","open","overdue"].includes(invoice.status) ? "pay-invoice" : ""; const label = invoice.status === "draft" ? "Verzenden" : action ? "Betaald registreren" : "-"; const paymentLink = !["paid","credited","cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : ""; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${action ? `<button class="inline-button" data-admin-action="${action}" data-invoice-id="${escapeHtml(invoice.id)}">${label}</button>` : label}${paymentLink}${credit}</div></td></tr>`; }).join("")
+      ? invoices.map((invoice) => { const open = ["sent","open","overdue"].includes(invoice.status); const mailAction = `<button class="inline-button" data-admin-action="send-invoice-mail" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.status === "draft" ? "Versturen" : "Opnieuw versturen"}</button>${open ? `<button class="inline-button" data-admin-action="send-invoice-reminder" data-invoice-id="${escapeHtml(invoice.id)}">Herinnering versturen</button><button class="inline-button" data-admin-action="pay-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Betaald registreren</button>` : ""}`; const paymentLink = !["paid","credited","cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : ""; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${mailAction}${paymentLink}${credit}</div></td></tr>`; }).join("")
       : '<tr data-empty-row><td colspan="4">Geen facturen.</td></tr>';
   }
 
@@ -412,6 +412,25 @@
     if (!result.ok) return setPortalNotice(result.error?.message || "Factuur bijwerken is mislukt.", "error");
     await window.RoofSignalBackend.createInvoiceEvent({ invoice_id: id, organization_id: invoice.organization_id, event_type: status === "sent" ? "sent" : "payment", amount: invoice.amount });
     setPortalNotice(status === "sent" ? "Factuur is als verzonden geregistreerd." : "Betaling is geregistreerd.", "success"); await loadLiveAdminData();
+  }
+
+  async function resendAppointment(id) {
+    const result = await window.RoofSignalBackend.sendAppointmentEmail(id);
+    setPortalNotice(result.ok ? "De afspraakbevestiging is opnieuw verstuurd." : result.error?.message || "De afspraakbevestiging kon niet worden verstuurd.", result.ok ? "success" : "error");
+  }
+
+  async function sendInvoiceMail(id, reminder = false) {
+    const result = await window.RoofSignalBackend.sendDocumentEmail("invoice", id, { reminder });
+    setPortalNotice(result.ok ? (reminder ? "De betalingsherinnering is verstuurd." : "De factuurmail is verstuurd.") : result.error?.message || "De factuurmail kon niet worden verstuurd.", result.ok ? "success" : "error");
+    if (result.ok) await loadLiveAdminData();
+  }
+
+  async function sendCustomerAccessMail(row, action) {
+    const customer = liveOrganizations.find((item) => item.id === row?.dataset.customerId);
+    if (!customer?.contact_email) return setPortalNotice("Deze klant heeft geen contact-e-mailadres.", "error");
+    const result = await window.RoofSignalBackend.sendPortalAccessEmail(customer.contact_email, action);
+    const label = action === "password_reset" ? "Wachtwoordmail" : "Accountmail";
+    setPortalNotice(result.ok ? `${label} is verstuurd naar ${customer.contact_email}.` : result.error?.message || `${label} kon niet worden verstuurd.`, result.ok ? "success" : "error");
   }
 
   async function setInvoicePaymentLink(id) {
@@ -459,7 +478,7 @@
     renderResourceCalendar(appointments);
     if (!planningList) return;
     planningList.innerHTML = appointments.length
-      ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p></div>`).join("")
+      ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p><button class="inline-button" type="button" data-admin-action="resend-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Bevestiging opnieuw versturen</button></div>`).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
   }
 
@@ -679,17 +698,19 @@
     const activity = prompt("Laatste activiteit", cells[3].textContent.trim());
     if (!activity) return;
 
-    cells[0].textContent = name;
-    cells[1].textContent = segment;
-    cells[3].textContent = activity;
-    row.dataset.customerKey = customerKey(name);
     if (window.RoofSignalBackend?.isConfigured && row.dataset.customerId) {
-      await window.RoofSignalBackend.updateOrganization(row.dataset.customerId, {
+      const result = await window.RoofSignalBackend.updateOrganization(row.dataset.customerId, {
         name,
         segment,
         notes: activity,
       });
+      if (!result.ok) return setPortalNotice(result.error?.message || "Klant opslaan is mislukt.", "error");
     }
+    cells[0].textContent = name;
+    cells[1].textContent = segment;
+    cells[3].textContent = activity;
+    row.dataset.customerKey = customerKey(name);
+    setPortalNotice("Klantgegevens zijn opgeslagen.", "success");
     syncCustomerOwnedData();
     saveState();
   }
@@ -2061,14 +2082,9 @@
   }
 
   function renderPortalNotifications(databaseNotifications = []) {
-    const state = customerPortalState || {}; const generated = [];
-    (state.quotes || []).filter((q) => ["sent","viewed","open"].includes(q.status)).forEach((q) => generated.push({ id:`quote-${q.id}`,title:"Offerte klaar voor goedkeuring",body:q.title,link:"#offertes",kind:"action",read_by:[] }));
-    (state.invoices || []).filter((i) => !["paid","credited","cancelled","draft"].includes(i.status)).forEach((i) => generated.push({ id:`invoice-${i.id}`,title:"Openstaande factuur",body:i.invoice_number || "Factuur",link:"#financieel",kind:"action",read_by:[] }));
-    (state.appointments || []).filter((a) => new Date(a.starts_at) >= new Date() && !a.customer_response).forEach((a) => generated.push({ id:`appointment-${a.id}`,title:"Afspraak wacht op uw reactie",body:a.title,link:"#planning",kind:"action",read_by:[] }));
-    const localRead = new Set(JSON.parse(localStorage.getItem("roofsignal-read-notifications") || "[]"));
-    const userId = portalAccess?.profile?.id; const items = [...databaseNotifications, ...generated].map((item) => ({ ...item, locallyRead: localRead.has(item.id) })); const list = document.querySelector(".portal-notification-list"); const count = document.querySelector("[data-notification-count]");
-    const unread = items.filter((item) => !item.locallyRead && !item.read_by?.includes(userId)); if (count) { count.textContent = unread.length; count.hidden = !unread.length; }
-    if (list) list.innerHTML = items.length ? items.map((item) => `<article class="portal-notification ${item.locallyRead || item.read_by?.includes(userId) ? "" : "unread"}"><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body || "")}</p></div><a class="inline-button" href="${escapeHtml(item.link || "#dashboard")}" data-notification-id="${escapeHtml(item.id)}">Bekijken</a></article>`).join("") : emptyState("Geen nieuwe meldingen.");
+    const userId = portalAccess?.profile?.id; const items = databaseNotifications; const list = document.querySelector(".portal-notification-list"); const count = document.querySelector("[data-notification-count]");
+    const unread = items.filter((item) => !item.read_by?.includes(userId)); if (count) { count.textContent = unread.length; count.hidden = !unread.length; }
+    if (list) list.innerHTML = items.length ? items.map((item) => `<article class="portal-notification ${item.read_by?.includes(userId) ? "" : "unread"}"><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body || "")}</p></div><a class="inline-button" href="${escapeHtml(item.link || "#dashboard")}" data-notification-id="${escapeHtml(item.id)}">Bekijken</a></article>`).join("") : emptyState("Geen nieuwe meldingen.");
   }
 
   async function loadCustomerPortalData() {
@@ -2422,13 +2438,13 @@
       if (portalAction === "delete-customer-object") return deleteCustomerObject(portalTarget.dataset.propertyId);
       if (portalAction === "accept-customer-quote") return acceptCustomerQuote(portalTarget.dataset.quoteId);
       if (portalAction === "appointment-response") return respondToCustomerAppointment(portalTarget.dataset.appointmentId, portalTarget.dataset.response);
-      if (portalAction === "mark-all-notifications-read") { const ids = [...document.querySelectorAll("[data-notification-id]")].map((item) => item.dataset.notificationId); localStorage.setItem("roofsignal-read-notifications", JSON.stringify(ids)); document.querySelectorAll(".portal-notification").forEach((item) => item.classList.remove("unread")); const count = document.querySelector("[data-notification-count]"); if (count) count.hidden = true; return; }
+      if (portalAction === "mark-all-notifications-read") { window.RoofSignalBackend.markAllPortalNotificationsRead().then((result) => { if (!result.ok) return setPortalNotice(result.error?.message || "Meldingen bijwerken is mislukt.", "error"); loadCustomerPortalData(); }); return; }
       handlePortalAction(portalAction);
       return;
     }
 
     const notificationLink = event.target.closest("[data-notification-id]");
-    if (notificationLink) { const id = notificationLink.dataset.notificationId; const read = new Set(JSON.parse(localStorage.getItem("roofsignal-read-notifications") || "[]")); read.add(id); localStorage.setItem("roofsignal-read-notifications", JSON.stringify([...read])); if (!/^(quote|invoice|appointment)-/.test(id)) window.RoofSignalBackend.markPortalNotificationRead(id); }
+    if (notificationLink) window.RoofSignalBackend.markPortalNotificationRead(notificationLink.dataset.notificationId);
 
     const target = event.target.closest("[data-admin-action]");
     if (!target) return;
@@ -2441,6 +2457,8 @@
     if (action === "create-offer") createOffer();
     if (action === "create-support-task") createSupportTask();
     if (action === "manage-customer") openCustomer(rowFor(target));
+    if (action === "send-account-mail") sendCustomerAccessMail(rowFor(target), "magiclink");
+    if (action === "send-password-mail") sendCustomerAccessMail(rowFor(target), "password_reset");
     if (action === "customer-objects") openCustomerWorkflow("objects");
     if (action === "customer-inspection") openCustomerWorkflow("inspection");
     if (action === "customer-quote") openCustomerWorkflow("quote");
@@ -2452,6 +2470,7 @@
     if (action === "edit-sent-quote") editSentQuote(target.dataset.quoteId);
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
     if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
+    if (action === "resend-appointment") resendAppointment(target.dataset.appointmentId);
     if (action === "copy-calendar-feed") copyCalendarFeed();
     if (action === "open-employee") openEmployeeDossier(target.dataset.profileId);
     if (action === "open-employee-document") window.RoofSignalBackend.openEmployeeDocument(target.dataset.storagePath).then((result) => { if (result.ok) window.open(result.data.signedUrl, "_blank", "noopener"); else setPortalNotice(result.error?.message || "Document openen is mislukt.", "error"); });
@@ -2459,7 +2478,8 @@
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
     if (action === "activate-upgrade") activateUpgrade(target);
     if (action === "finding-to-maintenance") findingToMaintenance(target);
-    if (action === "send-invoice") changeInvoiceStatus(target.dataset.invoiceId, "sent");
+    if (action === "send-invoice-mail") sendInvoiceMail(target.dataset.invoiceId, false);
+    if (action === "send-invoice-reminder") sendInvoiceMail(target.dataset.invoiceId, true);
     if (action === "pay-invoice") changeInvoiceStatus(target.dataset.invoiceId, "paid");
     if (action === "set-payment-link") setInvoicePaymentLink(target.dataset.invoiceId);
     if (action === "credit-invoice") creditInvoice(target.dataset.invoiceId);

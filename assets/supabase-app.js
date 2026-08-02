@@ -314,6 +314,12 @@
     return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
   }
 
+  async function sendDocumentEmail(kind, id, options = {}) {
+    const supabase = await getClient(); if (!supabase || !kind || !id) return { ok: false };
+    const { data, error } = await supabase.functions.invoke("send-document-email", { body: { kind, id, ...options } });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
+  }
+
   async function createStaffCalendarFeed(profileId) {
     const supabase = await getClient(); if (!supabase || !profileId) return { ok: false };
     const { data, error } = await supabase.functions.invoke("staff-calendar", { body: { profileId } });
@@ -637,6 +643,18 @@
     return error ? { ok: false, error } : { ok: true };
   }
 
+  async function markAllPortalNotificationsRead() {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.rpc("customer_mark_all_notifications_read");
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function sendPortalAccessEmail(email, action = "magiclink") {
+    const supabase = await getClient(); if (!supabase || !email) return { ok: false };
+    const { data, error } = await supabase.functions.invoke("send-portal-login-link", { body: { email, action } });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
+  }
+
   async function listOrganizationProperties(organizationId) {
     const supabase = await getClient();
     if (!supabase || !organizationId) return [];
@@ -781,14 +799,8 @@
     const supabase = await getClient(); if (!supabase || !profileId) return { ok: false };
     const normalized = [...new Set((roles || []).filter((role) => role && role !== "customer"))];
     if (!normalized.length) return { ok: false, error: new Error("Selecteer minimaal één backoffice-rol.") };
-    const upserted = await supabase.from("profile_roles").upsert(normalized.map((role) => ({ profile_id: profileId, role })), { onConflict: "profile_id,role" });
-    if (upserted.error) return { ok: false, error: upserted.error };
-    const current = await supabase.from("profile_roles").select("role").eq("profile_id", profileId);
-    if (current.error) return { ok: false, error: current.error };
-    const obsolete = (current.data || []).map((item) => item.role).filter((role) => !normalized.includes(role));
-    if (!obsolete.length) return { ok: true };
-    const removed = await supabase.from("profile_roles").delete().eq("profile_id", profileId).in("role", obsolete);
-    return removed.error ? { ok: false, error: removed.error } : { ok: true };
+    const { error } = await supabase.rpc("set_profile_roles", { p_profile_id: profileId, p_roles: normalized });
+    return error ? { ok: false, error } : { ok: true };
   }
 
   async function listRoleDefinitions() {
@@ -890,6 +902,7 @@
     updateQuoteItem,
     createAppointment,
     sendAppointmentEmail,
+    sendDocumentEmail,
     createStaffCalendarFeed,
     createInvoice,
     updateInvoice,
@@ -931,6 +944,8 @@
     createRequestMessage,
     listPortalNotifications,
     markPortalNotificationRead,
+    markAllPortalNotificationsRead,
+    sendPortalAccessEmail,
     listOrganizationProperties,
     listOrganizationReports,
     listOrganizationInvoices,
