@@ -28,7 +28,7 @@ serve(async (req) => {
   const { data: userData } = await userClient.auth.getUser();
   if (!userData.user) return new Response(JSON.stringify({ error: "Niet aangemeld." }), { status: 401, headers: jsonHeaders });
   const { data: caller } = await userClient.from("profiles").select("role,email").eq("id", userData.user.id).maybeSingle();
-  const internal = String(caller?.email || userData.user.email || "").endsWith("@roofsignal.nl") || ["planning", "owner_admin"].includes(caller?.role);
+  const internal = String(caller?.email || userData.user.email || "").endsWith("@roofsignal.nl") || ["planning", "hr", "owner_admin"].includes(caller?.role);
   if (!internal) return new Response(JSON.stringify({ error: "Geen toestemming." }), { status: 403, headers: jsonHeaders });
   const body = await req.json().catch(() => ({}));
   const profileId = String(body.profileId || "");

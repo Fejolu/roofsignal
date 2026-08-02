@@ -159,7 +159,7 @@
 
   function isInternalProfile(profile, email = "") {
     return String(email || profile?.email || "").toLowerCase().endsWith("@roofsignal.nl")
-      || ["support", "planning", "finance", "reportage", "owner_admin"].includes(profile?.role);
+      || ["support", "planning", "finance", "reportage", "hr", "owner_admin"].includes(profile?.role);
   }
 
   async function requirePortalAccess(surface) {

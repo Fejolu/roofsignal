@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal31">
+  <link rel="stylesheet" href="assets/styles.css?v=portal32">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
@@ -32,7 +32,7 @@
     <a href="#inspecties"><span aria-hidden="true">⌕</span>Inspecties</a>
     <a href="#facturen"><span aria-hidden="true">€</span>Facturen</a>
     <a href="#support"><span aria-hidden="true">?</span>Support</a>
-    <a class="portal-nav-secondary" href="#rechten"><span aria-hidden="true">⚙</span>Team &amp; rechten</a>
+    <a class="portal-nav-secondary" href="#rechten"><span aria-hidden="true">♙</span>Medewerkers &amp; HR</a>
   </nav>
   <div class="portal-account">
     <span>Beheerder</span>
@@ -74,7 +74,7 @@
 
   <section class="portal-panel" id="rechten">
     <div class="panel-head">
-      <div><span class="eyebrow orange">Medewerkers</span><h2>HR, rollen en rechten</h2></div><a href="#rechten" data-admin-action="focus-role-builder">＋ Nieuw teamlid</a>
+      <div><span class="eyebrow orange">Medewerkers</span><h2>HR, rollen en rechten</h2></div><a href="#rechten" data-role-administration data-admin-action="focus-role-builder">＋ Nieuw teamlid</a>
     </div>
     <div class="hr-metrics" data-hr-metrics>
       <article><span>Medewerkers</span><strong>0</strong><small>Actief in dienst</small></article>
@@ -82,15 +82,15 @@
       <article><span>Verzuim dit jaar</span><strong>0%</strong><small>Gehele populatie</small></article>
       <article><span>Open verlof</span><strong>0</strong><small>Aanvragen</small></article>
     </div>
-    <div class="support-grid admin-support">
+    <div class="support-grid admin-support" data-role-administration>
       <div><strong>Owner admin</strong><span>Alle modules: klanten, rollen, offertes, facturen, planning, support en instellingen.</span></div>
       <div><strong>Support</strong><span>Klantvragen, dossiernotities, meekijken, rapportstatus en agenda-inzage.</span></div>
       <div><strong>Planning</strong><span>Inspecties plannen, agenda's beheren, toegang en opnamevoorbereiding vastleggen.</span></div>
       <div><strong>Finance</strong><span>Facturen, offertes, betaalstatus, herinneringen en omzetoverzicht.</span></div>
     </div>
-    <div class="role-builder">
+    <div class="role-builder" data-role-administration>
       <label>E-mailadres<input placeholder="naam@roofsignal.nl" aria-label="E-mailadres teamlid"></label>
-      <label>Rol<select aria-label="Rol teamlid"><option>Owner admin</option><option selected>Support</option><option>Planning</option><option>Finance</option><option>Rapportage</option></select></label>
+      <label>Rol<select aria-label="Rol teamlid"><option>Owner admin</option><option selected>Support</option><option>Planning</option><option>Finance</option><option>Rapportage</option><option>HR</option></select></label>
       <button class="btn" type="button" data-admin-action="assign-role">Rol toewijzen</button>
     </div>
     <table class="portal-table compact role-table">
@@ -271,7 +271,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=18" defer></script>
-<script src="assets/portal-admin.js?v=29" defer></script>
+<script src="assets/supabase-app.js?v=19" defer></script>
+<script src="assets/portal-admin.js?v=30" defer></script>
 </body>
 </html>

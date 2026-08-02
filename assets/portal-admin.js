@@ -6,6 +6,7 @@
     Planning: "Agenda, inspecties, toegang",
     Finance: "Facturen, offertes, betaalstatus",
     Rapportage: "Rapporten, objectdata, exports",
+    HR: "Medewerkersdossiers, contracten, verlof en verzuim",
   };
   const roleLabels = {
     owner_admin: "Owner admin",
@@ -13,6 +14,7 @@
     planning: "Planning",
     finance: "Finance",
     rapportage: "Rapportage",
+    hr: "HR",
     customer: "Klant",
   };
   const inspectionDepths = {
@@ -135,6 +137,31 @@
       .replace(/'/g, "&#39;");
   }
 
+  const adminActionMeta = {
+    "staff-calendar-feed": ["Agenda-abonnement", "calendar"], "open-employee": ["Medewerkersdossier openen", "folder"],
+    "edit-role": ["Rol bewerken", "edit"], "remove-role": ["Teamlid verwijderen", "trash"],
+    "manage-customer": ["Klantdossier openen", "folder"], "edit-customer": ["Klant bewerken", "edit"], "delete-customer": ["Klant verwijderen", "trash"],
+    "open-inspection": ["Inspectie openen", "search"], "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
+    "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
+    "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
+    "pay-invoice": ["Betaling registreren", "check"], "set-payment-link": ["Betaallink beheren", "link"], "credit-invoice": ["Factuur crediteren", "credit"],
+  };
+  const adminIcons = {
+    calendar: '<path d="M5 3v3M13 3v3M3 8h12M4 5h10a1 1 0 0 1 1 1v9H3V6a1 1 0 0 1 1-1Z"/>', folder: '<path d="M2.5 5.5h5l1.5 2h6.5v7h-13Z"/>',
+    edit: '<path d="m4 14 1-4 7.5-7.5 3 3L8 13Z"/><path d="m11.5 3.5 3 3"/>', trash: '<path d="M3 5h12M7 5V3h4v2M5 5l1 10h6l1-10M8 8v4M11 8v4"/>',
+    search: '<circle cx="7.5" cy="7.5" r="4.5"/><path d="m11 11 4 4"/>', send: '<path d="m2 8 14-6-5 14-2.5-5.5ZM8.5 10.5 16 2"/>',
+    sync: '<path d="M14 6a6 6 0 0 0-10-2L2 6M2 2v4h4M4 12a6 6 0 0 0 10 2l2-2M16 16v-4h-4"/>', check: '<path d="m3 9 3 3 8-8"/>',
+    invoice: '<path d="M4 2h9v14l-2-1-2 1-2-1-3 1Z"/><path d="M6 6h5M6 9h5M6 12h3"/>', link: '<path d="M7 11 5.5 12.5a3 3 0 0 1-4-4L4 6M11 7l1.5-1.5a3 3 0 0 1 4 4L14 12M6 9h6"/>',
+    credit: '<path d="M3 5h12v9H3Z"/><path d="M3 8h12M6 11h3"/>',
+  };
+  function iconizeAdminActions(root = document) {
+    root.querySelectorAll(".portal-table [data-admin-action]").forEach((control) => {
+      const meta = adminActionMeta[control.dataset.adminAction]; if (!meta || control.classList.contains("admin-icon-action")) return;
+      control.classList.add("admin-icon-action"); control.title = meta[0]; control.setAttribute("aria-label", meta[0]);
+      control.innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true">${adminIcons[meta[1]] || adminIcons.folder}</svg>`;
+    });
+  }
+
   function statusMeta(status) {
     const statuses = {
       active: { label: "Actief", tone: "green" },
@@ -242,8 +269,9 @@
       const activeLeave = liveHrData.leave.find((item) => item.profile_id === profile.id && item.status === "approved" && item.starts_on <= today && item.ends_on >= today);
       const activeAbsence = liveHrData.absence.find((item) => item.profile_id === profile.id && item.status !== "recovered" && item.starts_on <= today && (!item.ends_on || item.ends_on >= today));
       const availability = activeAbsence ? `${Number(activeAbsence.absence_percentage || 100)}% ziek` : activeLeave ? "Met verlof" : "Beschikbaar";
-      const calendarAction = profile.role !== "customer" ? `<a href="#rechten" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</a>` : "";
-      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td><strong>${escapeHtml(profile.full_name || [employee.first_name,employee.last_name].filter(Boolean).join(" ") || profile.email)}</strong><small>${escapeHtml(profile.email)}</small></td><td>${escapeHtml(employee.job_title || role)}</td><td>${escapeHtml(availability)}</td><td>${statusCell(employee.status === "left" ? "Uit dienst" : "Actief", employee.status === "left" ? "yellow" : "green")}</td><td><div class="table-actions">${calendarAction}<button class="inline-button" data-admin-action="open-employee" data-profile-id="${escapeHtml(profile.id)}">Dossier</button><a href="#rechten" data-admin-action="edit-role">Rol bewerken</a></div></td></tr>`;
+      const calendarAction = `<button type="button" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</button>`;
+      const roleAction = portalAccess?.profile?.role === "owner_admin" ? '<button type="button" data-admin-action="edit-role">Rol bewerken</button>' : "";
+      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td><strong>${escapeHtml(profile.full_name || [employee.first_name,employee.last_name].filter(Boolean).join(" ") || profile.email)}</strong><small>${escapeHtml(profile.email)}</small></td><td>${escapeHtml(employee.job_title || role)}</td><td>${escapeHtml(availability)}</td><td>${statusCell(employee.status === "left" ? "Uit dienst" : "Actief", employee.status === "left" ? "yellow" : "green")}</td><td><div class="table-actions">${calendarAction}<button type="button" data-admin-action="open-employee" data-profile-id="${escapeHtml(profile.id)}">Dossier</button>${roleAction}</div></td></tr>`;
     }).join("");
     renderHrMetrics(teamProfiles);
   }
@@ -631,6 +659,7 @@
     populateInspectionOrganizations(customers);
     populateWorkflowOrganizations(customers);
     syncCustomerOwnedData();
+    iconizeAdminActions();
   }
 
   async function loadInspectionObjects(organizationId) {
@@ -1367,8 +1396,18 @@
   async function createCalendarFeed(profileId) {
     const result = await window.RoofSignalBackend.createStaffCalendarFeed(profileId);
     if (!result.ok) return setPortalNotice(result.error?.message || "Agenda-abonnement aanmaken is mislukt.", "error");
-    await navigator.clipboard.writeText(result.data.webcalUrl || result.data.feedUrl);
-    setPortalNotice("Persoonlijke agenda-abonnementslink is gekopieerd. Een nieuwe link vervangt een eerdere link.", "success");
+    const url = result.data.webcalUrl || result.data.feedUrl;
+    let dialog = document.querySelector("[data-calendar-feed-dialog]");
+    if (!dialog) { dialog = document.createElement("dialog"); dialog.className = "portal-dialog"; dialog.dataset.calendarFeedDialog = "true"; document.body.append(dialog); }
+    dialog.innerHTML = `<div class="portal-dialog-card admin-record-card"><div class="panel-head"><div><span class="eyebrow orange">Persoonlijke agenda</span><h2>Agenda-abonnement</h2></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div><p>Open de link om de RoofSignal-planning als abonnement aan Apple Agenda, Outlook of een andere agenda toe te voegen.</p><label>Abonnementslink<input type="text" readonly value="${escapeHtml(url)}" data-calendar-feed-url></label><div class="dialog-actions"><a class="btn" href="${escapeHtml(url)}">Open agenda-abonnement</a><button class="btn ghost-dark" type="button" data-admin-action="copy-calendar-feed">Link kopiëren</button><button class="btn ghost-dark" type="button" data-dialog-close>Sluiten</button></div></div>`;
+    dialog.showModal();
+    setPortalNotice("Het persoonlijke agenda-abonnement staat klaar.", "success");
+  }
+
+  async function copyCalendarFeed() {
+    const input = document.querySelector("[data-calendar-feed-url]"); if (!input) return;
+    try { await navigator.clipboard.writeText(input.value); setPortalNotice("Agenda-abonnementslink is gekopieerd.", "success"); }
+    catch (_error) { input.focus(); input.select(); setPortalNotice("De link is geselecteerd. Kopieer met Cmd+C of Ctrl+C.", "info"); }
   }
 
   async function invoiceQuote(id) {
@@ -1670,6 +1709,7 @@
       if (!result.ok) alert("Deze gebruiker bestaat nog niet in Supabase Auth. Maak eerst het account aan of laat de gebruiker inloggen.");
     }
     if (!existing) rolesBody.append(row);
+    iconizeAdminActions(rolesBody);
     saveState();
   }
 
@@ -2231,7 +2271,7 @@
     const input = document.querySelector("[data-admin-global-search]");
     const results = document.querySelector("[data-admin-search-results]");
     if (!input || !results) return;
-    const moduleNames = { klanten: "Klanten", offertes: "Offertes", planning: "Planning", inspecties: "Inspecties", facturen: "Facturen", support: "Support", rechten: "Team & rechten" };
+    const moduleNames = { klanten: "Klanten", offertes: "Offertes", planning: "Planning", inspecties: "Inspecties", facturen: "Facturen", support: "Support", rechten: "Medewerkers & HR" };
     input.addEventListener("input", () => {
       const query = input.value.trim().toLowerCase();
       if (query.length < 2) { results.hidden = true; results.innerHTML = ""; return; }
@@ -2304,11 +2344,13 @@
     if (!document.body.matches('[data-portal-surface="internal"]')) return;
     const allowed = {
       owner_admin: ["dashboard", "klanten", "inspecties", "planning", "facturen", "offertes", "support", "rechten"],
+      hr: ["rechten"],
       support: ["dashboard", "klanten", "inspecties", "support"],
       planning: ["dashboard", "klanten", "inspecties", "planning"],
       finance: ["dashboard", "klanten", "facturen", "offertes"],
       reportage: ["dashboard", "klanten", "inspecties"],
     }[role] || [];
+    document.querySelectorAll("[data-role-administration]").forEach((element) => { element.hidden = role !== "owner_admin"; });
     ["dashboard", "klanten", "inspecties", "planning", "facturen", "offertes", "support", "rechten"].forEach((id) => {
       const visible = allowed.includes(id);
       const section = document.getElementById(id);
@@ -2430,6 +2472,7 @@
     if (action === "edit-sent-quote") editSentQuote(target.dataset.quoteId);
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
     if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
+    if (action === "copy-calendar-feed") copyCalendarFeed();
     if (action === "open-employee") openEmployeeDossier(target.dataset.profileId);
     if (action === "open-employee-document") window.RoofSignalBackend.openEmployeeDocument(target.dataset.storagePath).then((result) => { if (result.ok) window.open(result.data.signedUrl, "_blank", "noopener"); else setPortalNotice(result.error?.message || "Document openen is mislukt.", "error"); });
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
