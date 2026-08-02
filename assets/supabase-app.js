@@ -785,6 +785,50 @@
     return error ? { ok: false, error } : { ok: true };
   }
 
+  async function listEmployeeHrData() {
+    const supabase = await getClient(); if (!supabase) return { records: [], leave: [], absence: [], documents: [] };
+    const [records, leave, absence, documents] = await Promise.all([
+      supabase.from("employee_records").select("*").order("last_name"),
+      supabase.from("employee_leave").select("*").order("starts_on", { ascending: false }),
+      supabase.from("employee_absence").select("*").order("starts_on", { ascending: false }),
+      supabase.from("employee_documents").select("*").order("created_at", { ascending: false }),
+    ]);
+    return { records: records.data || [], leave: leave.data || [], absence: absence.data || [], documents: documents.data || [] };
+  }
+
+  async function saveEmployeeRecord(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("employee_records").upsert(payload, { onConflict: "profile_id" }).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createEmployeeLeave(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("employee_leave").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function createEmployeeAbsence(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.from("employee_absence").insert(payload).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function uploadEmployeeDocument(file, payload) {
+    const supabase = await getClient(); if (!supabase || !file) return { ok: false };
+    const path = `${payload.profile_id}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+    const { error: uploadError } = await supabase.storage.from("hr-documents").upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) return { ok: false, error: uploadError };
+    const { data, error } = await supabase.from("employee_documents").insert({ ...payload, storage_path: path }).select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
+  async function openEmployeeDocument(path) {
+    const supabase = await getClient(); if (!supabase || !path) return { ok: false };
+    const { data, error } = await supabase.storage.from("hr-documents").createSignedUrl(path, 300);
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   async function signOut() {
     const supabase = await getClient();
     if (!supabase) return;
@@ -872,5 +916,11 @@
     deleteOrganization,
     listProfiles,
     updateProfileRole,
+    listEmployeeHrData,
+    saveEmployeeRecord,
+    createEmployeeLeave,
+    createEmployeeAbsence,
+    uploadEmployeeDocument,
+    openEmployeeDocument,
   };
 })();

@@ -107,6 +107,7 @@
   let liveTasks = [];
   let liveReports = [];
   let liveUpgradeRequests = [];
+  let liveHrData = { records: [], leave: [], absence: [], documents: [] };
   let portalAccess = null;
   let customerPortalState = null;
   let resourceCalendarWeekOffset = 0;
@@ -236,9 +237,40 @@
     }
     rolesBody.innerHTML = teamProfiles.map((profile) => {
       const role = roleLabels[profile.role] || profile.role;
+      const employee = liveHrData.records.find((item) => item.profile_id === profile.id) || {};
+      const today = new Date().toISOString().slice(0, 10);
+      const activeLeave = liveHrData.leave.find((item) => item.profile_id === profile.id && item.status === "approved" && item.starts_on <= today && item.ends_on >= today);
+      const activeAbsence = liveHrData.absence.find((item) => item.profile_id === profile.id && item.status !== "recovered" && item.starts_on <= today && (!item.ends_on || item.ends_on >= today));
+      const availability = activeAbsence ? `${Number(activeAbsence.absence_percentage || 100)}% ziek` : activeLeave ? "Met verlof" : "Beschikbaar";
       const calendarAction = profile.role !== "customer" ? `<a href="#rechten" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</a>` : "";
-      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions">${calendarAction}<a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
+      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td><strong>${escapeHtml(profile.full_name || [employee.first_name,employee.last_name].filter(Boolean).join(" ") || profile.email)}</strong><small>${escapeHtml(profile.email)}</small></td><td>${escapeHtml(employee.job_title || role)}</td><td>${escapeHtml(availability)}</td><td>${statusCell(employee.status === "left" ? "Uit dienst" : "Actief", employee.status === "left" ? "yellow" : "green")}</td><td><div class="table-actions">${calendarAction}<button class="inline-button" data-admin-action="open-employee" data-profile-id="${escapeHtml(profile.id)}">Dossier</button><a href="#rechten" data-admin-action="edit-role">Rol bewerken</a></div></td></tr>`;
     }).join("");
+    renderHrMetrics(teamProfiles);
+  }
+
+  function dateRangeDays(start, end = new Date().toISOString().slice(0, 10)) {
+    const from = new Date(`${start}T12:00:00`); const until = new Date(`${end}T12:00:00`); let days = 0;
+    for (const day = new Date(from); day <= until; day.setDate(day.getDate() + 1)) if (![0, 6].includes(day.getDay())) days += 1;
+    return Math.max(0, days);
+  }
+
+  function employeeAbsenceRate(profileId) {
+    const year = new Date().getFullYear(); const start = `${year}-01-01`; const today = new Date().toISOString().slice(0, 10);
+    const lost = liveHrData.absence.filter((item) => item.profile_id === profileId && item.starts_on <= today && (!item.ends_on || item.ends_on >= start)).reduce((sum, item) => sum + dateRangeDays(item.starts_on < start ? start : item.starts_on, item.ends_on && item.ends_on < today ? item.ends_on : today) * Number(item.absence_percentage || 100) / 100, 0);
+    return dateRangeDays(start, today) ? (lost / dateRangeDays(start, today)) * 100 : 0;
+  }
+
+  function renderHrMetrics(profiles) {
+    const cards = document.querySelectorAll("[data-hr-metrics] article"); if (!cards.length) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const absentIds = new Set([
+      ...liveHrData.leave.filter((item) => item.status === "approved" && item.starts_on <= today && item.ends_on >= today).map((item) => item.profile_id),
+      ...liveHrData.absence.filter((item) => item.status !== "recovered" && item.starts_on <= today && (!item.ends_on || item.ends_on >= today)).map((item) => item.profile_id),
+    ]);
+    const active = profiles.filter((profile) => (liveHrData.records.find((item) => item.profile_id === profile.id)?.status || "active") !== "left");
+    const rate = active.length ? active.reduce((sum, profile) => sum + employeeAbsenceRate(profile.id), 0) / active.length : 0;
+    const values = [active.length, absentIds.size, `${rate.toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%`, liveHrData.leave.filter((item) => item.status === "requested").length];
+    cards.forEach((card, index) => { const value = card.querySelector("strong"); if (value) value.textContent = String(values[index]); });
   }
 
   function reportPipelineStage(status) {
@@ -470,10 +502,74 @@
     }
   }
 
+  function hrInput(label, name, value = "", type = "text", extra = "") {
+    return `<label>${escapeHtml(label)}<input name="${escapeHtml(name)}" type="${escapeHtml(type)}" value="${escapeHtml(value || "")}" ${extra}></label>`;
+  }
+
+  async function openEmployeeDossier(profileId) {
+    const profile = liveProfiles.find((item) => item.id === profileId); if (!profile) return;
+    const employee = liveHrData.records.find((item) => item.profile_id === profileId) || {};
+    const leave = liveHrData.leave.filter((item) => item.profile_id === profileId);
+    const absence = liveHrData.absence.filter((item) => item.profile_id === profileId);
+    const documents = liveHrData.documents.filter((item) => item.profile_id === profileId);
+    let dialog = document.querySelector("[data-employee-dialog]");
+    if (!dialog) { dialog = document.createElement("dialog"); dialog.className = "portal-dialog employee-dialog"; dialog.dataset.employeeDialog = "true"; document.body.append(dialog); }
+    const leaveUsed = leave.filter((item) => item.status === "approved" && item.leave_type === "holiday").reduce((sum, item) => sum + Number(item.hours || 0), 0);
+    const leaveBalance = Number(employee.annual_leave_hours || 0) - leaveUsed;
+    dialog.innerHTML = `<div class="portal-dialog-card employee-record-card">
+      <div class="panel-head"><div><span class="eyebrow orange">Medewerkersdossier</span><h2>${escapeHtml(profile.full_name || profile.email)}</h2><p>${escapeHtml(employee.job_title || roleLabels[profile.role] || profile.role)} · verzuim ${employeeAbsenceRate(profileId).toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%</p></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div>
+      <div class="employee-dossier-tabs"><a href="#employee-personal">Persoonlijk</a><a href="#employee-employment">Dienstverband</a><a href="#employee-contracts">Contracten</a><a href="#employee-leave">Verlof</a><a href="#employee-absence">Verzuim</a></div>
+      <form class="employee-form" data-employee-form data-profile-id="${escapeHtml(profileId)}">
+        <section id="employee-personal"><h3>Persoonsgegevens</h3><div class="employee-form-grid">${hrInput("Voornaam","first_name",employee.first_name)}${hrInput("Initialen","initials",employee.initials)}${hrInput("Achternaam","last_name",employee.last_name)}${hrInput("Geboortedatum","birth_date",employee.birth_date,"date")}${hrInput("Straat","street",employee.street)}${hrInput("Huisnummer","house_number",employee.house_number)}${hrInput("Postcode","postcode",employee.postcode)}${hrInput("Plaats","city",employee.city)}${hrInput("Privé e-mail","private_email",employee.private_email,"email")}${hrInput("Telefoon","phone",employee.phone,"tel")}${hrInput("Noodcontact","emergency_contact_name",employee.emergency_contact_name)}${hrInput("Telefoon noodcontact","emergency_contact_phone",employee.emergency_contact_phone,"tel")}</div></section>
+        <section id="employee-employment"><h3>Dienstverband en salarisadministratie</h3><div class="employee-form-grid">${hrInput("Functie","job_title",employee.job_title)}${hrInput("Afdeling","department",employee.department)}${hrInput("Startdatum","contract_start",employee.contract_start,"date")}${hrInput("Einddatum","contract_end",employee.contract_end,"date")}${hrInput("Uren per week","weekly_hours",employee.weekly_hours,"number",'step="0.25" min="0"')}${hrInput("Jaarlijks verlof (uren)","annual_leave_hours",employee.annual_leave_hours,"number",'step="0.25" min="0"')}${hrInput("IBAN","iban",employee.iban)}${hrInput("Personeelsnummer","payroll_number",employee.payroll_number)}<label>Status<select name="status"><option value="active">Actief</option><option value="leave">Verlof</option><option value="sick">Ziek</option><option value="inactive">Inactief</option><option value="left">Uit dienst</option></select></label></div><label class="wide-field">Persoonlijke afspraken<textarea name="personal_agreements" rows="5" placeholder="Bijvoorbeeld werktijden, thuiswerk, opleidingsafspraken of afwijkende arbeidsvoorwaarden">${escapeHtml(employee.personal_agreements || "")}</textarea></label><label class="wide-field">Interne HR-notities<textarea name="notes" rows="3">${escapeHtml(employee.notes || "")}</textarea></label></section>
+        <button class="btn" type="submit">Medewerkersdossier opslaan</button><p class="form-note" data-employee-status></p>
+      </form>
+      <section id="employee-contracts"><h3>Arbeidscontracten en documenten</h3><form class="employee-inline-form" data-employee-document-form data-profile-id="${escapeHtml(profileId)}"><label>Type<select name="document_type"><option value="employment_contract">Arbeidscontract</option><option value="amendment">Addendum</option><option value="agreement">Persoonlijke afspraak</option><option value="identity">Identiteitsdocument</option><option value="payroll">Loonadministratie</option><option value="other">Overig</option></select></label>${hrInput("Titel","title","Arbeidscontract")}${hrInput("Geldig vanaf","valid_from","","date")}<label>Bestand<input name="file" type="file" accept="application/pdf,image/*" required></label><button class="btn ghost-dark" type="submit">Document opslaan</button></form><div class="employee-history-list">${documents.length ? documents.map((item) => `<button type="button" data-admin-action="open-employee-document" data-storage-path="${escapeHtml(item.storage_path)}"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.document_type)} · ${formatPortalDate(item.created_at)}</small></button>`).join("") : "<p>Nog geen documenten.</p>"}</div></section>
+      <section id="employee-leave"><h3>Verlof <span>${leaveBalance.toLocaleString("nl-NL")} uur resterend</span></h3><form class="employee-inline-form" data-employee-leave-form data-profile-id="${escapeHtml(profileId)}"><label>Type<select name="leave_type"><option value="holiday">Vakantie</option><option value="special">Bijzonder verlof</option><option value="parental">Ouderschapsverlof</option><option value="unpaid">Onbetaald verlof</option><option value="other">Overig</option></select></label>${hrInput("Van","starts_on","","date","required")}${hrInput("Tot en met","ends_on","","date","required")}${hrInput("Uren","hours","","number",'step="0.25" min="0" required')}<label>Status<select name="status"><option value="approved">Goedgekeurd</option><option value="requested">Aangevraagd</option><option value="rejected">Afgewezen</option></select></label><button class="btn ghost-dark" type="submit">Verlof vastleggen</button></form><div class="employee-history-list">${leave.map((item) => `<div><strong>${escapeHtml(item.leave_type)} · ${escapeHtml(item.hours)} uur</strong><small>${formatPortalDate(item.starts_on)} – ${formatPortalDate(item.ends_on)} · ${escapeHtml(item.status)}</small></div>`).join("") || "<p>Nog geen verlof.</p>"}</div></section>
+      <section id="employee-absence"><h3>Verzuim</h3><p class="form-note">Leg uitsluitend duur en inzetbaarheid vast. Geen diagnose, klachten, medicatie of medische oorzaak.</p><form class="employee-inline-form" data-employee-absence-form data-profile-id="${escapeHtml(profileId)}">${hrInput("Eerste ziektedag","starts_on","","date","required")}${hrInput("Beterdatum","ends_on","","date")}${hrInput("Ziektepercentage","absence_percentage","100","number",'min="0" max="100" step="1"')}${hrInput("Werkhervatting %","work_capacity_percentage","0","number",'min="0" max="100" step="1"')}<label>Status<select name="status"><option value="sick">Ziek</option><option value="partially_recovered">Gedeeltelijk hersteld</option><option value="recovered">Hersteld</option></select></label><label>Operationele afspraak<input name="operational_note" placeholder="Bijvoorbeeld: voorlopig 4 uur per dag"></label><button class="btn ghost-dark" type="submit">Verzuim vastleggen</button></form><div class="employee-history-list">${absence.map((item) => `<div><strong>${escapeHtml(item.absence_percentage)}% · ${escapeHtml(item.status)}</strong><small>${formatPortalDate(item.starts_on)}${item.ends_on ? ` – ${formatPortalDate(item.ends_on)}` : " – lopend"}</small></div>`).join("") || "<p>Nog geen verzuim.</p>"}</div></section>
+      <div class="dialog-actions"><button class="btn ghost-dark" type="button" data-dialog-close>Sluiten</button></div></div>`;
+    dialog.querySelector('[name="status"]').value = employee.status || "active";
+    dialog.showModal();
+  }
+
+  function formPayload(form, numeric = []) {
+    return Object.fromEntries([...new FormData(form).entries()].filter(([key]) => key !== "file").map(([key, value]) => [key, numeric.includes(key) ? (value === "" ? null : Number(value)) : (String(value).trim() || null)]));
+  }
+
+  async function submitEmployeeForm(form) {
+    const status = form.querySelector("[data-employee-status]");
+    const result = await window.RoofSignalBackend.saveEmployeeRecord({ profile_id: form.dataset.profileId, ...formPayload(form, ["weekly_hours","annual_leave_hours"]) });
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Medewerkersdossier opslaan is mislukt.", "error");
+    setWorkflowStatus(status, "Medewerkersdossier is opgeslagen.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
+  }
+
+  async function submitEmployeeLeave(form) {
+    const result = await window.RoofSignalBackend.createEmployeeLeave({ profile_id: form.dataset.profileId, ...formPayload(form, ["hours"]) });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Verlof vastleggen is mislukt.", "error");
+    setPortalNotice("Verlof is vastgelegd en wordt meegenomen in de beschikbaarheid.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
+  }
+
+  async function submitEmployeeAbsence(form) {
+    const payload = { profile_id: form.dataset.profileId, ...formPayload(form, ["absence_percentage","work_capacity_percentage"]) };
+    const result = await window.RoofSignalBackend.createEmployeeAbsence(payload);
+    if (!result.ok) return setPortalNotice(result.error?.message || "Verzuim vastleggen is mislukt.", "error");
+    await window.RoofSignalBackend.saveEmployeeRecord({ profile_id: form.dataset.profileId, status: payload.status === "recovered" ? "active" : "sick" });
+    setPortalNotice("Verzuim is vastgelegd zonder medische gegevens.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
+  }
+
+  async function submitEmployeeDocument(form) {
+    const file = form.elements.file.files?.[0]; if (!file) return;
+    const payload = formPayload(form); delete payload.file;
+    const result = await window.RoofSignalBackend.uploadEmployeeDocument(file, { profile_id: form.dataset.profileId, ...payload });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Document opslaan is mislukt.", "error");
+    setPortalNotice("HR-document is afgeschermd opgeslagen.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
+  }
+
   function openRecordContext(target) {
     const kind = target.dataset.recordKind;
     const id = target.dataset.recordId;
     if (kind === "inspection") return openInspection(id);
+    if (kind === "profile") return openEmployeeDossier(id);
     const record = { quote: liveQuotes, invoice: liveInvoices, appointment: liveAppointments, profile: liveProfiles }[kind]?.find((item) => item.id === id);
     if (!record) return;
     let dialog = document.querySelector("[data-admin-record-dialog]");
@@ -498,7 +594,7 @@
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades, requests, requestMessages] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades, requests, requestMessages, hrData] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
       backend.listInspections(),
@@ -511,6 +607,7 @@
       backend.listUpgradeRequests(),
       backend.listCustomerRequests(),
       backend.listRequestMessages(),
+      backend.listEmployeeHrData(),
     ]);
     liveOrganizations = customers;
     liveProfiles = profiles;
@@ -521,6 +618,7 @@
     liveTasks = tasks;
     liveReports = reports;
     liveUpgradeRequests = upgrades;
+    liveHrData = hrData;
     renderCustomers(customers);
     renderRoles(profiles);
     renderInspections(inspections);
@@ -2042,7 +2140,7 @@
       inspecties: ["Inspecties en rapportage.", "Volg de uitvoering, bevindingen en oplevering per object."],
       facturen: ["Facturen en betalingen.", "Bekijk betaalstatus, betaallinks en openstaande acties."],
       support: ["Support en klantvragen.", "Beantwoord vragen en volg interne taken per klantdossier."],
-      rechten: ["Team en rechten.", "Beheer medewerkers, rollen, toegang en agenda-abonnementen."]
+      rechten: ["Medewerkers en HR.", "Beheer personeelsdossiers, contracten, verlof, verzuim, rollen en toegang."]
     };
     const activate = (requestedId, updateHash = false) => {
       const available = links.find((link) => link.hash === `#${requestedId}` && !link.hidden);
@@ -2332,6 +2430,8 @@
     if (action === "edit-sent-quote") editSentQuote(target.dataset.quoteId);
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
     if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
+    if (action === "open-employee") openEmployeeDossier(target.dataset.profileId);
+    if (action === "open-employee-document") window.RoofSignalBackend.openEmployeeDocument(target.dataset.storagePath).then((result) => { if (result.ok) window.open(result.data.signedUrl, "_blank", "noopener"); else setPortalNotice(result.error?.message || "Document openen is mislukt.", "error"); });
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
     if (action === "activate-upgrade") activateUpgrade(target);
@@ -2405,6 +2505,14 @@
   document.querySelector("[data-customer-object-form]")?.addEventListener("submit", (event) => { event.preventDefault(); submitCustomerObject(event.currentTarget); });
   document.querySelector("[data-object-assistant-form]")?.addEventListener("submit", (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); answerObjectQuestion(String(data.get("question") || "")); });
   document.addEventListener("submit", async (event) => {
+    const employeeForm = event.target.closest("[data-employee-form],[data-employee-leave-form],[data-employee-absence-form],[data-employee-document-form]");
+    if (employeeForm) {
+      event.preventDefault();
+      if (employeeForm.matches("[data-employee-form]")) return submitEmployeeForm(employeeForm);
+      if (employeeForm.matches("[data-employee-leave-form]")) return submitEmployeeLeave(employeeForm);
+      if (employeeForm.matches("[data-employee-absence-form]")) return submitEmployeeAbsence(employeeForm);
+      return submitEmployeeDocument(employeeForm);
+    }
     const form = event.target.closest("[data-request-message-form]"); if (!form) return; event.preventDefault();
     const status = form.querySelector(".form-note"); const message = String(new FormData(form).get("message") || "").trim();
     const result = await window.RoofSignalBackend.createRequestMessage(form.dataset.requestId, customerPortalState.organizationId, message);

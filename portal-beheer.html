@@ -74,7 +74,13 @@
 
   <section class="portal-panel" id="rechten">
     <div class="panel-head">
-      <div><span class="eyebrow orange">Rechtenmodel</span><h2>Team, rollen en rechten</h2></div><a href="#rechten" data-admin-action="focus-role-builder">＋ Nieuw teamlid</a>
+      <div><span class="eyebrow orange">Medewerkers</span><h2>HR, rollen en rechten</h2></div><a href="#rechten" data-admin-action="focus-role-builder">＋ Nieuw teamlid</a>
+    </div>
+    <div class="hr-metrics" data-hr-metrics>
+      <article><span>Medewerkers</span><strong>0</strong><small>Actief in dienst</small></article>
+      <article><span>Vandaag afwezig</span><strong>0</strong><small>Verlof en verzuim</small></article>
+      <article><span>Verzuim dit jaar</span><strong>0%</strong><small>Gehele populatie</small></article>
+      <article><span>Open verlof</span><strong>0</strong><small>Aanvragen</small></article>
     </div>
     <div class="support-grid admin-support">
       <div><strong>Owner admin</strong><span>Alle modules: klanten, rollen, offertes, facturen, planning, support en instellingen.</span></div>
@@ -88,7 +94,7 @@
       <button class="btn" type="button" data-admin-action="assign-role">Rol toewijzen</button>
     </div>
     <table class="portal-table compact role-table">
-      <thead><tr><th>Teamlid</th><th>Rol</th><th>Rechten</th><th>Status</th><th>Acties</th></tr></thead>
+      <thead><tr><th>Medewerker</th><th>Functie / rol</th><th>Beschikbaarheid</th><th>Status</th><th>Acties</th></tr></thead>
       <tbody><tr data-empty-row><td colspan="5">Geen teamleden geladen.</td></tr></tbody>
     </table>
   </section>
@@ -265,7 +271,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=17" defer></script>
-<script src="assets/portal-admin.js?v=27" defer></script>
+<script src="assets/supabase-app.js?v=18" defer></script>
+<script src="assets/portal-admin.js?v=29" defer></script>
 </body>
 </html>
