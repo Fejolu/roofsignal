@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
+  <title>Medewerkersdossier | RoofSignal</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="stylesheet" href="assets/styles.css?v=portal34">
+</head>
+<body class="portal-body admin employee-page portal-auth-pending" data-portal-surface="internal">
+<aside class="portal-sidebar">
+  <a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a>
+  <nav class="portal-nav">
+    <a href="portal-beheer.html#dashboard"><span aria-hidden="true">⌂</span>Dashboard</a>
+    <a href="portal-beheer.html#klanten"><span aria-hidden="true">♙</span>Klanten</a>
+    <a href="portal-beheer.html#offertes"><span aria-hidden="true">▤</span>Offertes</a>
+    <a href="portal-beheer.html#planning"><span aria-hidden="true">□</span>Planning</a>
+    <a href="portal-beheer.html#inspecties"><span aria-hidden="true">⌕</span>Inspecties</a>
+    <a href="portal-beheer.html#facturen"><span aria-hidden="true">€</span>Facturen</a>
+    <a href="portal-beheer.html#support"><span aria-hidden="true">?</span>Support</a>
+    <a class="active portal-nav-secondary" href="portal-beheer.html#rechten"><span aria-hidden="true">♙</span>Medewerkers &amp; HR</a>
+  </nav>
+  <div class="portal-account">
+    <span>HR-dossier</span><strong data-account-name>RoofSignal team</strong><span data-account-role>Bevoegde medewerker</span>
+    <a href="portal-login">Uitloggen</a>
+  </div>
+</aside>
+
+<main class="portal-main employee-main">
+  <header class="portal-topbar employee-page-header">
+    <a class="icon-button employee-back" href="portal-beheer.html#rechten" aria-label="Terug naar medewerkers" title="Terug naar medewerkers">←</a>
+    <div class="employee-heading">
+      <p class="eyebrow orange">Medewerkersdossier</p>
+      <h1 data-employee-name>Medewerker laden…</h1>
+      <p data-employee-subtitle>Persoonsgegevens, dienstverband, documenten, verlof en verzuim.</p>
+    </div>
+    <div class="employee-header-status"><span>Status</span><strong data-employee-status-label>—</strong></div>
+  </header>
+
+  <nav class="employee-section-nav" aria-label="Onderdelen medewerkersdossier">
+    <a href="#overzicht">Overzicht</a><a href="#persoonlijk">Persoonlijk</a><a href="#dienstverband">Dienstverband</a><a href="#documenten">Documenten</a><a href="#verlof">Verlof</a><a href="#verzuim">Verzuim</a>
+  </nav>
+
+  <div class="portal-action-note" data-page-notice hidden></div>
+
+  <section id="overzicht" class="employee-summary-grid" aria-label="Samenvatting">
+    <article><span>Rol</span><strong data-summary-role>—</strong><small>Toegang in de backoffice</small></article>
+    <article><span>Uren per week</span><strong data-summary-hours>—</strong><small>Contractuele arbeidsduur</small></article>
+    <article><span>Verlof beschikbaar</span><strong data-summary-leave>—</strong><small>Na goedgekeurd verlof</small></article>
+    <article><span>Verzuim dit jaar</span><strong data-summary-absence>—</strong><small>Gewogen percentage</small></article>
+  </section>
+
+  <form class="employee-page-form" data-employee-form>
+    <section id="persoonlijk" class="portal-panel employee-page-section">
+      <div class="employee-section-head"><div><span class="eyebrow orange">Persoonlijk</span><h2>Persoons- en contactgegevens</h2><p>Gegevens die nodig zijn voor personeels- en noodcontactadministratie.</p></div></div>
+      <div class="employee-page-grid">
+        <label>Voornaam<input name="first_name" autocomplete="given-name"></label>
+        <label>Initialen<input name="initials"></label>
+        <label>Achternaam<input name="last_name" autocomplete="family-name"></label>
+        <label>Geboortedatum<input name="birth_date" type="date"></label>
+        <label>Straat<input name="street" autocomplete="address-line1"></label>
+        <label>Huisnummer<input name="house_number"></label>
+        <label>Postcode<input name="postcode" autocomplete="postal-code"></label>
+        <label>Plaats<input name="city" autocomplete="address-level2"></label>
+        <label>Privé e-mailadres<input name="private_email" type="email" autocomplete="email"></label>
+        <label>Telefoonnummer<input name="phone" type="tel" autocomplete="tel"></label>
+        <label>Noodcontact<input name="emergency_contact_name"></label>
+        <label>Telefoon noodcontact<input name="emergency_contact_phone" type="tel"></label>
+      </div>
+    </section>
+
+    <section id="dienstverband" class="portal-panel employee-page-section">
+      <div class="employee-section-head"><div><span class="eyebrow orange">Dienstverband</span><h2>Werk en salarisadministratie</h2><p>Contractuele gegevens en praktische werkafspraken.</p></div></div>
+      <div class="employee-page-grid">
+        <label>Functie<input name="job_title"></label>
+        <label>Afdeling<input name="department"></label>
+        <label>Backoffice-rol<select name="portal_role"><option value="support">Support</option><option value="planning">Planning</option><option value="finance">Finance</option><option value="reportage">Rapportage</option><option value="hr">HR</option><option value="owner_admin">Owner admin</option></select><small data-role-help></small></label>
+        <label>Startdatum<input name="contract_start" type="date"></label>
+        <label>Einddatum<input name="contract_end" type="date"></label>
+        <label>Status<select name="status"><option value="active">Actief</option><option value="leave">Met verlof</option><option value="sick">Ziek</option><option value="inactive">Inactief</option><option value="left">Uit dienst</option></select></label>
+        <label>Uren per week<input name="weekly_hours" type="number" step="0.25" min="0"></label>
+        <label>Jaarlijks verlof (uren)<input name="annual_leave_hours" type="number" step="0.25" min="0"></label>
+        <label>Personeelsnummer<input name="payroll_number"></label>
+        <label class="employee-grid-wide">IBAN<input name="iban" autocomplete="off"></label>
+        <label class="employee-grid-wide">Persoonlijke afspraken<textarea name="personal_agreements" rows="5" placeholder="Bijvoorbeeld werktijden, thuiswerk, opleiding of afwijkende arbeidsvoorwaarden"></textarea></label>
+        <label class="employee-grid-wide">Interne HR-notities<textarea name="notes" rows="4" placeholder="Alleen zakelijke, noodzakelijke notities. Geen medische informatie."></textarea></label>
+      </div>
+      <div class="employee-save-row"><p class="form-note" data-employee-form-status></p><button class="btn" type="submit">Wijzigingen opslaan</button></div>
+    </section>
+  </form>
+
+  <section id="documenten" class="portal-panel employee-page-section">
+    <div class="employee-section-head"><div><span class="eyebrow orange">Documenten</span><h2>Contracten en personeelsdocumenten</h2><p>Alleen de eigenaar en medewerkers met de HR-rol hebben toegang.</p></div></div>
+    <form class="employee-action-form" data-employee-document-form>
+      <label>Documenttype<select name="document_type"><option value="employment_contract">Arbeidscontract</option><option value="amendment">Addendum</option><option value="agreement">Persoonlijke afspraak</option><option value="identity">Identiteitsdocument</option><option value="payroll">Loonadministratie</option><option value="other">Overig</option></select></label>
+      <label>Titel<input name="title" value="Arbeidscontract" required></label>
+      <label>Geldig vanaf<input name="valid_from" type="date"></label>
+      <label>Bestand<input name="file" type="file" accept="application/pdf,image/*" required></label>
+      <button class="btn ghost-dark" type="submit">Document opslaan</button>
+    </form>
+    <div class="employee-history-list" data-document-list></div>
+  </section>
+
+  <section id="verlof" class="portal-panel employee-page-section">
+    <div class="employee-section-head"><div><span class="eyebrow orange">Verlof</span><h2>Verlof registreren</h2><p data-leave-balance>Beschikbaar verlof wordt berekend na laden.</p></div></div>
+    <form class="employee-action-form" data-employee-leave-form>
+      <label>Type<select name="leave_type"><option value="holiday">Vakantie</option><option value="special">Bijzonder verlof</option><option value="parental">Ouderschapsverlof</option><option value="unpaid">Onbetaald verlof</option><option value="other">Overig</option></select></label>
+      <label>Van<input name="starts_on" type="date" required></label><label>Tot en met<input name="ends_on" type="date" required></label><label>Uren<input name="hours" type="number" step="0.25" min="0" required></label>
+      <label>Status<select name="status"><option value="approved">Goedgekeurd</option><option value="requested">Aangevraagd</option><option value="rejected">Afgewezen</option></select></label>
+      <button class="btn ghost-dark" type="submit">Verlof vastleggen</button>
+    </form>
+    <div class="employee-history-list" data-leave-list></div>
+  </section>
+
+  <section id="verzuim" class="portal-panel employee-page-section">
+    <div class="employee-section-head"><div><span class="eyebrow orange">Verzuim</span><h2>Inzetbaarheid registreren</h2><p>Leg uitsluitend duur en inzetbaarheid vast. Geen diagnose, klachten, medicatie of medische oorzaak.</p></div></div>
+    <form class="employee-action-form" data-employee-absence-form>
+      <label>Eerste ziektedag<input name="starts_on" type="date" required></label><label>Beterdatum<input name="ends_on" type="date"></label>
+      <label>Ziektepercentage<input name="absence_percentage" type="number" value="100" min="0" max="100" step="1"></label><label>Werkhervatting<input name="work_capacity_percentage" type="number" value="0" min="0" max="100" step="1"></label>
+      <label>Status<select name="status"><option value="sick">Ziek</option><option value="partially_recovered">Gedeeltelijk hersteld</option><option value="recovered">Hersteld</option></select></label>
+      <label class="employee-grid-wide">Operationele afspraak<input name="operational_note" placeholder="Bijvoorbeeld: voorlopig vier uur per dag"></label>
+      <button class="btn ghost-dark" type="submit">Verzuim vastleggen</button>
+    </form>
+    <div class="employee-history-list" data-absence-list></div>
+  </section>
+</main>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/supabase-app.js?v=19" defer></script>
+<script src="assets/portal-employee.js?v=1" defer></script>
+</body>
+</html>

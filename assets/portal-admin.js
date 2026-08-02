@@ -530,67 +530,9 @@
     }
   }
 
-  function hrInput(label, name, value = "", type = "text", extra = "") {
-    return `<label>${escapeHtml(label)}<input name="${escapeHtml(name)}" type="${escapeHtml(type)}" value="${escapeHtml(value || "")}" ${extra}></label>`;
-  }
-
-  async function openEmployeeDossier(profileId) {
-    const profile = liveProfiles.find((item) => item.id === profileId); if (!profile) return;
-    const employee = liveHrData.records.find((item) => item.profile_id === profileId) || {};
-    const leave = liveHrData.leave.filter((item) => item.profile_id === profileId);
-    const absence = liveHrData.absence.filter((item) => item.profile_id === profileId);
-    const documents = liveHrData.documents.filter((item) => item.profile_id === profileId);
-    let dialog = document.querySelector("[data-employee-dialog]");
-    if (!dialog) { dialog = document.createElement("dialog"); dialog.className = "portal-dialog employee-dialog"; dialog.dataset.employeeDialog = "true"; document.body.append(dialog); }
-    const leaveUsed = leave.filter((item) => item.status === "approved" && item.leave_type === "holiday").reduce((sum, item) => sum + Number(item.hours || 0), 0);
-    const leaveBalance = Number(employee.annual_leave_hours || 0) - leaveUsed;
-    dialog.innerHTML = `<div class="portal-dialog-card employee-record-card">
-      <div class="panel-head"><div><span class="eyebrow orange">Medewerkersdossier</span><h2>${escapeHtml(profile.full_name || profile.email)}</h2><p>${escapeHtml(employee.job_title || roleLabels[profile.role] || profile.role)} · verzuim ${employeeAbsenceRate(profileId).toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%</p></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div>
-      <div class="employee-dossier-tabs"><a href="#employee-personal">Persoonlijk</a><a href="#employee-employment">Dienstverband</a><a href="#employee-contracts">Contracten</a><a href="#employee-leave">Verlof</a><a href="#employee-absence">Verzuim</a></div>
-      <form class="employee-form" data-employee-form data-profile-id="${escapeHtml(profileId)}">
-        <section id="employee-personal"><h3>Persoonsgegevens</h3><div class="employee-form-grid">${hrInput("Voornaam","first_name",employee.first_name)}${hrInput("Initialen","initials",employee.initials)}${hrInput("Achternaam","last_name",employee.last_name)}${hrInput("Geboortedatum","birth_date",employee.birth_date,"date")}${hrInput("Straat","street",employee.street)}${hrInput("Huisnummer","house_number",employee.house_number)}${hrInput("Postcode","postcode",employee.postcode)}${hrInput("Plaats","city",employee.city)}${hrInput("Privé e-mail","private_email",employee.private_email,"email")}${hrInput("Telefoon","phone",employee.phone,"tel")}${hrInput("Noodcontact","emergency_contact_name",employee.emergency_contact_name)}${hrInput("Telefoon noodcontact","emergency_contact_phone",employee.emergency_contact_phone,"tel")}</div></section>
-        <section id="employee-employment"><h3>Dienstverband en salarisadministratie</h3><div class="employee-form-grid">${hrInput("Functie","job_title",employee.job_title)}${hrInput("Afdeling","department",employee.department)}${hrInput("Startdatum","contract_start",employee.contract_start,"date")}${hrInput("Einddatum","contract_end",employee.contract_end,"date")}${hrInput("Uren per week","weekly_hours",employee.weekly_hours,"number",'step="0.25" min="0"')}${hrInput("Jaarlijks verlof (uren)","annual_leave_hours",employee.annual_leave_hours,"number",'step="0.25" min="0"')}${hrInput("IBAN","iban",employee.iban)}${hrInput("Personeelsnummer","payroll_number",employee.payroll_number)}<label>Status<select name="status"><option value="active">Actief</option><option value="leave">Verlof</option><option value="sick">Ziek</option><option value="inactive">Inactief</option><option value="left">Uit dienst</option></select></label></div><label class="wide-field">Persoonlijke afspraken<textarea name="personal_agreements" rows="5" placeholder="Bijvoorbeeld werktijden, thuiswerk, opleidingsafspraken of afwijkende arbeidsvoorwaarden">${escapeHtml(employee.personal_agreements || "")}</textarea></label><label class="wide-field">Interne HR-notities<textarea name="notes" rows="3">${escapeHtml(employee.notes || "")}</textarea></label></section>
-        <button class="btn" type="submit">Medewerkersdossier opslaan</button><p class="form-note" data-employee-status></p>
-      </form>
-      <section id="employee-contracts"><h3>Arbeidscontracten en documenten</h3><form class="employee-inline-form" data-employee-document-form data-profile-id="${escapeHtml(profileId)}"><label>Type<select name="document_type"><option value="employment_contract">Arbeidscontract</option><option value="amendment">Addendum</option><option value="agreement">Persoonlijke afspraak</option><option value="identity">Identiteitsdocument</option><option value="payroll">Loonadministratie</option><option value="other">Overig</option></select></label>${hrInput("Titel","title","Arbeidscontract")}${hrInput("Geldig vanaf","valid_from","","date")}<label>Bestand<input name="file" type="file" accept="application/pdf,image/*" required></label><button class="btn ghost-dark" type="submit">Document opslaan</button></form><div class="employee-history-list">${documents.length ? documents.map((item) => `<button type="button" data-admin-action="open-employee-document" data-storage-path="${escapeHtml(item.storage_path)}"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.document_type)} · ${formatPortalDate(item.created_at)}</small></button>`).join("") : "<p>Nog geen documenten.</p>"}</div></section>
-      <section id="employee-leave"><h3>Verlof <span>${leaveBalance.toLocaleString("nl-NL")} uur resterend</span></h3><form class="employee-inline-form" data-employee-leave-form data-profile-id="${escapeHtml(profileId)}"><label>Type<select name="leave_type"><option value="holiday">Vakantie</option><option value="special">Bijzonder verlof</option><option value="parental">Ouderschapsverlof</option><option value="unpaid">Onbetaald verlof</option><option value="other">Overig</option></select></label>${hrInput("Van","starts_on","","date","required")}${hrInput("Tot en met","ends_on","","date","required")}${hrInput("Uren","hours","","number",'step="0.25" min="0" required')}<label>Status<select name="status"><option value="approved">Goedgekeurd</option><option value="requested">Aangevraagd</option><option value="rejected">Afgewezen</option></select></label><button class="btn ghost-dark" type="submit">Verlof vastleggen</button></form><div class="employee-history-list">${leave.map((item) => `<div><strong>${escapeHtml(item.leave_type)} · ${escapeHtml(item.hours)} uur</strong><small>${formatPortalDate(item.starts_on)} – ${formatPortalDate(item.ends_on)} · ${escapeHtml(item.status)}</small></div>`).join("") || "<p>Nog geen verlof.</p>"}</div></section>
-      <section id="employee-absence"><h3>Verzuim</h3><p class="form-note">Leg uitsluitend duur en inzetbaarheid vast. Geen diagnose, klachten, medicatie of medische oorzaak.</p><form class="employee-inline-form" data-employee-absence-form data-profile-id="${escapeHtml(profileId)}">${hrInput("Eerste ziektedag","starts_on","","date","required")}${hrInput("Beterdatum","ends_on","","date")}${hrInput("Ziektepercentage","absence_percentage","100","number",'min="0" max="100" step="1"')}${hrInput("Werkhervatting %","work_capacity_percentage","0","number",'min="0" max="100" step="1"')}<label>Status<select name="status"><option value="sick">Ziek</option><option value="partially_recovered">Gedeeltelijk hersteld</option><option value="recovered">Hersteld</option></select></label><label>Operationele afspraak<input name="operational_note" placeholder="Bijvoorbeeld: voorlopig 4 uur per dag"></label><button class="btn ghost-dark" type="submit">Verzuim vastleggen</button></form><div class="employee-history-list">${absence.map((item) => `<div><strong>${escapeHtml(item.absence_percentage)}% · ${escapeHtml(item.status)}</strong><small>${formatPortalDate(item.starts_on)}${item.ends_on ? ` – ${formatPortalDate(item.ends_on)}` : " – lopend"}</small></div>`).join("") || "<p>Nog geen verzuim.</p>"}</div></section>
-      <div class="dialog-actions"><button class="btn ghost-dark" type="button" data-dialog-close>Sluiten</button></div></div>`;
-    dialog.querySelector('[name="status"]').value = employee.status || "active";
-    dialog.showModal();
-  }
-
-  function formPayload(form, numeric = []) {
-    return Object.fromEntries([...new FormData(form).entries()].filter(([key]) => key !== "file").map(([key, value]) => [key, numeric.includes(key) ? (value === "" ? null : Number(value)) : (String(value).trim() || null)]));
-  }
-
-  async function submitEmployeeForm(form) {
-    const status = form.querySelector("[data-employee-status]");
-    const result = await window.RoofSignalBackend.saveEmployeeRecord({ profile_id: form.dataset.profileId, ...formPayload(form, ["weekly_hours","annual_leave_hours"]) });
-    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "Medewerkersdossier opslaan is mislukt.", "error");
-    setWorkflowStatus(status, "Medewerkersdossier is opgeslagen.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
-  }
-
-  async function submitEmployeeLeave(form) {
-    const result = await window.RoofSignalBackend.createEmployeeLeave({ profile_id: form.dataset.profileId, ...formPayload(form, ["hours"]) });
-    if (!result.ok) return setPortalNotice(result.error?.message || "Verlof vastleggen is mislukt.", "error");
-    setPortalNotice("Verlof is vastgelegd en wordt meegenomen in de beschikbaarheid.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
-  }
-
-  async function submitEmployeeAbsence(form) {
-    const payload = { profile_id: form.dataset.profileId, ...formPayload(form, ["absence_percentage","work_capacity_percentage"]) };
-    const result = await window.RoofSignalBackend.createEmployeeAbsence(payload);
-    if (!result.ok) return setPortalNotice(result.error?.message || "Verzuim vastleggen is mislukt.", "error");
-    await window.RoofSignalBackend.saveEmployeeRecord({ profile_id: form.dataset.profileId, status: payload.status === "recovered" ? "active" : "sick" });
-    setPortalNotice("Verzuim is vastgelegd zonder medische gegevens.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
-  }
-
-  async function submitEmployeeDocument(form) {
-    const file = form.elements.file.files?.[0]; if (!file) return;
-    const payload = formPayload(form); delete payload.file;
-    const result = await window.RoofSignalBackend.uploadEmployeeDocument(file, { profile_id: form.dataset.profileId, ...payload });
-    if (!result.ok) return setPortalNotice(result.error?.message || "Document opslaan is mislukt.", "error");
-    setPortalNotice("HR-document is afgeschermd opgeslagen.", "success"); await loadLiveAdminData(); await openEmployeeDossier(form.dataset.profileId);
+  function openEmployeeDossier(profileId) {
+    if (!profileId) return;
+    window.location.href = `portal-medewerker.html?id=${encodeURIComponent(profileId)}`;
   }
 
   function openRecordContext(target) {
@@ -2548,14 +2490,6 @@
   document.querySelector("[data-customer-object-form]")?.addEventListener("submit", (event) => { event.preventDefault(); submitCustomerObject(event.currentTarget); });
   document.querySelector("[data-object-assistant-form]")?.addEventListener("submit", (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); answerObjectQuestion(String(data.get("question") || "")); });
   document.addEventListener("submit", async (event) => {
-    const employeeForm = event.target.closest("[data-employee-form],[data-employee-leave-form],[data-employee-absence-form],[data-employee-document-form]");
-    if (employeeForm) {
-      event.preventDefault();
-      if (employeeForm.matches("[data-employee-form]")) return submitEmployeeForm(employeeForm);
-      if (employeeForm.matches("[data-employee-leave-form]")) return submitEmployeeLeave(employeeForm);
-      if (employeeForm.matches("[data-employee-absence-form]")) return submitEmployeeAbsence(employeeForm);
-      return submitEmployeeDocument(employeeForm);
-    }
     const form = event.target.closest("[data-request-message-form]"); if (!form) return; event.preventDefault();
     const status = form.querySelector(".form-note"); const message = String(new FormData(form).get("message") || "").trim();
     const result = await window.RoofSignalBackend.createRequestMessage(form.dataset.requestId, customerPortalState.organizationId, message);
