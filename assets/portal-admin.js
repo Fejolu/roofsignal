@@ -384,7 +384,7 @@
     renderResourceCalendar(appointments);
     if (!planningList) return;
     planningList.innerHTML = appointments.length
-      ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, appointment.status].filter(Boolean).join(" · "))}</p><div class="table-actions"><button class="inline-button" data-admin-action="test-appointment-email" data-appointment-id="${escapeHtml(appointment.id)}">Test afspraakmail</button></div></div>`).join("")
+      ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p></div>`).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
   }
 
@@ -1263,13 +1263,6 @@
     quoteScheduleForm.reset(); quoteScheduleForm.hidden = true;
     setPortalNotice("De datum is gepland en de inspectie is aangemaakt.", "success");
     await loadLiveAdminData();
-  }
-
-  async function testAppointmentEmail(id) {
-    setPortalNotice("Test-afspraakbevestiging wordt verzonden…");
-    const result = await window.RoofSignalBackend.sendAppointmentEmail(id, "ferry@roofsignal.nl");
-    if (!result.ok) return setPortalNotice(result.error?.message || "Testmail verzenden is mislukt.", "error");
-    setPortalNotice("Test-afspraakbevestiging is verzonden naar ferry@roofsignal.nl.", "success");
   }
 
   async function createCalendarFeed(profileId) {
@@ -2335,7 +2328,6 @@
     if (action === "send-quote-custom") sendQuoteCustom(target.dataset.quoteId);
     if (action === "edit-sent-quote") editSentQuote(target.dataset.quoteId);
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
-    if (action === "test-appointment-email") testAppointmentEmail(target.dataset.appointmentId);
     if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
     if (action === "schedule-quote") openQuoteSchedule(target.dataset.quoteId);
     if (action === "invoice-quote") invoiceQuote(target.dataset.quoteId);
