@@ -229,11 +229,12 @@
 
   function renderRoles(profiles) {
     if (!rolesBody) return;
-    if (!profiles.length) {
+    const teamProfiles = profiles.filter((profile) => profile.role !== "customer");
+    if (!teamProfiles.length) {
       rolesBody.innerHTML = '<tr data-empty-row><td colspan="5">Geen teamleden gevonden.</td></tr>';
       return;
     }
-    rolesBody.innerHTML = profiles.map((profile) => {
+    rolesBody.innerHTML = teamProfiles.map((profile) => {
       const role = roleLabels[profile.role] || profile.role;
       const calendarAction = profile.role !== "customer" ? `<a href="#rechten" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</a>` : "";
       return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions">${calendarAction}<a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
@@ -2051,6 +2052,8 @@
       document.querySelectorAll("[data-admin-dashboard-preview]").forEach((section) => { section.hidden = id !== "dashboard"; });
       links.forEach((link) => link.classList.toggle("active", link.hash === `#${id}`));
       document.body.dataset.adminView = id;
+      const createCustomerButton = document.querySelector(".admin-create-button");
+      if (createCustomerButton) createCustomerButton.hidden = id === "rechten";
       const heading = document.querySelector(".portal-topbar h1");
       const intro = document.querySelector(".portal-topbar h1 + p");
       if (heading && viewCopy[id]) heading.textContent = viewCopy[id][0];
