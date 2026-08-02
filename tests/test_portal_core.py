@@ -283,3 +283,17 @@ def test_customer_portal_uses_one_control_and_alignment_system():
     assert ".portal-layout > .portal-panel:only-child" in styles
     assert ".timeline-list .appointment-actions" in styles
     assert ".request-history-item .request-thread" in styles
+
+
+def test_employee_roles_are_cumulative_and_include_inspector():
+    admin = read("portal-beheer.html")
+    employee = read("portal-medewerker.html")
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260802140001_multi_employee_roles.sql")
+    assert "<option>Inspecteur</option>" in admin
+    assert 'data-role-checkboxes' in employee
+    assert "saveProfileRoles" in backend
+    assert "profile_roles" in migration
+    assert "role_definitions" in migration
+    assert "current_user_has_role" in migration
+    assert "('inspector','Inspecteur'" in migration

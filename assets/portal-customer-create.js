@@ -483,7 +483,8 @@
       window.location.replace(access?.reason === "customer_only" ? "portal-klant.html" : "portal-login.html");
       return;
     }
-    if (!access.internal || !["owner_admin", "support"].includes(access.profile?.role)) {
+    const roles = access.profile?.roles || [access.profile?.role];
+    if (!access.internal || !["owner_admin", "support"].some((role) => roles.includes(role))) {
       window.location.replace("portal-beheer.html");
       return;
     }

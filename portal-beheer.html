@@ -84,9 +84,10 @@
     </div>
     <div class="role-builder" data-role-administration>
       <label>E-mailadres<input placeholder="naam@roofsignal.nl" aria-label="E-mailadres teamlid"></label>
-      <label>Rol<select aria-label="Rol teamlid"><option>Owner admin</option><option selected>Support</option><option>Planning</option><option>Finance</option><option>Rapportage</option><option>HR</option></select></label>
-      <button class="btn" type="button" data-admin-action="assign-role">Rol toewijzen</button>
+      <label>Rol toevoegen<select aria-label="Rol teamlid"><option>Owner admin</option><option selected>Support</option><option>Planning</option><option>Inspecteur</option><option>Finance</option><option>Rapportage</option><option>HR</option></select></label>
+      <button class="btn" type="button" data-admin-action="assign-role">Rol toevoegen</button>
     </div>
+    <div class="role-definition-list" data-role-definitions data-role-administration></div>
     <table class="portal-table compact role-table">
       <thead><tr><th>Medewerker</th><th>Functie / rol</th><th>Beschikbaarheid</th><th>Status</th><th>Acties</th></tr></thead>
       <tbody><tr data-empty-row><td colspan="5">Geen teamleden geladen.</td></tr></tbody>
@@ -265,7 +266,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=19" defer></script>
-<script src="assets/portal-admin.js?v=32" defer></script>
+<script src="assets/supabase-app.js?v=20" defer></script>
+<script src="assets/portal-admin.js?v=33" defer></script>
 </body>
 </html>

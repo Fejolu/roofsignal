@@ -2,7 +2,7 @@
   "use strict";
   const backend = window.RoofSignalBackend;
   const profileId = new URLSearchParams(window.location.search).get("id");
-  const roleLabels = { owner_admin: "Owner admin", support: "Support", planning: "Planning", finance: "Finance", reportage: "Rapportage", hr: "HR" };
+  const roleLabels = { owner_admin: "Owner admin", support: "Support", planning: "Planning", inspector: "Inspecteur", finance: "Finance", reportage: "Rapportage", hr: "HR" };
   const statusLabels = { active: "Actief", leave: "Met verlof", sick: "Ziek", inactive: "Inactief", left: "Uit dienst" };
   let access;
   let profile;
@@ -29,19 +29,18 @@
   }
 
   function payload(form, numeric = []) {
-    return Object.fromEntries([...new FormData(form).entries()].filter(([key]) => !["file", "portal_role"].includes(key)).map(([key, value]) => [key, numeric.includes(key) ? (value === "" ? null : Number(value)) : (String(value).trim() || null)]));
+    return Object.fromEntries([...new FormData(form).entries()].filter(([key]) => !["file", "portal_role", "portal_roles"].includes(key)).map(([key, value]) => [key, numeric.includes(key) ? (value === "" ? null : Number(value)) : (String(value).trim() || null)]));
   }
 
   function fillForm(employee) {
     const form = $("[data-employee-form]");
     [...form.elements].forEach((field) => {
-      if (!field.name || field.name === "portal_role") return;
+      if (!field.name || field.name === "portal_roles") return;
       if (Object.prototype.hasOwnProperty.call(employee, field.name)) field.value = employee[field.name] ?? "";
     });
     form.elements.status.value = employee.status || "active";
-    form.elements.portal_role.value = profile.role;
-    const owner = access.profile.role === "owner_admin";
-    form.elements.portal_role.disabled = !owner;
+    const owner = (access.profile.roles || [access.profile.role]).includes("owner_admin");
+    $("[data-role-checkboxes]").innerHTML = Object.entries(roleLabels).map(([role,label]) => `<label><input type="checkbox" name="portal_roles" value="${role}" ${(profile.roles || [profile.role]).includes(role) ? "checked" : ""} ${owner ? "" : "disabled"}><span>${label}</span></label>`).join("");
     $("[data-role-help]").textContent = owner ? "Alleen de eigenaar kan toegangsrollen wijzigen." : "Alleen de eigenaar kan deze rol wijzigen.";
   }
 
@@ -64,9 +63,9 @@
     const balance = number(employee.annual_leave_hours) - used;
 
     $("[data-employee-name]").textContent = profile.full_name || profile.email;
-    $("[data-employee-subtitle]").textContent = `${employee.job_title || roleLabels[profile.role] || profile.role} · ${profile.email}`;
+    $("[data-employee-subtitle]").textContent = `${employee.job_title || (profile.roles || [profile.role]).map((role) => roleLabels[role] || role).join(" + ")} · ${profile.email}`;
     $("[data-employee-status-label]").textContent = statusLabels[employee.status || "active"];
-    $("[data-summary-role]").textContent = roleLabels[profile.role] || profile.role;
+    $("[data-summary-role]").textContent = (profile.roles || [profile.role]).map((role) => roleLabels[role] || role).join(" + ");
     $("[data-summary-hours]").textContent = employee.weekly_hours ? `${number(employee.weekly_hours).toLocaleString("nl-NL")} uur` : "—";
     $("[data-summary-leave]").textContent = `${balance.toLocaleString("nl-NL")} uur`;
     $("[data-summary-absence]").textContent = `${absenceRate(absence).toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%`;
@@ -84,11 +83,11 @@
     if (!backend?.isConfigured || !profileId) return window.location.replace("portal-beheer.html#rechten");
     access = await backend.requirePortalAccess("internal");
     if (!access.ok) return window.location.replace("portal-login");
-    if (!["owner_admin", "hr"].includes(access.profile.role)) return window.location.replace("portal-beheer.html#rechten");
+    if (!["owner_admin", "hr"].some((role) => (access.profile.roles || [access.profile.role]).includes(role))) return window.location.replace("portal-beheer.html#rechten");
     const profiles = await backend.listProfiles(); profile = profiles.find((item) => item.id === profileId);
     if (!profile) { notice("Dit medewerkersdossier bestaat niet of u heeft geen toegang.", "error"); return; }
     $("[data-account-name]").textContent = access.profile.full_name || access.profile.email;
-    $("[data-account-role]").textContent = roleLabels[access.profile.role] || access.profile.role;
+    $("[data-account-role]").textContent = (access.profile.roles || [access.profile.role]).map((role) => roleLabels[role] || role).join(" + ");
     hrData = await backend.listEmployeeHrData(); render(); document.body.classList.remove("portal-auth-pending");
   }
 
@@ -96,10 +95,12 @@
     event.preventDefault(); const form = event.currentTarget;
     const result = await backend.saveEmployeeRecord({ profile_id: profileId, ...payload(form, ["weekly_hours", "annual_leave_hours"]) });
     if (!result.ok) return notice(result.error?.message || "Opslaan is mislukt.", "error");
-    if (access.profile.role === "owner_admin" && form.elements.portal_role.value !== profile.role) {
-      const roleResult = await backend.updateProfileRole(profile.email, form.elements.portal_role.value);
+    if ((access.profile.roles || [access.profile.role]).includes("owner_admin")) {
+      const selectedRoles = [...form.querySelectorAll('[name="portal_roles"]:checked')].map((input) => input.value);
+      if (!selectedRoles.length) return notice("Selecteer minimaal één backoffice-rol.", "error");
+      const roleResult = await backend.saveProfileRoles(profile.id, selectedRoles);
       if (!roleResult.ok) return notice("De gegevens zijn opgeslagen, maar de rol kon niet worden gewijzigd.", "error");
-      profile.role = form.elements.portal_role.value;
+      profile.roles = selectedRoles;
     }
     await reload(); confirmSaveButton(form); notice("Het medewerkersdossier is bijgewerkt.");
   });

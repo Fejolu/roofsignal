@@ -3488,6 +3488,7 @@ button { cursor: pointer; }
 .portal-toast{position:fixed;right:24px;bottom:24px;z-index:120;max-width:min(420px,calc(100vw - 48px));margin:0!important;padding:13px 16px;box-shadow:0 14px 40px rgba(7,18,14,.16);animation:portal-toast-in .18s ease-out}
 .portal-toast[hidden]{display:none!important}
 .save-confirmed{background:#237a54!important;border-color:#237a54!important;color:#fff!important;box-shadow:0 8px 22px rgba(35,122,84,.2)!important}
+.employee-role-picker{margin:0;padding:16px;border:1px solid var(--rs-line);border-radius:12px}.employee-role-picker legend{padding:0 8px;font-weight:900}.employee-role-picker>div{display:flex;flex-wrap:wrap;gap:10px}.employee-role-picker label{display:flex;flex-direction:row;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--rs-line);border-radius:9px;background:#f7f8f6}.employee-role-picker input{width:auto!important;height:auto!important;min-height:0!important}.role-definition-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.role-definition-card{display:grid;gap:8px;padding:16px;border:1px solid var(--rs-line);border-radius:12px;background:#f7f8f6}.role-definition-card textarea{min-height:82px}.role-definition-card .btn{justify-self:end}@media(max-width:760px){.role-definition-list{grid-template-columns:1fr}}
 @keyframes portal-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:640px){.portal-toast{right:16px;bottom:16px;max-width:calc(100vw - 32px)}}
 

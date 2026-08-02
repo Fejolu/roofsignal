@@ -6,6 +6,7 @@
     "Owner admin": "Alles",
     Support: "Support, meekijken, dossiers",
     Planning: "Agenda, inspecties, toegang",
+    Inspecteur: "Inspecties uitvoeren, bevindingen en opnames",
     Finance: "Facturen, offertes, betaalstatus",
     Rapportage: "Rapporten, objectdata, exports",
     HR: "Medewerkersdossiers, contracten, verlof en verzuim",
@@ -14,6 +15,7 @@
     owner_admin: "Owner admin",
     support: "Support",
     planning: "Planning",
+    inspector: "Inspecteur",
     finance: "Finance",
     rapportage: "Rapportage",
     hr: "HR",
@@ -112,6 +114,7 @@
   let liveReports = [];
   let liveUpgradeRequests = [];
   let liveHrData = { records: [], leave: [], absence: [], documents: [] };
+  let liveRoleDefinitions = [];
   let portalAccess = null;
   let customerPortalState = null;
   let resourceCalendarWeekOffset = 0;
@@ -259,23 +262,32 @@
 
   function renderRoles(profiles) {
     if (!rolesBody) return;
-    const teamProfiles = profiles.filter((profile) => profile.role !== "customer");
+    const teamProfiles = profiles.filter((profile) => profile.roles?.length || profile.role !== "customer");
     if (!teamProfiles.length) {
       rolesBody.innerHTML = '<tr data-empty-row><td colspan="5">Geen teamleden gevonden.</td></tr>';
       return;
     }
     rolesBody.innerHTML = teamProfiles.map((profile) => {
-      const role = roleLabels[profile.role] || profile.role;
+      const roles = profile.roles?.length ? profile.roles : [profile.role];
+      const role = roles.map((item) => roleLabels[item] || item).join(" + ");
       const employee = liveHrData.records.find((item) => item.profile_id === profile.id) || {};
       const today = new Date().toISOString().slice(0, 10);
       const activeLeave = liveHrData.leave.find((item) => item.profile_id === profile.id && item.status === "approved" && item.starts_on <= today && item.ends_on >= today);
       const activeAbsence = liveHrData.absence.find((item) => item.profile_id === profile.id && item.status !== "recovered" && item.starts_on <= today && (!item.ends_on || item.ends_on >= today));
       const availability = activeAbsence ? `${Number(activeAbsence.absence_percentage || 100)}% ziek` : activeLeave ? "Met verlof" : "Beschikbaar";
       const calendarAction = `<button type="button" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</button>`;
-      const roleAction = portalAccess?.profile?.role === "owner_admin" ? '<button type="button" data-admin-action="edit-role">Rol bewerken</button>' : "";
-      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td><strong>${escapeHtml(profile.full_name || [employee.first_name,employee.last_name].filter(Boolean).join(" ") || profile.email)}</strong><small>${escapeHtml(profile.email)}</small></td><td>${escapeHtml(employee.job_title || role)}</td><td>${escapeHtml(availability)}</td><td>${statusCell(employee.status === "left" ? "Uit dienst" : "Actief", employee.status === "left" ? "yellow" : "green")}</td><td><div class="table-actions">${calendarAction}<button type="button" data-admin-action="open-employee" data-profile-id="${escapeHtml(profile.id)}">Dossier</button>${roleAction}</div></td></tr>`;
+      const roleAction = (portalAccess?.profile?.roles || [portalAccess?.profile?.role]).includes("owner_admin") ? '<button type="button" data-admin-action="edit-role">Rollen bewerken</button>' : "";
+      const roleSummary = employee.job_title
+        ? `<strong>${escapeHtml(employee.job_title)}</strong><small>${escapeHtml(role)}</small>`
+        : escapeHtml(role);
+      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td><strong>${escapeHtml(profile.full_name || [employee.first_name,employee.last_name].filter(Boolean).join(" ") || profile.email)}</strong><small>${escapeHtml(profile.email)}</small></td><td>${roleSummary}</td><td>${escapeHtml(availability)}</td><td>${statusCell(employee.status === "left" ? "Uit dienst" : "Actief", employee.status === "left" ? "yellow" : "green")}</td><td><div class="table-actions">${calendarAction}<button type="button" data-admin-action="open-employee" data-profile-id="${escapeHtml(profile.id)}">Dossier</button>${roleAction}</div></td></tr>`;
     }).join("");
     renderHrMetrics(teamProfiles);
+  }
+
+  function renderRoleDefinitions(definitions) {
+    const list = document.querySelector("[data-role-definitions]"); if (!list) return;
+    list.innerHTML = definitions.map((item) => `<form class="role-definition-card" data-role-definition="${escapeHtml(item.role)}"><strong>${escapeHtml(item.label)}</strong><textarea name="description" aria-label="Functiebeschrijving ${escapeHtml(item.label)}">${escapeHtml(item.description || "")}</textarea><button class="btn ghost-dark" type="submit">Beschrijving opslaan</button></form>`).join("");
   }
 
   function dateRangeDays(start, end = new Date().toISOString().slice(0, 10)) {
@@ -468,7 +480,7 @@
     const days = Array.from({ length: 5 }, (_, index) => { const date = new Date(start); date.setDate(start.getDate() + index); return date; });
     const end = new Date(days[4]); end.setHours(23, 59, 59, 999);
     if (period) period.textContent = `${days[0].toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} – ${days[4].toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}`;
-    const inspectors = liveProfiles.filter((profile) => !["customer", "finance", "support"].includes(profile.role));
+    const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).some((role) => ["inspector", "planning", "owner_admin"].includes(role)));
     const resources = inspectors.length ? inspectors : [{ id: "unassigned", full_name: "Niet toegewezen" }];
     const header = `<div class="calendar-corner"><span>Inspecteur</span></div>${days.map((date) => `<div class="calendar-day-head${date.toDateString() === new Date().toDateString() ? " today" : ""}"><strong>${date.toLocaleDateString("nl-NL", { weekday: "short" })}</strong><span>${date.getDate()} ${date.toLocaleDateString("nl-NL", { month: "short" })}</span></div>`).join("")}`;
     const rows = resources.map((resource) => {
@@ -566,7 +578,7 @@
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
-    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades, requests, requestMessages, hrData] = await Promise.all([
+    const [customers, profiles, inspections, invoices, quotes, appointments, tasks, quoteItems, reports, upgrades, requests, requestMessages, hrData, roleDefinitions] = await Promise.all([
       backend.listOrganizations(),
       backend.listProfiles(),
       backend.listInspections(),
@@ -580,6 +592,7 @@
       backend.listCustomerRequests(),
       backend.listRequestMessages(),
       backend.listEmployeeHrData(),
+      backend.listRoleDefinitions(),
     ]);
     liveOrganizations = customers;
     liveProfiles = profiles;
@@ -591,8 +604,10 @@
     liveReports = reports;
     liveUpgradeRequests = upgrades;
     liveHrData = hrData;
+    liveRoleDefinitions = roleDefinitions;
     renderCustomers(customers);
     renderRoles(profiles);
+    renderRoleDefinitions(roleDefinitions);
     renderInspections(inspections);
     renderInvoices(invoices);
     renderQuotes(quotes);
@@ -1333,7 +1348,7 @@
     const unscheduled = liveQuoteItems.filter((item) => item.quote_id === id && !liveInspections.some((inspection) => inspection.quote_item_id === item.id));
     select.innerHTML = '<option value="">Selecteer object</option>' + unscheduled.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.properties?.name || "Object")} · ${escapeHtml(productLabel(item.inspection_product))} · ${escapeHtml(inspectionDepths[item.inspection_depth]?.label || "Basis")}</option>`).join("");
     const inspectorSelect = quoteScheduleForm.querySelector('[name="inspector_id"]');
-    const inspectors = liveProfiles.filter((profile) => profile.role !== "customer");
+    const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).some((role) => ["inspector", "planning", "owner_admin"].includes(role)));
     inspectorSelect.innerHTML = '<option value="">Selecteer inspecteur</option>' + inspectors.map((profile) => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.full_name || profile.email)} · ${escapeHtml(roleLabels[profile.role] || profile.role)}</option>`).join("");
     if (quoteScheduleTitle) quoteScheduleTitle.textContent = `${activeQuote.organizations?.name || "Klant"} · inspectie plannen`;
     quoteScheduleForm.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1630,21 +1645,7 @@
   }
 
   async function editRole(row) {
-    const cells = row.querySelectorAll("td");
-    const email = prompt("E-mailadres", cells[0].textContent.trim());
-    if (!email) return;
-    const currentRole = cells[1].textContent.trim();
-    const role = prompt("Rol", currentRole);
-    if (!role) return;
-
-    cells[0].textContent = email;
-    cells[1].innerHTML = roleCell(role);
-    cells[2].textContent = roleRights[role] || "Aangepaste rechten";
-    cells[3].innerHTML = statusCell("Actief");
-    if (window.RoofSignalBackend?.isConfigured) {
-      await window.RoofSignalBackend.updateProfileRole(email, role === "Owner admin" ? "owner_admin" : role.toLowerCase());
-    }
-    saveState();
+    openEmployeeDossier(row?.dataset.recordId);
   }
 
   function removeRole(row) {
@@ -1671,8 +1672,17 @@
     const row = existing || document.createElement("tr");
     row.innerHTML = `<td>${email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions"><a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td>`;
     if (window.RoofSignalBackend?.isConfigured) {
-      const result = await window.RoofSignalBackend.updateProfileRole(email, role === "Owner admin" ? "owner_admin" : role.toLowerCase());
-      if (!result.ok) alert("Deze gebruiker bestaat nog niet in Supabase Auth. Maak eerst het account aan of laat de gebruiker inloggen.");
+      const roleValue = role === "Owner admin" ? "owner_admin" : role === "Inspecteur" ? "inspector" : role.toLowerCase();
+      const profile = liveProfiles.find((item) => item.email?.toLowerCase() === email);
+      const result = profile ? await window.RoofSignalBackend.saveProfileRoles(profile.id, [...new Set([...(profile.roles || [profile.role]), roleValue])]) : { ok: false };
+      if (!result.ok) {
+        alert("Deze gebruiker bestaat nog niet in Supabase Auth. Maak eerst het account aan of laat de gebruiker inloggen.");
+        return;
+      }
+      await loadLiveAdminData();
+      setPortalNotice(`${roleLabels[roleValue] || role} is toegevoegd aan ${email}.`, "success");
+      if (emailInput) emailInput.value = "";
+      return;
     }
     if (!existing) rolesBody.append(row);
     iconizeAdminActions(rolesBody);
@@ -2306,17 +2316,21 @@
     localStorage.removeItem("roofsignal-current-customer-id");
   }
 
-  function applyInternalRole(role) {
+  function applyInternalRole(roles) {
     if (!document.body.matches('[data-portal-surface="internal"]')) return;
-    const allowed = {
+    roles = Array.isArray(roles) ? roles : [roles];
+    const roleAccess = {
       owner_admin: ["dashboard", "klanten", "inspecties", "planning", "facturen", "offertes", "support", "rechten"],
       hr: ["rechten"],
       support: ["dashboard", "klanten", "inspecties", "support"],
       planning: ["dashboard", "klanten", "inspecties", "planning"],
       finance: ["dashboard", "klanten", "facturen", "offertes"],
       reportage: ["dashboard", "klanten", "inspecties"],
-    }[role] || [];
-    document.querySelectorAll("[data-role-administration]").forEach((element) => { element.hidden = role !== "owner_admin"; });
+      inspector: ["dashboard", "inspecties", "planning"],
+    };
+    const allowed = [...new Set(roles.flatMap((role) => roleAccess[role] || []))];
+    const owner = roles.includes("owner_admin");
+    document.querySelectorAll("[data-role-administration]").forEach((element) => { element.hidden = !owner; });
     ["dashboard", "klanten", "inspecties", "planning", "facturen", "offertes", "support", "rechten"].forEach((id) => {
       const visible = allowed.includes(id);
       const section = document.getElementById(id);
@@ -2338,7 +2352,7 @@
       window.location.replace(portalAccess.reason === "customer_only" ? "portal-klant.html" : "portal-login.html");
       return;
     }
-    if (surface === "internal") applyInternalRole(portalAccess.profile.role);
+    if (surface === "internal") applyInternalRole(portalAccess.profile.roles || [portalAccess.profile.role]);
     if (surface === "internal") window.RoofSignalAdminNavigate?.(window.location.hash.slice(1) || "dashboard");
     document.body.classList.remove("portal-auth-pending");
     loadState();
@@ -2518,6 +2532,13 @@
   document.querySelector("[data-customer-object-form]")?.addEventListener("submit", (event) => { event.preventDefault(); submitCustomerObject(event.currentTarget); });
   document.querySelector("[data-object-assistant-form]")?.addEventListener("submit", (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); answerObjectQuestion(String(data.get("question") || "")); });
   document.addEventListener("submit", async (event) => {
+    const roleDefinitionForm = event.target.closest("[data-role-definition]");
+    if (roleDefinitionForm) {
+      event.preventDefault();
+      const description = String(new FormData(roleDefinitionForm).get("description") || "").trim();
+      const result = await window.RoofSignalBackend.updateRoleDefinition(roleDefinitionForm.dataset.roleDefinition, description);
+      return setPortalNotice(result.ok ? "Functiebeschrijving is opgeslagen." : result.error?.message || "Functiebeschrijving opslaan is mislukt.", result.ok ? "success" : "error");
+    }
     const form = event.target.closest("[data-request-message-form]"); if (!form) return; event.preventDefault();
     const status = form.querySelector(".form-note"); const message = String(new FormData(form).get("message") || "").trim();
     const result = await window.RoofSignalBackend.createRequestMessage(form.dataset.requestId, customerPortalState.organizationId, message);

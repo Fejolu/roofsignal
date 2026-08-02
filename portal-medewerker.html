@@ -75,7 +75,7 @@
       <div class="employee-page-grid">
         <label>Functie<input name="job_title"></label>
         <label>Afdeling<input name="department"></label>
-        <label>Backoffice-rol<select name="portal_role"><option value="support">Support</option><option value="planning">Planning</option><option value="finance">Finance</option><option value="reportage">Rapportage</option><option value="hr">HR</option><option value="owner_admin">Owner admin</option></select><small data-role-help></small></label>
+        <fieldset class="employee-role-picker employee-grid-wide"><legend>Backoffice-rollen</legend><div data-role-checkboxes></div><small data-role-help></small></fieldset>
         <label>Startdatum<input name="contract_start" type="date"></label>
         <label>Einddatum<input name="contract_end" type="date"></label>
         <label>Status<select name="status"><option value="active">Actief</option><option value="leave">Met verlof</option><option value="sick">Ziek</option><option value="inactive">Inactief</option><option value="left">Uit dienst</option></select></label>
@@ -126,7 +126,7 @@
   </section>
 </main>
 <script src="assets/supabase-config.js"></script>
-<script src="assets/supabase-app.js?v=19" defer></script>
-<script src="assets/portal-employee.js?v=2" defer></script>
+<script src="assets/supabase-app.js?v=20" defer></script>
+<script src="assets/portal-employee.js?v=3" defer></script>
 </body>
 </html>

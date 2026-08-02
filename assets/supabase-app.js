@@ -143,11 +143,13 @@
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*,profile_roles(role)")
       .eq("id", session.user.id)
       .maybeSingle();
 
     if (error) return null;
+    if (!data) return data;
+    data.roles = [...new Set([data.role, ...(data.profile_roles || []).map((item) => item.role)].filter((role) => role && role !== "customer"))];
     return data;
   }
 
@@ -159,7 +161,7 @@
 
   function isInternalProfile(profile, email = "") {
     return String(email || profile?.email || "").toLowerCase().endsWith("@roofsignal.nl")
-      || ["support", "planning", "finance", "reportage", "hr", "owner_admin"].includes(profile?.role);
+      || ["support", "planning", "inspector", "finance", "reportage", "hr", "owner_admin"].some((role) => (profile?.roles || [profile?.role]).includes(role));
   }
 
   async function requirePortalAccess(surface) {
@@ -769,10 +771,36 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,email,full_name,role,created_at")
+      .select("id,email,full_name,role,created_at,profile_roles(role)")
       .order("created_at", { ascending: false });
     if (error) return [];
-    return data || [];
+    return (data || []).map((profile) => ({ ...profile, roles: [...new Set([profile.role, ...(profile.profile_roles || []).map((item) => item.role)].filter((role) => role !== "customer"))] }));
+  }
+
+  async function saveProfileRoles(profileId, roles) {
+    const supabase = await getClient(); if (!supabase || !profileId) return { ok: false };
+    const normalized = [...new Set((roles || []).filter((role) => role && role !== "customer"))];
+    if (!normalized.length) return { ok: false, error: new Error("Selecteer minimaal één backoffice-rol.") };
+    const upserted = await supabase.from("profile_roles").upsert(normalized.map((role) => ({ profile_id: profileId, role })), { onConflict: "profile_id,role" });
+    if (upserted.error) return { ok: false, error: upserted.error };
+    const current = await supabase.from("profile_roles").select("role").eq("profile_id", profileId);
+    if (current.error) return { ok: false, error: current.error };
+    const obsolete = (current.data || []).map((item) => item.role).filter((role) => !normalized.includes(role));
+    if (!obsolete.length) return { ok: true };
+    const removed = await supabase.from("profile_roles").delete().eq("profile_id", profileId).in("role", obsolete);
+    return removed.error ? { ok: false, error: removed.error } : { ok: true };
+  }
+
+  async function listRoleDefinitions() {
+    const supabase = await getClient(); if (!supabase) return [];
+    const { data, error } = await supabase.from("role_definitions").select("*").order("label");
+    return error ? [] : data || [];
+  }
+
+  async function updateRoleDefinition(role, description) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { error } = await supabase.from("role_definitions").update({ description, updated_at: new Date().toISOString() }).eq("role", role);
+    return error ? { ok: false, error } : { ok: true };
   }
 
   async function updateProfileRole(email, role) {
@@ -916,6 +944,9 @@
     deleteOrganization,
     listProfiles,
     updateProfileRole,
+    saveProfileRoles,
+    listRoleDefinitions,
+    updateRoleDefinition,
     listEmployeeHrData,
     saveEmployeeRecord,
     createEmployeeLeave,
