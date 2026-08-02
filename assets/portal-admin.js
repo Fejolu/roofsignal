@@ -120,9 +120,8 @@
 
   function statusCell(label, tone = "green") {
     const meta = statusMeta(label);
-    const icons = { green: "✓", yellow: "○", red: "×" };
     const resolvedTone = meta.tone || tone;
-    return `<span class="status-dot ${resolvedTone}" data-status-label="${escapeHtml(meta.label)}"><span aria-hidden="true">${icons[resolvedTone] || "•"}</span>${escapeHtml(meta.label)}</span>`;
+    return `<span class="status-dot ${resolvedTone}" data-status-label="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span>`;
   }
 
   function escapeHtml(value) {
