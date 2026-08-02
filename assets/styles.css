@@ -38,6 +38,7 @@ body[data-portal-surface="internal"] .portal-nav .portal-nav-secondary { margin-
 .admin-create-button { gap: 7px; white-space: nowrap; }
 .portal-layout > [hidden], .portal-main > [hidden] { display: none !important; }
 .portal-layout > :not([hidden]):only-child { grid-column: 1 / -1; }
+body[data-portal-surface="internal"] .portal-layout > [id]:not([hidden]) { grid-column: 1 / -1; width: 100%; }
 body[data-admin-view="planning"] #planning { width: 100%; }
 .admin-list-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(150px, auto) auto auto auto; gap: 12px; align-items: center; margin: 4px 0 16px; }
 .admin-list-toolbar input { width: 100%; }
