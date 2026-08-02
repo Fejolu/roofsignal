@@ -39,10 +39,11 @@ body[data-portal-surface="internal"] .portal-nav .portal-nav-secondary { margin-
 .portal-layout > [hidden], .portal-main > [hidden] { display: none !important; }
 .portal-layout > :not([hidden]):only-child { grid-column: 1 / -1; }
 body[data-admin-view="planning"] #planning { width: 100%; }
-.admin-list-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto auto; gap: 12px; align-items: center; margin: 4px 0 16px; }
+.admin-list-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(150px, auto) auto auto auto; gap: 12px; align-items: center; margin: 4px 0 16px; }
 .admin-list-toolbar input { width: 100%; }
 .admin-list-toolbar .admin-page-size { display: flex; align-items: center; gap: 8px; color: var(--rs-graphite-600); font-size: 13px; }
 .admin-list-toolbar select { width: 76px; min-height: 44px; }
+.admin-list-toolbar .admin-status-filter select { width: auto; min-width: 160px; }
 .admin-list-toolbar > span { color: var(--rs-graphite-600); font-size: 13px; white-space: nowrap; }
 .admin-list-pages { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .admin-list-pages button { width: 40px; min-height: 40px; border: 1px solid var(--rs-line); border-radius: 9px; background: #fff; cursor: pointer; }
@@ -52,6 +53,15 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .icon-actions a { display: inline-flex; align-items: center; justify-content: center; width: 36px; min-height: 36px; padding: 0; border: 1px solid var(--rs-line); border-radius: 8px; text-decoration: none; }
 .icon-actions a:hover { border-color: var(--rs-orange); background: #fff8f4; }
 .offer-table th:nth-child(5), .offer-table td:nth-child(5) { min-width: 150px; }
+.admin-dashboard-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.admin-preview-list { display: grid; }
+.admin-preview-list > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--rs-line); }
+.admin-preview-list > div:first-child { border-top: 0; }
+.admin-preview-list > div > span:first-child { display: grid; gap: 2px; min-width: 0; }
+.admin-preview-list strong, .admin-preview-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-preview-list small { color: var(--rs-graphite-600); }
+.customer-topbar-actions { align-items: center; flex-wrap: wrap; }
+.customer-global-search { min-width: min(330px, 30vw); }
 @media (max-width: 900px) {
   .portal-topbar { align-items: stretch; }
   .admin-topbar-actions { width: 100%; }
@@ -59,6 +69,8 @@ body[data-admin-view="planning"] #planning { width: 100%; }
   .admin-list-toolbar { grid-template-columns: 1fr auto; }
   .admin-list-toolbar > span { justify-self: start; }
   .admin-list-pages { justify-self: end; }
+  .admin-dashboard-previews { grid-template-columns: 1fr; }
+  .customer-global-search { width: 100%; min-width: 0; flex-basis: 100%; }
 }
 @media (max-width: 600px) {
   .admin-topbar-actions { flex-wrap: wrap; }

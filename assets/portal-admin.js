@@ -122,7 +122,7 @@
     const meta = statusMeta(label);
     const icons = { green: "✓", yellow: "○", red: "×" };
     const resolvedTone = meta.tone || tone;
-    return `<span class="status-dot ${resolvedTone}"><span aria-hidden="true">${icons[resolvedTone] || "•"}</span>${escapeHtml(meta.label)}</span>`;
+    return `<span class="status-dot ${resolvedTone}" data-status-label="${escapeHtml(meta.label)}"><span aria-hidden="true">${icons[resolvedTone] || "•"}</span>${escapeHtml(meta.label)}</span>`;
   }
 
   function escapeHtml(value) {
@@ -401,6 +401,20 @@
     });
   }
 
+  function renderAdminDashboardPreviews(customers = [], quotes = [], appointments = []) {
+    const targets = {
+      customers: document.querySelector("[data-dashboard-customers]"),
+      quotes: document.querySelector("[data-dashboard-quotes]"),
+      planning: document.querySelector("[data-dashboard-planning]")
+    };
+    const row = (title, detail, status = "") => `<div><span><strong>${escapeHtml(title || "-")}</strong><small>${escapeHtml(detail || "")}</small></span>${status ? statusCell(status) : ""}</div>`;
+    if (targets.customers) targets.customers.innerHTML = customers.length ? customers.slice(0, 5).map((customer) => row(customer.name, customer.contact_email || customer.segment || "Klant", customer.status || "active")).join("") : emptyState("Nog geen klanten.");
+    const openQuotes = quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status));
+    if (targets.quotes) targets.quotes.innerHTML = openQuotes.length ? openQuotes.slice(0, 5).map((quote) => row(quote.organizations?.name || quote.title, `${quote.title || "Offerte"} · ${formatMoney(quote.amount)}`, quote.status || "draft")).join("") : emptyState("Geen open offertes.");
+    const upcoming = appointments.filter((appointment) => new Date(appointment.starts_at) >= new Date()).sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+    if (targets.planning) targets.planning.innerHTML = upcoming.length ? upcoming.slice(0, 5).map((appointment) => row(appointment.organizations?.name || appointment.title, `${formatPortalDate(appointment.starts_at)} · ${appointment.properties?.name || ""}`, appointment.status || "planned")).join("") : emptyState("Geen aankomende afspraken.");
+  }
+
   async function loadLiveAdminData() {
     const backend = window.RoofSignalBackend;
     if (!backend?.isConfigured || (!customersBody && !rolesBody)) return;
@@ -435,6 +449,7 @@
     renderAppointments(appointments);
     renderAdminSupport(requests, requestMessages, tasks);
     renderAdminMetrics(customers, inspections, invoices, quotes, tasks);
+    renderAdminDashboardPreviews(customers, quotes, appointments);
     populateInspectionOrganizations(customers);
     populateWorkflowOrganizations(customers);
     syncCustomerOwnedData();
@@ -1961,6 +1976,7 @@
       const id = (available || links.find((link) => !link.hidden))?.hash.slice(1);
       if (!id) return;
       sections.forEach((section) => { section.hidden = section.id !== id; });
+      document.querySelectorAll("[data-admin-dashboard-preview]").forEach((section) => { section.hidden = id !== "dashboard"; });
       links.forEach((link) => link.classList.toggle("active", link.hash === `#${id}`));
       document.body.dataset.adminView = id;
       const heading = document.querySelector(".portal-topbar h1");
@@ -1973,6 +1989,10 @@
     links.forEach((link) => link.addEventListener("click", (event) => {
       event.preventDefault();
       activate(link.hash.slice(1), true);
+    }));
+    document.querySelectorAll("[data-admin-view-link]").forEach((link) => link.addEventListener("click", (event) => {
+      event.preventDefault();
+      activate(link.dataset.adminViewLink, true);
     }));
     window.addEventListener("popstate", () => activate(window.location.hash.slice(1) || "dashboard"));
     window.addEventListener("hashchange", () => activate(window.location.hash.slice(1) || "dashboard"));
@@ -1995,15 +2015,23 @@
       collection.dataset.listToolsReady = "true";
       const toolbar = document.createElement("div");
       toolbar.className = "admin-list-toolbar";
-      toolbar.innerHTML = `<label><span class="sr-only">${placeholder}</span><input type="search" placeholder="${placeholder}" data-list-search></label><label class="admin-page-size"><span>Regels</span><select data-list-size><option>10</option><option>25</option><option>50</option></select></label><span data-list-count></span><div class="admin-list-pages"><button type="button" data-list-prev aria-label="Vorige pagina">‹</button><span data-list-page></span><button type="button" data-list-next aria-label="Volgende pagina">›</button></div>`;
+      toolbar.innerHTML = `<label><span class="sr-only">${placeholder}</span><input type="search" placeholder="${placeholder}" data-list-search></label>${selector === "table" ? '<label class="admin-status-filter"><span class="sr-only">Filter op status</span><select data-list-status><option value="">Alle statussen</option></select></label>' : ""}<label class="admin-page-size"><span>Regels</span><select data-list-size><option>10</option><option>25</option><option>50</option></select></label><span data-list-count></span><div class="admin-list-pages"><button type="button" data-list-prev aria-label="Vorige pagina">‹</button><span data-list-page></span><button type="button" data-list-next aria-label="Volgende pagina">›</button></div>`;
       collection.before(toolbar);
       let page = 1;
       const items = () => selector === "table" ? [...collection.querySelectorAll("tbody tr:not([data-empty-row])")] : [...collection.children].filter((item) => !item.dataset.emptyRow);
       const update = () => {
         const query = toolbar.querySelector("[data-list-search]").value.trim().toLowerCase();
+        const statusSelect = toolbar.querySelector("[data-list-status]");
+        const selectedStatus = statusSelect?.value || "";
         const size = Number(toolbar.querySelector("[data-list-size]").value);
         const all = items();
-        const matches = all.filter((item) => !query || item.textContent.toLowerCase().includes(query));
+        if (statusSelect) {
+          const currentOptions = new Set([...statusSelect.options].map((option) => option.value));
+          [...new Set(all.map((item) => item.querySelector(".status-dot")?.dataset.statusLabel).filter(Boolean))].sort().forEach((status) => {
+            if (!currentOptions.has(status)) statusSelect.add(new Option(status, status));
+          });
+        }
+        const matches = all.filter((item) => (!query || item.textContent.toLowerCase().includes(query)) && (!selectedStatus || item.querySelector(".status-dot")?.dataset.statusLabel === selectedStatus));
         const pages = Math.max(1, Math.ceil(matches.length / size));
         page = Math.min(Math.max(page, 1), pages);
         all.forEach((item) => { item.hidden = true; });
@@ -2047,6 +2075,42 @@
       results.hidden = true;
     });
     document.addEventListener("click", (event) => { if (!event.target.closest(".admin-global-search")) results.hidden = true; });
+  }
+
+  function initializeCustomerGlobalSearch() {
+    const input = document.querySelector("[data-customer-global-search]");
+    const results = document.querySelector("[data-customer-search-results]");
+    if (!input || !results) return;
+    const modules = {
+      objecten: ["Mijn objecten", "#objecten"], offertes: ["Offertes en documenten", "#offertes"],
+      inspecties: ["Inspecties en rapporten", "#inspecties"], planning: ["Afspraken", "#planning"],
+      financieel: ["Facturen", "#financieel"], aanvragen: ["Aanvragen en contact", "#aanvragen"],
+      notificaties: ["Meldingen", "#notificaties"]
+    };
+    input.addEventListener("input", () => {
+      const query = input.value.trim().toLowerCase();
+      if (query.length < 2) { results.hidden = true; results.innerHTML = ""; return; }
+      const found = [];
+      Object.entries(modules).forEach(([id, [label]]) => {
+        const section = document.getElementById(id);
+        if (!section) return;
+        const candidates = [...section.querySelectorAll("tbody tr, article, .customer-object-card, .customer-quote-card, .timeline-list > div, .portal-notification")];
+        if (label.toLowerCase().includes(query)) found.push({ id, label, text: "Open dit onderdeel" });
+        candidates.filter((item) => item.textContent.toLowerCase().includes(query)).slice(0, 3).forEach((item) => found.push({ id, label, text: item.textContent.trim().replace(/\s+/g, " ").slice(0, 110) }));
+      });
+      results.innerHTML = found.length ? found.slice(0, 10).map((item) => `<button type="button" data-customer-search-target="${item.id}"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.text)}</span></button>`).join("") : '<p>Geen resultaten in uw dossier.</p>';
+      results.hidden = false;
+    });
+    results.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-customer-search-target]");
+      if (!target) return;
+      const section = document.getElementById(target.dataset.customerSearchTarget);
+      if (!section) return;
+      history.pushState(null, "", `#${target.dataset.customerSearchTarget}`);
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      results.hidden = true;
+    });
+    document.addEventListener("click", (event) => { if (!event.target.closest(".customer-global-search")) results.hidden = true; });
   }
 
   function deleteCurrentCustomer() {
@@ -2104,6 +2168,7 @@
   initializePortalNavigation();
   initializeAdminListTools();
   initializeAdminGlobalSearch();
+  initializeCustomerGlobalSearch();
 
   document.addEventListener("click", (event) => {
     const dialogClose = event.target.closest("[data-dialog-close]");

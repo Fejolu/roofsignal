@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="RoofSignal Portaal | RoofSignal">
   <meta name="twitter:description" content="Objectgericht RoofSignal Portaal met onderhoudshistorie, inspecties, intelligence en planning.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal21">
+  <link rel="stylesheet" href="assets/styles.css?v=portal22">
 </head>
 <body class="portal-body portal-auth-pending" data-portal-surface="customer">
 <aside class="portal-sidebar">
@@ -49,7 +49,12 @@
       <h1>Klant</h1>
       <p>Uw objecten, gebouwdata, inspecties, rapporten, planning en facturen in één doorlopend vastgoeddossier.</p>
     </div>
-    <div class="topbar-actions">
+    <div class="topbar-actions customer-topbar-actions">
+      <div class="admin-global-search customer-global-search">
+        <label class="sr-only" for="customer-global-search">Zoeken in uw dossier</label>
+        <input id="customer-global-search" type="search" autocomplete="off" placeholder="Zoek object, document of afspraak…" data-customer-global-search>
+        <div class="admin-search-results" data-customer-search-results hidden></div>
+      </div>
       <a class="btn ghost-dark" href="#offertes">Bekijk documenten</a>
       <a class="btn" href="#planning">Bekijk afspraak</a>
     </div>
@@ -341,6 +346,6 @@
 </main>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/supabase-app.js?v=17" defer></script>
-<script src="assets/portal-admin.js?v=18" defer></script>
+<script src="assets/portal-admin.js?v=19" defer></script>
 </body>
 </html>
