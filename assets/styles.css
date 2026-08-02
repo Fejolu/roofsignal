@@ -76,6 +76,14 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .admin-preview-list .status-dot { justify-self: end; text-align: right; }
 .customer-topbar-actions { align-items: center; flex-wrap: wrap; }
 .customer-global-search { min-width: min(330px, 30vw); }
+@media (min-width: 1200px) {
+  body[data-portal-surface="internal"] .portal-topbar { min-height: 196px; align-items: center; }
+  body[data-portal-surface="internal"] .portal-topbar > div:first-child { flex: 1 1 auto; min-width: 0; }
+  body[data-portal-surface="internal"] .portal-topbar h1 { font-size: clamp(34px, 2.4vw, 42px); white-space: nowrap; }
+  body[data-portal-surface="internal"] .admin-topbar-actions { flex: 0 0 min(600px, 48%); flex-wrap: nowrap; align-items: flex-end; }
+  body[data-portal-surface="internal"] .admin-global-search { flex: 1 1 auto; min-width: 0; }
+  body[data-portal-surface="internal"] .admin-create-button { flex: 0 0 auto; }
+}
 @media (max-width: 900px) {
   .portal-topbar { align-items: stretch; }
   .admin-topbar-actions { width: 100%; }
