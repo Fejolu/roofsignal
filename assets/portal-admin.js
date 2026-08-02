@@ -406,12 +406,30 @@
       quotes: document.querySelector("[data-dashboard-quotes]"),
       planning: document.querySelector("[data-dashboard-planning]")
     };
-    const row = (title, detail, status = "") => `<div><span><strong>${escapeHtml(title || "-")}</strong><small>${escapeHtml(detail || "")}</small></span>${status ? statusCell(status) : ""}</div>`;
-    if (targets.customers) targets.customers.innerHTML = customers.length ? customers.slice(0, 5).map((customer) => row(customer.name, customer.contact_email || customer.segment || "Klant", customer.status || "active")).join("") : emptyState("Nog geen klanten.");
+    const row = (kind, id, title, detail, status = "", query = title) => `<button type="button" class="admin-preview-item" data-dashboard-preview-kind="${escapeHtml(kind)}" data-dashboard-preview-id="${escapeHtml(id || "")}" data-dashboard-preview-query="${escapeHtml(query || title || "")}" aria-label="${escapeHtml(title || "Item")} openen"><span><strong>${escapeHtml(title || "-")}</strong><small>${escapeHtml(detail || "")}</small></span>${status ? statusCell(status) : ""}<i aria-hidden="true">→</i></button>`;
+    if (targets.customers) targets.customers.innerHTML = customers.length ? customers.slice(0, 5).map((customer) => row("customer", customer.id, customer.name, customer.contact_email || customer.segment || "Klant", customer.status || "active")).join("") : emptyState("Nog geen klanten.");
     const openQuotes = quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status));
-    if (targets.quotes) targets.quotes.innerHTML = openQuotes.length ? openQuotes.slice(0, 5).map((quote) => row(quote.organizations?.name || quote.title, `${quote.title || "Offerte"} · ${formatMoney(quote.amount)}`, quote.status || "draft")).join("") : emptyState("Geen open offertes.");
+    if (targets.quotes) targets.quotes.innerHTML = openQuotes.length ? openQuotes.slice(0, 5).map((quote) => row("quote", quote.id, quote.organizations?.name || quote.title, `${quote.title || "Offerte"} · ${formatMoney(quote.amount)}`, quote.status || "draft", quote.title || quote.organizations?.name)).join("") : emptyState("Geen open offertes.");
     const upcoming = appointments.filter((appointment) => new Date(appointment.starts_at) >= new Date()).sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
-    if (targets.planning) targets.planning.innerHTML = upcoming.length ? upcoming.slice(0, 5).map((appointment) => row(appointment.organizations?.name || appointment.title, `${formatPortalDate(appointment.starts_at)} · ${appointment.properties?.name || ""}`, appointment.status || "planned")).join("") : emptyState("Geen aankomende afspraken.");
+    if (targets.planning) targets.planning.innerHTML = upcoming.length ? upcoming.slice(0, 5).map((appointment) => row("appointment", appointment.id, appointment.organizations?.name || appointment.title, `${formatPortalDate(appointment.starts_at)} · ${appointment.properties?.name || ""}`, appointment.status || "planned", appointment.organizations?.name || appointment.title)).join("") : emptyState("Geen aankomende afspraken.");
+  }
+
+  function openDashboardPreview(target) {
+    const kind = target.dataset.dashboardPreviewKind;
+    const view = { customer: "klanten", quote: "offertes", appointment: "planning" }[kind];
+    if (!view) return;
+    window.RoofSignalAdminNavigate?.(view);
+    if (kind === "customer") {
+      const row = customersBody?.querySelector(`[data-customer-id="${CSS.escape(target.dataset.dashboardPreviewId)}"]`);
+      if (row) openCustomer(row);
+      return;
+    }
+    const input = document.getElementById(view)?.querySelector("[data-list-search]");
+    if (input) {
+      input.value = target.dataset.dashboardPreviewQuery || "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.focus();
+    }
   }
 
   async function loadLiveAdminData() {
@@ -2175,6 +2193,8 @@
   initializeCustomerGlobalSearch();
 
   document.addEventListener("click", (event) => {
+    const dashboardPreview = event.target.closest("[data-dashboard-preview-kind]");
+    if (dashboardPreview) { openDashboardPreview(dashboardPreview); return; }
     const dialogClose = event.target.closest("[data-dialog-close]");
     if (dialogClose) { event.preventDefault(); dialogClose.closest("dialog")?.close(); return; }
     const signOut = event.target.closest(".portal-account a[href^='portal-login']");
