@@ -235,7 +235,7 @@
     rolesBody.innerHTML = profiles.map((profile) => {
       const role = roleLabels[profile.role] || profile.role;
       const calendarAction = profile.role !== "customer" ? `<a href="#rechten" data-admin-action="staff-calendar-feed" data-profile-id="${escapeHtml(profile.id)}">Agenda-abonnement</a>` : "";
-      return `<tr><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions">${calendarAction}<a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
+      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="profile" data-record-id="${escapeHtml(profile.id)}"><td>${profile.email}</td><td>${roleCell(role)}</td><td>${roleRights[role] || "Aangepaste rechten"}</td><td>${statusCell("Actief")}</td><td><div class="table-actions">${calendarAction}<a href="#rechten" data-admin-action="edit-role">Bewerken</a><a class="text-danger" href="#rechten" data-admin-action="remove-role">Verwijderen</a></div></td></tr>`;
     }).join("");
   }
 
@@ -271,7 +271,7 @@
     inspectionBody.innerHTML = inspections.map((inspection) => {
       const productAndDepth = `${productLabel(inspection.inspection_product)} · ${inspectionDepths[inspection.inspection_depth]?.label || "Basis"}`;
       const scope = inspection.scope ? `<small>${escapeHtml(inspection.scope)}</small>` : "";
-      return `<tr><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td><strong>${escapeHtml(productAndDepth)}</strong>${scope}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><button class="inline-button" type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Open</button></td></tr>`;
+      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="inspection" data-record-id="${escapeHtml(inspection.id)}"><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td><strong>${escapeHtml(productAndDepth)}</strong>${scope}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><button class="inline-button" type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Open</button></td></tr>`;
     }).join("");
   }
 
@@ -325,7 +325,7 @@
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
-      ? invoices.map((invoice) => { const action = invoice.status === "draft" ? "send-invoice" : ["sent","open","overdue"].includes(invoice.status) ? "pay-invoice" : ""; const label = invoice.status === "draft" ? "Verzenden" : action ? "Betaald registreren" : "-"; const paymentLink = !["paid","credited","cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : ""; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${action ? `<button class="inline-button" data-admin-action="${action}" data-invoice-id="${escapeHtml(invoice.id)}">${label}</button>` : label}${paymentLink}${credit}</div></td></tr>`; }).join("")
+      ? invoices.map((invoice) => { const action = invoice.status === "draft" ? "send-invoice" : ["sent","open","overdue"].includes(invoice.status) ? "pay-invoice" : ""; const label = invoice.status === "draft" ? "Verzenden" : action ? "Betaald registreren" : "-"; const paymentLink = !["paid","credited","cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : ""; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${action ? `<button class="inline-button" data-admin-action="${action}" data-invoice-id="${escapeHtml(invoice.id)}">${label}</button>` : label}${paymentLink}${credit}</div></td></tr>`; }).join("")
       : '<tr data-empty-row><td colspan="4">Geen facturen.</td></tr>';
   }
 
@@ -375,14 +375,14 @@
   function renderQuotes(quotes = []) {
     if (!offersBody) return;
     offersBody.innerHTML = quotes.length
-      ? quotes.map((quote) => { const items = liveQuoteItems.filter((item) => item.quote_id === quote.id); return `<tr><td>${escapeHtml(quote.organizations?.name || "-")}</td><td>${escapeHtml(items.map((item) => item.properties?.name).filter(Boolean).join(", ") || "-")}</td><td>${escapeHtml(quote.title || quote.quote_number || "Offerte")}</td><td>${escapeHtml(formatMoney(quote.amount))}</td><td>${statusCell(escapeHtml(quote.status || "Concept"), quote.status === "accepted" ? "green" : "yellow")}</td><td>${quoteNextAction(quote)}</td></tr>`; }).join("")
+      ? quotes.map((quote) => { const items = liveQuoteItems.filter((item) => item.quote_id === quote.id); return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="quote" data-record-id="${escapeHtml(quote.id)}"><td>${escapeHtml(quote.organizations?.name || "-")}</td><td>${escapeHtml(items.map((item) => item.properties?.name).filter(Boolean).join(", ") || "-")}</td><td>${escapeHtml(quote.title || quote.quote_number || "Offerte")}</td><td>${escapeHtml(formatMoney(quote.amount))}</td><td>${statusCell(escapeHtml(quote.status || "Concept"), quote.status === "accepted" ? "green" : "yellow")}</td><td>${quoteNextAction(quote)}</td></tr>`; }).join("")
       : '<tr data-empty-row><td colspan="6">Geen offertes.</td></tr>';
   }
 
   function renderAppointments(appointments = []) {
     if (!planningList) return;
     planningList.innerHTML = appointments.length
-      ? appointments.map((appointment) => `<div><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, appointment.status].filter(Boolean).join(" · "))}</p><div class="table-actions"><button class="inline-button" data-admin-action="test-appointment-email" data-appointment-id="${escapeHtml(appointment.id)}">Test afspraakmail</button></div></div>`).join("")
+      ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, appointment.status].filter(Boolean).join(" · "))}</p><div class="table-actions"><button class="inline-button" data-admin-action="test-appointment-email" data-appointment-id="${escapeHtml(appointment.id)}">Test afspraakmail</button></div></div>`).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
   }
 
@@ -430,6 +430,31 @@
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.focus();
     }
+  }
+
+  function openRecordContext(target) {
+    const kind = target.dataset.recordKind;
+    const id = target.dataset.recordId;
+    if (kind === "inspection") return openInspection(id);
+    const record = { quote: liveQuotes, invoice: liveInvoices, appointment: liveAppointments, profile: liveProfiles }[kind]?.find((item) => item.id === id);
+    if (!record) return;
+    let dialog = document.querySelector("[data-admin-record-dialog]");
+    if (!dialog) {
+      dialog = document.createElement("dialog");
+      dialog.className = "portal-dialog";
+      dialog.dataset.adminRecordDialog = "true";
+      document.body.append(dialog);
+    }
+    const title = kind === "quote" ? record.title || record.quote_number || "Offerte" : kind === "invoice" ? record.invoice_number || "Factuur" : kind === "profile" ? record.full_name || record.email : record.title || "Afspraak";
+    const fields = kind === "quote"
+      ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Geldig tot", record.valid_until ? formatPortalDate(record.valid_until) : "-"]]
+      : kind === "invoice"
+        ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Vervaldatum", record.due_date ? formatPortalDate(record.due_date) : "-"]]
+        : kind === "profile"
+          ? [["Naam", record.full_name], ["E-mailadres", record.email], ["Rol", roleLabels[record.role] || record.role], ["Telefoon", record.phone || "-"]]
+          : [["Klant", record.organizations?.name], ["Object", record.properties?.name], ["Datum en tijd", formatPortalDate(record.starts_at)], ["Inspecteur", record.profiles?.full_name || record.profiles?.email || "-"]];
+    dialog.innerHTML = `<div class="portal-dialog-card admin-record-card"><div class="panel-head"><div><span class="eyebrow orange">Details</span><h2>${escapeHtml(title)}</h2></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div><dl>${fields.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "-")}</dd></div>`).join("")}</dl><div class="dialog-actions"><button class="btn ghost-dark" type="button" data-dialog-close>Sluiten</button></div></div>`;
+    dialog.showModal();
   }
 
   async function loadLiveAdminData() {
@@ -2197,6 +2222,8 @@
     if (dashboardPreview) { openDashboardPreview(dashboardPreview); return; }
     const customerRowTarget = event.target.closest(".customer-clickable-row");
     if (customerRowTarget && !event.target.closest("a, button, input, select, textarea")) { openCustomer(customerRowTarget); return; }
+    const recordRowTarget = event.target.closest(".record-clickable-row");
+    if (recordRowTarget && !event.target.closest("a, button, input, select, textarea")) { openRecordContext(recordRowTarget); return; }
     const dialogClose = event.target.closest("[data-dialog-close]");
     if (dialogClose) { event.preventDefault(); dialogClose.closest("dialog")?.close(); return; }
     const signOut = event.target.closest(".portal-account a[href^='portal-login']");
@@ -2289,9 +2316,11 @@
 
   document.addEventListener("keydown", (event) => {
     const customerRowTarget = event.target.closest?.(".customer-clickable-row");
-    if (!customerRowTarget || !["Enter", " "].includes(event.key)) return;
+    const recordRowTarget = event.target.closest?.(".record-clickable-row");
+    if ((!customerRowTarget && !recordRowTarget) || !["Enter", " "].includes(event.key)) return;
     event.preventDefault();
-    openCustomer(customerRowTarget);
+    if (customerRowTarget) openCustomer(customerRowTarget);
+    if (recordRowTarget) openRecordContext(recordRowTarget);
   });
 
   customerCreateForm?.addEventListener("submit", createCustomer);

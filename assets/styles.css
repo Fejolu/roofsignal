@@ -56,6 +56,12 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .portal-table .customer-clickable-row { cursor: pointer; transition: background-color .16s ease, box-shadow .16s ease; }
 .portal-table .customer-clickable-row:hover, .portal-table .customer-clickable-row:focus-visible { background: #fff8f4; box-shadow: inset 4px 0 0 var(--rs-orange); outline: none; }
 .portal-table .customer-clickable-row:hover td:first-child, .portal-table .customer-clickable-row:focus-visible td:first-child { color: var(--rs-orange); }
+.record-clickable-row { cursor: pointer; transition: background-color .16s ease, box-shadow .16s ease; }
+.portal-table .record-clickable-row:hover, .portal-table .record-clickable-row:focus-visible, .timeline-list .record-clickable-row:hover, .timeline-list .record-clickable-row:focus-visible { background: #fff8f4; box-shadow: inset 4px 0 0 var(--rs-orange); outline: none; }
+.admin-record-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.admin-record-card dl div { padding: 14px; border: 1px solid var(--rs-line); border-radius: 10px; background: #f7f8f7; }
+.admin-record-card dt { color: var(--rs-graphite-600); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.admin-record-card dd { margin: 5px 0 0; font-weight: 800; }
 .offer-table th:nth-child(5), .offer-table td:nth-child(5) { min-width: 150px; }
 .admin-dashboard-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .metrics .metric-card-link { position: relative; cursor: pointer; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
