@@ -1,5 +1,7 @@
 (() => {
   const stateKey = "roofsignal-admin-html";
+  let activeSaveButton = null;
+  let portalNoticeTimer = null;
   const roleRights = {
     "Owner admin": "Alles",
     Support: "Support, meekijken, dossiers",
@@ -1049,12 +1051,16 @@
     let notice = main.querySelector(".portal-action-note");
     if (!notice) {
       notice = document.createElement("div");
-      notice.className = "portal-action-note";
+      notice.className = "portal-action-note portal-toast";
       const anchor = main.querySelector(".portal-topbar") || main.firstElementChild;
       anchor?.insertAdjacentElement("afterend", notice);
     }
     notice.dataset.statusTone = tone;
     notice.textContent = message;
+    notice.hidden = false;
+    finishSaveFeedback(tone);
+    clearTimeout(portalNoticeTimer);
+    portalNoticeTimer = window.setTimeout(() => { notice.hidden = true; }, tone === "error" ? 6000 : 3200);
   }
 
   function impersonateCustomer(row) {
@@ -1163,6 +1169,24 @@
     if (!element) return;
     element.textContent = message;
     element.dataset.statusTone = tone;
+    finishSaveFeedback(tone);
+  }
+
+  function finishSaveFeedback(tone) {
+    const button = activeSaveButton;
+    if (!button || tone !== "success") {
+      if (tone === "error") activeSaveButton = null;
+      return;
+    }
+    activeSaveButton = null;
+    const original = button.dataset.saveLabel || button.textContent;
+    button.dataset.saveLabel = original;
+    button.textContent = "✓ Opgeslagen";
+    button.classList.add("save-confirmed");
+    window.setTimeout(() => {
+      button.textContent = original;
+      button.classList.remove("save-confirmed");
+    }, 1800);
   }
 
   async function loadQuoteObjects(organizationId) {
@@ -2448,6 +2472,10 @@
     if (recordRowTarget) openRecordContext(recordRowTarget);
   });
 
+  document.addEventListener("submit", (event) => {
+    const button = event.target.querySelector?.('button[type="submit"]');
+    if (button && /opslaan|vastleggen|bijwerken|toevoegen|publiceren/i.test(button.textContent)) activeSaveButton = button;
+  }, true);
   customerCreateForm?.addEventListener("submit", createCustomer);
   customerSearchInput?.addEventListener("input", filterCustomers);
   inspectionForm?.querySelector('[name="organization_id"]')?.addEventListener("change", (event) => loadInspectionObjects(event.target.value));

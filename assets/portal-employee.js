@@ -7,6 +7,7 @@
   let access;
   let profile;
   let hrData;
+  let noticeTimer;
 
   const $ = (selector) => document.querySelector(selector);
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
@@ -16,7 +17,15 @@
   function notice(message, tone = "success") {
     const node = $("[data-page-notice]");
     node.textContent = message; node.dataset.statusTone = tone; node.hidden = false;
-    node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    clearTimeout(noticeTimer);
+    noticeTimer = window.setTimeout(() => { node.hidden = true; }, tone === "error" ? 6000 : 3200);
+  }
+
+  function confirmSaveButton(form) {
+    const button = form.querySelector('button[type="submit"]'); if (!button) return;
+    const original = button.dataset.saveLabel || button.textContent;
+    button.dataset.saveLabel = original; button.textContent = "✓ Opgeslagen"; button.classList.add("save-confirmed");
+    window.setTimeout(() => { button.textContent = original; button.classList.remove("save-confirmed"); }, 1800);
   }
 
   function payload(form, numeric = []) {
@@ -92,20 +101,20 @@
       if (!roleResult.ok) return notice("De gegevens zijn opgeslagen, maar de rol kon niet worden gewijzigd.", "error");
       profile.role = form.elements.portal_role.value;
     }
-    await reload(); notice("Het medewerkersdossier is bijgewerkt.");
+    await reload(); confirmSaveButton(form); notice("Het medewerkersdossier is bijgewerkt.");
   });
 
   $("[data-employee-document-form]")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget; const file = form.elements.file.files?.[0]; if (!file) return;
     const result = await backend.uploadEmployeeDocument(file, { profile_id: profileId, ...payload(form) });
     if (!result.ok) return notice(result.error?.message || "Document opslaan is mislukt.", "error");
-    form.reset(); await reload(); notice("Het document is afgeschermd opgeslagen.");
+    form.reset(); await reload(); confirmSaveButton(form); notice("Het document is afgeschermd opgeslagen.");
   });
 
   $("[data-employee-leave-form]")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const result = await backend.createEmployeeLeave({ profile_id: profileId, ...payload(event.currentTarget, ["hours"]) });
     if (!result.ok) return notice(result.error?.message || "Verlof vastleggen is mislukt.", "error");
-    event.currentTarget.reset(); await reload(); notice("Het verlof is vastgelegd.");
+    event.currentTarget.reset(); await reload(); confirmSaveButton(event.currentTarget); notice("Het verlof is vastgelegd.");
   });
 
   $("[data-employee-absence-form]")?.addEventListener("submit", async (event) => {
@@ -113,7 +122,7 @@
     const result = await backend.createEmployeeAbsence({ profile_id: profileId, ...data });
     if (!result.ok) return notice(result.error?.message || "Verzuim vastleggen is mislukt.", "error");
     await backend.saveEmployeeRecord({ profile_id: profileId, status: data.status === "recovered" ? "active" : "sick" });
-    form.reset(); await reload(); notice("De inzetbaarheid is vastgelegd zonder medische gegevens.");
+    form.reset(); await reload(); confirmSaveButton(form); notice("De inzetbaarheid is vastgelegd zonder medische gegevens.");
   });
 
   document.addEventListener("click", async (event) => {
