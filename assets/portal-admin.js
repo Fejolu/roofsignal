@@ -87,6 +87,7 @@
   const findingList = document.querySelector("[data-finding-list]");
   const inspectionChecklist = document.querySelector("[data-inspection-checklist]");
   const mediaUploadForm = document.querySelector("[data-media-upload-form]");
+  const mediaUploadStatus = document.querySelector("[data-media-upload-status]");
   const inspectionMediaList = document.querySelector("[data-inspection-media-list]");
   const reportForm = document.querySelector("[data-report-create-form]");
   const quoteForm = document.querySelector("[data-quote-create-form]");
@@ -2525,13 +2526,45 @@
   findingForm?.addEventListener("submit", submitFinding);
   reportForm?.addEventListener("submit", submitReport);
   mediaUploadForm?.addEventListener("submit", async (event) => {
-    event.preventDefault(); if (!activeInspection) return;
-    const data = new FormData(mediaUploadForm); const files = [...mediaUploadForm.elements.media_files.files];
-    for (const file of files) {
-      const result = await window.RoofSignalBackend.uploadInspectionMedia(file, { organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, media_type: data.get("media_type"), required_depth: data.get("required_depth") });
-      if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Media uploaden is mislukt.", "error");
+    event.preventDefault();
+    if (!activeInspection) return setWorkflowStatus(mediaUploadStatus, "Open eerst een inspectiedossier.", "error");
+    const data = new FormData(mediaUploadForm);
+    const files = [...mediaUploadForm.elements.media_files.files];
+    if (!files.length) return setWorkflowStatus(mediaUploadStatus, "Selecteer minimaal één foto of video.", "error");
+    const tooLarge = files.filter((file) => file.size > 50 * 1024 * 1024);
+    if (tooLarge.length) return setWorkflowStatus(mediaUploadStatus, `${tooLarge[0].name} is groter dan 50 MB. Verklein dit bestand of upload de video afzonderlijk.`, "error");
+    const unsupported = files.filter((file) => file.type && !/^(image|video)\//.test(file.type));
+    if (unsupported.length) return setWorkflowStatus(mediaUploadStatus, `${unsupported[0].name} is geen ondersteund foto- of videobestand.`, "error");
+
+    const button = mediaUploadForm.querySelector('button[type="submit"]');
+    const originalLabel = button.textContent;
+    const payload = { organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, media_type: data.get("media_type"), required_depth: data.get("required_depth") };
+    let cursor = 0; let completed = 0; const failures = [];
+    button.disabled = true;
+    const updateProgress = () => { button.textContent = `${completed}/${files.length} geüpload`; setWorkflowStatus(mediaUploadStatus, `Bezig met uploaden: ${completed} van ${files.length} bestanden. Laat dit venster open.`, ""); };
+    updateProgress();
+    const worker = async () => {
+      while (cursor < files.length) {
+        const file = files[cursor++];
+        let result = await window.RoofSignalBackend.uploadInspectionMedia(file, payload);
+        if (!result.ok) result = await window.RoofSignalBackend.uploadInspectionMedia(file, payload);
+        if (!result.ok) failures.push({ file: file.name, message: result.error?.message || "Upload mislukt" });
+        completed += 1; updateProgress();
+      }
+    };
+    try {
+      await Promise.all(Array.from({ length: Math.min(3, files.length) }, worker));
+      const uploaded = files.length - failures.length;
+      renderInspectionMedia(await window.RoofSignalBackend.listInspectionMedia(activeInspection.id));
+      if (failures.length) {
+        setWorkflowStatus(mediaUploadStatus, `${uploaded} van ${files.length} bestanden zijn geüpload. Mislukt: ${failures.slice(0, 3).map((item) => item.file).join(", ")}${failures.length > 3 ? ` en ${failures.length - 3} meer` : ""}. Selecteer alleen deze bestanden opnieuw.`, "error");
+      } else {
+        mediaUploadForm.reset();
+        setWorkflowStatus(mediaUploadStatus, `${uploaded} bestand${uploaded === 1 ? "" : "en"} succesvol geüpload.`, "success");
+      }
+    } finally {
+      button.disabled = false; button.textContent = originalLabel;
     }
-    mediaUploadForm.reset(); renderInspectionMedia(await window.RoofSignalBackend.listInspectionMedia(activeInspection.id)); setWorkflowStatus(inspectionWorkspaceStatus, `${files.length} bestand${files.length === 1 ? "" : "en"} geüpload.`, "success");
   });
   inspectionChecklist?.addEventListener("change", async (event) => {
     const select = event.target.closest("[data-checklist-item]"); if (!select) return;

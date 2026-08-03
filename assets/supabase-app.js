@@ -521,7 +521,11 @@
     const { error: uploadError } = await supabase.storage.from("inspection-media").upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) return { ok: false, error: uploadError };
     const { data, error } = await supabase.from("media_assets").insert({ ...payload, storage_path: path, file_name: file.name, mime_type: file.type, byte_size: file.size }).select("*").single();
-    return error ? { ok: false, error } : { ok: true, data };
+    if (error) {
+      await supabase.storage.from("inspection-media").remove([path]);
+      return { ok: false, error };
+    }
+    return { ok: true, data };
   }
 
   async function listInspectionMedia(inspectionId) {
