@@ -81,6 +81,7 @@
   const inspectionBody = document.querySelector(".inspection-table tbody");
   const inspectionWorkspace = document.querySelector("[data-inspection-workspace]");
   const inspectionWorkspaceTitle = document.querySelector("[data-inspection-workspace-title]");
+  const inspectionCommercialScope = document.querySelector("[data-inspection-commercial-scope]");
   const inspectionWorkspaceStatus = document.querySelector("[data-inspection-workspace-status]");
   const inspectionStatusForm = document.querySelector("[data-inspection-status-form]");
   const findingForm = document.querySelector("[data-finding-create-form]");
@@ -1463,14 +1464,16 @@
     setPortalNotice("Herinspectie is aangemaakt en aan de onderhoudsactie gekoppeld.", "success"); await loadLiveAdminData();
   }
 
-  function premiumChecklistRows() {
-    return Object.entries(inspectionDepths).flatMap(([depth, definition]) => Object.entries(definition.coverage).flatMap(([element, checkpoints]) => checkpoints.map((checkpoint) => ({ building_element: element, checkpoint, required_depth: depth }))));
+  function depthRank(depth) { return { basis: 1, plus: 2, premium: 3 }[depth] || 1; }
+
+  function entitledChecklistRows(depth = "basis") {
+    return Object.entries(inspectionDepths).filter(([candidate]) => depthRank(candidate) <= depthRank(depth)).flatMap(([candidate, definition]) => Object.entries(definition.coverage).flatMap(([element, checkpoints]) => checkpoints.map((checkpoint) => ({ building_element: element, checkpoint, required_depth: candidate }))));
   }
 
   function renderInspectionChecklist(items = []) {
     if (!inspectionChecklist) return;
     const complete = items.filter((item) => ["observed","not_observed","not_applicable"].includes(item.status)).length;
-    inspectionChecklist.innerHTML = `<div class="checklist-head"><strong>Premium-capture</strong><span>${complete}/${items.length} controlepunten afgerond</span></div>${items.map((item) => `<label><span><strong>${escapeHtml(item.building_element)}</strong><small>${escapeHtml(item.checkpoint)} · zichtbaar vanaf ${escapeHtml(inspectionDepths[item.required_depth]?.label || item.required_depth)}</small></span><select data-checklist-item="${escapeHtml(item.id)}"><option value="pending"${item.status === "pending" ? " selected" : ""}>Nog controleren</option><option value="observed"${item.status === "observed" ? " selected" : ""}>Bevinding</option><option value="not_observed"${item.status === "not_observed" ? " selected" : ""}>Geen gebrek</option><option value="not_applicable"${item.status === "not_applicable" ? " selected" : ""}>Niet van toepassing</option><option value="blocked"${item.status === "blocked" ? " selected" : ""}>Niet bereikbaar</option></select></label>`).join("")}`;
+    inspectionChecklist.innerHTML = `<div class="checklist-head"><strong>Offertescope · ${escapeHtml(inspectionDepths[activeInspection?.inspection_depth]?.label || "Basis")}</strong><span>${complete}/${items.length} controlepunten afgerond</span></div>${items.map((item) => `<label><span><strong>${escapeHtml(item.building_element)}</strong><small>${escapeHtml(item.checkpoint)} · onderdeel van ${escapeHtml(inspectionDepths[item.required_depth]?.label || item.required_depth)}</small></span><select data-checklist-item="${escapeHtml(item.id)}"><option value="pending"${item.status === "pending" ? " selected" : ""}>Nog controleren</option><option value="observed"${item.status === "observed" ? " selected" : ""}>Bevinding</option><option value="not_observed"${item.status === "not_observed" ? " selected" : ""}>Geen gebrek</option><option value="not_applicable"${item.status === "not_applicable" ? " selected" : ""}>Niet van toepassing</option><option value="blocked"${item.status === "blocked" ? " selected" : ""}>Niet bereikbaar</option></select></label>`).join("")}`;
   }
 
   function renderInspectionMedia(items = []) {
@@ -1483,15 +1486,21 @@
     if (!activeInspection || !inspectionWorkspace) return;
     inspectionWorkspace.hidden = false;
     if (inspectionWorkspaceTitle) inspectionWorkspaceTitle.textContent = `${activeInspection.reference || "Inspectie"} · ${activeInspection.properties?.name || "Object"}`;
+    const quote = liveQuotes.find((item) => item.id === activeInspection.quote_id);
+    const quoteItem = liveQuoteItems.find((item) => item.id === activeInspection.quote_item_id);
+    const depth = quoteItem?.inspection_depth || activeInspection.inspection_depth || "basis";
+    activeInspection = { ...activeInspection, inspection_product: quoteItem?.inspection_product || activeInspection.inspection_product, inspection_depth: depth, scope: quoteItem?.scope || activeInspection.scope };
+    if (inspectionCommercialScope) inspectionCommercialScope.innerHTML = quote?.status === "accepted" && quoteItem ? `<strong>Geaccordeerde opdracht</strong><span>${escapeHtml(productLabel(quoteItem.inspection_product))} · ${escapeHtml(inspectionDepths[depth]?.label || depth)}</span><small>Offerte ${escapeHtml(quote.quote_number || quote.title)}${quote.accepted_at ? ` · akkoord op ${escapeHtml(formatPortalDate(quote.accepted_at))}` : ""}${quoteItem.scope ? `<br>Aanvullende scope: ${escapeHtml(quoteItem.scope)}` : ""}</small>` : `<strong>Publicatie geblokkeerd</strong><span>Geen geaccordeerde offertescope gevonden</span><small>Koppel deze inspectie eerst aan de juiste geaccordeerde offerte en objectregel.</small>`;
+    [findingForm, mediaUploadForm].forEach((form) => { const select = form?.elements.required_depth; if (select) [...select.options].forEach((option) => { option.hidden = depthRank(option.value) > depthRank(depth); option.disabled = option.hidden; }); if (select && depthRank(select.value) > depthRank(depth)) select.value = depth; });
     inspectionStatusForm.elements.status.value = activeInspection.status || "intake";
     inspectionStatusForm.elements.summary.value = activeInspection.summary || "";
     renderFindings(await window.RoofSignalBackend.listFindings(id));
     let checklist = await window.RoofSignalBackend.listInspectionChecklist(id);
     if (!checklist.length) {
-      const created = await window.RoofSignalBackend.createInspectionChecklist(premiumChecklistRows().map((item) => ({ ...item, inspection_id: activeInspection.id, organization_id: activeInspection.organization_id, property_id: activeInspection.property_id })));
+      const created = await window.RoofSignalBackend.createInspectionChecklist(entitledChecklistRows(depth).map((item) => ({ ...item, inspection_id: activeInspection.id, organization_id: activeInspection.organization_id, property_id: activeInspection.property_id })));
       checklist = created.ok ? created.data : [];
     }
-    renderInspectionChecklist(checklist);
+    renderInspectionChecklist(checklist.filter((item) => depthRank(item.required_depth) <= depthRank(depth)));
     renderInspectionMedia(await window.RoofSignalBackend.listInspectionMedia(id));
     inspectionWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -1516,20 +1525,23 @@
 
   async function submitReport(event) {
     event.preventDefault(); if (!activeInspection) return;
+    const quote = liveQuotes.find((item) => item.id === activeInspection.quote_id);
+    const quoteItem = liveQuoteItems.find((item) => item.id === activeInspection.quote_item_id);
+    if (!quoteItem || quote?.status !== "accepted") return setWorkflowStatus(inspectionWorkspaceStatus, "Rapport kan niet worden gepubliceerd zonder gekoppelde geaccordeerde offerte.", "error");
     const checklist = await window.RoofSignalBackend.listInspectionChecklist(activeInspection.id);
-    const incomplete = checklist.filter((item) => ["pending","blocked"].includes(item.status));
-    if (!checklist.length || incomplete.length) return setWorkflowStatus(inspectionWorkspaceStatus, `Rapport kan nog niet worden gepubliceerd: ${incomplete.length || "de checklist"} Premium-controlepunt${incomplete.length === 1 ? "" : "en"} is niet afgerond.`, "error");
+    const relevant = checklist.filter((item) => depthRank(item.required_depth) <= depthRank(quoteItem.inspection_depth));
+    const incomplete = relevant.filter((item) => ["pending","blocked"].includes(item.status));
+    if (!relevant.length || incomplete.length) return setWorkflowStatus(inspectionWorkspaceStatus, `Rapport kan nog niet worden gepubliceerd: ${incomplete.length || "de checklist"} controlepunt${incomplete.length === 1 ? "" : "en"} binnen de offertescope is niet afgerond.`, "error");
     const data = new FormData(reportForm);
     const reportFile = data.get("report_file");
     let reportUrl = null;
     if (reportFile?.size) {
-      const uploaded = await window.RoofSignalBackend.uploadPortalDocument(reportFile, { organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, document_type: "inspection_report", title: String(data.get("title") || "").trim(), customer_visible: true, required_depth: "basis" });
+      const uploaded = await window.RoofSignalBackend.uploadPortalDocument(reportFile, { organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, document_type: "inspection_report", title: String(data.get("title") || "").trim(), customer_visible: false, required_depth: quoteItem.inspection_depth });
       if (!uploaded.ok) return setWorkflowStatus(inspectionWorkspaceStatus, uploaded.error?.message || "Rapportbestand uploaden is mislukt.", "error");
       reportUrl = null;
     }
-    const result = await window.RoofSignalBackend.createReport({ organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, title: String(data.get("title") || "").trim(), summary: inspectionStatusForm.elements.summary.value.trim() || null, report_url: reportUrl, status: "published", published_at: new Date().toISOString() });
+    const result = await window.RoofSignalBackend.publishInspectionReport(activeInspection.id, String(data.get("title") || "").trim(), inspectionStatusForm.elements.summary.value.trim() || null);
     if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Rapport publiceren is mislukt.", "error");
-    await window.RoofSignalBackend.updateInspection(activeInspection.id, { status: "delivered", inspected_at: activeInspection.inspected_at || new Date().toISOString() });
     reportForm.reset(); setWorkflowStatus(inspectionWorkspaceStatus, "Rapport is gepubliceerd in het klantenportaal.", "success");
     await loadLiveAdminData();
   }

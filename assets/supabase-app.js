@@ -262,6 +262,12 @@
     return { ok: true, data };
   }
 
+  async function publishInspectionReport(inspectionId, title, summary) {
+    const supabase = await getClient(); if (!supabase || !inspectionId) return { ok: false };
+    const { data, error } = await supabase.rpc("publish_inspection_report", { p_inspection_id: inspectionId, p_title: title, p_summary: summary || null });
+    return error ? { ok: false, error } : { ok: true, data };
+  }
+
   async function createQuote(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false };
@@ -899,6 +905,7 @@
     listFindings,
     createFinding,
     createReport,
+    publishInspectionReport,
     createQuote,
     createQuoteItems,
     listQuoteItems,

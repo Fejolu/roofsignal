@@ -75,7 +75,7 @@ def test_operational_workflows_are_database_backed():
     migration = read("supabase/migrations/20260719223000_portal_operational_workflows.sql")
     for marker in ("data-inspection-status-form", "data-finding-create-form", "data-report-create-form", "data-quote-create-form", "data-task-create-form"):
         assert marker in admin
-    for method in ("createFinding", "createReport", "createQuote", "createTask", "updateInspection"):
+    for method in ("createFinding", "publishInspectionReport", "createQuote", "createTask", "updateInspection"):
         assert method in backend
         assert method in script
     assert "create table if not exists public.tasks" in migration
@@ -152,13 +152,26 @@ def test_operational_backbone_covers_missing_core_domains():
     assert "portal-documents" in migration
 
 
-def test_inspection_completion_requires_premium_checklist():
+def test_inspection_completion_requires_the_accepted_quote_scope():
     portal = read("portal-beheer.html")
     script = read("assets/portal-admin.js")
     assert "data-inspection-checklist" in portal
-    assert "premiumChecklistRows" in script
+    assert "entitledChecklistRows" in script
+    assert "Geaccordeerde opdracht" in script
+    assert "binnen de offertescope" in script
+    assert "quote?.status !== \"accepted\"" in script
     assert "Rapport kan nog niet worden gepubliceerd" in script
     assert "data-media-upload-form" in portal
+
+
+def test_report_publication_keeps_an_immutable_commercial_snapshot():
+    migration = read("supabase/migrations/20260803101500_report_commercial_scope.sql")
+    backend = read("assets/supabase-app.js")
+    assert "publish_inspection_report" in migration
+    assert "commercial_snapshot" in migration
+    assert "v_quote.status<>'accepted'" in migration
+    assert "scope_snapshot" in migration
+    assert "publish_inspection_report" in backend
 
 
 def test_invoice_followup_is_idempotent_and_creates_call_task():
