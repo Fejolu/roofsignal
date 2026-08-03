@@ -1942,7 +1942,61 @@ button { cursor: pointer; }
 }
 
 .inspection-workspace .wide-field,
-.inspection-workspace form label:has(textarea) { grid-column: span 2; }
+.inspection-workspace form label:has(textarea) { grid-column: span 6; }
+
+/* Inspection workspace: stable form geometry instead of content-driven sizing. */
+.inspection-workspace .inspection-status-form {
+  grid-template-columns: minmax(220px, 1fr) minmax(360px, 2fr) minmax(220px, 1fr);
+  padding: 20px;
+  border: 1px solid var(--rs-line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.inspection-workspace .inspection-status-form > label,
+.inspection-workspace .inspection-status-form > label:has(textarea),
+.inspection-workspace .inspection-status-form > .btn {
+  grid-column: auto;
+}
+
+.inspection-workspace .inspection-status-form textarea {
+  min-height: var(--portal-control-height);
+  height: var(--portal-control-height);
+  resize: vertical;
+}
+
+.inspection-workspace .finding-create-form {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 20px;
+  border: 1px solid var(--rs-line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.inspection-workspace .finding-create-form > label,
+.inspection-workspace .finding-create-form > label:has(textarea) {
+  grid-column: auto;
+}
+
+.inspection-workspace .finding-create-form > .wide-field {
+  grid-column: 2 / span 2;
+}
+
+.inspection-workspace .finding-create-form > .btn {
+  grid-column: 4;
+  align-self: end;
+}
+
+.inspection-workspace .finding-create-form textarea {
+  min-height: 96px;
+}
+
+@media (max-width: 1100px) {
+  .inspection-workspace .inspection-status-form,
+  .inspection-workspace .finding-create-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inspection-workspace .finding-create-form > .wide-field { grid-column: 1 / -1; }
+  .inspection-workspace .finding-create-form > .btn { grid-column: 2; }
+}
 .finding-list { display: grid; gap: 10px; margin: 16px 0; }
 .finding-list article { padding: 14px; border: 1px solid #e6e2de; border-radius: 12px; background: #fff; }
 .finding-list article span { display: block; color: #666; margin-top: 4px; }
@@ -1978,6 +2032,10 @@ button { cursor: pointer; }
   .quote-object-row { grid-template-columns: 1fr; }
   .customer-workspace { grid-template-columns: 1fr; }
   .customer-workspace-actions { justify-content: flex-start; }
+  .inspection-workspace .inspection-status-form,
+  .inspection-workspace .finding-create-form { grid-template-columns: 1fr; }
+  .inspection-workspace .finding-create-form > .wide-field,
+  .inspection-workspace .finding-create-form > .btn { grid-column: auto; }
 }
 
 .inspection-create-form .form-section-head,
