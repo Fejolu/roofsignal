@@ -21,6 +21,10 @@ from docx.shared import Pt
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TEMPLATE = ROOT / "templates" / "roofsignal-offerte-template.docx"
+FORBIDDEN_CUSTOMER_TERMS = (
+    "premium-capture",
+    "interne bronregistratie",
+)
 
 
 def money(value: float) -> str:
@@ -51,7 +55,23 @@ def required(data: dict, name: str):
     return value
 
 
+def validate_customer_language(data: dict) -> None:
+    customer_text = "\n".join(
+        str(value)
+        for name, value in data.items()
+        if name not in {"signer_roofsignal"}
+        for value in (value if isinstance(value, list) else [value])
+    ).lower()
+    found = [term for term in FORBIDDEN_CUSTOMER_TERMS if term in customer_text]
+    if found:
+        raise ValueError(
+            "Interne terminologie is niet toegestaan in klanttekst: "
+            + ", ".join(found)
+        )
+
+
 def build(data: dict, template: Path, output: Path) -> None:
+    validate_customer_language(data)
     doc = Document(template)
 
     # Fixed paragraph slots from the canonical two-page quotation template.
@@ -77,23 +97,25 @@ def build(data: dict, template: Path, output: Path) -> None:
     replace_paragraph(doc.paragraphs[28], required(data, "payment_validity_text"))
     replace_paragraph(doc.paragraphs[30], data.get("acceptance_text", "Door ondertekening geeft opdrachtgever akkoord op de beschreven scope, investering en uitgangspunten."))
 
-    # These source paragraphs were centred in an early Koorn working file.
-    # Force regular left-aligned body copy so every section starts cleanly
-    # below its heading in Word as well as in the generated PDF.
-    for index in (26, 28, 30):
-        paragraph = doc.paragraphs[index]
-        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        paragraph.paragraph_format.left_indent = Pt(0)
-        paragraph.paragraph_format.first_line_indent = Pt(0)
+    # Preserve the original Koorn source geometry while producing the neutral
+    # reusable template. Apply the LibreOffice compatibility fixes only when
+    # generating an actual customer quotation from that template.
+    if not data.get("template_mode", False):
+        for index in (26, 28, 30):
+            paragraph = doc.paragraphs[index]
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            paragraph.paragraph_format.left_indent = Pt(0)
+            paragraph.paragraph_format.first_line_indent = Pt(0)
 
     # LibreOffice can collapse the source template's keep-with-next heading
     # geometry on page two. Fix the rhythm explicitly while retaining the
     # template's font, colour and size.
-    for index in (18, 25, 27, 29):
-        paragraph = doc.paragraphs[index]
-        paragraph.paragraph_format.keep_with_next = False
-        paragraph.paragraph_format.space_before = Pt(10)
-        paragraph.paragraph_format.space_after = Pt(5)
+    if not data.get("template_mode", False):
+        for index in (18, 25, 27, 29):
+            paragraph = doc.paragraphs[index]
+            paragraph.paragraph_format.keep_with_next = False
+            paragraph.paragraph_format.space_before = Pt(10)
+            paragraph.paragraph_format.space_after = Pt(5)
 
     metadata = doc.tables[0]
     meta_values = [

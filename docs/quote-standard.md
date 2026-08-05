@@ -23,6 +23,10 @@ RoofSignal-offertes. Een nieuwe offerte krijgt geen nieuw ontwerp.
    pakket, klant, klantadres en inspectielocatie.
 7. RoofSignal voert intern Premium-capture uit. Het geaccordeerde pakket bepaalt
    welke rapportinhoud aan de klant wordt geleverd.
+   Interne termen zoals `Premium-capture`, `interne bronregistratie`, technische
+   bestandsnamen en procesnotities worden nooit in klantgerichte offerte- of
+   rapporttekst opgenomen. Beschrijf uitsluitend het resultaat, de scope en de
+   voor de klant relevante werkwijze.
 8. Render de DOCX naar PDF en inspecteer iedere pagina vóór oplevering of
    verzending.
 9. Verzending gebeurt pas na expliciete opdracht en alleen naar een bevestigd
