@@ -1,0 +1,22 @@
+{
+  "project_ref": "kakpticlxlaxtebhsuoh",
+  "functions": [
+    "create-portal-customer",
+    "quote-acceptance",
+    "send-appointment-email",
+    "send-document-email",
+    "send-lead-notification",
+    "send-portal-login-link",
+    "send-quote-email",
+    "staff-calendar"
+  ],
+  "required_secrets": [
+    "BREVO_API_KEY",
+    "BREVO_FROM_EMAIL",
+    "BREVO_FROM_NAME",
+    "EMAIL_PROVIDER",
+    "NOTIFICATION_EMAIL",
+    "QUOTE_ACCEPTANCE_IP_SALT",
+    "ROOFSIGNAL_SIGNER_NAME"
+  ]
+}

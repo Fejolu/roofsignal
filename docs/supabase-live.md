@@ -1,115 +1,88 @@
-# Supabase live-koppeling
+# Supabase productiebeheer
 
-RoofSignal is voorbereid op Supabase voor formulieren, login, rollen, klanten en portaaldata.
-
-## 1. Database aanmaken
-
-Open Supabase SQL Editor en voer de migratie uit:
+RoofSignal gebruikt één Supabase-project voor authenticatie, database, opslag en Edge Functions:
 
 ```text
-supabase/migrations/20260629140500_initial_live_schema.sql
+kakpticlxlaxtebhsuoh
 ```
 
-Deze migratie maakt onder meer:
+Voer productiewijzigingen nooit meer los uit in de SQL Editor of door afzonderlijke functies handmatig te publiceren. De gecontroleerde releaseprocedure voorkomt dat database en functies verschillende versies krijgen.
 
-- `lead_requests`
-- `organizations`
-- `profiles`
-- `organization_members`
-- `properties`
-- `reports`
-- `findings`
-- `quotes`
-- `invoices`
-- `appointments`
-- `audit_log`
-
-RLS staat aan. Publieke bezoekers kunnen alleen lead- en prijsaanvragen aanmaken. Klant- en portaaldata is alleen zichtbaar voor ingelogde klanten of RoofSignal-medewerkers.
-
-## 2. Frontend configureren
-
-Vul in `assets/supabase-config.js` de projectgegevens in:
-
-```js
-window.ROOFSIGNAL_SUPABASE = window.ROOFSIGNAL_SUPABASE || {
-  url: "https://PROJECTREF.supabase.co",
-  anonKey: "SUPABASE_ANON_KEY",
-  loginRedirectUrl: "https://www.roofsignal.nl/portal-login",
-};
-```
-
-Gebruik alleen de anon key in de frontend. De service role key mag nooit in de repository of browsercode staan.
-
-## 3. Auth instellingen
-
-In Supabase:
-
-- Zet Site URL op `https://www.roofsignal.nl`.
-- Voeg `https://www.roofsignal.nl/portal-login` en `https://www.roofsignal.nl/portal-login.html` toe aan Redirect URLs.
-- Maak accounts aan voor `admin@roofsignal.nl` en `ferry@roofsignal.nl`.
-- Na aanmaak krijgen deze adressen via de database-trigger de rol `owner_admin`.
-- Andere `@roofsignal.nl` adressen krijgen standaard `support`.
-
-## 4. Wat werkt zodra de config is ingevuld
-
-- Homepage voorbeeldrapport-aanvraag wordt opgeslagen in `lead_requests`.
-- Tarieven prijsindicatie wordt opgeslagen in `lead_requests`.
-- Portaal-login gebruikt Supabase Auth. Wachtwoord-login gaat direct via Supabase Auth; wachtwoordloze inloglinks lopen via de Edge Function `send-portal-login-link`, zodat de e-mail vanuit RoofSignal komt met RoofSignal-opmaak in plaats van de standaard Supabase Auth-template.
-- Beheerdersportaal kan organisaties aanmaken, laden, aanpassen en soft-deleten.
-- Rollen kunnen vanuit het portaal worden aangepast voor bestaande Supabase Auth-gebruikers.
-- Offertes, facturen en afspraken moeten aan een organisatie gekoppeld zijn. Verwijderen van een organisatie verwijdert deze afhankelijke records mee, zodat er geen klantloze backoffice-data overblijft.
-
-Zolang de config leeg is, valt de site terug op demo-opslag in de browser. Klanten aanmaken blijft dan binnen de backoffice, maar wordt nog niet naar Supabase geschreven.
-
-## 5. E-mailnotificaties via Brevo
-
-Deploy de Edge Function:
+## Voorcontrole zonder wijzigingen
 
 ```sh
-supabase functions deploy send-lead-notification
+python3 tools/supabase_release.py
 ```
 
-Zet daarna minimaal deze Supabase secrets:
+Deze controleert:
+
+- de vaste projectkoppeling;
+- geldige en uniek geordende migraties;
+- of elke Edge Function in het release-manifest staat;
+- dat geen herkenbare toegangssleutel in de broncode staat;
+- toegang tot het juiste Supabase-project;
+- alle lokale tests.
+
+## Productie publiceren
+
+Publiceer bij voorkeur via de handmatig te starten GitHub-workflow **Supabase productie-release**. Stel daarvoor in de afgeschermde GitHub-omgeving `production` deze secrets in:
+
+- `SUPABASE_ACCESS_TOKEN`
+- `SUPABASE_DB_PASSWORD`
+
+Laat voor die omgeving een handmatige goedkeuring verplicht zijn. De workflow staat niet op automatisch publiceren en twee releases kunnen niet gelijktijdig lopen.
+
+Lokaal kan dezelfde fail-safe route worden gebruikt met tijdelijke omgevingsvariabelen:
 
 ```sh
-supabase secrets set BREVO_API_KEY="..."
-supabase secrets set BREVO_FROM_EMAIL="noreply@roofsignal.nl"
-supabase secrets set BREVO_FROM_NAME="RoofSignal"
-supabase secrets set NOTIFICATION_EMAIL="info@roofsignal.nl"
+SUPABASE_ACCESS_TOKEN="..." SUPABASE_DB_PASSWORD="..." \
+  python3 tools/supabase_release.py --deploy
 ```
 
-De frontend roept `send-lead-notification` aan na een succesvolle insert in `lead_requests`. De function gebruikt Brevo Transactional Email en verstuurt per aanvraag:
+De release stopt direct als een controle faalt. De volgorde is altijd:
 
-- een interne notificatie naar `NOTIFICATION_EMAIL`
-- een bevestiging naar het e-mailadres van de aanvrager
+1. broncode, migraties en tests controleren;
+2. account en exact project-ID controleren;
+3. alleen de namen van vereiste secrets controleren;
+4. databasewijzigingen droog uitvoeren;
+5. databasewijzigingen toepassen;
+6. alle vastgelegde Edge Functions publiceren;
+7. de geteste Auth- en projectconfiguratie toepassen;
+8. iedere functie op bereikbaarheid testen.
 
-Zonder `BREVO_API_KEY` valt de function lokaal terug naar dry-run logging.
+Wachtwoorden en API-sleutels worden nooit in de repository of het manifest opgeslagen of weergegeven.
 
-## 6. Portal-inloglinks via RoofSignal
+## Vereiste functies en secrets
 
-Deploy de Edge Function:
+`supabase/release-manifest.json` is de enige bron voor de productiefuncties en vereiste zelf ingestelde secrets. De door Supabase beheerde waarden `SUPABASE_URL`, `SUPABASE_ANON_KEY` en `SUPABASE_SERVICE_ROLE_KEY` worden automatisch aan Edge Functions aangeboden.
 
-```sh
-supabase functions deploy send-portal-login-link --project-ref kakpticlxlaxtebhsuoh
-```
+De frontend bevat uitsluitend de publieke anon key. De service-role key mag uitsluitend binnen Edge Functions worden gebruikt.
 
-Deze function gebruikt `SUPABASE_SERVICE_ROLE_KEY` om een Supabase Auth magic link te genereren voor bestaande profielen en verstuurt die link daarna via Resend of Brevo. De function geeft altijd een generieke succesrespons terug voor onbekende e-mailadressen, zodat accountstatus niet publiek uitlekt.
+## Authenticatie
 
-Benodigde secrets:
+De gewenste configuratie staat in `supabase/config.toml`:
 
-- `EMAIL_PROVIDER=brevo` (expliciete transactionele verzendroute; voorkom impliciete providerwissels)
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `RESEND_API_KEY` of `BREVO_API_KEY`
-- `BREVO_FROM_EMAIL` of `FROM_EMAIL`
-- `BREVO_FROM_NAME`
+- minimaal twaalf tekens voor nieuwe wachtwoorden;
+- hoofdletters, kleine letters en cijfers verplicht;
+- recente herauthenticatie voor een wachtwoordwijziging;
+- refresh-tokenrotatie ingeschakeld;
+- geen anonieme login;
+- uitsluitend expliciet toegestane redirect-URL's.
 
-## 7. Afzenderlogo in Apple Mail en andere BIMI-clients
+Wachtwoordloze inloglinks lopen via `send-portal-login-link`, zodat klant en medewerker een RoofSignal-mail ontvangen. De function geeft voor bekende en onbekende adressen dezelfde publieke reactie terug en lekt daarmee geen accountstatus.
 
-Het inboxlogo wordt niet door de HTML-template bepaald. Gebruik hiervoor Branded Mail in Apple Business Connect en BIMI.
+## Operationele controles
 
-- Publieke logoasset: `https://www.roofsignal.nl/assets/roofsignal-bimi.svg`
+- Activeer point-in-time recovery zodra het Supabase-abonnement dit ondersteunt.
+- Controleer maandelijks Auth-, Database- en Edge Function-logs op terugkerende fouten.
+- Roteer het databasewachtwoord en toegangstokens bij personeelswisselingen of een vermoed incident.
+- Test ieder kwartaal klantlogin, medewerkerlogin, wachtwoordherstel, offerteakkoord en documentmail met aparte testaccounts.
+- Beperk toegang tot de GitHub-omgeving `production` en het Supabase-dashboard tot eigenaar/beheerder; functionele HR-toegang geeft geen infrastructuurbeheer.
+
+## E-mail en afzender
+
+Transactionele mail gebruikt expliciet `EMAIL_PROVIDER=brevo` met de RoofSignal-afzendergegevens uit Supabase secrets. BIMI en Apple Branded Mail bepalen het inboxlogo; het HTML-logo in een bericht bepaalt dit niet.
+
+- Logoasset: `https://www.roofsignal.nl/assets/roofsignal-bimi.svg`
 - BIMI-hostnaam: `default._bimi.roofsignal.nl`
-- BIMI TXT-waarde zonder certificaat: `v=BIMI1; l=https://www.roofsignal.nl/assets/roofsignal-bimi.svg; a=`
-- DMARC moet op `p=quarantine` of `p=reject` blijven staan en alle transactionele mail moet DKIM-aligned verzonden worden.
-- Rond de bedrijfs- en merkverificatie af in Apple Business Connect en koppel `roofsignal.nl` aan Branded Mail. Apple kan aanvullende verificatie of een BIMI Evidence Document verlangen voordat het logo wordt getoond.
+- DKIM en DMARC moeten aligned blijven voor alle transactionele mail.
