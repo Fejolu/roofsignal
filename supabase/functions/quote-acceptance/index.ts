@@ -1,9 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const headers = {
   "Access-Control-Allow-Origin": "https://www.roofsignal.nl",
-  "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
 };
@@ -12,6 +13,97 @@ const encode = (input: string) => new TextEncoder().encode(input);
 async function sha256(value: string) {
   const digest = await crypto.subtle.digest("SHA-256", encode(value));
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+async function sha256Bytes(value: Uint8Array) {
+  const digest = await crypto.subtle.digest("SHA-256", value);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+const formatMoment = (value: Date) => new Intl.DateTimeFormat("nl-NL", {
+  dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Amsterdam",
+}).format(value);
+
+async function addCustomerAcceptance(pdfBytes: Uint8Array, details: {
+  actorName: string; actorEmail: string; acceptedAt: Date; quoteVersion: number;
+}) {
+  const pdf = await PDFDocument.load(pdfBytes);
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const page = pdf.getPages()[pdf.getPageCount() - 1];
+  const dark = rgb(0.063, 0.09, 0.082);
+  const muted = rgb(0.36, 0.4, 0.38);
+  const green = rgb(0.18, 0.55, 0.34);
+  page.drawRectangle({ x: 54, y: 234, width: 487, height: 166, color: rgb(1, 1, 1) });
+  page.drawRectangle({ x: 56, y: 236, width: 483, height: 162, borderColor: green, borderWidth: 1.5, color: rgb(0.98, 0.99, 0.98) });
+  page.drawText("OPDRACHTGEVER - DIGITAAL AKKOORD", { x: 76, y: 366, size: 9, font: bold, color: green });
+  page.drawText(details.actorName, { x: 76, y: 337, size: 16, font: bold, color: dark });
+  page.drawText(details.actorEmail, { x: 76, y: 315, size: 10, font: regular, color: muted });
+  page.drawText(`Digitaal akkoord op ${formatMoment(details.acceptedAt)}`, { x: 76, y: 283, size: 10, font: regular, color: dark });
+  page.drawText(`Geaccepteerde offerteversie ${details.quoteVersion}`, { x: 76, y: 261, size: 10, font: regular, color: dark });
+  return new Uint8Array(await pdf.save());
+}
+
+async function finalizeAcceptedDocument(service: any, quote: any, actor: {
+  id?: string | null; name: string; email: string; acceptedAt: Date; ipHash?: string | null; userAgent?: string | null; authMethod: string;
+}) {
+  const { data: issuedDocument } = await service.from("documents")
+    .select("id,storage_path,title,version,metadata")
+    .eq("quote_id", quote.id)
+    .eq("document_type", "quote")
+    .eq("metadata->>execution_status", "issued")
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!issuedDocument) return { documentPending: true, reason: "issued_document_missing" };
+  const { data: sourcePdf, error: downloadError } = await service.storage.from("portal-documents").download(issuedDocument.storage_path);
+  if (downloadError || !sourcePdf) return { documentPending: true, reason: "issued_document_download_failed" };
+  const { data: acceptedVersionRow } = await service.from("quote_versions")
+    .select("version").eq("quote_id", quote.id).eq("status", "accepted")
+    .order("version", { ascending: false }).limit(1).maybeSingle();
+  const acceptedVersion = Number(acceptedVersionRow?.version || Number(quote.acceptance_version || 1) + 1);
+  const acceptedBytes = await addCustomerAcceptance(new Uint8Array(await sourcePdf.arrayBuffer()), {
+    actorName: actor.name, actorEmail: actor.email, acceptedAt: actor.acceptedAt, quoteVersion: acceptedVersion,
+  });
+  const acceptedHash = await sha256Bytes(acceptedBytes);
+  const path = `${quote.organization_id}/general/${quote.id}/v${acceptedVersion}-geaccepteerd.pdf`;
+  const { error: uploadError } = await service.storage.from("portal-documents").upload(
+    path, new Blob([acceptedBytes], { type: "application/pdf" }), { contentType: "application/pdf", upsert: true },
+  );
+  if (uploadError) return { documentPending: true, reason: "accepted_document_upload_failed" };
+  const { data: acceptedDocument, error: documentError } = await service.from("documents").insert({
+    organization_id: quote.organization_id,
+    quote_id: quote.id,
+    document_type: "quote",
+    title: `${quote.quote_number || quote.title} - geaccepteerd.pdf`,
+    storage_path: path,
+    version: Number(issuedDocument.version || 1) + 1,
+    customer_visible: true,
+    required_depth: "basis",
+    created_by: actor.id || null,
+    metadata: { execution_status: "accepted", quote_version: acceptedVersion, document_hash: acceptedHash },
+  }).select("id").single();
+  if (documentError) return { documentPending: true, reason: "accepted_document_record_failed" };
+  await service.from("documents").update({ customer_visible: false }).eq("quote_id", quote.id).eq("document_type", "quote").neq("id", acceptedDocument.id);
+  await service.from("quotes").update({ accepted_document_id: acceptedDocument.id, accepted_document_hash: acceptedHash }).eq("id", quote.id);
+  await service.from("quote_versions").update({ document_id: acceptedDocument.id, document_hash: acceptedHash })
+    .eq("quote_id", quote.id).eq("version", acceptedVersion).eq("status", "accepted");
+  await service.from("quote_execution_events").upsert({
+    quote_id: quote.id,
+    organization_id: quote.organization_id,
+    quote_version: acceptedVersion,
+    event_type: "accepted",
+    actor_type: "customer",
+    actor_id: actor.id || null,
+    actor_name: actor.name,
+    actor_email: actor.email,
+    statement: "Ik heb deze offerte en de bijbehorende voorwaarden gelezen en ga hiermee akkoord.",
+    event_at: actor.acceptedAt.toISOString(),
+    document_id: acceptedDocument.id,
+    document_hash: acceptedHash,
+    auth_method: actor.authMethod,
+    ip_hash: actor.ipHash || null,
+    user_agent: safeText(actor.userAgent, 1000),
+  }, { onConflict: "quote_id,quote_version,event_type" });
+  return { documentPending: false, documentId: acceptedDocument.id, documentHash: acceptedHash };
 }
 
 function safeText(value: unknown, max = 250) {
@@ -56,8 +148,30 @@ serve(async (req) => {
     { auth: { persistSession: false } },
   );
   const body = await req.json().catch(() => ({}));
-  const token = safeText(body.token, 300);
   const action = safeText(body.action, 30);
+  if (action === "acceptAuthenticated") {
+    const authorization = req.headers.get("Authorization") || "";
+    const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authorization } }, auth: { persistSession: false },
+    });
+    const { data: userData } = await userClient.auth.getUser();
+    if (!userData.user) return new Response(JSON.stringify({ error: "Niet aangemeld." }), { status: 401, headers });
+    const quoteId = safeText(body.quoteId, 100);
+    const actorName = safeText(body.actorName) || safeText(userData.user.user_metadata?.full_name) || safeText(userData.user.email);
+    const actorEmail = safeText(userData.user.email).toLowerCase();
+    const { data: quote } = await service.from("quotes").select("id,organization_id,quote_number,title,acceptance_version").eq("id", quoteId).maybeSingle();
+    if (!quote) return new Response(JSON.stringify({ error: "Offerte niet gevonden." }), { status: 404, headers });
+    const { data: accepted, error: acceptError } = await userClient.rpc("customer_accept_quote", { p_quote_id: quoteId, p_name: actorName });
+    if (acceptError) return new Response(JSON.stringify({ error: acceptError.message }), { status: 400, headers });
+    const acceptedAt = new Date();
+    const finalized = await finalizeAcceptedDocument(service, quote, {
+      id: userData.user.id, name: actorName, email: actorEmail, acceptedAt,
+      userAgent: req.headers.get("user-agent"), authMethod: "authenticated_customer_portal",
+    });
+    return new Response(JSON.stringify({ success: true, result: accepted, ...finalized }), { headers });
+  }
+
+  const token = safeText(body.token, 300);
   if (token.length < 32) return new Response(JSON.stringify({ error: "Ongeldige offertelink." }), { status: 400, headers });
   const tokenHash = await sha256(token);
 
@@ -125,6 +239,11 @@ serve(async (req) => {
     p_ip_hash: ipHash,
   });
   if (acceptError) return new Response(JSON.stringify({ error: acceptError.message }), { status: 400, headers });
+  const acceptedAt = new Date(String(accepted?.accepted_at || new Date().toISOString()));
+  const finalized = await finalizeAcceptedDocument(service, quote, {
+    name: actorName, email: actorEmail, acceptedAt, ipHash,
+    userAgent: req.headers.get("user-agent"), authMethod: "secure_email_link_with_confirmation",
+  });
   await notifyAcceptance(quote, actorName, actorEmail);
-  return new Response(JSON.stringify({ success: true, result: accepted }), { headers });
+  return new Response(JSON.stringify({ success: true, result: accepted, ...finalized }), { headers });
 });

@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const cors = {
@@ -20,6 +21,41 @@ const bytesToBase64 = (bytes: Uint8Array) => {
 async function sha256(value: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+async function sha256Bytes(value: Uint8Array) {
+  const digest = await crypto.subtle.digest("SHA-256", value);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+const formatMoment = (value: Date) => new Intl.DateTimeFormat("nl-NL", {
+  dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Amsterdam",
+}).format(value);
+
+async function appendExecutionPage(pdfBytes: Uint8Array, details: {
+  quoteLabel: string; version: number; issuedAt: Date; issuedBy: string; issuedByEmail: string;
+}) {
+  const pdf = await PDFDocument.load(pdfBytes);
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const page = pdf.addPage([595.28, 841.89]);
+  const orange = rgb(1, 0.353, 0.078);
+  const dark = rgb(0.063, 0.09, 0.082);
+  const muted = rgb(0.36, 0.4, 0.38);
+  page.drawText("ROOFSIGNAL", { x: 56, y: 774, size: 18, font: bold, color: dark });
+  page.drawText("DIGITALE AKKOORDREGISTRATIE", { x: 56, y: 712, size: 11, font: bold, color: orange });
+  page.drawText("Offerte digitaal uitgebracht", { x: 56, y: 670, size: 24, font: bold, color: dark });
+  page.drawText(details.quoteLabel, { x: 56, y: 642, size: 11, font: regular, color: muted });
+  page.drawRectangle({ x: 56, y: 440, width: 483, height: 162, borderColor: orange, borderWidth: 1.5, color: rgb(0.98, 0.98, 0.975) });
+  page.drawText("NAMENS ROOFSIGNAL", { x: 76, y: 570, size: 9, font: bold, color: orange });
+  page.drawText(details.issuedBy, { x: 76, y: 539, size: 16, font: bold, color: dark });
+  page.drawText(details.issuedByEmail, { x: 76, y: 517, size: 10, font: regular, color: muted });
+  page.drawText(`Digitaal uitgebracht op ${formatMoment(details.issuedAt)}`, { x: 76, y: 485, size: 10, font: regular, color: dark });
+  page.drawText(`Offerteversie ${details.version}`, { x: 76, y: 463, size: 10, font: regular, color: dark });
+  page.drawRectangle({ x: 56, y: 236, width: 483, height: 162, borderColor: rgb(0.78, 0.8, 0.79), borderWidth: 1, color: rgb(1, 1, 1) });
+  page.drawText("OPDRACHTGEVER", { x: 76, y: 366, size: 9, font: bold, color: muted });
+  page.drawText("Digitale acceptatie nog niet ontvangen", { x: 76, y: 334, size: 15, font: bold, color: dark });
+  page.drawText("Naam, datum en tijd worden na akkoord automatisch vastgelegd.", { x: 76, y: 305, size: 10, font: regular, color: muted });
+  page.drawText("Deze pagina maakt integraal onderdeel uit van de offerte.", { x: 56, y: 184, size: 9, font: regular, color: muted });
+  return new Uint8Array(await pdf.save());
 }
 function randomToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
@@ -93,7 +129,7 @@ serve(async (req) => {
   if (!document) return new Response(JSON.stringify({ error: "Upload eerst de PDF-offerte bij deze offerte." }), { status: 400, headers: cors });
   const { data: pdf, error: downloadError } = await service.storage.from("portal-documents").download(document.storage_path);
   if (downloadError || !pdf) return new Response(JSON.stringify({ error: "De PDF-offerte kon niet worden geladen." }), { status: 500, headers: cors });
-  const pdfBase64 = bytesToBase64(new Uint8Array(await pdf.arrayBuffer()));
+  const originalPdfBytes = new Uint8Array(await pdf.arrayBuffer());
 
   const token = randomToken();
   const tokenHash = await sha256(token);
@@ -101,6 +137,19 @@ serve(async (req) => {
   const expiresAt = new Date(sentAt.getTime() + 30 * 24 * 60 * 60 * 1000);
   const { data: latestVersion } = await service.from("quote_versions").select("version").eq("quote_id", quote.id).order("version", { ascending: false }).limit(1).maybeSingle();
   const version = Number(latestVersion?.version || 1) + 1;
+  const issuedBy = (Deno.env.get("ROOFSIGNAL_SIGNER_NAME") || "F.J. Joosten").trim();
+  const issuedByEmail = String(userData.user.email || "info@roofsignal.nl").toLowerCase();
+  const issuedPdfBytes = testRecipient
+    ? originalPdfBytes
+    : await appendExecutionPage(originalPdfBytes, {
+      quoteLabel: quote.quote_number || quote.title,
+      version,
+      issuedAt: sentAt,
+      issuedBy,
+      issuedByEmail,
+    });
+  const issuedHash = await sha256Bytes(issuedPdfBytes);
+  const pdfBase64 = bytesToBase64(issuedPdfBytes);
   const acceptanceUrl = `https://www.roofsignal.nl/offerte-akkoord?token=${encodeURIComponent(token)}`;
   const property = quote.quote_items?.[0]?.properties;
   const address = [property?.address, property?.postcode, property?.city].filter(Boolean).join(", ");
@@ -117,7 +166,32 @@ serve(async (req) => {
 
   const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || "noreply@roofsignal.nl";
   const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
+  let issuedDocument: any = null;
+  let messageSent = false;
   try {
+    if (!testRecipient) {
+      const issuedPath = `${quote.organization_id}/general/${quote.id}/${crypto.randomUUID()}-v${version}-uitgebracht.pdf`;
+      const { error: uploadError } = await service.storage.from("portal-documents").upload(
+        issuedPath,
+        new Blob([issuedPdfBytes], { type: "application/pdf" }),
+        { contentType: "application/pdf", upsert: true },
+      );
+      if (uploadError) throw uploadError;
+      const { data: createdDocument, error: documentError } = await service.from("documents").insert({
+        organization_id: quote.organization_id,
+        quote_id: quote.id,
+        document_type: "quote",
+        title: `${quote.quote_number || quote.title} - uitgebracht.pdf`,
+        storage_path: issuedPath,
+        version: Number(document.version || 1) + 1,
+        customer_visible: false,
+        required_depth: "basis",
+        created_by: userData.user.id,
+        metadata: { execution_status: "issued", quote_version: version, document_hash: issuedHash },
+      }).select("id,storage_path,title,version").single();
+      if (documentError) throw documentError;
+      issuedDocument = createdDocument;
+    }
     const result = await sendBrevo({
       sender: { email: fromEmail, name: fromName },
       to: [{ email: recipient, name: quote.organizations?.contact_name || quote.organizations?.name }],
@@ -127,11 +201,22 @@ serve(async (req) => {
       subject,
       textContent: text,
       htmlContent: html,
-      attachment: [{ name: document.title.endsWith(".pdf") ? document.title : `${document.title}.pdf`, content: pdfBase64 }],
+      attachment: [{ name: `${quote.quote_number || "RoofSignal-offerte"}.pdf`, content: pdfBase64 }],
     });
+    messageSent = true;
+    if (testRecipient) {
+      return new Response(JSON.stringify({ success: true, test: true, recipient, version, messageId: result?.messageId || null }), { headers: cors });
+    }
+    await service.from("documents").update({ customer_visible: false }).eq("quote_id", quote.id).eq("document_type", "quote").neq("id", issuedDocument.id);
+    await service.from("documents").update({ customer_visible: true }).eq("id", issuedDocument.id);
     await service.from("quotes").update({
       status: "sent",
       sent_at: sentAt.toISOString(),
+      issued_at: sentAt.toISOString(),
+      issued_by: userData.user.id,
+      issued_by_name: issuedBy,
+      issued_by_email: issuedByEmail,
+      issued_document_hash: issuedHash,
       acceptance_token_hash: tokenHash,
       acceptance_token_expires_at: expiresAt.toISOString(),
       acceptance_version: version,
@@ -141,8 +226,30 @@ serve(async (req) => {
       version,
       status: "sent",
       sent_at: sentAt.toISOString(),
-      snapshot: { quote, document_id: document.id, recipient, cc_recipient: ccRecipient || null },
+      issued_at: sentAt.toISOString(),
+      issued_by_name: issuedBy,
+      issued_by_email: issuedByEmail,
+      document_id: issuedDocument.id,
+      document_hash: issuedHash,
+      snapshot: { quote, document_id: issuedDocument.id, recipient, cc_recipient: ccRecipient || null, document_hash: issuedHash },
       created_by: userData.user.id,
+    });
+    await service.from("quote_execution_events").insert({
+      quote_id: quote.id,
+      organization_id: quote.organization_id,
+      quote_version: version,
+      event_type: "issued",
+      actor_type: "roofsignal",
+      actor_id: userData.user.id,
+      actor_name: issuedBy,
+      actor_email: issuedByEmail,
+      statement: "Deze offerte is namens RoofSignal digitaal uitgebracht.",
+      event_at: sentAt.toISOString(),
+      document_id: issuedDocument.id,
+      document_hash: issuedHash,
+      auth_method: "authenticated_backoffice_session",
+      user_agent: String(req.headers.get("user-agent") || "").slice(0, 1000),
+      metadata: { message_id: result?.messageId || null, recipient },
     });
     await service.from("customer_activities").insert({
       organization_id: quote.organization_id,
@@ -153,6 +260,10 @@ serve(async (req) => {
     });
     return new Response(JSON.stringify({ success: true, recipient, ccRecipient: ccRecipient || null, version, messageId: result?.messageId || null }), { headers: cors });
   } catch (sendError) {
+    if (!messageSent && issuedDocument?.id) {
+      await service.from("documents").delete().eq("id", issuedDocument.id);
+      await service.storage.from("portal-documents").remove([issuedDocument.storage_path]);
+    }
     return new Response(JSON.stringify({ error: sendError instanceof Error ? sendError.message : "Verzenden is mislukt." }), { status: 500, headers: cors });
   }
 });

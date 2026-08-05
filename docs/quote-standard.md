@@ -31,6 +31,11 @@ RoofSignal-offertes. Een nieuwe offerte krijgt geen nieuw ontwerp.
    verzending.
 9. Verzending gebeurt pas na expliciete opdracht en alleen naar een bevestigd
    e-mailadres.
+10. Gebruik geen nagebootste of lege handtekeningvelden. Bij verzending wordt
+    de offerte namens RoofSignal digitaal uitgebracht met naam, datum, tijd,
+    versie en document-hash. Na digitaal klantakkoord wordt een definitieve PDF
+    gemaakt met dezelfde gegevens van de opdrachtgever en een controleerbare
+    auditregistratie.
 
 Klantgegevens horen in een tijdelijk JSON-invoerbestand en worden niet aan de
 publieke broncode toegevoegd.

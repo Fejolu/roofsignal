@@ -616,8 +616,10 @@
 
   async function acceptCustomerQuote(id, name) {
     const supabase = await getClient(); if (!supabase) return { ok: false };
-    const { data, error } = await supabase.rpc("customer_accept_quote", { p_quote_id: id, p_name: name || "" });
-    return error ? { ok: false, error } : { ok: true, data };
+    const { data, error } = await supabase.functions.invoke("quote-acceptance", {
+      body: { action: "acceptAuthenticated", quoteId: id, actorName: name || "" },
+    });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
   }
 
   async function respondToAppointment(id, action, note = "") {

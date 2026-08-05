@@ -288,6 +288,24 @@ def test_customer_self_service_journeys_are_real_and_scoped():
     assert "payment_url" in migration
 
 
+def test_quote_issue_and_acceptance_create_verifiable_final_document():
+    issue = read("supabase/functions/send-quote-email/index.ts")
+    acceptance = read("supabase/functions/quote-acceptance/index.ts")
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260805193000_quote_digital_execution.sql")
+    quote_tool = read("tools/create_roofsignal_quote.py")
+    assert "appendExecutionPage" in issue
+    assert 'event_type: "issued"' in issue
+    assert "issued_document_hash" in issue
+    assert "addCustomerAcceptance" in acceptance
+    assert 'event_type: "accepted"' in acceptance
+    assert "accepted_document_hash" in acceptance
+    assert 'action: "acceptAuthenticated"' in backend
+    assert "quote_execution_events" in migration
+    assert "document_hash text not null" in migration
+    assert "Digitale acceptatie volgt via de akkoordpagina" in quote_tool
+
+
 def test_customer_portal_uses_one_control_and_alignment_system():
     styles = read("assets/styles.css")
     assert "--portal-control-height: 48px" in styles

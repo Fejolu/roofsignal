@@ -95,7 +95,10 @@ def build(data: dict, template: Path, output: Path) -> None:
 
     replace_paragraph(doc.paragraphs[26], required(data, "delivery_text"))
     replace_paragraph(doc.paragraphs[28], required(data, "payment_validity_text"))
-    replace_paragraph(doc.paragraphs[30], data.get("acceptance_text", "Door ondertekening geeft opdrachtgever akkoord op de beschreven scope, investering en uitgangspunten."))
+    replace_paragraph(doc.paragraphs[30], data.get(
+        "acceptance_text",
+        "RoofSignal brengt deze offerte digitaal uit. Het akkoord van de opdrachtgever wordt met naam, datum, tijd en offerteversie vastgelegd.",
+    ))
 
     # Preserve the original Koorn source geometry while producing the neutral
     # reusable template. Apply the LibreOffice compatibility fixes only when
@@ -155,8 +158,10 @@ def build(data: dict, template: Path, output: Path) -> None:
     replace_cell(total_table.cell(0, 1), money(total))
 
     acceptance = doc.tables[3]
-    replace_cell(acceptance.cell(1, 0), f"Naam: {required(data, 'signer_customer')}")
-    replace_cell(acceptance.cell(1, 1), f"Naam: {data.get('signer_roofsignal', 'F.J. Joosten')}")
+    replace_cell(acceptance.cell(1, 0), "Digitale acceptatie volgt via de akkoordpagina.")
+    replace_cell(acceptance.cell(1, 1), "Wordt digitaal uitgebracht bij verzending.")
+    replace_cell(acceptance.cell(2, 0), "Naam, datum en tijd worden automatisch vastgelegd.")
+    replace_cell(acceptance.cell(2, 1), f"Namens RoofSignal: {data.get('signer_roofsignal', 'F.J. Joosten')}")
 
     doc.core_properties.title = f"Offerte {data['customer_name']} - {data['package']}"
     doc.core_properties.subject = data["package_title"]
