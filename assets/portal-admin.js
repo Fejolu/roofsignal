@@ -130,7 +130,7 @@
   }
 
   function statusCell(label, tone = "green") {
-    const meta = statusMeta(label);
+    const meta = typeof label === "object" ? label : statusMeta(label);
     const resolvedTone = meta.tone || tone;
     return `<span class="status-dot ${resolvedTone}" data-status-label="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span>`;
   }
@@ -151,6 +151,7 @@
     "open-inspection": ["Inspectie openen", "search"], "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
     "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
+    "send-invoice-mail": ["Factuur versturen", "send"], "send-invoice-reminder": ["Betalingsherinnering versturen", "bell"],
     "pay-invoice": ["Betaling registreren", "check"], "set-payment-link": ["Betaallink beheren", "link"], "credit-invoice": ["Factuur crediteren", "credit"],
   };
   const adminIcons = {
@@ -159,7 +160,7 @@
     search: '<circle cx="7.5" cy="7.5" r="4.5"/><path d="m11 11 4 4"/>', send: '<path d="m2 8 14-6-5 14-2.5-5.5ZM8.5 10.5 16 2"/>',
     sync: '<path d="M14 6a6 6 0 0 0-10-2L2 6M2 2v4h4M4 12a6 6 0 0 0 10 2l2-2M16 16v-4h-4"/>', check: '<path d="m3 9 3 3 8-8"/>',
     invoice: '<path d="M4 2h9v14l-2-1-2 1-2-1-3 1Z"/><path d="M6 6h5M6 9h5M6 12h3"/>', link: '<path d="M7 11 5.5 12.5a3 3 0 0 1-4-4L4 6M11 7l1.5-1.5a3 3 0 0 1 4 4L14 12M6 9h6"/>',
-    credit: '<path d="M3 5h12v9H3Z"/><path d="M3 8h12M6 11h3"/>',
+    credit: '<path d="M3 5h12v9H3Z"/><path d="M3 8h12M6 11h3"/>', bell: '<path d="M5 12V8a4 4 0 0 1 8 0v4l1.5 2h-11Z"/><path d="M7 15a2 2 0 0 0 4 0"/>',
   };
   function iconizeAdminActions(root = document) {
     root.querySelectorAll(".portal-table [data-admin-action]").forEach((control) => {
@@ -193,6 +194,19 @@
       expired: { label: "Verlopen", tone: "red" },
     };
     return statuses[String(status || "").toLowerCase()] || { label: status || "Actief", tone: "green" };
+  }
+
+  function invoiceStatusMeta(status) {
+    const statuses = {
+      draft: { label: "Concept", tone: "yellow" },
+      sent: { label: "Wacht op betaling", tone: "yellow" },
+      open: { label: "Wacht op betaling", tone: "yellow" },
+      overdue: { label: "Betaling te laat", tone: "red" },
+      paid: { label: "Betaald", tone: "green" },
+      credited: { label: "Gecrediteerd", tone: "green" },
+      cancelled: { label: "Geannuleerd", tone: "red" },
+    };
+    return statuses[String(status || "").toLowerCase()] || { label: status || "Concept", tone: "yellow" };
   }
 
   function roleCell(role) {
@@ -403,7 +417,13 @@
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
-      ? invoices.map((invoice) => { const open = ["sent","open","overdue"].includes(invoice.status); const mailAction = `<button class="inline-button" data-admin-action="send-invoice-mail" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.status === "draft" ? "Versturen" : "Opnieuw versturen"}</button>${open ? `<button class="inline-button" data-admin-action="send-invoice-reminder" data-invoice-id="${escapeHtml(invoice.id)}">Herinnering versturen</button><button class="inline-button" data-admin-action="pay-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Betaald registreren</button>` : ""}`; const paymentLink = !["paid","credited","cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : ""; const credit = !["credited","cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : ""; return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td><div class="table-actions">${mailAction}${paymentLink}${credit}</div></td></tr>`; }).join("")
+      ? invoices.map((invoice) => {
+        const open = ["sent", "open", "overdue"].includes(invoice.status);
+        const mailAction = `<button class="inline-button" data-admin-action="send-invoice-mail" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.status === "draft" ? "Versturen" : "Opnieuw versturen"}</button>${open ? `<button class="inline-button" data-admin-action="send-invoice-reminder" data-invoice-id="${escapeHtml(invoice.id)}">Herinnering versturen</button><button class="inline-button" data-admin-action="pay-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Betaald registreren</button>` : ""}`;
+        const paymentLink = !["paid", "credited", "cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : "";
+        const credit = !["credited", "cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : "";
+        return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(invoiceStatusMeta(invoice.status))}</td><td><div class="table-actions">${mailAction}${paymentLink}${credit}</div></td></tr>`;
+      }).join("")
       : '<tr data-empty-row><td colspan="4">Geen facturen.</td></tr>';
   }
 
@@ -2007,7 +2027,7 @@
       const download = document ? `<a href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">Download factuur</a>` : '<span class="unavailable-label">Nog niet beschikbaar</span>';
       const payment = invoice.payment_url && !["paid","credited","cancelled"].includes(invoice.status) ? `<a class="inline-button" href="${escapeHtml(invoice.payment_url)}" target="_blank" rel="noopener">Betaal nu</a>` : "";
       const action = `<div class="quote-actions">${download}${payment}</div>`;
-      return `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td>${action}</td></tr>`;
+      return `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(invoiceStatusMeta(invoice.status))}</td><td>${action}</td></tr>`;
     }).join("");
   }
 
