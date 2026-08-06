@@ -21,6 +21,20 @@ def test_captured_command_keeps_stderr_out_of_json(monkeypatch, capsys):
     assert "newer Supabase CLI" in capsys.readouterr().err
 
 
+def test_regular_command_captures_diagnostics_and_echoes_success(monkeypatch, capsys):
+    def fake_run(*args, **kwargs):
+        assert kwargs["stdout"] is supabase_release.subprocess.PIPE
+        assert kwargs["stderr"] is supabase_release.subprocess.PIPE
+        return SimpleNamespace(returncode=0, stdout="migration applied\n", stderr="")
+
+    monkeypatch.setattr(supabase_release.subprocess, "run", fake_run)
+
+    output = supabase_release.run(["supabase", "db", "push"])
+
+    assert output == "migration applied\n"
+    assert "migration applied" in capsys.readouterr().out
+
+
 def test_failed_command_reports_stdout_and_stderr(monkeypatch):
     def fake_run(*args, **kwargs):
         return SimpleNamespace(returncode=1, stdout="stdout detail\n", stderr="stderr detail\n")
