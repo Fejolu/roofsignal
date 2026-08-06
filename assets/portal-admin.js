@@ -588,7 +588,7 @@
     const fields = kind === "quote"
       ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Geldig tot", record.valid_until ? formatPortalDate(record.valid_until) : "-"]]
       : kind === "invoice"
-        ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Vervaldatum", record.due_date ? formatPortalDate(record.due_date) : "-"]]
+        ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Vervaldatum", record.due_date ? formatPortalDate(record.due_date) : "-"], ["Betalingstermijn", record.payment_term_days != null ? `${record.payment_term_days} dagen` : "-"], ["Rekeningnummer", record.bank_account], ["Ten name van", record.account_holder]]
         : kind === "profile"
           ? [["Naam", record.full_name], ["E-mailadres", record.email], ["Rol", roleLabels[record.role] || record.role], ["Telefoon", record.phone || "-"]]
           : [["Klant", record.organizations?.name], ["Object", record.properties?.name], ["Datum en tijd", formatPortalDate(record.starts_at)], ["Inspecteur", record.profiles?.full_name || record.profiles?.email || "-"]];
@@ -1448,7 +1448,7 @@
     const existingInvoice = liveInvoices.find((item) => item.quote_id === id);
     if (!quote || quote.status !== "accepted" || !inspections.length) return setPortalNotice("Een conceptfactuur kan pas worden aangemaakt na offerteakkoord en zodra de inspectie is gekoppeld.", "error");
     if (existingInvoice) return setPortalNotice(`Er bestaat al een factuur voor deze offerte: ${existingInvoice.invoice_number || "conceptfactuur"}.`, "info");
-    const due = new Date(); due.setDate(due.getDate() + 30);
+    const due = new Date(); due.setDate(due.getDate() + 14);
     const firstInspection = inspections[0];
     const firstQuoteItem = liveQuoteItems.find((item) => item.quote_id === id);
     const result = await window.RoofSignalBackend.createInvoice({ organization_id: quote.organization_id, quote_id: quote.id, property_id: firstQuoteItem?.property_id || null, inspection_id: firstInspection.id, amount: quote.amount, status: "draft", due_date: due.toISOString().slice(0, 10) });

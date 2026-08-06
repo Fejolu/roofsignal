@@ -697,7 +697,7 @@
     if (!supabase || !organizationId) return [];
     const { data, error } = await supabase
       .from("invoices")
-      .select("id,organization_id,invoice_number,amount,status,due_date,payment_url,created_at")
+      .select("id,organization_id,invoice_number,amount,status,due_date,payment_url,bank_account,account_holder,payment_term_days,created_at")
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false });
     if (error) return [];
@@ -721,7 +721,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("invoices")
-      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,payment_url,created_at,organizations(name)")
+      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,payment_url,bank_account,account_holder,payment_term_days,created_at,organizations(name)")
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
