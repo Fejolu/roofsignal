@@ -2005,7 +2005,7 @@
     body.innerHTML = invoices.map((invoice) => {
       const document = documents.find((item) => item.invoice_id === invoice.id && item.signed_url);
       const download = document ? `<a href="${escapeHtml(document.signed_url)}" target="_blank" rel="noopener">Download factuur</a>` : '<span class="unavailable-label">Nog niet beschikbaar</span>';
-      const payment = invoice.payment_url && !["paid","credited","cancelled"].includes(invoice.status) ? `<a class="inline-button" href="${escapeHtml(invoice.payment_url)}" target="_blank" rel="noopener">Online betalen</a>` : "";
+      const payment = invoice.payment_url && !["paid","credited","cancelled"].includes(invoice.status) ? `<a class="inline-button" href="${escapeHtml(invoice.payment_url)}" target="_blank" rel="noopener">Betaal nu</a>` : "";
       const action = `<div class="quote-actions">${download}${payment}</div>`;
       return `<tr><td>${escapeHtml(invoice.invoice_number || "Factuur")}</td><td>${escapeHtml(money.format(Number(invoice.amount || 0)))}</td><td>${statusCell(escapeHtml(invoice.status || "Concept"), invoice.status === "paid" ? "green" : "yellow")}</td><td>${action}</td></tr>`;
     }).join("");
