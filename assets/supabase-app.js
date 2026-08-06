@@ -565,6 +565,21 @@
     }));
   }
 
+  async function openInvoiceDocument(invoiceId) {
+    const supabase = await getClient();
+    if (!supabase || !invoiceId) return { ok: false };
+    const { data: document, error } = await supabase
+      .from("documents")
+      .select("id,storage_path,title,file_name,created_at")
+      .eq("invoice_id", invoiceId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !document?.storage_path) return { ok: false, error: error || { message: "Geen factuurdocument gevonden." } };
+    const { data, error: signedError } = await supabase.storage.from("portal-documents").createSignedUrl(document.storage_path, 300);
+    return signedError || !data?.signedUrl ? { ok: false, error: signedError } : { ok: true, data: { ...document, signedUrl: data.signedUrl } };
+  }
+
   async function createOrganization(payload) {
     const supabase = await getClient();
     if (!supabase) return { ok: false, fallback: true };
@@ -946,6 +961,7 @@
     listInspectionMedia,
     uploadPortalDocument,
     listOrganizationDocuments,
+    openInvoiceDocument,
     createOrganization,
     createProperties,
     createPortalCustomer,

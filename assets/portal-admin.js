@@ -152,7 +152,7 @@
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
     "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
     "send-invoice-mail": ["Factuur versturen", "send"], "send-invoice-reminder": ["Betalingsherinnering versturen", "bell"],
-    "pay-invoice": ["Betaling registreren", "check"], "set-payment-link": ["Betaallink beheren", "link"], "credit-invoice": ["Factuur crediteren", "credit"],
+    "open-invoice": ["Factuur bekijken", "document"], "pay-invoice": ["Betaling registreren", "check"], "set-payment-link": ["Betaallink beheren", "link"], "credit-invoice": ["Factuur crediteren", "credit"],
   };
   const adminIcons = {
     calendar: '<path d="M5 3v3M13 3v3M3 8h12M4 5h10a1 1 0 0 1 1 1v9H3V6a1 1 0 0 1 1-1Z"/>', folder: '<path d="M2.5 5.5h5l1.5 2h6.5v7h-13Z"/>',
@@ -160,7 +160,7 @@
     search: '<circle cx="7.5" cy="7.5" r="4.5"/><path d="m11 11 4 4"/>', send: '<path d="m2 8 14-6-5 14-2.5-5.5ZM8.5 10.5 16 2"/>',
     sync: '<path d="M14 6a6 6 0 0 0-10-2L2 6M2 2v4h4M4 12a6 6 0 0 0 10 2l2-2M16 16v-4h-4"/>', check: '<path d="m3 9 3 3 8-8"/>',
     invoice: '<path d="M4 2h9v14l-2-1-2 1-2-1-3 1Z"/><path d="M6 6h5M6 9h5M6 12h3"/>', link: '<path d="M7 11 5.5 12.5a3 3 0 0 1-4-4L4 6M11 7l1.5-1.5a3 3 0 0 1 4 4L14 12M6 9h6"/>',
-    credit: '<path d="M3 5h12v9H3Z"/><path d="M3 8h12M6 11h3"/>', bell: '<path d="M5 12V8a4 4 0 0 1 8 0v4l1.5 2h-11Z"/><path d="M7 15a2 2 0 0 0 4 0"/>',
+    credit: '<path d="M3 5h12v9H3Z"/><path d="M3 8h12M6 11h3"/>', bell: '<path d="M5 12V8a4 4 0 0 1 8 0v4l1.5 2h-11Z"/><path d="M7 15a2 2 0 0 0 4 0"/>', document: '<path d="M4 2h7l3 3v11H4Z"/><path d="M11 2v4h4M6.5 9h5M6.5 12h5"/>',
   };
   function iconizeAdminActions(root = document) {
     root.querySelectorAll(".portal-table [data-admin-action]").forEach((control) => {
@@ -422,7 +422,8 @@
         const mailAction = `<button class="inline-button" data-admin-action="send-invoice-mail" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.status === "draft" ? "Versturen" : "Opnieuw versturen"}</button>${open ? `<button class="inline-button" data-admin-action="send-invoice-reminder" data-invoice-id="${escapeHtml(invoice.id)}">Herinnering versturen</button><button class="inline-button" data-admin-action="pay-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Betaald registreren</button>` : ""}`;
         const paymentLink = !["paid", "credited", "cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : "";
         const credit = !["credited", "cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : "";
-        return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(invoiceStatusMeta(invoice.status))}</td><td><div class="table-actions">${mailAction}${paymentLink}${credit}</div></td></tr>`;
+        const view = `<button class="inline-button" data-admin-action="open-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Factuur bekijken</button>`;
+        return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(invoiceStatusMeta(invoice.status))}</td><td><div class="table-actions">${view}${mailAction}${paymentLink}${credit}</div></td></tr>`;
       }).join("")
       : '<tr data-empty-row><td colspan="4">Geen facturen.</td></tr>';
   }
@@ -590,11 +591,25 @@
     window.location.href = `portal-medewerker.html?id=${encodeURIComponent(profileId)}`;
   }
 
-  function openRecordContext(target) {
+  async function openInvoicePdf(invoiceId, fallbackTarget) {
+    const viewer = window.open("about:blank", "_blank");
+    const result = await window.RoofSignalBackend.openInvoiceDocument(invoiceId);
+    if (result.ok && result.data?.signedUrl) {
+      if (viewer) viewer.location.replace(result.data.signedUrl);
+      else window.location.href = result.data.signedUrl;
+      return;
+    }
+    viewer?.close();
+    setPortalNotice("Bij deze factuur is nog geen PDF opgeslagen. De factuurgegevens worden getoond.", "error");
+    if (fallbackTarget) openRecordContext(fallbackTarget, true);
+  }
+
+  function openRecordContext(target, detailsOnly = false) {
     const kind = target.dataset.recordKind;
     const id = target.dataset.recordId;
     if (kind === "inspection") return openInspection(id);
     if (kind === "profile") return openEmployeeDossier(id);
+    if (kind === "invoice" && !detailsOnly) return openInvoicePdf(id, target);
     const record = { quote: liveQuotes, invoice: liveInvoices, appointment: liveAppointments, profile: liveProfiles }[kind]?.find((item) => item.id === id);
     if (!record) return;
     let dialog = document.querySelector("[data-admin-record-dialog]");
@@ -608,7 +623,7 @@
     const fields = kind === "quote"
       ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Geldig tot", record.valid_until ? formatPortalDate(record.valid_until) : "-"]]
       : kind === "invoice"
-        ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", statusMeta(record.status).label], ["Vervaldatum", record.due_date ? formatPortalDate(record.due_date) : "-"], ["Betalingstermijn", record.payment_term_days != null ? `${record.payment_term_days} dagen` : "-"], ["Rekeningnummer", record.bank_account], ["Ten name van", record.account_holder]]
+        ? [["Klant", record.organizations?.name], ["Bedrag", formatMoney(record.amount)], ["Status", invoiceStatusMeta(record.status).label], ["Vervaldatum", record.due_date ? formatPortalDate(record.due_date) : "-"], ["Betalingstermijn", record.payment_term_days != null ? `${record.payment_term_days} dagen` : "-"], ["Rekeningnummer", record.bank_account], ["Ten name van", record.account_holder]]
         : kind === "profile"
           ? [["Naam", record.full_name], ["E-mailadres", record.email], ["Rol", roleLabels[record.role] || record.role], ["Telefoon", record.phone || "-"]]
           : [["Klant", record.organizations?.name], ["Object", record.properties?.name], ["Datum en tijd", formatPortalDate(record.starts_at)], ["Inspecteur", record.profiles?.full_name || record.profiles?.email || "-"]];
@@ -2545,6 +2560,7 @@
     if (action === "finding-to-maintenance") findingToMaintenance(target);
     if (action === "send-invoice-mail") sendInvoiceMail(target.dataset.invoiceId, false);
     if (action === "send-invoice-reminder") sendInvoiceMail(target.dataset.invoiceId, true);
+    if (action === "open-invoice") openInvoicePdf(target.dataset.invoiceId, target.closest(".record-clickable-row"));
     if (action === "pay-invoice") changeInvoiceStatus(target.dataset.invoiceId, "paid");
     if (action === "set-payment-link") setInvoicePaymentLink(target.dataset.invoiceId);
     if (action === "credit-invoice") creditInvoice(target.dataset.invoiceId);
