@@ -464,9 +464,9 @@
     const unscheduled = items.filter((item) => !inspections.some((inspection) => inspection.quote_item_id === item.id));
     if (unscheduled.length) return `<button class="inline-button" data-admin-action="schedule-quote" data-quote-id="${escapeHtml(quote.id)}">${unscheduled.length} object${unscheduled.length === 1 ? "" : "en"} plannen</button>`;
     const openInspection = inspections.find((inspection) => inspection.status !== "delivered");
-    if (openInspection) return `<button class="inline-button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(openInspection.id)}">Inspectie openen</button>`;
-    if (!invoice) return `<button class="inline-button" data-admin-action="invoice-quote" data-quote-id="${escapeHtml(quote.id)}">Factuur aanmaken</button>`;
-    return `Factuur ${escapeHtml(invoice.status || "concept")}`;
+    if (invoice) return `Factuur ${escapeHtml(invoice.status || "concept")}`;
+    if (openInspection) return `<div class="table-actions"><button class="inline-button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(openInspection.id)}">Inspectie openen</button><button class="inline-button" data-admin-action="invoice-quote" data-quote-id="${escapeHtml(quote.id)}">Conceptfactuur</button></div>`;
+    return `<button class="inline-button" data-admin-action="invoice-quote" data-quote-id="${escapeHtml(quote.id)}">Conceptfactuur</button>`;
   }
 
   function renderQuotes(quotes = []) {
@@ -1445,14 +1445,18 @@
   async function invoiceQuote(id) {
     const quote = liveQuotes.find((item) => item.id === id);
     const inspections = liveInspections.filter((item) => item.quote_id === id);
-    if (!quote || !inspections.length || inspections.some((inspection) => inspection.status !== "delivered")) return;
+    const existingInvoice = liveInvoices.find((item) => item.quote_id === id);
+    if (!quote || quote.status !== "accepted" || !inspections.length) return setPortalNotice("Een conceptfactuur kan pas worden aangemaakt na offerteakkoord en zodra de inspectie is gekoppeld.", "error");
+    if (existingInvoice) return setPortalNotice(`Er bestaat al een factuur voor deze offerte: ${existingInvoice.invoice_number || "conceptfactuur"}.`, "info");
     const due = new Date(); due.setDate(due.getDate() + 30);
-    const result = await window.RoofSignalBackend.createInvoice({ organization_id: quote.organization_id, quote_id: quote.id, amount: quote.amount, status: "draft", due_date: due.toISOString().slice(0, 10) });
+    const firstInspection = inspections[0];
+    const firstQuoteItem = liveQuoteItems.find((item) => item.quote_id === id);
+    const result = await window.RoofSignalBackend.createInvoice({ organization_id: quote.organization_id, quote_id: quote.id, property_id: firstQuoteItem?.property_id || null, inspection_id: firstInspection.id, amount: quote.amount, status: "draft", due_date: due.toISOString().slice(0, 10) });
     if (!result.ok) return setPortalNotice(result.error?.message || "Factuur aanmaken is mislukt.", "error");
     const quoteItems = liveQuoteItems.filter((item) => item.quote_id === id);
     await window.RoofSignalBackend.createInvoiceLines(quoteItems.map((item) => ({ invoice_id: result.data.id, description: `${productLabel(item.inspection_product)} ${inspectionDepths[item.inspection_depth]?.label || "Basis"} · ${item.properties?.name || "Object"}`, quantity: 1, unit_price: item.amount, vat_rate: 21 })));
     await window.RoofSignalBackend.createInvoiceEvent({ invoice_id: result.data.id, organization_id: quote.organization_id, event_type: "created", amount: quote.amount });
-    setPortalNotice("Conceptfactuur is aangemaakt vanuit de afgeronde inspectie.", "success");
+    setPortalNotice("Conceptfactuur is aangemaakt vanuit de geaccordeerde offerte. Controleer de factuur voordat u deze verstuurt.", "success");
     await loadLiveAdminData();
   }
 
