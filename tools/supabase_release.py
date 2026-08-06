@@ -52,11 +52,15 @@ def run(command: list[str], *, env: dict[str, str] | None = None, capture: bool 
         check=False,
         text=True,
         stdout=subprocess.PIPE if capture else None,
-        stderr=subprocess.STDOUT if capture else None,
+        stderr=subprocess.PIPE if capture else None,
     )
     if result.returncode:
-        detail = (result.stdout or "").strip()
+        detail = "\n".join(
+            part.strip() for part in (result.stdout, result.stderr) if part and part.strip()
+        )
         raise ReleaseError(f"Commando mislukt ({result.returncode}): {printable}\n{detail}")
+    if capture and result.stderr and result.stderr.strip():
+        print(result.stderr.strip(), file=sys.stderr)
     return result.stdout or ""
 
 
