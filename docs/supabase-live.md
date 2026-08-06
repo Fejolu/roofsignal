@@ -25,12 +25,12 @@ Deze controleert:
 
 ## Productie publiceren
 
-Publiceer bij voorkeur via de handmatig te starten GitHub-workflow **Supabase productie-release**. Stel daarvoor in de afgeschermde GitHub-omgeving `production` deze secrets in:
+Publiceer via de GitHub-workflow **Supabase productie-release**. Een wijziging op `main` start deze workflow uitsluitend wanneer Supabase-code, de releasecontrole of de bijbehorende tests zijn gewijzigd. De workflow kan daarnaast handmatig opnieuw worden gestart. Stel in de afgeschermde GitHub-omgeving `production` deze secrets in:
 
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_DB_PASSWORD`
 
-Laat voor die omgeving een handmatige goedkeuring verplicht zijn. De workflow staat niet op automatisch publiceren en twee releases kunnen niet gelijktijdig lopen.
+Laat voor die omgeving desgewenst een handmatige goedkeuring verplicht zijn. Twee releases kunnen nooit gelijktijdig lopen; een volgende release wacht op de lopende release.
 
 Lokaal kan dezelfde fail-safe route worden gebruikt met tijdelijke omgevingsvariabelen:
 
