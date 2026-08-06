@@ -6,7 +6,7 @@
   async function getClient() {
     if (!isConfigured) return null;
     if (!clientPromise) {
-      clientPromise = import("https://esm.sh/@supabase/supabase-js@2").then(({ createClient }) => {
+      clientPromise = import("https://esm.sh/@supabase/supabase-js@2.49.1").then(({ createClient }) => {
         return createClient(config.url, config.anonKey, {
           auth: {
             persistSession: true,
