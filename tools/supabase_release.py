@@ -29,6 +29,19 @@ class ReleaseError(RuntimeError):
     pass
 
 
+def report_failure(message: str) -> None:
+    """Expose a useful failure reason in GitHub without ever printing secret values."""
+    safe = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    print(f"::error title=Supabase-release afgebroken::{safe}", file=sys.stderr)
+    summary_path = os.getenv("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        with Path(summary_path).open("a", encoding="utf-8") as summary:
+            summary.write("## Supabase-release afgebroken\n\n")
+            summary.write("```text\n")
+            summary.write(message)
+            summary.write("\n```\n")
+
+
 def run(command: list[str], *, env: dict[str, str] | None = None, capture: bool = False) -> str:
     printable = " ".join(command)
     print(f"→ {printable}")
@@ -199,6 +212,7 @@ def main() -> int:
         print("✓ RoofSignal Supabase-release volledig afgerond.")
         return 0
     except ReleaseError as exc:
+        report_failure(str(exc))
         print(f"✗ {exc}", file=sys.stderr)
         return 1
 
