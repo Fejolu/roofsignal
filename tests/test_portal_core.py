@@ -109,6 +109,19 @@ def test_internal_workflows_start_from_a_selected_customer():
     assert "closeWorkflowForms" in script
 
 
+def test_quote_workflow_opens_from_customer_and_global_action():
+    portal = read("portal-beheer.html")
+    script = read("assets/portal-admin.js")
+    customer_create = read("assets/portal-customer-create.js")
+    assert 'data-admin-action="create-offer"' in portal
+    assert "quoteForm.hidden = false" in script
+    assert 'openCustomerWorkflow("quote")' in script
+    for loader in ("listOrganizationContacts", "listCustomerActivities", "listMaintenanceActions"):
+        assert loader in script
+    assert 'sessionStorage.setItem("roofsignal-open-customer-id"' in customer_create
+    assert 'sessionStorage.getItem("roofsignal-open-customer-id")' in script
+
+
 def test_quotes_support_multiple_objects_and_three_products():
     portal = read("portal-beheer.html")
     script = read("assets/portal-admin.js")

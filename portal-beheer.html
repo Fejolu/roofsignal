@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Beheerderskant | RoofSignal">
   <meta name="twitter:description" content="Interne RoofSignal beheeromgeving voor support, klantbeheer, facturen, planning en rollen.">
   <meta name="twitter:image" content="https://www.roofsignal.nl/assets/hero-roofsignal-v6.jpg">
-  <link rel="stylesheet" href="assets/styles.css?v=portal38">
+  <link rel="stylesheet" href="assets/styles.css?v=portal39">
 </head>
 <body class="portal-body admin portal-auth-pending" data-portal-surface="internal">
 <aside class="portal-sidebar">
@@ -225,7 +225,7 @@
   <section class="portal-panel" id="offertes">
     <div class="panel-head">
       <div><span class="eyebrow orange">Offertes</span><h2>Offertes maken en opvolgen</h2></div>
-      <a href="#klanten" title="Nieuwe offerte aanmaken">＋ Nieuwe offerte</a>
+      <button class="panel-link-button" type="button" data-admin-action="create-offer" title="Nieuwe offerte aanmaken">＋ Nieuwe offerte</button>
     </div>
     <form class="compact-workflow-form workflow-form" data-quote-create-form hidden>
       <label>Klant<select name="organization_id" required><option value="">Selecteer klant</option></select></label>
@@ -269,6 +269,6 @@
 </main>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/supabase-app.js?v=22" defer></script>
-<script src="assets/portal-admin.js?v=35" defer></script>
+<script src="assets/portal-admin.js?v=36" defer></script>
 </body>
 </html>

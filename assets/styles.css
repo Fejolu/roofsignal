@@ -1646,10 +1646,20 @@ button { cursor: pointer; }
 }
 
 .panel-head a,
+.panel-link-button,
 .portal-table a {
   color: var(--rs-orange);
   font-weight: 900;
   text-decoration: none;
+}
+
+.panel-link-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
 .table-actions {

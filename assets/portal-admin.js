@@ -627,6 +627,12 @@
     liveHrData = hrData;
     liveRoleDefinitions = roleDefinitions;
     renderCustomers(customers);
+    const pendingCustomerId = sessionStorage.getItem("roofsignal-open-customer-id");
+    if (pendingCustomerId) {
+      sessionStorage.removeItem("roofsignal-open-customer-id");
+      const pendingRow = customersBody?.querySelector(`[data-customer-id="${CSS.escape(pendingCustomerId)}"]`);
+      if (pendingRow) window.setTimeout(() => openCustomer(pendingRow), 0);
+    }
     renderRoles(profiles);
     renderRoleDefinitions(roleDefinitions);
     renderInspections(inspections);
@@ -1116,8 +1122,17 @@
   }
 
   function createOffer() {
-    quoteForm?.scrollIntoView({ behavior: "smooth", block: "center" });
-    quoteForm?.querySelector('[name="organization_id"]')?.focus();
+    if (!quoteForm) return;
+    closeWorkflowForms(quoteForm);
+    quoteForm.hidden = false;
+    const organizationId = activeObjectCustomerRow?.dataset.customerId || "";
+    if (organizationId) {
+      selectOrganizationInForm(quoteForm, organizationId);
+    } else {
+      setWorkflowStatus(quoteForm.querySelector("[data-quote-create-status]"), "Selecteer een klant in Klanten beheren, of kies de klant in dit formulier.");
+    }
+    quoteForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    quoteForm.querySelector('[name="organization_id"]')?.focus({ preventScroll: true });
   }
 
   function selectOrganizationInForm(form, organizationId) {
@@ -1138,7 +1153,12 @@
   async function renderCustomerDossier(organizationId) {
     if (!customerDossierOverview) return;
     customerDossierOverview.innerHTML = '<div class="empty-state">Klantdossier laden...</div>';
-    const properties = await window.RoofSignalBackend.listOrganizationProperties(organizationId);
+    const [properties, contacts, activities, maintenance] = await Promise.all([
+      window.RoofSignalBackend.listOrganizationProperties(organizationId),
+      window.RoofSignalBackend.listOrganizationContacts(organizationId),
+      window.RoofSignalBackend.listCustomerActivities(organizationId),
+      window.RoofSignalBackend.listMaintenanceActions(organizationId),
+    ]);
     const inspections = liveInspections.filter((item) => item.organization_id === organizationId);
     const quotes = liveQuotes.filter((item) => item.organization_id === organizationId);
     const invoices = liveInvoices.filter((item) => item.organization_id === organizationId);
@@ -1181,7 +1201,12 @@
     customerWorkspace.hidden = false;
     if (customerWorkspaceTitle) customerWorkspaceTitle.textContent = customerNameFromRow(row);
     closeWorkflowForms();
-    await renderCustomerDossier(row.dataset.customerId);
+    try {
+      await renderCustomerDossier(row.dataset.customerId);
+    } catch (error) {
+      customerDossierOverview.innerHTML = '<div class="empty-state">Het klantdossier kon niet volledig worden geladen.</div>';
+      setPortalNotice(error?.message || "Klantdossier laden is mislukt.", "error");
+    }
     customerWorkspace.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
@@ -1194,6 +1219,9 @@
     closeWorkflowForms(target);
     target.hidden = false;
     selectOrganizationInForm(target, organizationId);
+    if (type === "quote") {
+      setWorkflowStatus(target.querySelector("[data-quote-create-status]"), "Klant geselecteerd. Kies minimaal één object en vul de offertegegevens in.");
+    }
     target.scrollIntoView({ behavior: "smooth", block: "center" });
     target.querySelector("input:not([type='hidden']), select")?.focus();
   }

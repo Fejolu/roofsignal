@@ -468,6 +468,7 @@
         ? `${customer.name} staat lokaal in deze sessie.${syncWarning}`
         : `${customer.name} is aangemaakt en de activatiemail is verstuurd.`,
       syncWarning ? "error" : "success");
+      if (syncedId) sessionStorage.setItem("roofsignal-open-customer-id", syncedId);
       window.setTimeout(() => {
         window.location.href = "portal-beheer.html#klanten";
       }, 650);
