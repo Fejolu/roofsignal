@@ -43,10 +43,14 @@ create index if not exists quote_execution_events_quote_id_idx
 
 alter table public.quote_execution_events enable row level security;
 
+drop policy if exists "quote execution visible by membership or internal"
+on public.quote_execution_events;
 create policy "quote execution visible by membership or internal"
 on public.quote_execution_events for select to authenticated
 using (public.is_internal_user() or public.is_org_member(organization_id));
 
+drop policy if exists "quote execution managed internally"
+on public.quote_execution_events;
 create policy "quote execution managed internally"
 on public.quote_execution_events for all to authenticated
 using (public.is_internal_user())

@@ -34,10 +34,14 @@ create index if not exists quote_acceptance_events_quote_id_idx
 
 alter table public.quote_acceptance_events enable row level security;
 
+drop policy if exists "quote acceptance events visible by membership or internal"
+on public.quote_acceptance_events;
 create policy "quote acceptance events visible by membership or internal"
 on public.quote_acceptance_events for select to authenticated
 using (public.is_internal_user() or public.is_org_member(organization_id));
 
+drop policy if exists "quote acceptance events managed internally"
+on public.quote_acceptance_events;
 create policy "quote acceptance events managed internally"
 on public.quote_acceptance_events for all to authenticated
 using (public.is_internal_user())
