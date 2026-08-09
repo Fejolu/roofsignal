@@ -371,6 +371,18 @@ def test_de_parken_sections_keep_alternating_background_after_strategy_removal()
     assert '<section class="section muted lead-section"' not in page
 
 
+def test_de_parken_bookings_create_operational_backoffice_records():
+    migration = read("supabase/migrations/20260809203000_sync_parken_bookings_to_backoffice.sql")
+    for table in ["organizations", "properties", "appointments", "inspections"]:
+        assert f"public.{table}" in migration
+    assert "ferry@roofsignal.nl" in migration
+    assert "inspector_id = v_inspector_id" in migration
+    assert "at time zone 'Europe/Amsterdam'" in migration
+    assert "parken_booking_backoffice_sync" in migration
+    assert "for v_booking_id in select id from public.parken_bookings" in migration
+    assert "set inspection_id = v_inspection_id" not in migration
+
+
 def test_de_parken_confirmation_email_omits_payment_copy():
     confirmation = read("supabase/functions/send-parken-booking-confirmation/index.ts")
     assert "€356,95" not in confirmation
