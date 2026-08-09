@@ -411,3 +411,13 @@ def test_employee_roles_are_cumulative_and_include_inspector():
     assert "role_definitions" in migration
     assert "current_user_has_role" in migration
     assert "('inspector','Inspecteur'" in migration
+
+
+def test_admin_dashboard_previews_keep_content_inside_cards():
+    script = read("assets/portal-admin.js")
+    styles = read("assets/styles.css")
+    assert 'class="admin-preview-copy"' in script
+    assert 'class="admin-preview-meta"' in script
+    assert ".admin-dashboard-previews > .portal-panel { overflow: hidden; }" in styles
+    assert ".admin-preview-list > .admin-preview-item { display: grid;" in styles
+    assert "@media (max-width: 1700px) and (min-width: 901px)" in styles
