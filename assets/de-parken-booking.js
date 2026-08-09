@@ -36,7 +36,7 @@
       const weekday = date.getDay();
       const dateValue = `2026-09-${String(day).padStart(2, "0")}`;
       const times = [];
-      if (weekday >= 1 && weekday <= 4) times.push({ value: "16:30-18:30", label: "Einde middag · 16:30–18:30" });
+      if (weekday >= 1 && weekday <= 4) times.push({ value: "16:00-18:00", label: "Einde middag · 16:00–18:00" });
       if (weekday === 5 || weekday === 6) {
         times.push(
           { value: "09:00-10:30", label: "09:00–10:30" },

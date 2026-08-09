@@ -96,7 +96,7 @@ begin
   if p_slot_date < date '2026-09-01' or p_slot_date > date '2026-09-30' then
     raise exception 'INVALID_PILOT_DATE';
   end if;
-  if (v_weekday between 1 and 4 and p_slot_time <> '16:30-18:30')
+  if (v_weekday between 1 and 4 and p_slot_time <> '16:00-18:00')
      or (v_weekday in (5,6) and p_slot_time not in ('09:00-10:30','10:45-12:15','13:00-14:30','14:45-16:15'))
      or v_weekday = 7 then
     raise exception 'INVALID_PILOT_SLOT';
@@ -126,4 +126,3 @@ $$;
 
 revoke all on function public.create_parken_booking(text,text,text,text,text,text,date,text,text,text,boolean,boolean,boolean) from public;
 grant execute on function public.create_parken_booking(text,text,text,text,text,text,date,text,text,text,boolean,boolean,boolean) to anon, authenticated;
-
