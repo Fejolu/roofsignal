@@ -7,33 +7,86 @@
   const postcodeStatus = form.querySelector("[data-postcode-status]");
   const bookingFields = form.querySelector("[data-booking-fields]");
   const status = form.querySelector("[data-booking-status]");
-  const slotSelect = form.querySelector("[name='slot']");
+  const slotInput = form.querySelector("[name='slot']");
   const checkButton = form.querySelector("[data-check-postcode]");
+  const calendarDays = form.querySelector("[data-calendar-days]");
+  const timePanel = form.querySelector("[data-time-panel]");
+  const timeLabel = form.querySelector("[data-time-label]");
+  const timeOptions = form.querySelector("[data-time-options]");
+  const plannerChoice = form.querySelector("[data-planner-choice]");
+  const plannerError = form.querySelector("[data-planner-error]");
+  const slotMap = new Map();
+  let selectedDate = "";
 
   function normalizePostcode(value) {
     return String(value || "").replace(/\s/g, "").toUpperCase();
   }
 
-  function populateSlots() {
+  function buildCalendar() {
     const formatter = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long" });
+    const firstDayOffset = 1; // 1 september 2026 is dinsdag; kalender start op maandag.
+    for (let empty = 0; empty < firstDayOffset; empty += 1) {
+      const spacer = document.createElement("span");
+      spacer.className = "rs-day empty";
+      spacer.setAttribute("aria-hidden", "true");
+      calendarDays.append(spacer);
+    }
     for (let day = 1; day <= 30; day += 1) {
       const date = new Date(2026, 8, day);
       const weekday = date.getDay();
       const dateValue = `2026-09-${String(day).padStart(2, "0")}`;
-      const add = (time, label) => {
-        const option = document.createElement("option");
-        option.value = `${dateValue}|${time}`;
-        option.textContent = `${formatter.format(date)} · ${label}`;
-        slotSelect.append(option);
-      };
-      if (weekday >= 1 && weekday <= 4) add("16:30-18:30", "einde middag");
+      const times = [];
+      if (weekday >= 1 && weekday <= 4) times.push({ value: "16:30-18:30", label: "Einde middag · 16:30–18:30" });
       if (weekday === 5 || weekday === 6) {
-        add("09:00-10:30", "09:00–10:30");
-        add("10:45-12:15", "10:45–12:15");
-        add("13:00-14:30", "13:00–14:30");
-        add("14:45-16:15", "14:45–16:15");
+        times.push(
+          { value: "09:00-10:30", label: "09:00–10:30" },
+          { value: "10:45-12:15", label: "10:45–12:15" },
+          { value: "13:00-14:30", label: "13:00–14:30" },
+          { value: "14:45-16:15", label: "14:45–16:15" },
+        );
       }
+      slotMap.set(dateValue, { date, label: formatter.format(date), times });
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `rs-day ${times.length ? "available" : "unavailable"}`;
+      button.textContent = String(day);
+      button.dataset.date = dateValue;
+      button.setAttribute("role", "gridcell");
+      button.setAttribute("aria-label", `${formatter.format(date)}${times.length ? ", beschikbaar" : ", niet beschikbaar"}`);
+      button.disabled = !times.length;
+      if (times.length) button.addEventListener("click", () => selectDate(dateValue));
+      calendarDays.append(button);
     }
+  }
+
+  function selectDate(dateValue) {
+    selectedDate = dateValue;
+    slotInput.value = "";
+    plannerChoice.classList.remove("visible");
+    plannerError.classList.remove("visible");
+    calendarDays.querySelectorAll(".rs-day").forEach((day) => day.classList.toggle("selected", day.dataset.date === dateValue));
+    const selected = slotMap.get(dateValue);
+    timeLabel.textContent = `Beschikbare momenten op ${selected.label}`;
+    timeOptions.innerHTML = "";
+    selected.times.forEach((time) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "rs-time";
+      button.textContent = time.label;
+      button.addEventListener("click", () => selectTime(time, button));
+      timeOptions.append(button);
+    });
+    timePanel.hidden = false;
+  }
+
+  function selectTime(time, button) {
+    timeOptions.querySelectorAll(".rs-time").forEach((item) => item.classList.remove("selected"));
+    button.classList.add("selected");
+    slotInput.value = `${selectedDate}|${time.value}`;
+    const selected = slotMap.get(selectedDate);
+    plannerChoice.innerHTML = `<strong>Gekozen moment</strong> · ${selected.label} · ${time.label}`;
+    plannerChoice.classList.add("visible");
+    plannerError.classList.remove("visible");
   }
 
   function checkPostcode() {
@@ -96,6 +149,11 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!checkPostcode() || !form.reportValidity()) return;
+    if (!slotInput.value) {
+      plannerError.classList.add("visible");
+      form.querySelector("[data-planner]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     const button = form.querySelector("button[type='submit']");
     button.disabled = true;
     button.textContent = "Reserveren…";
@@ -139,5 +197,5 @@
     }
   });
 
-  populateSlots();
+  buildCalendar();
 })();

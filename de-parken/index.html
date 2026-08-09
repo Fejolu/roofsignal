@@ -87,7 +87,35 @@
     .booking-summary strong,.booking-summary span { display:block; }
     .booking-summary span { margin-top:4px; color:var(--rs-graphite-600); }
     .booking-success { display:grid; gap:6px; }
+    .rs-planner { overflow:hidden; border:1px solid rgba(15,23,42,.14); border-radius:var(--rs-radius); background:#fff; box-shadow:0 18px 45px rgba(15,23,42,.08); }
+    .rs-planner-head { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:22px 24px; color:#fff; background:linear-gradient(135deg,var(--dark),#17364b); }
+    .rs-planner-head span { display:block; margin-bottom:5px; color:rgba(255,255,255,.68); font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+    .rs-planner-head strong { font-family:inherit; font-size:1.55rem; }
+    .rs-planner-availability { max-width:180px; color:rgba(255,255,255,.78); font-size:.78rem; line-height:1.4; text-align:right; }
+    .rs-calendar { padding:22px 24px 24px; }
+    .rs-weekdays,.rs-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; }
+    .rs-weekdays { margin-bottom:8px; color:var(--rs-graphite-600); font-size:.72rem; font-weight:800; letter-spacing:.08em; text-align:center; text-transform:uppercase; }
+    .rs-day { position:relative; display:grid; place-items:center; min-height:48px; padding:0; border:1px solid transparent; border-radius:10px; color:var(--dark); background:transparent; font:700 .95rem/1 inherit; cursor:pointer; transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease; }
+    .rs-day.available { background:#f4f7f7; border-color:rgba(15,23,42,.08); }
+    .rs-day.available:after { content:""; position:absolute; bottom:6px; width:4px; height:4px; border-radius:50%; background:var(--orange); }
+    .rs-day.available:hover { transform:translateY(-2px); border-color:var(--orange); }
+    .rs-day.selected { color:#fff; border-color:var(--orange); background:var(--orange); box-shadow:0 8px 18px rgba(234,92,38,.25); }
+    .rs-day.selected:after { background:#fff; }
+    .rs-day.unavailable { color:#aab3b8; cursor:default; }
+    .rs-day.empty { visibility:hidden; }
+    .rs-times { padding:22px 24px 26px; border-top:1px solid rgba(15,23,42,.1); background:#f7f8f7; }
+    .rs-times[hidden] { display:none; }
+    .rs-times-label { display:block; margin-bottom:13px; color:var(--dark); font-weight:800; }
+    .rs-time-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .rs-time { padding:13px 14px; border:1px solid rgba(15,23,42,.16); border-radius:9px; color:var(--dark); background:#fff; font:700 .9rem/1.2 inherit; cursor:pointer; transition:border-color .16s ease,background .16s ease,color .16s ease; }
+    .rs-time:hover { border-color:var(--orange); }
+    .rs-time.selected { color:#fff; border-color:var(--dark); background:var(--dark); }
+    .rs-planner-choice { display:none; padding:13px 16px; border-left:4px solid var(--orange); color:var(--dark); background:#fff5ef; font-size:.88rem; }
+    .rs-planner-choice.visible { display:block; }
+    .rs-planner-error { display:none; margin:10px 0 0; color:#a12f24; font-size:.85rem; }
+    .rs-planner-error.visible { display:block; }
     @media (max-width:700px) { .booking-two,.postcode-check { grid-template-columns:1fr; } }
+    @media (max-width:520px) { .rs-planner-head { align-items:flex-start; padding:19px; } .rs-planner-head strong { font-size:1.3rem; } .rs-planner-availability { max-width:125px; } .rs-calendar { padding:18px 14px; } .rs-weekdays,.rs-days { gap:4px; } .rs-day { min-height:42px; } .rs-times { padding:18px; } .rs-time-options { grid-template-columns:1fr; } }
   </style>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","@id":"https://www.roofsignal.nl/de-parken/#service","name":"RoofSignal Woningscan De Parken","url":"https://www.roofsignal.nl/de-parken/","provider":{"@id":"https://www.roofsignal.nl/#organization"},"areaServed":"De Parken, Apeldoorn","serviceType":"Onafhankelijke woningscan en onderhoudsrapportage","inLanguage":"nl-NL"}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.roofsignal.nl/de-parken/#webpage","url":"https://www.roofsignal.nl/de-parken/","name":"Woningscan De Parken Apeldoorn | RoofSignal","description":"Onafhankelijke woningscan voor bewoners van De Parken in Apeldoorn: dak, gevel, goten, schoorsteen en onderhoudsprioriteiten in een helder rapport.","isPartOf":{"@id":"https://www.roofsignal.nl/#website"},"about":{"@id":"https://www.roofsignal.nl/#organization"},"inLanguage":"nl-NL"}</script>
@@ -225,7 +253,17 @@
       <div class="booking-two"><label>Straat<input name="street" autocomplete="address-line1" required></label><label>Huisnummer + toevoeging<input name="house_number" required></label></div>
       <div class="booking-two"><label>Naam<input name="name" autocomplete="name" required></label><label>Telefoon<input name="phone" type="tel" autocomplete="tel" required></label></div>
       <label>E-mailadres<input type="email" name="email" autocomplete="email" required></label>
-      <label>Voorkeursmoment<select name="slot" required><option value="" selected disabled>Kies een moment in september</option></select></label>
+      <div class="planner-field">
+        <span class="planner-label">Voorkeursmoment</span>
+        <div class="rs-planner" data-planner>
+          <div class="rs-planner-head"><div><span>Beschikbaarheid</span><strong>September 2026</strong></div><div class="rs-planner-availability">Selecteer eerst een datum en daarna een tijdstip.</div></div>
+          <div class="rs-calendar"><div class="rs-weekdays" aria-hidden="true"><span>Ma</span><span>Di</span><span>Wo</span><span>Do</span><span>Vr</span><span>Za</span><span>Zo</span></div><div class="rs-days" data-calendar-days role="grid" aria-label="Beschikbare dagen in september 2026"></div></div>
+          <div class="rs-times" data-time-panel hidden><strong class="rs-times-label" data-time-label></strong><div class="rs-time-options" data-time-options></div></div>
+        </div>
+        <input type="hidden" name="slot" value="">
+        <div class="rs-planner-choice" data-planner-choice></div>
+        <p class="rs-planner-error" data-planner-error>Kies een beschikbare datum en een tijdstip.</p>
+      </div>
       <label>Bijzonderheden (optioneel)<textarea name="notes" rows="3" placeholder="Bijvoorbeeld toegang via een poort of werkzaamheden aan de woning"></textarea></label>
       <label class="booking-check"><input type="checkbox" name="terms_accepted" value="yes" required><span>Ik geef opdracht voor de Woningscan à €356,95 incl. btw en ga akkoord met de productscope, het weersvoorbehoud en de voorwaarden.</span></label>
       <label class="booking-check"><input type="checkbox" name="early_start_requested" value="yes"><span>Als mijn afspraak binnen de wettelijke bedenktijd valt, verzoek ik RoofSignal om de dienst alvast uit te voeren.</span></label>
