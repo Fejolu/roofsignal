@@ -364,9 +364,11 @@ def test_de_parken_page_contains_no_internal_pilot_strategy_copy():
 
 def test_de_parken_sections_keep_alternating_background_after_strategy_removal():
     page = read("de-parken/index.html")
-    independence = page.index('<section class="section split independence-band">')
-    booking = page.index('<section class="section muted lead-section" id="aanvraag">')
+    independence = page.index('<section class="section split independence-band section-band-muted">')
+    booking = page.index('<section class="section lead-section" id="aanvraag">')
     assert independence < booking
+    assert ".section-band-muted" in page
+    assert '<section class="section muted lead-section"' not in page
 
 
 def test_de_parken_confirmation_email_omits_payment_copy():
