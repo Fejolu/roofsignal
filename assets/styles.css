@@ -148,7 +148,7 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .admin-preview-item:hover, .admin-preview-item:focus-visible { color: var(--rs-orange); outline: none; }
 .admin-preview-item:hover .admin-preview-meta > i, .admin-preview-item:focus-visible .admin-preview-meta > i { opacity: 1; transform: translateX(2px); }
 .admin-preview-item:hover small, .admin-preview-item:focus-visible small { color: var(--rs-graphite-600); }
-.admin-preview-list strong, .admin-preview-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-preview-list strong, .admin-preview-list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-preview-list small { color: var(--rs-graphite-600); }
 .admin-preview-list .status-dot::before { display: none; }
 .admin-preview-list .status-dot { min-width: 0; max-width: calc(100% - 25px); overflow: hidden; text-align: left; text-overflow: ellipsis; }
