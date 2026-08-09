@@ -560,7 +560,12 @@
       quotes: document.querySelector("[data-dashboard-quotes]"),
       planning: document.querySelector("[data-dashboard-planning]")
     };
-    const row = (kind, id, title, detail, status = "", query = title) => `<button type="button" class="admin-preview-item" data-dashboard-preview-kind="${escapeHtml(kind)}" data-dashboard-preview-id="${escapeHtml(id || "")}" data-dashboard-preview-query="${escapeHtml(query || title || "")}" aria-label="${escapeHtml(title || "Item")} openen"><span class="admin-preview-copy"><strong>${escapeHtml(title || "-")}</strong><small>${escapeHtml(detail || "")}</small></span><span class="admin-preview-meta">${status ? statusCell(status) : ""}<i aria-hidden="true">→</i></span></button>`;
+    const previewIcons = {
+      customer: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"/></svg>',
+      quote: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h8l3 3V20.5H7z"/><path d="M15 3.5v4h4M10 12h5M10 16h5"/></svg>',
+      appointment: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 3.5v5M16 3.5v5M4 10h16M8 14h3M13 14h3"/></svg>'
+    };
+    const row = (kind, id, title, detail, status = "", query = title) => `<button type="button" class="admin-preview-item" data-dashboard-preview-kind="${escapeHtml(kind)}" data-dashboard-preview-id="${escapeHtml(id || "")}" data-dashboard-preview-query="${escapeHtml(query || title || "")}" aria-label="${escapeHtml(title || "Item")} openen"><span class="admin-preview-icon">${previewIcons[kind] || ""}</span><span class="admin-preview-copy"><strong title="${escapeHtml(title || "-")}">${escapeHtml(title || "-")}</strong><small title="${escapeHtml(detail || "")}">${escapeHtml(detail || "")}</small>${status ? statusCell(status) : ""}</span><i class="admin-preview-arrow" aria-hidden="true">›</i></button>`;
     if (targets.customers) targets.customers.innerHTML = customers.length ? customers.slice(0, 5).map((customer) => row("customer", customer.id, customer.name, customer.contact_email || customer.segment || "Klant", customer.status || "active")).join("") : emptyState("Nog geen klanten.");
     const openQuotes = quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status));
     if (targets.quotes) targets.quotes.innerHTML = openQuotes.length ? openQuotes.slice(0, 5).map((quote) => row("quote", quote.id, quote.organizations?.name || quote.title, `${quote.title || "Offerte"} · ${formatMoney(quote.amount)}`, quote.status || "draft", quote.title || quote.organizations?.name)).join("") : emptyState("Geen open offertes.");
