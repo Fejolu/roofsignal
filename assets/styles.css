@@ -131,7 +131,7 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .planning-list-heading h3 { margin: 2px 0 0; font-size: 22px; }
 @media (max-width: 900px) { .resource-calendar { overflow-x: auto; } }
 .offer-table th:nth-child(5), .offer-table td:nth-child(5) { min-width: 150px; }
-.admin-dashboard-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.admin-dashboard-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
 .admin-dashboard-previews > .portal-panel { overflow: hidden; }
 .admin-dashboard-previews .panel-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
 .admin-dashboard-previews .panel-head a { justify-self: end; white-space: nowrap; }
@@ -140,10 +140,10 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .metrics .metric-card-link:hover, .metrics .metric-card-link:focus-visible { transform: translateY(-2px); border-color: rgba(255,90,20,.45); box-shadow: 0 16px 38px rgba(8,20,16,.09); outline: none; }
 .metrics .metric-card-link:hover > i, .metrics .metric-card-link:focus-visible > i { opacity: 1; transform: translateX(0); }
 .admin-preview-list { display: grid; }
-.admin-preview-list > .admin-preview-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; width: 100%; min-width: 0; overflow: hidden; padding: 12px 0; border: 0; border-top: 1px solid var(--rs-line); border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.admin-preview-list > .admin-preview-item { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 8px; width: 100%; min-width: 0; overflow: hidden; padding: 12px 0; border: 0; border-top: 1px solid var(--rs-line); border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .admin-preview-list > .admin-preview-item:first-child { border-top: 0; }
 .admin-preview-copy { display: grid; gap: 2px; min-width: 0; overflow: hidden; }
-.admin-preview-meta { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; max-width: 100%; color: var(--rs-orange); }
+.admin-preview-meta { display: flex; align-items: center; justify-content: flex-start; gap: 7px; min-width: 0; max-width: 100%; color: var(--rs-orange); }
 .admin-preview-meta > i { flex: 0 0 auto; font-size: 18px; font-style: normal; opacity: .7; transition: opacity .16s ease, transform .16s ease; }
 .admin-preview-item:hover, .admin-preview-item:focus-visible { color: var(--rs-orange); outline: none; }
 .admin-preview-item:hover .admin-preview-meta > i, .admin-preview-item:focus-visible .admin-preview-meta > i { opacity: 1; transform: translateX(2px); }
@@ -151,7 +151,7 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .admin-preview-list strong, .admin-preview-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-preview-list small { color: var(--rs-graphite-600); }
 .admin-preview-list .status-dot::before { display: none; }
-.admin-preview-list .status-dot { min-width: 0; overflow: hidden; text-align: right; text-overflow: ellipsis; }
+.admin-preview-list .status-dot { min-width: 0; max-width: calc(100% - 25px); overflow: hidden; text-align: left; text-overflow: ellipsis; }
 .appointment-inspector-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--rs-line); }
 .appointment-inspector-form label { display: grid; gap: 7px; font-weight: 800; }
 .appointment-inspector-form .btn { min-height: 48px; }
@@ -182,9 +182,7 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 @media (max-width: 600px) {
   .appointment-inspector-form { grid-template-columns: 1fr; }
   .appointment-inspector-form .form-note { grid-column: auto; }
-  .admin-preview-list > .admin-preview-item { grid-template-columns: 1fr; gap: 6px; }
-  .admin-preview-meta { justify-content: flex-start; }
-  .admin-preview-list .status-dot { text-align: left; }
+  .admin-preview-list > .admin-preview-item { gap: 6px; }
   .admin-topbar-actions { flex-wrap: wrap; }
   .admin-global-search, .admin-create-button { width: 100%; }
   .admin-list-toolbar { grid-template-columns: 1fr; }
