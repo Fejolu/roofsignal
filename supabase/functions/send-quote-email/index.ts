@@ -30,31 +30,34 @@ const formatMoment = (value: Date) => new Intl.DateTimeFormat("nl-NL", {
   dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Amsterdam",
 }).format(value);
 
-async function appendExecutionPage(pdfBytes: Uint8Array, details: {
+async function stampExecutionRegistration(pdfBytes: Uint8Array, details: {
   quoteLabel: string; version: number; issuedAt: Date; issuedBy: string; issuedByEmail: string;
 }) {
   const pdf = await PDFDocument.load(pdfBytes);
+  if (pdf.getPageCount() !== 2) throw new Error("De offerte-PDF moet vóór verzending exact twee pagina's bevatten.");
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const page = pdf.addPage([595.28, 841.89]);
+  const page = pdf.getPages()[1];
+  const { width } = page.getSize();
   const orange = rgb(1, 0.353, 0.078);
   const dark = rgb(0.063, 0.09, 0.082);
   const muted = rgb(0.36, 0.4, 0.38);
-  page.drawText("ROOFSIGNAL", { x: 56, y: 774, size: 18, font: bold, color: dark });
-  page.drawText("DIGITALE AKKOORDREGISTRATIE", { x: 56, y: 712, size: 11, font: bold, color: orange });
-  page.drawText("Offerte digitaal uitgebracht", { x: 56, y: 670, size: 24, font: bold, color: dark });
-  page.drawText(details.quoteLabel, { x: 56, y: 642, size: 11, font: regular, color: muted });
-  page.drawRectangle({ x: 56, y: 440, width: 483, height: 162, borderColor: orange, borderWidth: 1.5, color: rgb(0.98, 0.98, 0.975) });
-  page.drawText("NAMENS ROOFSIGNAL", { x: 76, y: 570, size: 9, font: bold, color: orange });
-  page.drawText(details.issuedBy, { x: 76, y: 539, size: 16, font: bold, color: dark });
-  page.drawText(details.issuedByEmail, { x: 76, y: 517, size: 10, font: regular, color: muted });
-  page.drawText(`Digitaal uitgebracht op ${formatMoment(details.issuedAt)}`, { x: 76, y: 485, size: 10, font: regular, color: dark });
-  page.drawText(`Offerteversie ${details.version}`, { x: 76, y: 463, size: 10, font: regular, color: dark });
-  page.drawRectangle({ x: 56, y: 236, width: 483, height: 162, borderColor: rgb(0.78, 0.8, 0.79), borderWidth: 1, color: rgb(1, 1, 1) });
-  page.drawText("OPDRACHTGEVER", { x: 76, y: 366, size: 9, font: bold, color: muted });
-  page.drawText("Digitale acceptatie nog niet ontvangen", { x: 76, y: 334, size: 15, font: bold, color: dark });
-  page.drawText("Naam, datum en tijd worden na akkoord automatisch vastgelegd.", { x: 76, y: 305, size: 10, font: regular, color: muted });
-  page.drawText("Deze pagina maakt integraal onderdeel uit van de offerte.", { x: 56, y: 184, size: 9, font: regular, color: muted });
+  const left = 56;
+  const gap = 10;
+  const boxWidth = (width - 112 - gap) / 2;
+  const right = left + boxWidth + gap;
+  page.drawRectangle({ x: 50, y: 198, width: width - 100, height: 216, color: rgb(1, 1, 1) });
+  page.drawRectangle({ x: left, y: 292, width: boxWidth, height: 94, borderColor: rgb(0.78, 0.8, 0.79), borderWidth: 1, color: rgb(1, 1, 1) });
+  page.drawText("OPDRACHTGEVER", { x: left + 14, y: 366, size: 8, font: bold, color: muted });
+  page.drawText("Digitale acceptatie", { x: left + 14, y: 342, size: 11, font: bold, color: dark });
+  page.drawText("Nog niet ontvangen", { x: left + 14, y: 322, size: 9, font: regular, color: muted });
+  page.drawRectangle({ x: right, y: 292, width: boxWidth, height: 94, borderColor: orange, borderWidth: 1.5, color: rgb(0.98, 0.98, 0.975) });
+  page.drawText("NAMENS ROOFSIGNAL", { x: right + 14, y: 366, size: 8, font: bold, color: orange });
+  page.drawText(details.issuedBy, { x: right + 14, y: 344, size: 11, font: bold, color: dark });
+  page.drawText(details.issuedByEmail, { x: right + 14, y: 329, size: 8, font: regular, color: muted });
+  page.drawText(`Uitgebracht: ${formatMoment(details.issuedAt)}`, { x: right + 14, y: 310, size: 8, font: regular, color: dark });
+  page.drawText(`Offerteversie ${details.version}`, { x: right + 14, y: 297, size: 8, font: regular, color: dark });
+  page.drawText(`Offerte ${details.quoteLabel} - digitaal en controleerbaar geregistreerd.`, { x: left, y: 258, size: 8, font: regular, color: muted });
   return new Uint8Array(await pdf.save());
 }
 function randomToken() {
@@ -141,7 +144,7 @@ serve(async (req) => {
   const issuedByEmail = String(userData.user.email || "info@roofsignal.nl").toLowerCase();
   const issuedPdfBytes = testRecipient
     ? originalPdfBytes
-    : await appendExecutionPage(originalPdfBytes, {
+    : await stampExecutionRegistration(originalPdfBytes, {
       quoteLabel: quote.quote_number || quote.title,
       version,
       issuedAt: sentAt,

@@ -28,17 +28,22 @@ async function addCustomerAcceptance(pdfBytes: Uint8Array, details: {
   const pdf = await PDFDocument.load(pdfBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  if (pdf.getPageCount() !== 2) throw new Error("De uitgegeven offerte moet exact twee pagina's bevatten.");
   const page = pdf.getPages()[pdf.getPageCount() - 1];
+  const { width } = page.getSize();
   const dark = rgb(0.063, 0.09, 0.082);
   const muted = rgb(0.36, 0.4, 0.38);
   const green = rgb(0.18, 0.55, 0.34);
-  page.drawRectangle({ x: 54, y: 234, width: 487, height: 166, color: rgb(1, 1, 1) });
-  page.drawRectangle({ x: 56, y: 236, width: 483, height: 162, borderColor: green, borderWidth: 1.5, color: rgb(0.98, 0.99, 0.98) });
-  page.drawText("OPDRACHTGEVER - DIGITAAL AKKOORD", { x: 76, y: 366, size: 9, font: bold, color: green });
-  page.drawText(details.actorName, { x: 76, y: 337, size: 16, font: bold, color: dark });
-  page.drawText(details.actorEmail, { x: 76, y: 315, size: 10, font: regular, color: muted });
-  page.drawText(`Digitaal akkoord op ${formatMoment(details.acceptedAt)}`, { x: 76, y: 283, size: 10, font: regular, color: dark });
-  page.drawText(`Geaccepteerde offerteversie ${details.quoteVersion}`, { x: 76, y: 261, size: 10, font: regular, color: dark });
+  const left = 56;
+  const gap = 10;
+  const boxWidth = (width - 112 - gap) / 2;
+  page.drawRectangle({ x: left - 2, y: 290, width: boxWidth + 4, height: 98, color: rgb(1, 1, 1) });
+  page.drawRectangle({ x: left, y: 292, width: boxWidth, height: 94, borderColor: green, borderWidth: 1.5, color: rgb(0.98, 0.99, 0.98) });
+  page.drawText("OPDRACHTGEVER - DIGITAAL AKKOORD", { x: left + 14, y: 366, size: 8, font: bold, color: green });
+  page.drawText(details.actorName, { x: left + 14, y: 344, size: 11, font: bold, color: dark });
+  page.drawText(details.actorEmail, { x: left + 14, y: 329, size: 8, font: regular, color: muted });
+  page.drawText(`Akkoord: ${formatMoment(details.acceptedAt)}`, { x: left + 14, y: 310, size: 8, font: regular, color: dark });
+  page.drawText(`Geaccepteerde offerteversie ${details.quoteVersion}`, { x: left + 14, y: 297, size: 8, font: regular, color: dark });
   return new Uint8Array(await pdf.save());
 }
 

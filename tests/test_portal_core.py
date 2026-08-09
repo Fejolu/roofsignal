@@ -307,16 +307,18 @@ def test_quote_issue_and_acceptance_create_verifiable_final_document():
     backend = read("assets/supabase-app.js")
     migration = read("supabase/migrations/20260805193000_quote_digital_execution.sql")
     quote_tool = read("tools/create_roofsignal_quote.py")
-    assert "appendExecutionPage" in issue
+    assert "stampExecutionRegistration" in issue
+    assert "pdf.getPageCount() !== 2" in issue
     assert 'event_type: "issued"' in issue
     assert "issued_document_hash" in issue
     assert "addCustomerAcceptance" in acceptance
+    assert "pdf.getPageCount() !== 2" in acceptance
     assert 'event_type: "accepted"' in acceptance
     assert "accepted_document_hash" in acceptance
     assert 'action: "acceptAuthenticated"' in backend
     assert "quote_execution_events" in migration
     assert "document_hash text not null" in migration
-    assert "Digitale acceptatie volgt via de akkoordpagina" in quote_tool
+    assert "Digitale acceptatie nog niet ontvangen" in quote_tool
 
 
 def test_customer_portal_uses_one_control_and_alignment_system():

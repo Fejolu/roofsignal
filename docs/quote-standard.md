@@ -31,11 +31,13 @@ RoofSignal-offertes. Een nieuwe offerte krijgt geen nieuw ontwerp.
    verzending.
 9. Verzending gebeurt pas na expliciete opdracht en alleen naar een bevestigd
    e-mailadres.
-10. Gebruik geen nagebootste of lege handtekeningvelden. Bij verzending wordt
-    de offerte namens RoofSignal digitaal uitgebracht met naam, datum, tijd,
-    versie en document-hash. Na digitaal klantakkoord wordt een definitieve PDF
-    gemaakt met dezelfde gegevens van de opdrachtgever en een controleerbare
-    auditregistratie.
+10. Gebruik geen nagebootste of lege handtekeningvelden en voeg geen derde
+    akkoordpagina toe. Onderaan pagina 2 staat één compacte digitale
+    akkoordregistratie met twee kolommen: opdrachtgever en RoofSignal. Bij
+    verzending wordt de RoofSignal-kolom gevuld met naam, e-mail, datum, tijd en
+    versie. Na digitaal klantakkoord wordt de opdrachtgeverkolom met dezelfde
+    gegevens gevuld. De offerte blijft in iedere status exact twee pagina's;
+    document-hashes en auditgebeurtenissen blijven daarnaast technisch bewaard.
 
 Klantgegevens horen in een tijdelijk JSON-invoerbestand en worden niet aan de
 publieke broncode toegevoegd.

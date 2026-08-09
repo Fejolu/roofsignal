@@ -97,7 +97,7 @@ def build(data: dict, template: Path, output: Path) -> None:
     replace_paragraph(doc.paragraphs[28], required(data, "payment_validity_text"))
     replace_paragraph(doc.paragraphs[30], data.get(
         "acceptance_text",
-        "RoofSignal brengt deze offerte digitaal uit. Het akkoord van de opdrachtgever wordt met naam, datum, tijd en offerteversie vastgelegd.",
+        "De digitale akkoordregistratie wordt bij verzending en acceptatie automatisch in deze offerte vastgelegd.",
     ))
 
     # Preserve the original Koorn source geometry while producing the neutral
@@ -158,9 +158,9 @@ def build(data: dict, template: Path, output: Path) -> None:
     replace_cell(total_table.cell(0, 1), money(total))
 
     acceptance = doc.tables[3]
-    replace_cell(acceptance.cell(1, 0), "Digitale acceptatie volgt via de akkoordpagina.")
-    replace_cell(acceptance.cell(1, 1), "Wordt digitaal uitgebracht bij verzending.")
-    replace_cell(acceptance.cell(2, 0), "Naam, datum en tijd worden automatisch vastgelegd.")
+    replace_cell(acceptance.cell(1, 0), "Digitale acceptatie nog niet ontvangen.")
+    replace_cell(acceptance.cell(1, 1), "Digitale uitgifte wordt bij verzending geregistreerd.")
+    replace_cell(acceptance.cell(2, 0), "Naam, e-mail, datum, tijd en versie volgen na akkoord.")
     replace_cell(acceptance.cell(2, 1), f"Namens RoofSignal: {data.get('signer_roofsignal', 'F.J. Joosten')}")
 
     doc.core_properties.title = f"Offerte {data['customer_name']} - {data['package']}"
