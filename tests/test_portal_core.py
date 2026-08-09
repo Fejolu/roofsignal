@@ -439,7 +439,7 @@ def test_admin_dashboard_previews_keep_content_inside_cards():
     assert "grid-template-columns: 34px minmax(0, 1fr) 18px" in styles
     assert "gap: 20px; align-items: start" in styles
     assert 'assets/styles.css?v=portal43' in page
-    assert 'assets/portal-admin.js?v=41' in page
+    assert 'assets/portal-admin.js?v=42' in page
     assert ".admin-preview-list strong, .admin-preview-list small { display: block;" in styles
     assert "@media (max-width: 1199px) and (min-width: 901px)" in styles
 
@@ -456,3 +456,11 @@ def test_appointments_are_assigned_from_existing_employee_roles():
     assert '.from("parken_bookings").update({ inspector_id: payload.inspector_id })' in backend
     assert "keep_new_parken_booking_unassigned" in migration
     assert "profile_roles" not in migration
+
+
+def test_currently_assigned_inspector_remains_selected_in_editor():
+    admin = read("assets/portal-admin.js")
+    assert "appointment.inspector_id && !inspectors.some" in admin
+    assert "appointment.profiles" in admin
+    assert 'profile.id === appointment.inspector_id ? " selected"' in admin
+    assert 'appointment.inspector_id ? "" : " selected"' in admin

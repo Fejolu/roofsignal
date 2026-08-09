@@ -639,8 +639,12 @@
 
   function appointmentInspectorEditor(appointment) {
     const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).includes("inspector"));
+    if (appointment.inspector_id && !inspectors.some((profile) => profile.id === appointment.inspector_id)) {
+      const assignedProfile = liveProfiles.find((profile) => profile.id === appointment.inspector_id) || appointment.profiles;
+      if (assignedProfile) inspectors.unshift({ ...assignedProfile, id: appointment.inspector_id });
+    }
     const options = inspectors.map((profile) => `<option value="${escapeHtml(profile.id)}"${profile.id === appointment.inspector_id ? " selected" : ""}>${escapeHtml(profile.full_name || profile.email)}</option>`).join("");
-    return `<form class="appointment-inspector-form" data-appointment-inspector-form data-appointment-id="${escapeHtml(appointment.id)}"><label>Inspecteur/drone-operator<select name="inspector_id" required><option value="">Selecteer medewerker</option>${options}</select></label><button class="btn" type="submit">Koppeling opslaan</button><p class="form-note" data-appointment-inspector-status>${inspectors.length ? "Alleen medewerkers met de rol Inspecteur zijn beschikbaar." : "Ken eerst in Medewerkers & HR de rol Inspecteur toe."}</p></form>`;
+    return `<form class="appointment-inspector-form" data-appointment-inspector-form data-appointment-id="${escapeHtml(appointment.id)}"><label>Inspecteur/drone-operator<select name="inspector_id" required><option value=""${appointment.inspector_id ? "" : " selected"}>Selecteer medewerker</option>${options}</select></label><button class="btn" type="submit">Koppeling opslaan</button><p class="form-note" data-appointment-inspector-status>${inspectors.length ? "Selecteer de inspecteur/drone-operator voor deze afspraak." : "Ken eerst in Medewerkers & HR de rol Inspecteur toe."}</p></form>`;
   }
 
   async function submitAppointmentInspector(event) {
