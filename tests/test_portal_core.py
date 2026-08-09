@@ -340,6 +340,12 @@ def test_de_parken_success_state_does_not_refocus_or_leave_pending_button():
     assert "de-parken-booking.js?v=4" in page
 
 
+def test_de_parken_confirmation_email_omits_payment_copy():
+    confirmation = read("supabase/functions/send-parken-booking-confirmation/index.ts")
+    assert "€356,95" not in confirmation
+    assert "betaaltermijn" not in confirmation.lower()
+
+
 def test_customer_portal_uses_one_control_and_alignment_system():
     styles = read("assets/styles.css")
     assert "--portal-control-height: 48px" in styles
