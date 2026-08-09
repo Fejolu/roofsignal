@@ -4,6 +4,7 @@
     "create-portal-customer",
     "quote-acceptance",
     "send-appointment-email",
+    "send-parken-booking-confirmation",
     "send-document-email",
     "send-lead-notification",
     "send-portal-login-link",

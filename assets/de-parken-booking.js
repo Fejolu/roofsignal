@@ -109,32 +109,13 @@
     return "De boeking kon niet worden opgeslagen. Probeer het opnieuw of neem contact op via 085 21 28 019.";
   }
 
-  async function sendConfirmationNotification(payload, booking) {
+  async function sendBookingConfirmation(payload, booking) {
     const config = window.ROOFSIGNAL_SUPABASE;
     if (!config?.url || !config?.anonKey) return;
-    const record = {
-      request_type: "parken",
-      name: payload.name,
-      email: payload.email,
-      postcode: payload.postcode,
-      scope: "Woningscan De Parken · €356,95 incl. btw",
-      message: [
-        `Boekingsreferentie: ${booking.reference}`,
-        `Adres: ${payload.street} ${payload.house_number}`,
-        `Telefoon: ${payload.phone}`,
-        `Voorkeursmoment: ${payload.slot_date} · ${payload.slot_time}`,
-        `Vervroegde uitvoering verzocht: ${payload.early_start_requested ? "ja" : "nee"}`,
-        `Thermografie-interesse: ${payload.thermography_interest ? "ja" : "nee"}`,
-        payload.notes ? `Bijzonderheden: ${payload.notes}` : "",
-      ].filter(Boolean).join("\n"),
-      source_path: window.location.pathname,
-      created_at: new Date().toISOString(),
-      status: "confirmation_pending",
-    };
-    const response = await fetch(`${config.url}/functions/v1/send-lead-notification`, {
+    const response = await fetch(`${config.url}/functions/v1/send-parken-booking-confirmation`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.anonKey}` },
-      body: JSON.stringify({ record }),
+      body: JSON.stringify({ reference: booking.reference, email: payload.email }),
     });
     if (!response.ok) throw new Error("Confirmation email failed");
   }
@@ -188,7 +169,7 @@
       status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail. U betaalt na de inspectie; betaaltermijn 14 dagen.</span>`;
       form.classList.add("is-complete");
       [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });
-      sendConfirmationNotification(payload, booking).catch((error) => console.warn("Booking saved; email notification failed", error));
+      sendBookingConfirmation(payload, booking).catch((error) => console.warn("Booking saved; confirmation email failed", error));
     } catch (error) {
       status.className = "form-note form-status error";
       status.textContent = errorCopy(error);
