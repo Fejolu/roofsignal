@@ -417,12 +417,14 @@ def test_employee_roles_are_cumulative_and_include_inspector():
 def test_admin_dashboard_previews_keep_content_inside_cards():
     script = read("assets/portal-admin.js")
     styles = read("assets/styles.css")
+    page = read("portal-beheer.html")
     assert 'class="admin-preview-copy"' in script
     assert 'class="admin-preview-meta"' in script
     assert ".admin-dashboard-previews > .portal-panel { overflow: hidden; }" in styles
     assert ".admin-preview-list > .admin-preview-item { display: grid;" in styles
     assert "grid-template-columns: minmax(0, 1fr); align-items: start; gap: 8px" in styles
     assert "gap: 20px; align-items: start" in styles
+    assert 'assets/styles.css?v=portal41' in page
     assert "@media (max-width: 1700px) and (min-width: 901px)" in styles
 
 
