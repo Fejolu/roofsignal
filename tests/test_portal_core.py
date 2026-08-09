@@ -332,6 +332,14 @@ def test_de_parken_booking_slot_check_qualifies_table_columns():
     assert "where slot_date=p_slot_date" not in base_migration
 
 
+def test_de_parken_success_state_does_not_refocus_or_leave_pending_button():
+    page = read("de-parken/index.html")
+    booking = read("assets/de-parken-booking.js")
+    assert 'checkPostcode({ focusFirstField: false })' in booking
+    assert 'button.textContent = "Gereserveerd ✓"' in booking
+    assert "de-parken-booking.js?v=4" in page
+
+
 def test_customer_portal_uses_one_control_and_alignment_system():
     styles = read("assets/styles.css")
     assert "--portal-control-height: 48px" in styles

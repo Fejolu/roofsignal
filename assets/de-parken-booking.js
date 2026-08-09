@@ -89,14 +89,14 @@
     plannerError.classList.remove("visible");
   }
 
-  function checkPostcode() {
+  function checkPostcode({ focusFirstField = true } = {}) {
     const eligible = validPostcodes.has(normalizePostcode(postcodeInput.value));
     postcodeStatus.className = `form-note postcode-status ${eligible ? "success" : "error"}`;
     postcodeStatus.textContent = eligible
       ? "Deze postcode valt binnen de voorlopige pilotselectie. Vul hieronder uw boeking in."
       : "Deze postcode valt niet binnen de voorlopige selectie. Neem contact op als u denkt dat dit niet klopt.";
     bookingFields.hidden = !eligible;
-    if (eligible) bookingFields.querySelector("input,select")?.focus();
+    if (eligible && focusFirstField) bookingFields.querySelector("input,select")?.focus();
     return eligible;
   }
 
@@ -129,7 +129,7 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!checkPostcode() || !form.reportValidity()) return;
+    if (!checkPostcode({ focusFirstField: false }) || !form.reportValidity()) return;
     if (!slotInput.value) {
       plannerError.classList.add("visible");
       form.querySelector("[data-planner]")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -168,6 +168,7 @@
       status.className = "form-note form-status success booking-success";
       status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail. U betaalt na de inspectie; betaaltermijn 14 dagen.</span>`;
       form.classList.add("is-complete");
+      button.textContent = "Gereserveerd ✓";
       [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });
       sendBookingConfirmation(payload, booking).catch((error) => console.warn("Booking saved; confirmation email failed", error));
     } catch (error) {
