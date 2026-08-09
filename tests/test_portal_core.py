@@ -326,7 +326,9 @@ def test_de_parken_booking_slot_check_qualifies_table_columns():
     repair_migration = read("supabase/migrations/20260809201000_de_parken_unambiguous_slot_check.sql")
     for column in ["slot_date", "slot_time", "status"]:
         assert f"booking.{column}" in base_migration
-        assert f"booking.{column}" in repair_migration
+    assert "booking.parken_bookings.slot_date" in repair_migration
+    assert "booking.parken_bookings.slot_time" in repair_migration
+    assert "from public.parken_bookings where slot_date=p_slot_date and slot_time=p_slot_time" in repair_migration
     assert "where slot_date=p_slot_date" not in base_migration
 
 
