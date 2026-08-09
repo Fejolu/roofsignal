@@ -166,7 +166,7 @@
       if (!result.ok) throw result.error || new Error("Booking rejected");
       const booking = result.booking;
       status.className = "form-note form-status success booking-success";
-      status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail. U betaalt na de inspectie; betaaltermijn 14 dagen.</span>`;
+      status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
       form.classList.add("is-complete");
       button.textContent = "Gereserveerd ✓";
       [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });

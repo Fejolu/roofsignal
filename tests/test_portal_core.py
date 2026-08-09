@@ -337,7 +337,15 @@ def test_de_parken_success_state_does_not_refocus_or_leave_pending_button():
     booking = read("assets/de-parken-booking.js")
     assert 'checkPostcode({ focusFirstField: false })' in booking
     assert 'button.textContent = "Gereserveerd ✓"' in booking
-    assert "de-parken-booking.js?v=4" in page
+    assert "de-parken-booking.js?v=5" in page
+    assert "U betaalt na de inspectie" not in booking
+
+
+def test_de_parken_booking_page_omits_payment_summary_block():
+    page = read("de-parken/index.html")
+    assert "booking-summary" not in page
+    assert "vaste all-in pilotprijs" not in page
+    assert "Geen vooruitbetaling" not in page
 
 
 def test_de_parken_confirmation_email_omits_payment_copy():
