@@ -55,6 +55,30 @@
     return { ok: true };
   }
 
+  async function submitParkenBooking(payload) {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+
+    const { data, error } = await supabase.rpc("create_parken_booking", {
+      p_name: payload.name,
+      p_email: payload.email,
+      p_phone: payload.phone,
+      p_street: payload.street,
+      p_house_number: payload.house_number,
+      p_postcode: payload.postcode,
+      p_slot_date: payload.slot_date,
+      p_slot_time: payload.slot_time,
+      p_notes: payload.notes || "",
+      p_source: payload.source || "de-parken-directmail-2026",
+      p_terms_accepted: Boolean(payload.terms_accepted),
+      p_early_start_requested: Boolean(payload.early_start_requested),
+      p_thermography_interest: Boolean(payload.thermography_interest),
+    });
+
+    if (error) return { ok: false, error };
+    return { ok: true, booking: Array.isArray(data) ? data[0] : data };
+  }
+
   async function readFunctionError(error) {
     const fallback = error?.message || "De serveractie is mislukt.";
     const response = error?.context;
@@ -906,6 +930,7 @@
     isConfigured,
     getClient,
     submitLead,
+    submitParkenBooking,
     signIn,
     resetPassword,
     updatePassword,

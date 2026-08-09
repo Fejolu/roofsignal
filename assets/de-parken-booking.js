@@ -1,0 +1,143 @@
+(() => {
+  const form = document.querySelector("[data-parken-booking]");
+  if (!form) return;
+
+  const validPostcodes = new Set(`7311AA 7311AB 7311AC 7311AD 7311AE 7311AG 7311AJ 7311AL 7311LV 7315BR 7315BS 7315BT 7315BV 7315EB 7316AA 7316AB 7316AC 7316AD 7316AE 7316AG 7316AH 7316AK 7316AL 7316AM 7316AN 7316AP 7316AR 7316AS 7316AT 7316AV 7316AW 7316BA 7316BB 7316BC 7316BD 7316BE 7316BG 7316BH 7316BJ 7316BK 7316BL 7316BM 7316BN 7316BP 7316BR 7316BS 7316BT 7316BV 7316BW 7316BX 7316BZ 7316CA 7316CD 7316CE 7316CG 7316CH 7316CJ 7316CK 7316CL 7316CM 7316CN 7316CP 7316CR 7316CS 7316CT 7316CV 7316CW 7316CX 7316CZ 7316DA 7316DB 7316DC 7316DD 7316DE 7316DG 7316DH 7316DJ 7316DK 7316DL 7316DM 7316DN 7316DP 7316DR 7316DS 7316DT 7316DV 7316DW 7316DX 7316DZ 7316EA 7316EB 7316EC 7316ED 7316EE 7316EG 7316EH 7316EJ 7316EK 7316EL 7316EM 7316EN 7316EP 7316ER 7316ES 7316ET 7317AC 7317AD 7317AE 7317AH 7317AJ 7317AP 7317AR 7317CA 7317CB 7317CC 7317CE`.split(" "));
+  const postcodeInput = form.querySelector("[name='postcode']");
+  const postcodeStatus = form.querySelector("[data-postcode-status]");
+  const bookingFields = form.querySelector("[data-booking-fields]");
+  const status = form.querySelector("[data-booking-status]");
+  const slotSelect = form.querySelector("[name='slot']");
+  const checkButton = form.querySelector("[data-check-postcode]");
+
+  function normalizePostcode(value) {
+    return String(value || "").replace(/\s/g, "").toUpperCase();
+  }
+
+  function populateSlots() {
+    const formatter = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long" });
+    for (let day = 1; day <= 30; day += 1) {
+      const date = new Date(2026, 8, day);
+      const weekday = date.getDay();
+      const dateValue = `2026-09-${String(day).padStart(2, "0")}`;
+      const add = (time, label) => {
+        const option = document.createElement("option");
+        option.value = `${dateValue}|${time}`;
+        option.textContent = `${formatter.format(date)} · ${label}`;
+        slotSelect.append(option);
+      };
+      if (weekday >= 1 && weekday <= 4) add("16:30-18:30", "einde middag");
+      if (weekday === 5 || weekday === 6) {
+        add("09:00-10:30", "09:00–10:30");
+        add("10:45-12:15", "10:45–12:15");
+        add("13:00-14:30", "13:00–14:30");
+        add("14:45-16:15", "14:45–16:15");
+      }
+    }
+  }
+
+  function checkPostcode() {
+    const eligible = validPostcodes.has(normalizePostcode(postcodeInput.value));
+    postcodeStatus.className = `form-note postcode-status ${eligible ? "success" : "error"}`;
+    postcodeStatus.textContent = eligible
+      ? "Deze postcode valt binnen de voorlopige pilotselectie. Vul hieronder uw boeking in."
+      : "Deze postcode valt niet binnen de voorlopige selectie. Neem contact op als u denkt dat dit niet klopt.";
+    bookingFields.hidden = !eligible;
+    if (eligible) bookingFields.querySelector("input,select")?.focus();
+    return eligible;
+  }
+
+  function errorCopy(error) {
+    const message = String(error?.message || error || "");
+    if (message.includes("PILOT_FULL")) return "De 25 pilotplekken zijn inmiddels bezet.";
+    if (message.includes("SLOT_TAKEN")) return "Dit moment is zojuist gereserveerd. Kies een ander moment.";
+    if (message.includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) return "Voor dit adres of moment bestaat al een actieve boeking.";
+    if (message.includes("ADDRESS_OUTSIDE_PILOT")) return "Dit adres valt niet binnen de pilotselectie.";
+    return "De boeking kon niet worden opgeslagen. Probeer het opnieuw of neem contact op via 085 21 28 019.";
+  }
+
+  async function sendConfirmationNotification(payload, booking) {
+    const config = window.ROOFSIGNAL_SUPABASE;
+    if (!config?.url || !config?.anonKey) return;
+    const record = {
+      request_type: "parken",
+      name: payload.name,
+      email: payload.email,
+      postcode: payload.postcode,
+      scope: "Woningscan De Parken · €356,95 incl. btw",
+      message: [
+        `Boekingsreferentie: ${booking.reference}`,
+        `Adres: ${payload.street} ${payload.house_number}`,
+        `Telefoon: ${payload.phone}`,
+        `Voorkeursmoment: ${payload.slot_date} · ${payload.slot_time}`,
+        `Vervroegde uitvoering verzocht: ${payload.early_start_requested ? "ja" : "nee"}`,
+        `Thermografie-interesse: ${payload.thermography_interest ? "ja" : "nee"}`,
+        payload.notes ? `Bijzonderheden: ${payload.notes}` : "",
+      ].filter(Boolean).join("\n"),
+      source_path: window.location.pathname,
+      created_at: new Date().toISOString(),
+      status: "confirmation_pending",
+    };
+    const response = await fetch(`${config.url}/functions/v1/send-lead-notification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.anonKey}` },
+      body: JSON.stringify({ record }),
+    });
+    if (!response.ok) throw new Error("Confirmation email failed");
+  }
+
+  checkButton.addEventListener("click", checkPostcode);
+  postcodeInput.addEventListener("input", () => {
+    bookingFields.hidden = true;
+    postcodeStatus.textContent = "";
+    postcodeStatus.className = "form-note postcode-status";
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!checkPostcode() || !form.reportValidity()) return;
+    const button = form.querySelector("button[type='submit']");
+    button.disabled = true;
+    button.textContent = "Reserveren…";
+    status.className = "form-note form-status pending";
+    status.textContent = "Uw boeking wordt gecontroleerd en opgeslagen…";
+
+    const data = new FormData(form);
+    const [slotDate, slotTime] = String(data.get("slot") || "").split("|");
+    const payload = {
+      name: String(data.get("name") || "").trim(),
+      email: String(data.get("email") || "").trim(),
+      phone: String(data.get("phone") || "").trim(),
+      street: String(data.get("street") || "").trim(),
+      house_number: String(data.get("house_number") || "").trim(),
+      postcode: normalizePostcode(data.get("postcode")),
+      slot_date: slotDate,
+      slot_time: slotTime,
+      notes: String(data.get("notes") || "").trim(),
+      source: "de-parken-directmail-2026",
+      terms_accepted: data.get("terms_accepted") === "yes",
+      early_start_requested: data.get("early_start_requested") === "yes",
+      thermography_interest: data.get("thermography_interest") === "yes",
+    };
+
+    try {
+      const backend = window.RoofSignalBackend;
+      if (!backend?.isConfigured || !backend.submitParkenBooking) throw new Error("Backend unavailable");
+      const result = await backend.submitParkenBooking(payload);
+      if (!result.ok) throw result.error || new Error("Booking rejected");
+      const booking = result.booking;
+      status.className = "form-note form-status success booking-success";
+      status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail. U betaalt na de inspectie; betaaltermijn 14 dagen.</span>`;
+      form.classList.add("is-complete");
+      [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });
+      sendConfirmationNotification(payload, booking).catch((error) => console.warn("Booking saved; email notification failed", error));
+    } catch (error) {
+      status.className = "form-note form-status error";
+      status.textContent = errorCopy(error);
+      button.disabled = false;
+      button.textContent = "Reserveer mijn Woningscan";
+    }
+  });
+
+  populateSlots();
+})();

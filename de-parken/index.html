@@ -70,12 +70,30 @@
     .local-note span {
       color: var(--rs-graphite-600);
     }
+
+    .pilot-price strong { display:block; font-size:clamp(2rem,4vw,3rem); color:var(--orange); }
+    .pilot-price small { display:block; margin-top:6px; color:var(--rs-graphite-600); }
+    .parken-booking-form { align-content:start; }
+    .postcode-check { display:grid; grid-template-columns:1fr auto; gap:10px; }
+    .postcode-check .btn { align-self:end; min-height:48px; }
+    .postcode-status:empty { display:none; }
+    .booking-fields { display:grid; gap:14px; margin-top:12px; }
+    .booking-fields[hidden] { display:none; }
+    .booking-two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .booking-check { display:grid !important; grid-template-columns:auto 1fr; align-items:start; gap:10px; font-weight:400 !important; }
+    .booking-check input { width:18px; height:18px; margin-top:2px; }
+    .booking-check.optional { padding-top:14px; border-top:1px solid rgba(15,23,42,.12); }
+    .booking-summary { padding:16px; border-left:4px solid var(--orange); background:var(--muted); }
+    .booking-summary strong,.booking-summary span { display:block; }
+    .booking-summary span { margin-top:4px; color:var(--rs-graphite-600); }
+    .booking-success { display:grid; gap:6px; }
+    @media (max-width:700px) { .booking-two,.postcode-check { grid-template-columns:1fr; } }
   </style>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","@id":"https://www.roofsignal.nl/de-parken/#service","name":"RoofSignal Woningscan De Parken","url":"https://www.roofsignal.nl/de-parken/","provider":{"@id":"https://www.roofsignal.nl/#organization"},"areaServed":"De Parken, Apeldoorn","serviceType":"Onafhankelijke woningscan en onderhoudsrapportage","inLanguage":"nl-NL"}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.roofsignal.nl/de-parken/#webpage","url":"https://www.roofsignal.nl/de-parken/","name":"Woningscan De Parken Apeldoorn | RoofSignal","description":"Onafhankelijke woningscan voor bewoners van De Parken in Apeldoorn: dak, gevel, goten, schoorsteen en onderhoudsprioriteiten in een helder rapport.","isPartOf":{"@id":"https://www.roofsignal.nl/#website"},"about":{"@id":"https://www.roofsignal.nl/#organization"},"inLanguage":"nl-NL"}</script>
   <script src="../assets/supabase-config.js"></script>
   <script src="../assets/supabase-app.js?v=17" defer></script>
-  <script src="../assets/lead-capture.js?v=10" defer></script>
+  <script src="../assets/de-parken-booking.js?v=1" defer></script>
 </head>
 <body class="de-parken-page">
 <header class="site-header">
@@ -87,15 +105,15 @@
   <nav class="nav">
     <a href="../diensten">Diensten</a><a href="../werkwijze">Werkwijze</a><a href="../voor-wie">Voor wie</a><a href="../tarieven">Tarieven</a><a href="../contact">Contact</a>
   </nav>
-  <a class="btn btn-small" href="#aanvraag">Vraag Woningscan aan</a>
+  <a class="btn btn-small" href="#aanvraag">Plan uw Woningscan</a>
 </header>
 <main>
 <section class="local-hero de-parken-hero">
   <div class="local-hero-content">
     <p class="eyebrow orange">Voor bewoners van De Parken</p>
     <h1>Kent u de staat van uw dak en gevel werkelijk?</h1>
-    <p class="lead">RoofSignal geeft onafhankelijk inzicht in dak, gevel, goten en schoorsteen. Geen aannemer. Geen herstelverkoop. Wel een helder onderhoudsrapport met prioriteiten.</p>
-    <div class="actions"><a class="btn" href="#aanvraag">Vraag een Woningscan aan</a><a class="btn ghost" href="#rapport">Bekijk wat u ontvangt</a></div>
+    <p class="lead">RoofSignal geeft onafhankelijk inzicht in wat zichtbaar aan dak, gevel, goten en schoorsteen speelt. Geen aannemer. Geen herstelverkoop. Wel een helder digitaal rapport met beelden en beknopte prioritering.</p>
+    <div class="actions"><a class="btn" href="#aanvraag">Plan uw Woningscan</a><a class="btn ghost" href="#rapport">Bekijk wat u ontvangt</a></div>
   </div>
   <div class="local-trustbar">
     <div><strong>Onafhankelijk</strong><span>geen herstelverkoop</span></div>
@@ -108,7 +126,7 @@
   <div>
     <p class="eyebrow orange">Waarom nu</p>
     <h2>Voorkom verrassingen aan uw woning.</h2>
-    <p>Veel onderhoud wordt pas besproken wanneer er lekkage, houtrot of zichtbare schade is. Een RoofSignal Woningscan legt de zichtbare staat van belangrijke bouwdelen vast en vertaalt die naar een praktisch onderhoudsadvies.</p>
+    <p>Veel onderhoud wordt pas besproken wanneer er lekkage, houtrot of zichtbare schade is. Een RoofSignal Woningscan legt de zichtbare staat van belangrijke bouwdelen vast en vertaalt die naar heldere bevindingen en prioriteiten.</p>
     <p>De scan is bedoeld voor woningeigenaren die hun onderhoud willen plannen zonder verkoopdruk vanuit een herstelpartij.</p>
     <div class="local-note"><strong>Speciaal voor De Parken</strong><span>Premium pilot met beperkte beschikbaarheid, gericht op zorgvuldige rapportage en lokale referenties.</span></div>
   </div>
@@ -129,9 +147,9 @@
     <p class="centered-copy">Een premium woningscan voor bewoners die objectief onderhoudsinzicht willen. De pilot is beperkt beschikbaar, zodat rapportage en werkwijze zorgvuldig gevalideerd blijven.</p>
   </div>
   <div class="cards three price-cards">
-    <article><span class="phase">Scope</span><h3>Dak, gevel, goten en schoorsteen</h3><p>Gerichte beoordeling van zichtbare bouwdelen met nadruk op onderhoudsrisico en prioriteit.</p></article>
-    <article><span class="phase">Rapport</span><h3>Heldere samenvatting en bewijs</h3><p>Executive summary, fotografisch bewijs, aandachtspunten en onderhoudshorizon.</p></article>
-    <article><span class="phase">Indicatie</span><h3>EUR 395 - EUR 495</h3><p>Premium pilotprijs. Definitieve prijs hangt af van omvang, bereikbaarheid en gewenste rapportdiepte.</p></article>
+    <article><span class="phase">Scope</span><h3>Dak, gevel, goten en schoorsteen</h3><p>Visuele, niet-destructieve beoordeling van veilig en verantwoord zichtbare delen van de buitenschil.</p></article>
+    <article><span class="phase">Rapport</span><h3>Heldere samenvatting en bewijs</h3><p>Overzichts- en detailbeelden, zichtbare bevindingen en beknopte prioritering in consumententaal.</p></article>
+    <article class="pilot-price"><span class="phase">Vaste pilotprijs</span><h3><strong>€ 356,95</strong><small>€295 excl. btw</small></h3><p>All-in binnen De Parken. Geen “vanaf”, geen reiskosten en geen onverwachte bijbetaling achteraf.</p></article>
   </div>
 </section>
 
@@ -139,8 +157,8 @@
   <div class="report-copy">
     <p class="eyebrow orange">Wat u ontvangt</p>
     <h2>Geen fotomap, maar een onderhoudsbesluit.</h2>
-    <p>RoofSignal vertaalt beelden naar een compact rapport: wat is zichtbaar, wat verdient aandacht, wat kan wachten en welke vervolgstap is logisch?</p>
-    <a class="btn" href="#aanvraag">Vraag een Woningscan aan</a>
+    <p>RoofSignal vertaalt beelden naar een compact rapport: wat is zichtbaar, wat verdient aandacht en wat kan op basis van deze visuele momentopname worden gevolgd?</p>
+    <a class="btn" href="#aanvraag">Plan uw Woningscan</a>
   </div>
   <div class="report-card local-report-card">
     <div class="report-top"><span>RoofSignal Woningscan</span><strong>De Parken</strong></div>
@@ -191,22 +209,34 @@
 
 <section class="section lead-section" id="aanvraag">
   <div>
-    <p class="eyebrow orange">Aanvraag</p>
-    <h2>Vraag een Woningscan aan.</h2>
-    <p>Laat uw gegevens achter. We nemen contact op om de woning, onderhoudsvraag, bereikbaarheid en gewenste rapportdiepte kort af te stemmen.</p>
+    <p class="eyebrow orange">Plan uw Woningscan</p>
+    <h2>Reserveer een plek in september.</h2>
+    <p>De pilot geldt uitsluitend voor geselecteerde grondgebonden woningen in De Parken en stopt bij 25 bevestigde opdrachten.</p>
+    <div class="booking-summary"><strong>€356,95 incl. btw · vaste all-in pilotprijs</strong><span>Geen vooruitbetaling. Rapport en factuur na de inspectie. Betaaltermijn: 14 dagen.</span></div>
+    <div class="local-note"><strong>Weer en toegankelijkheid</strong><span>U hoeft niet thuis te zijn als de benodigde buitenruimte toegankelijk is. Bij onveilig of ongeschikt weer verplaatsen we de afspraak kosteloos.</span></div>
   </div>
-  <form class="quote-tool lead-form" data-lead-form="de-parken">
-    <label>Naam<input name="name" autocomplete="name" placeholder="Naam" required></label>
-    <label>Adres of straat<input name="buildings" placeholder="Straat en huisnummer in De Parken" required></label>
-    <label>E-mailadres<input type="email" name="email" autocomplete="email" placeholder="naam@example.nl" required></label>
-    <label>Telefoon<input name="phone" autocomplete="tel" placeholder="Telefoonnummer"></label>
-    <label>Onderhoudsvraag<select name="scope"><option>Algemene woningscan</option><option>Dak en goten</option><option>Gevel en schilderwerk</option><option>Schoorsteen en dakdetails</option><option>Nog niet zeker</option></select></label>
-    <button class="btn" type="submit">Vraag Woningscan aan</button>
-    <p class="form-note" data-lead-status>We gebruiken uw gegevens alleen voor deze aanvraag en eventuele opvolging.</p>
+  <form class="quote-tool lead-form parken-booking-form" data-parken-booking>
+    <div class="postcode-check">
+      <label>Postcode<input name="postcode" autocomplete="postal-code" placeholder="7316 AB" required></label>
+      <button class="btn" type="button" data-check-postcode>Controleer</button>
+    </div>
+    <p class="form-note postcode-status" data-postcode-status></p>
+    <div class="booking-fields" data-booking-fields hidden>
+      <div class="booking-two"><label>Straat<input name="street" autocomplete="address-line1" required></label><label>Huisnummer + toevoeging<input name="house_number" required></label></div>
+      <div class="booking-two"><label>Naam<input name="name" autocomplete="name" required></label><label>Telefoon<input name="phone" type="tel" autocomplete="tel" required></label></div>
+      <label>E-mailadres<input type="email" name="email" autocomplete="email" required></label>
+      <label>Voorkeursmoment<select name="slot" required><option value="" selected disabled>Kies een moment in september</option></select></label>
+      <label>Bijzonderheden (optioneel)<textarea name="notes" rows="3" placeholder="Bijvoorbeeld toegang via een poort of werkzaamheden aan de woning"></textarea></label>
+      <label class="booking-check"><input type="checkbox" name="terms_accepted" value="yes" required><span>Ik geef opdracht voor de Woningscan à €356,95 incl. btw en ga akkoord met de productscope, het weersvoorbehoud en de voorwaarden.</span></label>
+      <label class="booking-check"><input type="checkbox" name="early_start_requested" value="yes"><span>Als mijn afspraak binnen de wettelijke bedenktijd valt, verzoek ik RoofSignal om de dienst alvast uit te voeren.</span></label>
+      <label class="booking-check optional"><input type="checkbox" name="thermography_interest" value="yes"><span>Houd mij per e-mail op de hoogte over thermische inspecties in Q4. Afmelden kan altijd.</span></label>
+      <button class="btn" type="submit">Reserveer mijn Woningscan</button>
+      <p class="form-note" data-booking-status>We gebruiken uw gegevens voor deze boeking en de uitvoering ervan.</p>
+    </div>
   </form>
 </section>
 
-<section class="cta"><h2>Onderhoud begint met inzicht.</h2><a class="btn" href="#aanvraag">Vraag een Woningscan aan</a></section>
+<section class="cta"><h2>Onderhoud begint met inzicht.</h2><a class="btn" href="#aanvraag">Plan uw Woningscan</a></section>
 </main>
 <footer class="footer"><div><a class="logo" href="../"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div><h4>Voor wie</h4><a href="../vve-beheerders">VvE beheerders</a><a href="../vastgoedbeheerders">Vastgoedbeheerders</a><a href="../bedrijfspanden">Bedrijfspanden</a><a class="footer-portal-link" href="../portal-login">Klantenportaal</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span></div></footer>
 </body>
