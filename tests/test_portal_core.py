@@ -348,6 +348,20 @@ def test_de_parken_booking_page_omits_payment_summary_block():
     assert "Geen vooruitbetaling" not in page
 
 
+def test_de_parken_page_contains_no_internal_pilot_strategy_copy():
+    page = read("de-parken/index.html")
+    for internal_phrase in [
+        "local-strategy",
+        "rapportstructuur verder aanscherpen",
+        "lokale referenties",
+        "zakelijke vastgoedconnecties",
+        "B2B-introducties",
+        "zorgvuldig gevalideerd",
+        "klantwaarde zorgvuldig te valideren",
+    ]:
+        assert internal_phrase not in page
+
+
 def test_de_parken_confirmation_email_omits_payment_copy():
     confirmation = read("supabase/functions/send-parken-booking-confirmation/index.ts")
     assert "€356,95" not in confirmation
