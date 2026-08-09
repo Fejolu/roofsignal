@@ -522,7 +522,7 @@
     const days = Array.from({ length: 5 }, (_, index) => { const date = new Date(start); date.setDate(start.getDate() + index); return date; });
     const end = new Date(days[4]); end.setHours(23, 59, 59, 999);
     if (period) period.textContent = `${days[0].toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} – ${days[4].toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}`;
-    const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).some((role) => ["inspector", "planning", "owner_admin"].includes(role)));
+    const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).includes("inspector"));
     const resources = inspectors.length ? inspectors : [{ id: "unassigned", full_name: "Niet toegewezen" }];
     const header = `<div class="calendar-corner"><span>Inspecteur</span></div>${days.map((date) => `<div class="calendar-day-head${date.toDateString() === new Date().toDateString() ? " today" : ""}"><strong>${date.toLocaleDateString("nl-NL", { weekday: "short" })}</strong><span>${date.getDate()} ${date.toLocaleDateString("nl-NL", { month: "short" })}</span></div>`).join("")}`;
     const rows = resources.map((resource) => {
@@ -627,8 +627,28 @@
         : kind === "profile"
           ? [["Naam", record.full_name], ["E-mailadres", record.email], ["Rol", roleLabels[record.role] || record.role], ["Telefoon", record.phone || "-"]]
           : [["Klant", record.organizations?.name], ["Object", record.properties?.name], ["Datum en tijd", formatPortalDate(record.starts_at)], ["Inspecteur", record.profiles?.full_name || record.profiles?.email || "-"]];
-    dialog.innerHTML = `<div class="portal-dialog-card admin-record-card"><div class="panel-head"><div><span class="eyebrow orange">Details</span><h2>${escapeHtml(title)}</h2></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div><dl>${fields.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "-")}</dd></div>`).join("")}</dl><div class="dialog-actions"><button class="btn ghost-dark" type="button" data-dialog-close>Sluiten</button></div></div>`;
+    const inspectorEditor = kind === "appointment" ? appointmentInspectorEditor(record) : "";
+    dialog.innerHTML = `<div class="portal-dialog-card admin-record-card"><div class="panel-head"><div><span class="eyebrow orange">Details</span><h2>${escapeHtml(title)}</h2></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div><dl>${fields.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "-")}</dd></div>`).join("")}</dl>${inspectorEditor}<div class="dialog-actions"><button class="btn ghost-dark" type="button" data-dialog-close>Sluiten</button></div></div>`;
     dialog.showModal();
+  }
+
+  function appointmentInspectorEditor(appointment) {
+    const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).includes("inspector"));
+    const options = inspectors.map((profile) => `<option value="${escapeHtml(profile.id)}"${profile.id === appointment.inspector_id ? " selected" : ""}>${escapeHtml(profile.full_name || profile.email)}</option>`).join("");
+    return `<form class="appointment-inspector-form" data-appointment-inspector-form data-appointment-id="${escapeHtml(appointment.id)}"><label>Inspecteur/drone-operator<select name="inspector_id" required><option value="">Selecteer medewerker</option>${options}</select></label><button class="btn" type="submit">Koppeling opslaan</button><p class="form-note" data-appointment-inspector-status>${inspectors.length ? "Alleen medewerkers met de rol Inspecteur zijn beschikbaar." : "Ken eerst in Medewerkers & HR de rol Inspecteur toe."}</p></form>`;
+  }
+
+  async function submitAppointmentInspector(event) {
+    event.preventDefault();
+    const form = event.target;
+    const status = form.querySelector("[data-appointment-inspector-status]");
+    const inspectorId = new FormData(form).get("inspector_id");
+    if (!inspectorId) return setWorkflowStatus(status, "Selecteer een inspecteur/drone-operator.", "error");
+    const result = await window.RoofSignalBackend.updateAppointment(form.dataset.appointmentId, { inspector_id: inspectorId });
+    if (!result.ok) return setWorkflowStatus(status, result.error?.message || "De medewerker kon niet worden gekoppeld.", "error");
+    form.closest("dialog")?.close();
+    setPortalNotice("Inspecteur/drone-operator is aan de opdracht gekoppeld.", "success");
+    await loadLiveAdminData();
   }
 
   async function loadLiveAdminData() {
@@ -2588,6 +2608,10 @@
   });
 
   document.addEventListener("submit", (event) => {
+    if (event.target.matches?.("[data-appointment-inspector-form]")) {
+      submitAppointmentInspector(event);
+      return;
+    }
     const button = event.target.querySelector?.('button[type="submit"]');
     if (button && /opslaan|vastleggen|bijwerken|toevoegen|publiceren/i.test(button.textContent)) activeSaveButton = button;
   }, true);

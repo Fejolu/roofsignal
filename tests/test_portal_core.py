@@ -375,7 +375,8 @@ def test_de_parken_bookings_create_operational_backoffice_records():
     migration = read("supabase/migrations/20260809203000_sync_parken_bookings_to_backoffice.sql")
     for table in ["organizations", "properties", "appointments", "inspections"]:
         assert f"public.{table}" in migration
-    assert "ferry@roofsignal.nl" in migration
+    assert "ferry@roofsignal.nl" not in migration
+    assert "v_inspector_id := v_booking.inspector_id" in migration
     assert "inspector_id = v_inspector_id" in migration
     assert "at time zone 'Europe/Amsterdam'" in migration
     assert "parken_booking_backoffice_sync" in migration
@@ -421,3 +422,17 @@ def test_admin_dashboard_previews_keep_content_inside_cards():
     assert ".admin-dashboard-previews > .portal-panel { overflow: hidden; }" in styles
     assert ".admin-preview-list > .admin-preview-item { display: grid;" in styles
     assert "@media (max-width: 1700px) and (min-width: 901px)" in styles
+
+
+def test_appointments_are_assigned_from_existing_employee_roles():
+    admin = read("assets/portal-admin.js")
+    backend = read("assets/supabase-app.js")
+    migration = read("supabase/migrations/20260809211500_assign_inspectors_per_appointment.sql")
+    assert 'includes("inspector")' in admin
+    assert "data-appointment-inspector-form" in admin
+    assert "Inspecteur/drone-operator" in admin
+    assert ".appointment-inspector-form" in read("assets/styles.css")
+    assert "updateAppointment" in backend
+    assert '.from("parken_bookings").update({ inspector_id: payload.inspector_id })' in backend
+    assert "keep_new_parken_booking_unassigned" in migration
+    assert "profile_roles" not in migration

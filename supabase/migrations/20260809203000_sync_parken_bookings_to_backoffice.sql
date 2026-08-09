@@ -39,14 +39,7 @@ begin
     raise exception 'PARKEN_BOOKING_NOT_FOUND';
   end if;
 
-  select id into v_inspector_id
-  from public.profiles
-  where lower(email) = 'ferry@roofsignal.nl'
-  limit 1;
-
-  if v_inspector_id is null then
-    raise exception 'PARKEN_INSPECTOR_PROFILE_NOT_FOUND';
-  end if;
+  v_inspector_id := v_booking.inspector_id;
 
   v_address := trim(v_booking.street) || ' ' || trim(v_booking.house_number);
   v_starts_at := (v_booking.slot_date::text || ' ' || left(v_booking.slot_time, 5))::timestamp at time zone 'Europe/Amsterdam';

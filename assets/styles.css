@@ -152,6 +152,10 @@ body[data-admin-view="planning"] #planning { width: 100%; }
 .admin-preview-list small { color: var(--rs-graphite-600); }
 .admin-preview-list .status-dot::before { display: none; }
 .admin-preview-list .status-dot { min-width: 0; overflow: hidden; text-align: right; text-overflow: ellipsis; }
+.appointment-inspector-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--rs-line); }
+.appointment-inspector-form label { display: grid; gap: 7px; font-weight: 800; }
+.appointment-inspector-form .btn { min-height: 48px; }
+.appointment-inspector-form .form-note { grid-column: 1 / -1; margin: 0; }
 .customer-topbar-actions { align-items: center; flex-wrap: wrap; }
 .customer-global-search { min-width: min(330px, 30vw); }
 @media (min-width: 1200px) {
@@ -176,6 +180,8 @@ body[data-admin-view="planning"] #planning { width: 100%; }
   .admin-dashboard-previews { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) {
+  .appointment-inspector-form { grid-template-columns: 1fr; }
+  .appointment-inspector-form .form-note { grid-column: auto; }
   .admin-preview-list > .admin-preview-item { grid-template-columns: 1fr; gap: 6px; }
   .admin-preview-meta { justify-content: flex-start; }
   .admin-preview-list .status-dot { text-align: left; }

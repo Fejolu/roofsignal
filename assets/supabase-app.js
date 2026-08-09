@@ -793,6 +793,22 @@
     return appointments.map((appointment) => ({ ...appointment, profiles: inspectorMap.get(appointment.inspector_id) || null }));
   }
 
+  async function updateAppointment(id, payload) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data, error } = await supabase
+      .from("appointments")
+      .update(payload)
+      .eq("id", id)
+      .select("id,organization_id,property_id,inspector_id,title,starts_at,ends_at,status,notes")
+      .single();
+    if (error) return { ok: false, error };
+    if (Object.prototype.hasOwnProperty.call(payload, "inspector_id")) {
+      await supabase.from("parken_bookings").update({ inspector_id: payload.inspector_id }).eq("appointment_id", id);
+    }
+    return { ok: true, data };
+  }
+
   async function updateProperty(id, payload) {
     const supabase = await getClient();
     if (!supabase || !id) return { ok: false };
@@ -1007,6 +1023,7 @@
     listInvoices,
     listQuotes,
     listAppointments,
+    updateAppointment,
     updateProperty,
     deleteProperty,
     updateOrganization,
