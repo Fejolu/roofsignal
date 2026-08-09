@@ -362,6 +362,13 @@ def test_de_parken_page_contains_no_internal_pilot_strategy_copy():
         assert internal_phrase not in page
 
 
+def test_de_parken_sections_keep_alternating_background_after_strategy_removal():
+    page = read("de-parken/index.html")
+    independence = page.index('<section class="section split independence-band">')
+    booking = page.index('<section class="section muted lead-section" id="aanvraag">')
+    assert independence < booking
+
+
 def test_de_parken_confirmation_email_omits_payment_copy():
     confirmation = read("supabase/functions/send-parken-booking-confirmation/index.ts")
     assert "€356,95" not in confirmation
