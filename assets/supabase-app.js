@@ -79,6 +79,15 @@
     return { ok: true, booking: Array.isArray(data) ? data[0] : data };
   }
 
+  async function listUnavailableParkenSlots() {
+    const supabase = await getClient();
+    if (!supabase) return { ok: false, fallback: true };
+
+    const { data, error } = await supabase.rpc("list_unavailable_parken_slots");
+    if (error) return { ok: false, error };
+    return { ok: true, slots: Array.isArray(data) ? data : [] };
+  }
+
   async function readFunctionError(error) {
     const fallback = error?.message || "De serveractie is mislukt.";
     const response = error?.context;
@@ -947,6 +956,7 @@
     getClient,
     submitLead,
     submitParkenBooking,
+    listUnavailableParkenSlots,
     signIn,
     resetPassword,
     updatePassword,

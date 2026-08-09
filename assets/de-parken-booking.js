@@ -15,7 +15,9 @@
   const timeOptions = form.querySelector("[data-time-options]");
   const plannerChoice = form.querySelector("[data-planner-choice]");
   const plannerError = form.querySelector("[data-planner-error]");
+  const availabilityMessage = form.querySelector("[data-planner-availability]");
   const slotMap = new Map();
+  let unavailableSlots = new Set();
   let selectedDate = "";
 
   function normalizePostcode(value) {
@@ -23,6 +25,8 @@
   }
 
   function buildCalendar() {
+    calendarDays.innerHTML = "";
+    slotMap.clear();
     const formatter = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long" });
     const firstDayOffset = 1; // 1 september 2026 is dinsdag; kalender start op maandag.
     for (let empty = 0; empty < firstDayOffset; empty += 1) {
@@ -45,17 +49,47 @@
           { value: "14:45-16:15", label: "14:45–16:15" },
         );
       }
-      slotMap.set(dateValue, { date, label: formatter.format(date), times });
+      const availableTimes = times.filter((time) => !unavailableSlots.has(`${dateValue}|${time.value}`));
+      slotMap.set(dateValue, { date, label: formatter.format(date), times: availableTimes });
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `rs-day ${times.length ? "available" : "unavailable"}`;
+      button.className = `rs-day ${availableTimes.length ? "available" : "unavailable"}`;
       button.textContent = String(day);
       button.dataset.date = dateValue;
       button.setAttribute("role", "gridcell");
-      button.setAttribute("aria-label", `${formatter.format(date)}${times.length ? ", beschikbaar" : ", niet beschikbaar"}`);
-      button.disabled = !times.length;
-      if (times.length) button.addEventListener("click", () => selectDate(dateValue));
+      button.setAttribute("aria-label", `${formatter.format(date)}${availableTimes.length ? ", beschikbaar" : ", niet beschikbaar"}`);
+      button.disabled = !availableTimes.length;
+      if (availableTimes.length) button.addEventListener("click", () => selectDate(dateValue));
       calendarDays.append(button);
+    }
+  }
+
+  async function refreshAvailability() {
+    const backend = window.RoofSignalBackend;
+    availabilityMessage.textContent = "Beschikbaarheid wordt gecontroleerd…";
+    try {
+      if (!backend?.isConfigured || !backend.listUnavailableParkenSlots) throw new Error("Backend unavailable");
+      const result = await backend.listUnavailableParkenSlots();
+      if (!result.ok) throw result.error || new Error("Availability unavailable");
+      unavailableSlots = new Set(result.slots.map((slot) => `${slot.slot_date}|${slot.slot_time}`));
+      buildCalendar();
+      if (selectedDate && !slotMap.get(selectedDate)?.times.length) {
+        selectedDate = "";
+        slotInput.value = "";
+        timePanel.hidden = true;
+        plannerChoice.classList.remove("visible");
+      } else if (selectedDate) {
+        selectDate(selectedDate);
+      }
+      availabilityMessage.textContent = "Selecteer eerst een datum en daarna een tijdstip.";
+      return true;
+    } catch (error) {
+      unavailableSlots = new Set();
+      calendarDays.innerHTML = "";
+      slotMap.clear();
+      timePanel.hidden = true;
+      availabilityMessage.textContent = "De actuele beschikbaarheid kan niet worden geladen. Probeer het later opnieuw.";
+      return false;
     }
   }
 
@@ -176,8 +210,15 @@
       status.textContent = errorCopy(error);
       button.disabled = false;
       button.textContent = "Reserveer mijn Woningscan";
+      if (String(error?.message || error || "").includes("SLOT_TAKEN") || String(error?.message || error || "").includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) {
+        await refreshAvailability();
+      }
     }
   });
 
-  buildCalendar();
+  refreshAvailability();
+  window.addEventListener("focus", refreshAvailability);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshAvailability();
+  });
 })();

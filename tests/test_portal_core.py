@@ -332,12 +332,25 @@ def test_de_parken_booking_slot_check_qualifies_table_columns():
     assert "where slot_date=p_slot_date" not in base_migration
 
 
+def test_de_parken_calendar_uses_live_privacy_safe_availability():
+    migration = read("supabase/migrations/20260809214500_public_parken_availability.sql")
+    backend = read("assets/supabase-app.js")
+    booking = read("assets/de-parken-booking.js")
+    assert "list_unavailable_parken_slots" in migration
+    assert "status not in ('cancelled', 'declined')" in migration
+    assert "name" not in migration and "email" not in migration and "phone" not in migration
+    assert 'supabase.rpc("list_unavailable_parken_slots")' in backend
+    assert "unavailableSlots.has(`${dateValue}|${time.value}`)" in booking
+    assert 'window.addEventListener("focus", refreshAvailability)' in booking
+    assert "De actuele beschikbaarheid kan niet worden geladen" in booking
+
+
 def test_de_parken_success_state_does_not_refocus_or_leave_pending_button():
     page = read("de-parken/index.html")
     booking = read("assets/de-parken-booking.js")
     assert 'checkPostcode({ focusFirstField: false })' in booking
     assert 'button.textContent = "Gereserveerd ✓"' in booking
-    assert "de-parken-booking.js?v=5" in page
+    assert "de-parken-booking.js?v=6" in page
     assert "U betaalt na de inspectie" not in booking
 
 
