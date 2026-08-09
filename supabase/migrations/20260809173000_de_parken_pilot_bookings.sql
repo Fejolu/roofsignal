@@ -104,7 +104,13 @@ begin
   if (select count(*) from public.parken_bookings where status not in ('cancelled','declined')) >= 25 then
     raise exception 'PILOT_FULL';
   end if;
-  if exists(select 1 from public.parken_bookings where slot_date=p_slot_date and slot_time=p_slot_time and status not in ('cancelled','declined')) then
+  if exists(
+    select 1
+    from public.parken_bookings as booking
+    where booking.slot_date = p_slot_date
+      and booking.slot_time = p_slot_time
+      and booking.status not in ('cancelled','declined')
+  ) then
     raise exception 'SLOT_TAKEN';
   end if;
 

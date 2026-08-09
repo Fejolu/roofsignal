@@ -321,6 +321,15 @@ def test_quote_issue_and_acceptance_create_verifiable_final_document():
     assert "Digitale acceptatie nog niet ontvangen" in quote_tool
 
 
+def test_de_parken_booking_slot_check_qualifies_table_columns():
+    base_migration = read("supabase/migrations/20260809173000_de_parken_pilot_bookings.sql")
+    repair_migration = read("supabase/migrations/20260809201000_de_parken_unambiguous_slot_check.sql")
+    for column in ["slot_date", "slot_time", "status"]:
+        assert f"booking.{column}" in base_migration
+        assert f"booking.{column}" in repair_migration
+    assert "where slot_date=p_slot_date" not in base_migration
+
+
 def test_customer_portal_uses_one_control_and_alignment_system():
     styles = read("assets/styles.css")
     assert "--portal-control-height: 48px" in styles
