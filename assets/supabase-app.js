@@ -359,6 +359,12 @@
     return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
   }
 
+  async function sendCustomerEmail(payload) {
+    const supabase = await getClient(); if (!supabase) return { ok: false };
+    const { data, error } = await supabase.functions.invoke("send-customer-email", { body: payload });
+    return error ? { ok: false, error: await readFunctionError(error) } : { ok: true, data };
+  }
+
   async function createStaffCalendarFeed(profileId) {
     const supabase = await getClient(); if (!supabase || !profileId) return { ok: false };
     const { data, error } = await supabase.functions.invoke("staff-calendar", { body: { profileId } });
@@ -982,6 +988,7 @@
     createAppointment,
     sendAppointmentEmail,
     sendDocumentEmail,
+    sendCustomerEmail,
     createStaffCalendarFeed,
     createInvoice,
     updateInvoice,

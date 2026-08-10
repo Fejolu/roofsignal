@@ -127,6 +127,16 @@
             <label>Onderwerp<input name="subject" required></label><label class="wide-field">Inhoud<textarea name="body" rows="3"></textarea></label>
             <button class="btn ghost-dark" type="submit">Activiteit opslaan</button>
           </form>
+          <form class="customer-mini-form customer-mail-form" data-customer-mail-form>
+            <h4>E-mail sturen</h4>
+            <label>Aan<input name="recipient" type="email" required></label>
+            <label>BCC<input name="bcc" type="email" value="ferry@roofsignal.nl" readonly></label>
+            <label class="wide-field">Onderwerp<input name="subject" required></label>
+            <label class="wide-field">Bericht<textarea name="body" rows="9" required></textarea></label>
+            <label class="wide-field">PDF-bijlage<input name="attachment" type="file" accept="application/pdf,.pdf" required></label>
+            <p class="form-note wide-field" data-customer-mail-status>De e-mail wordt verzonden vanaf ferry@roofsignal.nl en vastgelegd bij Activiteiten.</p>
+            <button class="btn" type="submit">E-mail versturen</button>
+          </form>
         </div>
       </div>
       <div class="customer-object-manager" data-object-manager hidden>

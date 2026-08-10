@@ -100,6 +100,7 @@
   const customerDossierOverview = document.querySelector("[data-customer-dossier-overview]");
   const contactCreateForm = document.querySelector("[data-contact-create-form]");
   const activityCreateForm = document.querySelector("[data-activity-create-form]");
+  const customerMailForm = document.querySelector("[data-customer-mail-form]");
   const customerProfileForm = document.querySelector("[data-customer-profile-form]");
   let activeObjectCustomerRow = null;
   let activeCustomerObjects = [];
@@ -1264,6 +1265,10 @@
     activeObjectCustomerRow = row;
     customerWorkspace.hidden = false;
     if (customerWorkspaceTitle) customerWorkspaceTitle.textContent = customerNameFromRow(row);
+    if (customerMailForm) {
+      const organization = liveOrganizations.find((item) => item.id === row.dataset.customerId);
+      customerMailForm.elements.recipient.value = organization?.contact_email || "";
+    }
     closeWorkflowForms();
     try {
       await renderCustomerDossier(row.dataset.customerId);
@@ -1272,6 +1277,47 @@
       setPortalNotice(error?.message || "Klantdossier laden is mislukt.", "error");
     }
     customerWorkspace.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function submitCustomerMail(event) {
+    event.preventDefault();
+    const organizationId = activeObjectCustomerRow?.dataset.customerId;
+    if (!organizationId || !customerMailForm) return;
+    const data = new FormData(customerMailForm);
+    const file = customerMailForm.elements.attachment.files?.[0];
+    const status = customerMailForm.querySelector("[data-customer-mail-status]");
+    const button = customerMailForm.querySelector('button[type="submit"]');
+    if (!file || file.type !== "application/pdf") return setWorkflowStatus(status, "Selecteer één PDF-bestand.", "error");
+    if (file.size > 15 * 1024 * 1024) return setWorkflowStatus(status, "De PDF is groter dan 15 MB.", "error");
+    button.disabled = true; button.textContent = "Verzenden…";
+    try {
+      setWorkflowStatus(status, "Bijlage veilig uploaden…", "");
+      const uploaded = await window.RoofSignalBackend.uploadPortalDocument(file, {
+        organization_id: organizationId,
+        document_type: "customer_email_attachment",
+        title: file.name.replace(/\.pdf$/i, ""),
+        customer_visible: false,
+        required_depth: "basis",
+        metadata: { purpose: "outbound_customer_email" },
+      });
+      if (!uploaded.ok) return setWorkflowStatus(status, uploaded.error?.message || "Bijlage uploaden is mislukt.", "error");
+      setWorkflowStatus(status, "E-mail verzenden…", "");
+      const result = await window.RoofSignalBackend.sendCustomerEmail({
+        organizationId,
+        recipient: String(data.get("recipient") || "").trim(),
+        subject: String(data.get("subject") || "").trim(),
+        body: String(data.get("body") || "").trim(),
+        documentId: uploaded.data.id,
+      });
+      if (!result.ok) return setWorkflowStatus(status, result.error?.message || "E-mail verzenden is mislukt.", "error");
+      customerMailForm.elements.subject.value = "";
+      customerMailForm.elements.body.value = "";
+      customerMailForm.elements.attachment.value = "";
+      setWorkflowStatus(status, "E-mail is verzonden en vastgelegd bij Activiteiten.", "success");
+      await renderCustomerDossier(organizationId);
+    } finally {
+      button.disabled = false; button.textContent = "E-mail versturen";
+    }
   }
 
   function openCustomerWorkflow(type) {
@@ -2686,6 +2732,7 @@
   });
   contactCreateForm?.addEventListener("submit", submitContact);
   activityCreateForm?.addEventListener("submit", submitActivity);
+  customerMailForm?.addEventListener("submit", submitCustomerMail);
   customerProfileForm?.addEventListener("submit", async (event) => {
     event.preventDefault(); const data = new FormData(customerProfileForm); const status = customerProfileForm.querySelector("[data-customer-profile-status]");
     const result = await window.RoofSignalBackend.completeCustomerProfile(String(data.get("full_name") || "").trim(), String(data.get("phone") || "").trim());

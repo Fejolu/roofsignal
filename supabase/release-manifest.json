@@ -6,6 +6,7 @@
     "send-appointment-email",
     "send-parken-booking-confirmation",
     "send-document-email",
+    "send-customer-email",
     "send-lead-notification",
     "send-portal-login-link",
     "send-quote-email",

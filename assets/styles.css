@@ -2631,6 +2631,7 @@ button { cursor: pointer; }
 .customer-mini-form textarea { width: 100%; padding: 10px; border: 1px solid var(--rs-line); border-radius: 9px; font: inherit; }
 .customer-mini-form .check { display: flex; align-items: center; }
 .customer-mini-form .check input { width: auto; }
+.customer-mail-form { grid-column: 1 / -1; }
 .inspection-checklist { display: grid; gap: 7px; margin: 18px 0; max-height: 520px; overflow: auto; padding-right: 6px; }
 .checklist-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; padding: 12px; border-radius: 10px; background: var(--rs-graphite-950); color: #fff; }
 .inspection-checklist > label { display: grid; grid-template-columns: 1fr 180px; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--rs-line); border-radius: 10px; background: #fff; }
