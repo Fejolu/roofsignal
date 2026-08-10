@@ -38,6 +38,18 @@ RoofSignal-offertes. Een nieuwe offerte krijgt geen nieuw ontwerp.
     versie. Na digitaal klantakkoord wordt de opdrachtgeverkolom met dezelfde
     gegevens gevuld. De offerte blijft in iedere status exact twee pagina's;
     document-hashes en auditgebeurtenissen blijven daarnaast technisch bewaard.
+11. Maak de inspectiemethode in iedere offerte expliciet. Voor een dak- of
+    Woningscan met drone staat onder `Uitgangspunten en werkwijze` ten minste:
+    "De dak- en gevelinspectie wordt van buitenaf uitgevoerd met professionele
+    drone-opnamen." Leg daarnaast in klanttaal vast dat ook moeilijk bereikbare
+    dakdelen, aansluitingen en details visueel kunnen worden vastgelegd zonder
+    het dak fysiek te betreden.
+12. Claim niet dat een drone-inspectie op zichzelf betrouwbaarder is dan iedere
+    fysieke inspectie. Gebruik als vaste uitleg: "De betrouwbaarheid zit in de
+    combinatie van systematische beeldregistratie, voldoende beeldkwaliteit,
+    een vast inspectieprotocol en deskundige beoordeling." Benoem ook de grens:
+    het betreft een visuele beoordeling van de buitenzijde; RoofSignal kijkt
+    niet door materialen of constructies heen en meldt niet-zichtbare delen.
 
 Klantgegevens horen in een tijdelijk JSON-invoerbestand en worden niet aan de
 publieke broncode toegevoegd.

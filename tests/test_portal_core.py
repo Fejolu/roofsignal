@@ -285,6 +285,25 @@ def test_veilig_is_not_used_as_generic_portal_or_marketing_copy():
         assert "veilig" not in read(path).lower()
 
 
+def test_knowledge_base_has_indexable_articles_and_consistent_footer_links():
+    pages = [
+        "kennisbank.html",
+        "kennisbank-drone-inspectie-betrouwbaar.html",
+        "kennisbank-wat-ziet-een-dakinspectie.html",
+        "kennisbank-van-bevinding-naar-prioriteit.html",
+    ]
+    for path in pages:
+        page = read(path)
+        assert '<meta name="robots" content="index,follow">' in page
+        assert 'rel="canonical"' in page
+        assert 'href="kennisbank">Kennisbank</a>' in page
+        contact = page.split('<h4>Contact</h4>', 1)[1].split('</div>', 1)[0]
+        assert 'footer-portal-link' in contact
+    sitemap = read("sitemap.xml")
+    for slug in ["kennisbank", "kennisbank-drone-inspectie-betrouwbaar", "kennisbank-wat-ziet-een-dakinspectie", "kennisbank-van-bevinding-naar-prioriteit"]:
+        assert f"https://www.roofsignal.nl/{slug}" in sitemap
+
+
 def test_customer_self_service_journeys_are_real_and_scoped():
     page = read("portal-klant.html")
     portal = read("assets/portal-admin.js")

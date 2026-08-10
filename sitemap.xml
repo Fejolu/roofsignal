@@ -108,4 +108,8 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url><loc>https://www.roofsignal.nl/kennisbank</loc><lastmod>2026-08-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.roofsignal.nl/kennisbank-drone-inspectie-betrouwbaar</loc><lastmod>2026-08-10</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.roofsignal.nl/kennisbank-wat-ziet-een-dakinspectie</loc><lastmod>2026-08-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.roofsignal.nl/kennisbank-van-bevinding-naar-prioriteit</loc><lastmod>2026-08-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
