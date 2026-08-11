@@ -1211,6 +1211,10 @@ form.is-complete button[disabled] {
 
 .footer p { opacity: .7; }
 
+.footer-company-spacer {
+  min-height: 1.55em;
+}
+
 .legal-body {
   max-width: 760px;
   line-height: 1.7;
