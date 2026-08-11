@@ -1395,12 +1395,14 @@ form {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   font: inherit;
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: var(--rs-radius);
+  background: #fff;
 }
 
 button { cursor: pointer; }
