@@ -22,7 +22,8 @@
   <link rel="stylesheet" href="assets/styles.css">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.roofsignal.nl/#organization","name":"RoofSignal","url":"https://www.roofsignal.nl/","email":"info@roofsignal.nl","telephone":"+31 85 212 8019","address":{"@type":"PostalAddress","addressLocality":"Apeldoorn","addressCountry":"NL"},"areaServed":"NL"}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.roofsignal.nl/#website","url":"https://www.roofsignal.nl/","name":"RoofSignal","publisher":{"@id":"https://www.roofsignal.nl/#organization"},"inLanguage":"nl-NL"}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfessionalService","@id":"https://www.roofsignal.nl/#service","name":"RoofSignal","url":"https://www.roofsignal.nl/","email":"info@roofsignal.nl","telephone":"+31 85 212 8019","address":{"@type":"PostalAddress","addressLocality":"Apeldoorn","addressCountry":"NL"},"areaServed":"NL","serviceType":["Onafhankelijke gebouwschilbeoordeling","Onderhoudsrapportage","Portefeuilleprioritering","Vastgoed onderhoudsdossier"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfessionalService","@id":"https://www.roofsignal.nl/#service","name":"RoofSignal","url":"https://www.roofsignal.nl/","email":"info@roofsignal.nl","telephone":"+31 85 212 8019","address":{"@type":"PostalAddress","addressLocality":"Apeldoorn","addressCountry":"NL"},"areaServed":"NL","priceRange":"€€","serviceType":["Onafhankelijke gebouwschilbeoordeling","Onderhoudsrapportage","Portefeuilleprioritering","Vastgoed onderhoudsdossier"],"contactPoint":{"@type":"ContactPoint","contactType":"customer service","telephone":"+31 85 212 8019","email":"info@roofsignal.nl","areaServed":"NL","availableLanguage":"nl"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","@id":"https://www.roofsignal.nl/#gebouwschil-service","name":"Gebouwschilinspectie","serviceType":"Gebouwschilrapportage en onderhoudsadvies","provider":{"@id":"https://www.roofsignal.nl/#organization"},"areaServed":"NL","url":"https://www.roofsignal.nl/diensten","hasOfferCatalog":{"@type":"OfferCatalog","name":"Objectrapportage","itemListElement":[{"@type":"Offer","name":"RoofSignal Basis","description":"Zichtbare nulmeting van dak en/of gevel","price":"295","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://www.roofsignal.nl/tarieven"},{"@type":"Offer","name":"RoofSignal Plus","description":"Volledige gebouwschilbeoordeling met onderhoudsadvies","price":"595","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://www.roofsignal.nl/tarieven"},{"@type":"Offer","name":"RoofSignal Premium","description":"Conditie-informatie, MJOP-input en meerjarenplanning","price":"995","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://www.roofsignal.nl/tarieven"}]}}</script>
   <script src="assets/supabase-config.js"></script>
   <script src="assets/supabase-app.js?v=23" defer></script>
   <script src="assets/lead-capture.js?v=10" defer></script>
@@ -78,10 +79,11 @@
     <p class="centered-copy">RoofSignal werkt met een startprijs per onderhoudsvraag. De definitieve prijs hangt af van omvang, rapportagediepte, begaanbaarheid op locatie en reisafstand.</p>
   </div>
   <div class="cards three price-cards">
-    <article><span class="phase">Objectrapportage</span><h3>Vanaf EUR 495 excl. btw</h3><p>Voor een gerichte beoordeling van een dak, gevel of gebouwschil met concrete onderhoudsprioriteiten.</p></article>
-    <article><span class="phase">Portefeuillescan</span><h3>Vanaf EUR 995 excl. btw</h3><p>Voor beheerders die meerdere objecten willen vergelijken en de juiste prioriteiten willen bepalen.</p></article>
-    <article><span class="phase">Op maat</span><h3>Rapportdiepte per vraag</h3><p>MJOP-input, kostenindicatie, extra bouwdelen of periodieke opvolging worden vooraf afgestemd.</p></article>
+    <article><span class="phase">RoofSignal Basis</span><h3>Vanaf € 295 excl. btw</h3><p>Zichtbare nulmeting voor een gerichte beoordeling van dak en/of gevel.</p></article>
+    <article><span class="phase">RoofSignal Plus</span><h3>Vanaf € 595 excl. btw</h3><p>Volledige gebouwschilbeoordeling met analyse, risico en onderhoudsadvies.</p></article>
+    <article><span class="phase">RoofSignal Premium</span><h3>Vanaf € 995 excl. btw</h3><p>Conditie-informatie, MJOP-input en meerjarenplanning voor bestuurlijke besluiten.</p></article>
   </div>
+  <p class="centered-copy"><a href="tarieven">Bekijk alle pakketten en de portefeuillescan →</a></p>
 </section>
 
 <section class="section report-preview" id="voorbeeldrapport">
@@ -106,7 +108,7 @@
     </div>
     <div class="report-rows">
       <div><strong>Urgentie</strong><span>2 punten hoog, 5 normaal</span></div>
-      <div><strong>Kostenindicatie</strong><span>EUR 750-EUR 2.500 afhankelijk van begaanbaarheid en reisafstand</span></div>
+      <div><strong>Kostenindicatie</strong><span>€ 750 – € 2.500 afhankelijk van begaanbaarheid en reisafstand</span></div>
       <div><strong>Conclusie</strong><span>Onderhoud prioriteren voor bestuur, beheerder of eigenaar</span></div>
     </div>
   </div>
@@ -150,7 +152,7 @@
   <div class="case-metrics">
     <article><span>Bevindingen</span><strong>11</strong><p>verdeeld over dak, gevel, goten en houtwerk.</p></article>
     <article><span>Urgent</span><strong>3</strong><p>actie nodig om lekkage- en gevelrisico te beperken.</p></article>
-    <article><span>3 jaar</span><strong>EUR 28.000</strong><p>indicatieve onderhoudsreservering.</p></article>
+    <article><span>3 jaar</span><strong>€ 28.000</strong><p>indicatieve onderhoudsreservering.</p></article>
     <article><span>Bewijs</span><strong>73</strong><p>geannoteerde beelden in het rapport.</p></article>
   </div>
   <div class="case-findings">
@@ -235,6 +237,6 @@
 
 <section class="cta"><h2>Waar liggen de grootste onderhoudsrisico’s binnen uw portefeuille?</h2><a class="btn" href="contact">Vraag een portefeuillescan aan</a></section>
 </main>
-<footer class="footer"><div><a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div><h4>Voor wie</h4><a href="vve-beheerders">VvE beheerders</a><a href="vastgoedbeheerders">Vastgoedbeheerders</a><a href="bedrijfspanden">Bedrijfspanden</a><a href="kennisbank">Kennisbank</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span><a class="footer-portal-link" href="portal-login">RoofSignal Portaal</a></div></footer>
+<footer class="footer"><div><a class="logo" href="/"><span class="mark">⌂</span>ROOF<span>SIGNAL</span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div><h4>Voor wie</h4><a href="vve-beheerders">VvE beheerders</a><a href="vastgoedbeheerders">Vastgoedbeheerders</a><a href="bedrijfspanden">Bedrijfspanden</a><a href="kennisbank">Kennisbank</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span><a class="footer-portal-link" href="portal-login">RoofSignal Portaal</a></div><div><h4>Service</h4><a href="over-ons">Over ons</a><a href="projecten">Projecten</a><a href="privacy">Privacyverklaring</a><a href="cookies">Cookiebeleid</a><a href="voorwaarden">Algemene voorwaarden</a></div></footer>
 </body>
 </html>

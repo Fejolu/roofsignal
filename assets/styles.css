@@ -1153,7 +1153,7 @@ form.is-complete button[disabled] {
   color: #fff;
   padding: 54px 7vw;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 40px;
 }
 
@@ -1164,6 +1164,33 @@ form.is-complete button[disabled] {
 }
 
 .footer p { opacity: .7; }
+
+.legal-body {
+  max-width: 760px;
+  line-height: 1.7;
+}
+
+.legal-body h2 {
+  font-size: 22px;
+  margin: 32px 0 12px;
+}
+
+.legal-body ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.legal-body li {
+  margin-bottom: 6px;
+}
+
+.legal-body p {
+  margin: 0 0 14px;
+}
+
+.legal-body a {
+  color: var(--orange);
+}
 
 .footer-portal-link {
   margin-top: 24px;
