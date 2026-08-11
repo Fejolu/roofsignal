@@ -294,8 +294,114 @@ section {
 
 .nav {
   display: flex;
+  align-items: center;
   gap: 26px;
   margin-left: auto;
+}
+
+.nav-services {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-services-trigger:after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 0 3px 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.services-dropdown {
+  position: absolute;
+  top: calc(100% + 17px);
+  left: -22px;
+  width: min(720px, calc(100vw - 44px));
+  display: grid;
+  grid-template-columns: .88fr 1.12fr;
+  gap: 0;
+  padding: 14px;
+  color: #fff;
+  background: rgba(8, 14, 12, .99);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.42);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-7px);
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+  pointer-events: none;
+}
+
+.services-dropdown:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -19px;
+  height: 19px;
+}
+
+.nav-services:hover .services-dropdown,
+.nav-services:focus-within .services-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.services-dropdown-group {
+  padding: 8px;
+}
+
+.services-dropdown-group + .services-dropdown-group {
+  border-left: 1px solid rgba(255,255,255,.11);
+}
+
+.services-dropdown-label,
+.mobile-services-label {
+  display: block;
+  padding: 4px 11px 8px;
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.nav .services-dropdown a {
+  display: block;
+  padding: 9px 11px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.25;
+  opacity: 1;
+}
+
+.nav .services-dropdown a:hover,
+.nav .services-dropdown a:focus-visible {
+  color: #fff;
+  background: rgba(255,255,255,.07);
+  outline: none;
+}
+
+.services-dropdown a span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(255,255,255,.62);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.services-dropdown-all {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  color: var(--orange) !important;
+  border-top: 1px solid rgba(255,255,255,.11);
 }
 
 .nav a,
@@ -1383,6 +1489,7 @@ form.is-complete button[disabled] {
 }
 
 .page-hero-diensten { --page-hero-image: url('heroes/diensten.jpg'); }
+.page-hero-toepassingen { --page-hero-image: url('heroes/vastgoedbeheerders.jpg'); }
 .page-hero-werkwijze { --page-hero-image: url('heroes/werkwijze.jpg'); }
 .page-hero-tarieven { --page-hero-image: url('heroes/tarieven.jpg'); }
 .page-hero-contact { --page-hero-image: url('heroes/contact.jpg'); }
@@ -1394,6 +1501,75 @@ form.is-complete button[disabled] {
 .page-hero-bedrijf { --page-hero-image: url('heroes/bedrijfspanden.jpg'); }
 .page-hero-portal { --page-hero-image: url('heroes/portal-login.jpg'); }
 .page-hero-voor-wie { --page-hero-image: url('heroes/vastgoedbeheerders.jpg'); }
+
+.application-intro {
+  display: grid;
+  grid-template-columns: .8fr 1.2fr;
+  gap: 70px;
+  align-items: start;
+}
+
+.status-key {
+  display: grid;
+  gap: 12px;
+}
+
+.status-key div {
+  padding: 18px 20px;
+  background: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.status-key strong,
+.status-key span { display: block; }
+.status-key span { margin-top: 4px; color: var(--grey); }
+
+.application-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 32px;
+}
+
+.application-card {
+  scroll-margin-top: 110px;
+  padding: 30px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--rs-shadow-soft);
+}
+
+.application-card h3 { margin: 8px 0 12px; font-size: 25px; }
+.application-card p { margin: 0 0 16px; }
+
+.application-status {
+  display: inline-flex;
+  padding: 6px 9px;
+  color: #9c310a;
+  background: #fff0e9;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.application-boundary {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--grey);
+  font-size: 14px;
+}
+
+.application-boundary strong { color: var(--ink); }
+
+@media (max-width: 800px) {
+  .application-intro,
+  .application-grid { grid-template-columns: 1fr; }
+  .application-intro { gap: 30px; }
+}
 
 .service-cards article { min-height: 220px; }
 
@@ -3389,6 +3565,48 @@ button { cursor: pointer; }
   .mobile-menu a:hover {
     background: rgba(255,255,255,.06);
   }
+  .mobile-services {
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .mobile-services summary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: var(--rs-radius);
+    color: #fff;
+    font-size: 15px;
+    list-style: none;
+  }
+  .mobile-services summary:after {
+    content: "+";
+    display: block;
+    width: auto;
+    height: auto;
+    color: var(--orange);
+    background: none;
+    font-weight: 900;
+  }
+  .mobile-services[open] summary:after { content: "−"; }
+  .mobile-services summary:before,
+  .mobile-services summary span { display: none; }
+  .mobile-services-links {
+    max-height: 58vh;
+    padding: 2px 8px 10px;
+    overflow-y: auto;
+  }
+  .mobile-services-links .mobile-services-label {
+    display: block;
+    width: auto;
+    height: auto;
+    padding-top: 12px;
+    background: none;
+    border-radius: 0;
+  }
+  .mobile-services-links a { padding: 9px 14px; }
   .hero {
     display: block;
     min-height: auto;
