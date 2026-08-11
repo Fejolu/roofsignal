@@ -1173,6 +1173,10 @@ form.is-complete button[disabled] {
   gap: 40px;
 }
 
+@media (max-width: 480px) {
+  .footer-cols { grid-template-columns: 1fr; }
+}
+
 .footer p { opacity: .7; }
 
 .legal-body {
@@ -3555,7 +3559,6 @@ button { cursor: pointer; }
   .section { padding: 58px 24px; }
   .cta { display: block; }
   .cta .btn { margin-top: 20px; }
-  .footer-cols { grid-template-columns: 1fr; }
   .knowledge-grid { grid-template-columns: 1fr; }
   .knowledge-hero { min-height: auto; padding: 68px 24px; }
   .knowledge-feature-section, .knowledge-library, .knowledge-publications { padding: 60px 24px; }
