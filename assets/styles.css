@@ -1351,6 +1351,7 @@ form.is-complete button[disabled] {
 .page-hero-contact { --page-hero-image: url('heroes/contact.jpg'); }
 .page-hero-over { --page-hero-image: url('heroes/over-ons.jpg'); }
 .page-hero-projecten { --page-hero-image: url('heroes/projecten.jpg'); }
+.page-hero-cases { --page-hero-image: url('heroes/projecten.jpg'); }
 .page-hero-vve { --page-hero-image: url('heroes/vve-beheerders.jpg'); }
 .page-hero-vastgoed { --page-hero-image: url('heroes/vastgoedbeheerders.jpg'); }
 .page-hero-bedrijf { --page-hero-image: url('heroes/bedrijfspanden.jpg'); }
