@@ -77,12 +77,35 @@ body {
   text-decoration: none;
   font-weight: 900;
   letter-spacing: 0;
-  font-size: 22px;
   line-height: 1;
   white-space: nowrap;
+  --logo-wordmark-size: 22px;
 }
 
-.logo span:not(.mark) { color: var(--rs-orange); }
+.logo-lockup {
+  display: grid;
+  gap: 3px;
+}
+
+.logo-wordmark {
+  display: flex;
+  align-items: baseline;
+  color: #fff;
+  font-size: var(--logo-wordmark-size);
+  font-weight: 900;
+  letter-spacing: -.035em;
+  line-height: .82;
+}
+
+.logo-roof { color: #fff; }
+.logo-signal { color: var(--rs-orange); }
+.logo-tagline {
+  color: rgba(255,255,255,.78);
+  font-size: calc(var(--logo-wordmark-size) * .225);
+  font-weight: 800;
+  letter-spacing: .2em;
+  line-height: 1;
+}
 
 .mark {
   display: inline-grid;
@@ -257,6 +280,14 @@ h3 {
 
 .page-header .logo {
   color: var(--rs-graphite-950);
+}
+
+.page-header .logo-roof {
+  color: var(--rs-graphite-950);
+}
+
+.page-header .logo-tagline {
+  color: rgba(16,19,18,.68);
 }
 
 .page-header .mark {
