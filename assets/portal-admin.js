@@ -91,6 +91,8 @@
   const mediaUploadStatus = document.querySelector("[data-media-upload-status]");
   const inspectionMediaList = document.querySelector("[data-inspection-media-list]");
   const reportForm = document.querySelector("[data-report-create-form]");
+  const reportDeliveryActions = document.querySelector("[data-report-delivery-actions]");
+  const reportDeliveryStatus = document.querySelector("[data-report-delivery-status]");
   const quoteForm = document.querySelector("[data-quote-create-form]");
   const quoteScheduleForm = document.querySelector("[data-quote-schedule-form]");
   const quoteScheduleTitle = document.querySelector("[data-quote-schedule-title]");
@@ -107,6 +109,7 @@
   let liveOrganizations = [];
   let liveInspections = [];
   let activeInspection = null;
+  let activeReport = null;
   let liveAppointments = [];
   let liveProfiles = [];
   let liveInvoices = [];
@@ -1632,6 +1635,7 @@
   async function openInspection(id) {
     activeInspection = liveInspections.find((inspection) => inspection.id === id);
     if (!activeInspection || !inspectionWorkspace) return;
+    activeReport = liveReports.find((report) => report.inspection_id === id) || null;
     inspectionWorkspace.hidden = false;
     if (inspectionWorkspaceTitle) inspectionWorkspaceTitle.textContent = `${activeInspection.reference || "Inspectie"} · ${activeInspection.properties?.name || "Object"}`;
     const quote = liveQuotes.find((item) => item.id === activeInspection.quote_id);
@@ -1642,6 +1646,16 @@
     [findingForm, mediaUploadForm].forEach((form) => { const select = form?.elements.required_depth; if (select) [...select.options].forEach((option) => { option.hidden = depthRank(option.value) > depthRank(depth); option.disabled = option.hidden; }); if (select && depthRank(select.value) > depthRank(depth)) select.value = depth; });
     inspectionStatusForm.elements.status.value = activeInspection.status || "intake";
     inspectionStatusForm.elements.summary.value = activeInspection.summary || "";
+    if (reportForm) {
+      reportForm.elements.title.value = activeReport?.title || `Inspectierapport ${activeInspection.properties?.name || activeInspection.reference || ""}`.trim();
+      reportForm.elements.report_file.required = !activeReport;
+      if (reportDeliveryActions) reportDeliveryActions.hidden = !activeReport;
+      const resend = reportDeliveryActions?.querySelector('[data-admin-action="resend-report"]');
+      const publish = reportDeliveryActions?.querySelector('[data-admin-action="publish-report"]');
+      if (resend) resend.hidden = activeReport?.status !== "published";
+      if (publish) publish.hidden = activeReport?.status === "published";
+      setWorkflowStatus(reportDeliveryStatus, activeReport?.status === "published" ? "Dit rapport is definitief gepubliceerd en zichtbaar voor de klant." : activeReport ? "Concept opgeslagen. Open en controleer de PDF vóór definitieve verzending." : "Upload eerst het extern opgemaakte PDF-rapport. De klant ziet het pas na definitieve publicatie.", activeReport?.status === "published" ? "success" : "");
+    }
     renderFindings(await window.RoofSignalBackend.listFindings(id));
     let checklist = await window.RoofSignalBackend.listInspectionChecklist(id);
     if (!checklist.length) {
@@ -1676,22 +1690,61 @@
     const quote = liveQuotes.find((item) => item.id === activeInspection.quote_id);
     const quoteItem = liveQuoteItems.find((item) => item.id === activeInspection.quote_item_id);
     if (!quoteItem || quote?.status !== "accepted") return setWorkflowStatus(inspectionWorkspaceStatus, "Rapport kan niet worden gepubliceerd zonder gekoppelde geaccordeerde offerte.", "error");
-    const checklist = await window.RoofSignalBackend.listInspectionChecklist(activeInspection.id);
-    const relevant = checklist.filter((item) => depthRank(item.required_depth) <= depthRank(quoteItem.inspection_depth));
-    const incomplete = relevant.filter((item) => ["pending","blocked"].includes(item.status));
-    if (!relevant.length || incomplete.length) return setWorkflowStatus(inspectionWorkspaceStatus, `Rapport kan nog niet worden gepubliceerd: ${incomplete.length || "de checklist"} controlepunt${incomplete.length === 1 ? "" : "en"} binnen de offertescope is niet afgerond.`, "error");
     const data = new FormData(reportForm);
     const reportFile = data.get("report_file");
-    let reportUrl = null;
-    if (reportFile?.size) {
-      const uploaded = await window.RoofSignalBackend.uploadPortalDocument(reportFile, { organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, document_type: "inspection_report", title: String(data.get("title") || "").trim(), customer_visible: false, required_depth: quoteItem.inspection_depth });
-      if (!uploaded.ok) return setWorkflowStatus(inspectionWorkspaceStatus, uploaded.error?.message || "Rapportbestand uploaden is mislukt.", "error");
-      reportUrl = null;
-    }
-    const result = await window.RoofSignalBackend.publishInspectionReport(activeInspection.id, String(data.get("title") || "").trim(), inspectionStatusForm.elements.summary.value.trim() || null);
-    if (!result.ok) return setWorkflowStatus(inspectionWorkspaceStatus, result.error?.message || "Rapport publiceren is mislukt.", "error");
-    reportForm.reset(); setWorkflowStatus(inspectionWorkspaceStatus, "Rapport is gepubliceerd in het klantenportaal.", "success");
+    if (!reportFile?.size) return setWorkflowStatus(reportDeliveryStatus, "Selecteer het externe PDF-rapport.", "error");
+    if (reportFile.type !== "application/pdf" && !reportFile.name.toLowerCase().endsWith(".pdf")) return setWorkflowStatus(reportDeliveryStatus, "Alleen een PDF-bestand kan als rapport worden opgeslagen.", "error");
+    const title = String(data.get("title") || "").trim();
+    setWorkflowStatus(reportDeliveryStatus, "Rapportconcept wordt opgeslagen…", "");
+    const uploaded = await window.RoofSignalBackend.uploadPortalDocument(reportFile, { organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, document_type: "inspection_report", title, customer_visible: false, required_depth: quoteItem.inspection_depth });
+    if (!uploaded.ok) return setWorkflowStatus(reportDeliveryStatus, uploaded.error?.message || "Rapportbestand uploaden is mislukt.", "error");
+    const result = await window.RoofSignalBackend.saveInspectionReportDraft({ organization_id: activeInspection.organization_id, property_id: activeInspection.property_id, inspection_id: activeInspection.id, quote_id: activeInspection.quote_id, quote_item_id: activeInspection.quote_item_id, title, summary: inspectionStatusForm.elements.summary.value.trim() || null });
+    if (!result.ok) return setWorkflowStatus(reportDeliveryStatus, result.error?.message || "Rapportconcept opslaan is mislukt.", "error");
+    activeReport = result.data;
+    reportForm.elements.report_file.value = "";
+    reportForm.elements.report_file.required = false;
+    reportDeliveryActions.hidden = false;
+    reportDeliveryActions.querySelector('[data-admin-action="publish-report"]').hidden = false;
+    reportDeliveryActions.querySelector('[data-admin-action="resend-report"]').hidden = true;
+    setWorkflowStatus(reportDeliveryStatus, "Concept opgeslagen. Open en controleer de PDF vóór definitieve verzending.", "success");
     await loadLiveAdminData();
+  }
+
+  async function openReportDraft() {
+    if (!activeInspection) return;
+    const result = await window.RoofSignalBackend.openInspectionReportDocument(activeInspection.id);
+    if (!result.ok) return setWorkflowStatus(reportDeliveryStatus, result.error?.message || "Rapport openen is mislukt.", "error");
+    window.open(result.data.signedUrl, "_blank", "noopener");
+  }
+
+  async function publishAndSendReport() {
+    if (!activeInspection || !activeReport) return setWorkflowStatus(reportDeliveryStatus, "Sla eerst een rapportconcept op.", "error");
+    const checklist = await window.RoofSignalBackend.listInspectionChecklist(activeInspection.id);
+    const quoteItem = liveQuoteItems.find((item) => item.id === activeInspection.quote_item_id);
+    const relevant = checklist.filter((item) => depthRank(item.required_depth) <= depthRank(quoteItem?.inspection_depth || activeInspection.inspection_depth));
+    const incomplete = relevant.filter((item) => ["pending","blocked"].includes(item.status));
+    if (!relevant.length || incomplete.length) return setWorkflowStatus(reportDeliveryStatus, `Definitieve verzending is geblokkeerd: ${incomplete.length || "de checklist"} controlepunt${incomplete.length === 1 ? "" : "en"} binnen de offertescope is niet afgerond.`, "error");
+    setWorkflowStatus(reportDeliveryStatus, "Rapport wordt gepubliceerd en verzonden…", "");
+    const published = await window.RoofSignalBackend.publishInspectionReport(activeInspection.id, reportForm.elements.title.value.trim(), inspectionStatusForm.elements.summary.value.trim() || null);
+    if (!published.ok) return setWorkflowStatus(reportDeliveryStatus, published.error?.message || "Rapport publiceren is mislukt.", "error");
+    activeReport = published.data;
+    const mailed = await window.RoofSignalBackend.sendDocumentEmail("report", activeReport.id);
+    if (!mailed.ok) {
+      reportDeliveryActions.querySelector('[data-admin-action="publish-report"]').hidden = true;
+      reportDeliveryActions.querySelector('[data-admin-action="resend-report"]').hidden = false;
+      return setWorkflowStatus(reportDeliveryStatus, `Rapport is wel gepubliceerd, maar de e-mail is niet verzonden: ${mailed.error?.message || "onbekende fout"}. Gebruik 'Rapport opnieuw versturen'.`, "error");
+    }
+    reportDeliveryActions.querySelector('[data-admin-action="publish-report"]').hidden = true;
+    reportDeliveryActions.querySelector('[data-admin-action="resend-report"]').hidden = false;
+    setWorkflowStatus(reportDeliveryStatus, "Rapport is gepubliceerd, zichtbaar in het klantenportaal en per e-mail verzonden.", "success");
+    await loadLiveAdminData();
+  }
+
+  async function resendReport() {
+    if (!activeReport?.id) return setWorkflowStatus(reportDeliveryStatus, "Geen gepubliceerd rapport gevonden.", "error");
+    setWorkflowStatus(reportDeliveryStatus, "Rapport wordt opnieuw verzonden…", "");
+    const result = await window.RoofSignalBackend.sendDocumentEmail("report", activeReport.id);
+    setWorkflowStatus(reportDeliveryStatus, result.ok ? "Rapport is opnieuw per e-mail verzonden." : result.error?.message || "Rapport opnieuw versturen is mislukt.", result.ok ? "success" : "error");
   }
 
   function setAiAnswer(title, body) {
@@ -2625,6 +2678,9 @@
     if (action === "customer-quote") openCustomerWorkflow("quote");
     if (action === "customer-task") openCustomerWorkflow("task");
     if (action === "open-inspection") openInspection(target.dataset.inspectionId);
+    if (action === "open-report-draft") openReportDraft();
+    if (action === "publish-report") publishAndSendReport();
+    if (action === "resend-report") resendReport();
     if (action === "accept-quote") acceptQuote(target.dataset.quoteId);
     if (action === "send-quote") sendQuote(target.dataset.quoteId);
     if (action === "send-quote-custom") sendQuoteCustom(target.dataset.quoteId);

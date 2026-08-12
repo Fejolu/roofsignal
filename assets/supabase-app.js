@@ -232,7 +232,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("reports")
-      .select("id,organization_id,property_id,title,status,published_at,created_at,updated_at")
+      .select("id,organization_id,property_id,inspection_id,quote_id,quote_item_id,title,summary,status,published_at,created_at,updated_at")
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
@@ -293,6 +293,17 @@
       if (findingError) return { ok: false, error: findingError };
     }
     return { ok: true, data };
+  }
+
+  async function saveInspectionReportDraft(payload) {
+    const supabase = await getClient();
+    if (!supabase || !payload?.inspection_id) return { ok: false, error: { message: "Inspectie ontbreekt." } };
+    const { data: existing, error: lookupError } = await supabase.from("reports").select("id,status").eq("inspection_id", payload.inspection_id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (lookupError) return { ok: false, error: lookupError };
+    if (existing?.status === "published") return { ok: false, error: { message: "Dit rapport is al definitief gepubliceerd." } };
+    const query = existing?.id ? supabase.from("reports").update({ ...payload, status: "draft", published_at: null }).eq("id", existing.id) : supabase.from("reports").insert({ ...payload, status: "draft" });
+    const { data, error } = await query.select("*").single();
+    return error ? { ok: false, error } : { ok: true, data };
   }
 
   async function publishInspectionReport(inspectionId, title, summary) {
@@ -615,6 +626,15 @@
       .limit(1)
       .maybeSingle();
     if (error || !document?.storage_path) return { ok: false, error: error || { message: "Geen factuurdocument gevonden." } };
+    const { data, error: signedError } = await supabase.storage.from("portal-documents").createSignedUrl(document.storage_path, 300);
+    return signedError || !data?.signedUrl ? { ok: false, error: signedError } : { ok: true, data: { ...document, signedUrl: data.signedUrl } };
+  }
+
+  async function openInspectionReportDocument(inspectionId) {
+    const supabase = await getClient();
+    if (!supabase || !inspectionId) return { ok: false };
+    const { data: document, error } = await supabase.from("documents").select("id,storage_path,title,file_name,customer_visible,created_at").eq("inspection_id", inspectionId).eq("document_type", "inspection_report").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (error || !document?.storage_path) return { ok: false, error: error || { message: "Geen rapportbestand gevonden." } };
     const { data, error: signedError } = await supabase.storage.from("portal-documents").createSignedUrl(document.storage_path, 300);
     return signedError || !data?.signedUrl ? { ok: false, error: signedError } : { ok: true, data: { ...document, signedUrl: data.signedUrl } };
   }
@@ -979,6 +999,7 @@
     listFindings,
     createFinding,
     createReport,
+    saveInspectionReportDraft,
     publishInspectionReport,
     createQuote,
     createQuoteItems,
@@ -1020,6 +1041,7 @@
     uploadPortalDocument,
     listOrganizationDocuments,
     openInvoiceDocument,
+    openInspectionReportDocument,
     createOrganization,
     createProperties,
     createPortalCustomer,

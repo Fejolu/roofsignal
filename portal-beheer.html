@@ -216,10 +216,16 @@
         </form>
         <div class="inspection-media-list" data-inspection-media-list></div>
         <div class="finding-list" data-finding-list></div>
-        <form data-report-create-form>
+        <form class="report-delivery-form" data-report-create-form>
           <label>Rapporttitel<input name="title" required placeholder="Inspectierapport gebouwschil"></label>
-          <label>Rapportbestand<input name="report_file" type="file" accept="application/pdf"></label>
-          <button class="btn" type="submit">Rapport publiceren</button>
+          <label>Extern rapport (PDF)<input name="report_file" type="file" accept="application/pdf"></label>
+          <button class="btn ghost-dark" type="submit">Rapportconcept opslaan</button>
+          <div class="report-delivery-actions" data-report-delivery-actions hidden>
+            <button class="btn ghost-dark" type="button" data-admin-action="open-report-draft">Concept openen</button>
+            <button class="btn" type="button" data-admin-action="publish-report">Definitief publiceren en versturen</button>
+            <button class="btn ghost-dark" type="button" data-admin-action="resend-report" hidden>Rapport opnieuw versturen</button>
+          </div>
+          <p class="form-note" data-report-delivery-status>Upload eerst het extern opgemaakte PDF-rapport. De klant ziet het pas na definitieve publicatie.</p>
         </form>
         <p class="form-note" data-inspection-workspace-status></p>
       </div>

@@ -114,6 +114,12 @@ def test_quote_workflow_opens_from_customer_and_global_action():
     script = read("assets/portal-admin.js")
     customer_create = read("assets/portal-customer-create.js")
     assert 'data-admin-action="create-offer"' in portal
+    assert "Rapportconcept opslaan" in portal
+    assert 'data-admin-action="open-report-draft"' in portal
+    assert 'data-admin-action="publish-report"' in portal
+    assert 'data-admin-action="resend-report"' in portal
+    assert "saveInspectionReportDraft" in script
+    assert 'sendDocumentEmail("report"' in script
     assert "quoteForm.hidden = false" in script
     assert 'openCustomerWorkflow("quote")' in script
     for loader in ("listOrganizationContacts", "listCustomerActivities", "listMaintenanceActions"):
@@ -173,7 +179,7 @@ def test_inspection_completion_requires_the_accepted_quote_scope():
     assert "Geaccordeerde opdracht" in script
     assert "binnen de offertescope" in script
     assert "quote?.status !== \"accepted\"" in script
-    assert "Rapport kan nog niet worden gepubliceerd" in script
+    assert "Definitieve verzending is geblokkeerd" in script
     assert "data-media-upload-form" in portal
 
 
