@@ -2,6 +2,7 @@
   "project_ref": "kakpticlxlaxtebhsuoh",
   "functions": [
     "create-portal-customer",
+    "process-scheduled-invoices",
     "quote-acceptance",
     "send-appointment-email",
     "send-parken-booking-confirmation",
@@ -18,6 +19,7 @@
     "BREVO_FROM_NAME",
     "EMAIL_PROVIDER",
     "NOTIFICATION_EMAIL",
-    "QUOTE_ACCEPTANCE_IP_SALT"
+    "QUOTE_ACCEPTANCE_IP_SALT",
+    "INVOICE_AUTOMATION_SECRET"
   ]
 }

@@ -1,6 +1,16 @@
+import json
+from pathlib import Path
 from types import SimpleNamespace
 
 from tools import supabase_release
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_invoice_automation_is_part_of_the_controlled_release():
+    manifest = json.loads((ROOT / "supabase" / "release-manifest.json").read_text())
+    assert "process-scheduled-invoices" in manifest["functions"]
+    assert "INVOICE_AUTOMATION_SECRET" in manifest["required_secrets"]
 
 
 def test_captured_command_keeps_stderr_out_of_json(monkeypatch, capsys):
