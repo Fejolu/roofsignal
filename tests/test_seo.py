@@ -16,11 +16,12 @@ def test_cloudflare_has_a_real_not_found_page():
     assert content.count("<h1>") == 1
 
 
-def test_homepage_targets_the_primary_service_and_audience():
+def test_homepage_targets_property_intelligence_and_a_concrete_outcome():
     content = read("index.html")
-    assert "Gebouwschilinspectie voor VvE en vastgoed" in content
-    assert "Inspectie van de gebouwschil voor al uw vastgoed." in content
-    assert "Onafhankelijk onderhoud prioriteren" in content
+    assert "Property Intelligence voor gebouwschil en onderhoud" in content
+    assert "Van gebouwsignalen naar betere vastgoedbesluiten." in content
+    assert "VvE beheerders" in content
+    assert "onderhoudsprioriteiten" in content
 
 
 def test_indexable_pages_have_one_h1_and_a_canonical():
