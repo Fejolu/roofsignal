@@ -183,6 +183,26 @@ def test_inspection_completion_requires_the_accepted_quote_scope():
     assert "data-media-upload-form" in portal
 
 
+def test_report_delivery_queues_a_guarded_invoice():
+    migration = read("supabase/migrations/20260812210000_report_invoice_automation.sql")
+    processor = read("supabase/functions/process-scheduled-invoices/index.ts")
+    document_mail = read("supabase/functions/send-document-email/index.ts")
+    admin = read("assets/portal-admin.js")
+    workflow = read(".github/workflows/process-scheduled-invoices.yml")
+    assert "next_invoice_business_send_at" in migration
+    assert "time '09:00'" in migration
+    assert "reports_queue_invoice" in migration
+    assert "action_required" in migration
+    assert "Voeg een betaallink toe." in migration
+    assert "INVOICE_AUTOMATION_SECRET" in processor
+    assert "Betaallink ontbreekt." in processor
+    assert "Factuur-PDF ontbreekt." in processor
+    assert 'auto_send_status:"sent"' in processor
+    assert "Voeg eerst een geldige betaallink toe." in document_mail
+    assert "voeg de betaallink toe" in admin
+    assert 'cron: "*/15 * * * *"' in workflow
+
+
 def test_report_publication_keeps_an_immutable_commercial_snapshot():
     migration = read("supabase/migrations/20260803101500_report_commercial_scope.sql")
     backend = read("assets/supabase-app.js")

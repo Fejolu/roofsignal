@@ -29,9 +29,9 @@ serve(async(req)=>{
     intro=reminder?"Volgens onze administratie staat onderstaande factuur nog open. Mogelijk heeft uw betaling en dit bericht elkaar gekruist.":"In de bijlage vindt u uw factuur van RoofSignal.";
     detail=`${invoice.invoice_number||"Factuur"} · ${money(invoice.amount)} excl. btw · vervaldatum ${invoice.due_date||"-"}`;
     paymentUrl=/^https:\/\//i.test(String(invoice.payment_url||""))?String(invoice.payment_url):"";
+    if(!reminder&&!paymentUrl)return new Response(JSON.stringify({error:"Voeg eerst een geldige betaallink toe."}),{status:400,headers:cors});
     const result=await service.from("documents").select("*").eq("invoice_id",id).eq("document_type","invoice").order("version",{ascending:false}).limit(1).maybeSingle(); document=result.data;
-    if(!reminder)await service.from("invoices").update({status:"sent",sent_at:new Date().toISOString()}).eq("id",id);
-    await service.from("invoice_events").insert({invoice_id:id,organization_id:invoice.organization_id,event_type:eventType,amount:invoice.amount,created_by:identity.user.id});
+    (body as any)._invoice=invoice;
   }else{
     const {data:report}=await service.from("reports").select("*,organizations(name,contact_name,contact_email)").eq("id",id).single();
     if(!report)return new Response(JSON.stringify({error:"Rapport niet gevonden."}),{status:404,headers:cors});
@@ -47,5 +47,5 @@ serve(async(req)=>{
   const attachment=[] as Record<string,string>[];
   if(document){const {data:file}=await service.storage.from("portal-documents").download(document.storage_path);if(file)attachment.push({name:document.title.endsWith(".pdf")?document.title:`${document.title}.pdf`,content:b64(new Uint8Array(await file.arrayBuffer()))});}
   if(!attachment.length)return new Response(JSON.stringify({error:"Het PDF-document ontbreekt. Upload het document voordat u de e-mail verstuurt."}),{status:400,headers:cors});
-  try{const result=await send({sender:{email:Deno.env.get("BREVO_FROM_EMAIL")||"noreply@roofsignal.nl",name:"RoofSignal"},to:[{email:recipient,name:organization?.contact_name||organization?.name}],replyTo:{email:"info@roofsignal.nl",name:"RoofSignal"},subject:`${body.testRecipient?"[TEST] ":""}${subject}`,htmlContent:html,textContent:`${salutation}\n\n${intro}\n${detail}${paymentUrl?`\nBetaal nu: ${paymentUrl}`:""}\n\nMet vriendelijke groet,\nF.J. Joosten\nRoofSignal`,attachment});return new Response(JSON.stringify({ok:true,messageId:result.messageId}),{headers:cors});}catch(error){return new Response(JSON.stringify({error:error instanceof Error?error.message:String(error)}),{status:502,headers:cors});}
+  try{const result=await send({sender:{email:Deno.env.get("BREVO_FROM_EMAIL")||"noreply@roofsignal.nl",name:"RoofSignal"},to:[{email:recipient,name:organization?.contact_name||organization?.name}],replyTo:{email:"info@roofsignal.nl",name:"RoofSignal"},subject:`${body.testRecipient?"[TEST] ":""}${subject}`,htmlContent:html,textContent:`${salutation}\n\n${intro}\n${detail}${paymentUrl?`\nBetaal nu: ${paymentUrl}`:""}\n\nMet vriendelijke groet,\nF.J. Joosten\nRoofSignal`,attachment});if(kind==="invoice"){const invoice=(body as any)._invoice;if(!reminder)await service.from("invoices").update({status:"sent",sent_at:new Date().toISOString(),auto_send_status:"sent",auto_send_error:null}).eq("id",id);await service.from("invoice_events").insert({invoice_id:id,organization_id:invoice.organization_id,event_type:eventType,amount:invoice.amount,created_by:identity.user.id});}return new Response(JSON.stringify({ok:true,messageId:result.messageId}),{headers:cors});}catch(error){return new Response(JSON.stringify({error:error instanceof Error?error.message:String(error)}),{status:502,headers:cors});}
 });

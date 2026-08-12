@@ -1,0 +1,29 @@
+name: Geplande facturen verwerken
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: process-scheduled-invoices
+  cancel-in-progress: false
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verwerk facturen waarvan de verzendtijd is bereikt
+        env:
+          AUTOMATION_SECRET: ${{ secrets.INVOICE_AUTOMATION_SECRET }}
+        run: |
+          test -n "$AUTOMATION_SECRET"
+          curl --fail-with-body --silent --show-error \
+            -X POST "https://kakpticlxlaxtebhsuoh.supabase.co/functions/v1/process-scheduled-invoices" \
+            -H "x-automation-secret: $AUTOMATION_SECRET" \
+            -H "Content-Type: application/json" \
+            -d '{}'

@@ -423,11 +423,12 @@
     invoicesBody.innerHTML = invoices.length
       ? invoices.map((invoice) => {
         const open = ["sent", "open", "overdue"].includes(invoice.status);
-        const mailAction = `<button class="inline-button" data-admin-action="send-invoice-mail" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.status === "draft" ? "Versturen" : "Opnieuw versturen"}</button>${open ? `<button class="inline-button" data-admin-action="send-invoice-reminder" data-invoice-id="${escapeHtml(invoice.id)}">Herinnering versturen</button><button class="inline-button" data-admin-action="pay-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Betaald registreren</button>` : ""}`;
+        const mailAction = `<button class="inline-button" data-admin-action="send-invoice-mail" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.status === "draft" ? "Nu versturen" : "Opnieuw versturen"}</button>${open ? `<button class="inline-button" data-admin-action="send-invoice-reminder" data-invoice-id="${escapeHtml(invoice.id)}">Herinnering versturen</button><button class="inline-button" data-admin-action="pay-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Betaald registreren</button>` : ""}`;
         const paymentLink = !["paid", "credited", "cancelled"].includes(invoice.status) ? `<button class="inline-button" data-admin-action="set-payment-link" data-invoice-id="${escapeHtml(invoice.id)}">${invoice.payment_url ? "Betaallink wijzigen" : "Betaallink toevoegen"}</button>` : "";
         const credit = !["credited", "cancelled"].includes(invoice.status) ? `<button class="inline-button text-danger" data-admin-action="credit-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Crediteren</button>` : "";
         const view = `<button class="inline-button" data-admin-action="open-invoice" data-invoice-id="${escapeHtml(invoice.id)}">Factuur bekijken</button>`;
-        return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(invoiceStatusMeta(invoice.status))}</td><td><div class="table-actions">${view}${mailAction}${paymentLink}${credit}</div></td></tr>`;
+        const queue = invoice.auto_send_at && invoice.status === "draft" ? `<small>${invoice.auto_send_status === "scheduled" ? `Automatisch op ${formatPortalDate(invoice.auto_send_at)} om ${new Intl.DateTimeFormat("nl-NL",{hour:"2-digit",minute:"2-digit"}).format(new Date(invoice.auto_send_at))}` : `Actie vereist: ${invoice.auto_send_error || "voeg de betaallink toe"}`}</small>` : "";
+        return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="invoice" data-record-id="${escapeHtml(invoice.id)}"><td>${escapeHtml(invoice.organizations?.name || "-")}</td><td>${escapeHtml(formatMoney(invoice.amount))}</td><td>${statusCell(invoiceStatusMeta(invoice.status))}${queue}</td><td><div class="table-actions">${view}${mailAction}${paymentLink}${credit}</div></td></tr>`;
       }).join("")
       : '<tr data-empty-row><td colspan="4">Geen facturen.</td></tr>';
   }
@@ -447,6 +448,8 @@
   }
 
   async function sendInvoiceMail(id, reminder = false) {
+    const invoice = liveInvoices.find((item) => item.id === id);
+    if (!reminder && !invoice?.payment_url) return setPortalNotice("Voeg eerst de betaallink toe. Een factuur wordt nooit zonder betaalmogelijkheid verzonden.", "error");
     const result = await window.RoofSignalBackend.sendDocumentEmail("invoice", id, { reminder });
     setPortalNotice(result.ok ? (reminder ? "De betalingsherinnering is verstuurd." : "De factuurmail is verstuurd.") : result.error?.message || "De factuurmail kon niet worden verstuurd.", result.ok ? "success" : "error");
     if (result.ok) await loadLiveAdminData();
