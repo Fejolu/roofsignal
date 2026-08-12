@@ -269,6 +269,24 @@
     return error ? { ok: false, error } : { ok: true, data };
   }
 
+  async function deleteInspection(id) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data: inspection, error: findError } = await supabase.from("inspections").select("*").eq("id", id).single();
+    if (findError) return { ok: false, error: findError };
+    const [{ count: reportCount, error: reportError }, { count: invoiceCount, error: invoiceError }] = await Promise.all([
+      supabase.from("reports").select("id", { count: "exact", head: true }).eq("inspection_id", id),
+      supabase.from("invoices").select("id", { count: "exact", head: true }).eq("inspection_id", id).not("status", "in", '(cancelled,credited)'),
+    ]);
+    if (reportError || invoiceError) return { ok: false, error: reportError || invoiceError };
+    if (reportCount || invoiceCount) return { ok: false, blocked: true, error: { message: "Deze inspectie heeft een rapport of financiële registratie en kan daarom niet worden verwijderd. Zet de status zo nodig op Geannuleerd." } };
+    await supabase.from("parken_bookings").update({ inspection_id: null }).eq("inspection_id", id);
+    const { error } = await supabase.from("inspections").delete().eq("id", id);
+    if (error) return { ok: false, error };
+    await supabase.from("audit_log").insert({ action: "inspection.deleted_by_internal", table_name: "inspections", record_id: id, metadata: { organization_id: inspection.organization_id, property_id: inspection.property_id, quote_id: inspection.quote_id, appointment_id: inspection.appointment_id, reference: inspection.reference, status: inspection.status } });
+    return { ok: true, data: inspection };
+  }
+
   async function listFindings(inspectionId) {
     const supabase = await getClient();
     if (!supabase || !inspectionId) return [];
@@ -1024,6 +1042,7 @@
     listInspections,
     createInspection,
     updateInspection,
+    deleteInspection,
     listFindings,
     createFinding,
     createReport,

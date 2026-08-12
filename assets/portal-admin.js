@@ -154,7 +154,8 @@
     "manage-customer": ["Klantdossier openen", "folder"], "view-customer-portal": ["Klantportaal bekijken", "view"],
     "send-account-mail": ["Accountmail opnieuw versturen", "mail"], "send-password-mail": ["Wachtwoord opnieuw instellen", "key"],
     "edit-customer": ["Klant bewerken", "edit"], "delete-customer": ["Klant verwijderen", "trash"],
-    "open-inspection": ["Inspectie openen", "search"], "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
+    "open-inspection": ["Inspectie openen", "search"], "edit-inspection-status": ["Inspectiestatus wijzigen", "edit"], "delete-inspection": ["Inspectie verwijderen", "trash"],
+    "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
     "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
     "complete-appointment": ["Afspraak voltooien", "check"], "resend-appointment": ["Bevestiging opnieuw versturen", "send"], "delete-appointment": ["Afspraak verwijderen", "trash"],
@@ -374,8 +375,35 @@
     inspectionBody.innerHTML = inspections.map((inspection) => {
       const productAndDepth = `${productLabel(inspection.inspection_product)} · ${inspectionDepths[inspection.inspection_depth]?.label || "Basis"}`;
       const scope = inspection.scope ? `<small>${escapeHtml(inspection.scope)}</small>` : "";
-      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="inspection" data-record-id="${escapeHtml(inspection.id)}"><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td><strong>${escapeHtml(productAndDepth)}</strong>${scope}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><button class="inline-button" type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Open</button></td></tr>`;
+      return `<tr class="record-clickable-row" role="link" tabindex="0" data-record-kind="inspection" data-record-id="${escapeHtml(inspection.id)}"><td>${escapeHtml(inspection.reference || inspection.id.slice(0, 8).toUpperCase())}</td><td>${escapeHtml(inspection.organizations?.name || "-")}</td><td>${escapeHtml(inspection.properties?.name || "-")}</td><td><strong>${escapeHtml(productAndDepth)}</strong>${scope}</td><td>${statusCell(escapeHtml(inspection.status), inspection.status === "delivered" ? "green" : "yellow")}</td><td><div class="table-actions icon-actions"><button type="button" data-admin-action="open-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Inspectie openen</button><button type="button" data-admin-action="edit-inspection-status" data-inspection-id="${escapeHtml(inspection.id)}">Status wijzigen</button><button class="text-danger" type="button" data-admin-action="delete-inspection" data-inspection-id="${escapeHtml(inspection.id)}">Inspectie verwijderen</button></div></td></tr>`;
     }).join("");
+    iconizeAdminActions(inspectionBody);
+  }
+
+  function openInspectionStatusDialog(id) {
+    const inspection = liveInspections.find((item) => item.id === id); if (!inspection) return;
+    const dialog = ensureDialog("inspection-status-dialog");
+    const options = [["intake","Intake"],["planned","Gepland"],["captured","Opname voltooid"],["analysis","Analyse"],["review","Controle"],["delivered","Opgeleverd"],["cancelled","Geannuleerd"]];
+    dialog.innerHTML = `<form class="portal-dialog-card admin-record-card" data-inspection-status-editor data-inspection-id="${escapeHtml(id)}"><div class="panel-head"><div><span class="eyebrow orange">Inspectie</span><h2>Status wijzigen</h2></div><button class="dialog-close" type="button" data-dialog-close aria-label="Sluiten">×</button></div><p>${escapeHtml(inspection.reference || inspection.title || "Inspectie")} · ${escapeHtml(inspection.properties?.name || "Object")}</p><label>Status<select name="status">${options.map(([value,label])=>`<option value="${value}"${inspection.status===value?" selected":""}>${label}</option>`).join("")}</select></label><p class="form-note" data-inspection-status-editor-note>Een statuswijziging verstuurt geen klantmail.</p><div class="dialog-actions"><button class="btn" type="submit">Status opslaan</button><button class="btn ghost-dark" type="button" data-dialog-close>Annuleren</button></div></form>`;
+    dialog.showModal();
+  }
+
+  async function submitInspectionStatus(event) {
+    event.preventDefault(); const form = event.target; const note = form.querySelector("[data-inspection-status-editor-note]");
+    const inspection = liveInspections.find((item) => item.id === form.dataset.inspectionId); const status = new FormData(form).get("status");
+    const payload = { status };
+    if (status === "captured" && !inspection?.inspected_at) payload.inspected_at = new Date().toISOString();
+    const result = await window.RoofSignalBackend.updateInspection(form.dataset.inspectionId, payload);
+    if (!result.ok) return setWorkflowStatus(note, result.error?.message || "Status wijzigen is mislukt.", "error");
+    form.closest("dialog")?.close(); setPortalNotice("Inspectiestatus is bijgewerkt.", "success"); await loadLiveAdminData();
+  }
+
+  async function deleteInspection(id) {
+    const inspection = liveInspections.find((item) => item.id === id); if (!inspection) return;
+    if (!window.confirm(`Inspectie verwijderen?\n\n${inspection.reference || inspection.properties?.name || "Inspectie"}\n\nKlant, object, offerte en agenda-afspraak blijven bestaan. Een rapport of financiële registratie blokkeert verwijdering.`)) return;
+    const result = await window.RoofSignalBackend.deleteInspection(id);
+    if (!result.ok) return setPortalNotice(result.error?.message || "Inspectie verwijderen is mislukt.", "error");
+    setPortalNotice("Inspectie is verwijderd.", "success"); await loadLiveAdminData();
   }
 
   function populateWorkflowOrganizations(organizations) {
@@ -2709,6 +2737,8 @@
     if (action === "customer-quote") openCustomerWorkflow("quote");
     if (action === "customer-task") openCustomerWorkflow("task");
     if (action === "open-inspection") openInspection(target.dataset.inspectionId);
+    if (action === "edit-inspection-status") openInspectionStatusDialog(target.dataset.inspectionId);
+    if (action === "delete-inspection") deleteInspection(target.dataset.inspectionId);
     if (action === "open-report-draft") openReportDraft();
     if (action === "publish-report") publishAndSendReport();
     if (action === "resend-report") resendReport();
@@ -2758,6 +2788,10 @@
   });
 
   document.addEventListener("submit", (event) => {
+    if (event.target.matches?.("[data-inspection-status-editor]")) {
+      submitInspectionStatus(event);
+      return;
+    }
     if (event.target.matches?.("[data-appointment-inspector-form]")) {
       submitAppointmentInspector(event);
       return;
