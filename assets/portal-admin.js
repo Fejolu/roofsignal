@@ -536,7 +536,9 @@
         });
         return `<div class="calendar-resource-cell${date.toDateString() === new Date().toDateString() ? " today" : ""}">${events.map((appointment) => `<button type="button" class="calendar-event-card record-clickable-row" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><time>${new Date(appointment.starts_at).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}</time><strong>${escapeHtml(appointment.organizations?.name || appointment.title || "Afspraak")}</strong><span>${escapeHtml(appointment.properties?.name || "")}</span></button>`).join("")}</div>`;
       }).join("");
-      return `<div class="calendar-resource-name"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(roleLabels[resource.role] || "Inspecteur")}</span></div>${cells}`;
+      const resourceRoles = resource.roles || [resource.role];
+      const calendarRole = resourceRoles.includes("inspector") ? "Inspecteur" : (roleLabels[resource.role] || "Inspecteur");
+      return `<div class="calendar-resource-name"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(calendarRole)}</span></div>${cells}`;
     }).join("");
     grid.innerHTML = header + rows;
   }
@@ -1510,7 +1512,11 @@
     select.innerHTML = '<option value="">Selecteer object</option>' + unscheduled.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.properties?.name || "Object")} · ${escapeHtml(productLabel(item.inspection_product))} · ${escapeHtml(inspectionDepths[item.inspection_depth]?.label || "Basis")}</option>`).join("");
     const inspectorSelect = quoteScheduleForm.querySelector('[name="inspector_id"]');
     const inspectors = liveProfiles.filter((profile) => (profile.roles || [profile.role]).some((role) => ["inspector", "planning", "owner_admin"].includes(role)));
-    inspectorSelect.innerHTML = '<option value="">Selecteer inspecteur</option>' + inspectors.map((profile) => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.full_name || profile.email)} · ${escapeHtml(roleLabels[profile.role] || profile.role)}</option>`).join("");
+    inspectorSelect.innerHTML = '<option value="">Selecteer inspecteur</option>' + inspectors.map((profile) => {
+      const profileRoles = profile.roles || [profile.role];
+      const planningRole = profileRoles.includes("inspector") ? "Inspecteur" : (roleLabels[profile.role] || profile.role);
+      return `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.full_name || profile.email)} · ${escapeHtml(planningRole)}</option>`;
+    }).join("");
     if (quoteScheduleTitle) quoteScheduleTitle.textContent = `${activeQuote.organizations?.name || "Klant"} · inspectie plannen`;
     quoteScheduleForm.scrollIntoView({ behavior: "smooth", block: "center" });
   }
