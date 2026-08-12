@@ -203,6 +203,8 @@ def test_report_delivery_queues_a_guarded_invoice():
     assert "dry_run:" in workflow
     assert "Alleen controleren; niets versturen" in workflow
     assert '"dryRun"' in workflow or '\\"dryRun\\"' in workflow
+    assert 'cron: "*/15 * * * *"' in workflow
+    assert "github.event_name == 'schedule' && 'false'" in workflow
 
 
 def test_report_publication_keeps_an_immutable_commercial_snapshot():

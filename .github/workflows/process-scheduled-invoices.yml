@@ -1,7 +1,8 @@
 name: Geplande facturen verwerken
 
 on:
-  # The schedule is restored after the repaired endpoint has passed a dry run.
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -35,9 +36,9 @@ jobs:
       - name: Verwerk facturen waarvan de verzendtijd is bereikt
         env:
           AUTOMATION_SECRET: ${{ secrets.INVOICE_AUTOMATION_SECRET }}
-          DRY_RUN: ${{ inputs.dry_run }}
-          TEST_ONLY: ${{ inputs.test_only }}
-          PREPARE_INTERNAL_TEST: ${{ inputs.prepare_internal_test }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+          TEST_ONLY: ${{ github.event_name == 'schedule' && 'false' || inputs.test_only }}
+          PREPARE_INTERNAL_TEST: ${{ github.event_name == 'schedule' && 'false' || inputs.prepare_internal_test }}
         run: |
           if [ -z "$AUTOMATION_SECRET" ]; then
             echo "::error title=Factuurautomatisering niet geconfigureerd::GitHub secret INVOICE_AUTOMATION_SECRET ontbreekt."
