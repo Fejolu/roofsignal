@@ -4161,6 +4161,24 @@ button { cursor: pointer; }
   border: 0;
 }
 
+.timeline-list .appointment-list-row {
+  position: relative;
+  padding-right: 112px;
+}
+
+.timeline-list .appointment-admin-actions {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .timeline-list .appointment-list-row { padding-right: 16px; }
+  .timeline-list .appointment-admin-actions { position: static; transform: none; margin-top: 12px; }
+}
+
 .appointment-actions .inline-button,
 .customer-object-actions .inline-button,
 .quote-actions .inline-button {

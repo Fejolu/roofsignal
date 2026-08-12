@@ -844,6 +844,31 @@
     return { ok: true, data };
   }
 
+  async function deleteAppointment(id) {
+    const supabase = await getClient();
+    if (!supabase || !id) return { ok: false };
+    const { data: appointment, error: findError } = await supabase
+      .from("appointments")
+      .select("id,organization_id,property_id,quote_id,quote_item_id,title,starts_at")
+      .eq("id", id)
+      .single();
+    if (findError) return { ok: false, error: findError };
+
+    const inspectionUpdate = await supabase.from("inspections").update({ appointment_id: null, scheduled_at: null, status: "intake" }).eq("appointment_id", id).in("status", ["intake", "planned"]);
+    if (inspectionUpdate.error) return { ok: false, error: inspectionUpdate.error };
+    const bookingUpdate = await supabase.from("parken_bookings").update({ appointment_id: null }).eq("appointment_id", id);
+    if (bookingUpdate.error) return { ok: false, error: bookingUpdate.error };
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) return { ok: false, error };
+    await supabase.from("audit_log").insert({
+      action: "appointment.deleted_by_internal",
+      table_name: "appointments",
+      record_id: id,
+      metadata: { organization_id: appointment.organization_id, property_id: appointment.property_id, quote_id: appointment.quote_id, quote_item_id: appointment.quote_item_id, title: appointment.title, starts_at: appointment.starts_at },
+    });
+    return { ok: true, data: appointment };
+  }
+
   async function updateProperty(id, payload) {
     const supabase = await getClient();
     if (!supabase || !id) return { ok: false };
@@ -1063,6 +1088,7 @@
     listQuotes,
     listAppointments,
     updateAppointment,
+    deleteAppointment,
     updateProperty,
     deleteProperty,
     updateOrganization,

@@ -157,6 +157,7 @@
     "open-inspection": ["Inspectie openen", "search"], "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
     "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
+    "resend-appointment": ["Bevestiging opnieuw versturen", "send"], "delete-appointment": ["Afspraak verwijderen", "trash"],
     "send-invoice-mail": ["Factuur versturen", "send"], "send-invoice-reminder": ["Betalingsherinnering versturen", "bell"],
     "open-invoice": ["Factuur bekijken", "document"], "pay-invoice": ["Betaling registreren", "check"], "set-payment-link": ["Betaallink beheren", "link"], "credit-invoice": ["Factuur crediteren", "credit"],
   };
@@ -513,8 +514,20 @@
     renderResourceCalendar(appointments);
     if (!planningList) return;
     planningList.innerHTML = appointments.length
-      ? appointments.map((appointment) => `<div class="record-clickable-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p><button class="inline-button" type="button" data-admin-action="resend-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Bevestiging opnieuw versturen</button></div>`).join("")
+      ? appointments.map((appointment) => `<div class="record-clickable-row appointment-list-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p><div class="table-actions icon-actions appointment-admin-actions"><button type="button" data-admin-action="resend-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Bevestiging opnieuw versturen</button><button class="text-danger" type="button" data-admin-action="delete-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Afspraak verwijderen</button></div></div>`).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
+    iconizeAdminActions(planningList);
+  }
+
+  async function deleteAppointment(id) {
+    const appointment = liveAppointments.find((item) => item.id === id);
+    if (!appointment) return;
+    const label = [appointment.title || "Afspraak", appointment.starts_at ? formatPortalDate(appointment.starts_at) : ""].filter(Boolean).join(" · ");
+    if (!window.confirm(`Afspraak verwijderen?\n\n${label}\n\nDe gekoppelde klant, offerte en inspectie blijven bestaan. De inspectie wordt weer ongepland.`)) return;
+    const result = await window.RoofSignalBackend.deleteAppointment(id);
+    if (!result.ok) return setPortalNotice(result.error?.message || "Afspraak verwijderen is mislukt.", "error");
+    setPortalNotice("Afspraak is verwijderd. De gekoppelde inspectie kan opnieuw worden gepland.", "success");
+    await loadLiveAdminData();
   }
 
   function startOfCalendarWeek(offset = 0) {
@@ -2696,6 +2709,7 @@
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
     if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
     if (action === "resend-appointment") resendAppointment(target.dataset.appointmentId);
+    if (action === "delete-appointment") deleteAppointment(target.dataset.appointmentId);
     if (action === "copy-calendar-feed") copyCalendarFeed();
     if (action === "open-employee") openEmployeeDossier(target.dataset.profileId);
     if (action === "open-employee-document") window.RoofSignalBackend.openEmployeeDocument(target.dataset.storagePath).then((result) => { if (result.ok) window.open(result.data.signedUrl, "_blank", "noopener"); else setPortalNotice(result.error?.message || "Document openen is mislukt.", "error"); });
