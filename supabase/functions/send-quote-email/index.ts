@@ -34,10 +34,12 @@ async function stampExecutionRegistration(pdfBytes: Uint8Array, details: {
   quoteLabel: string; version: number; issuedAt: Date; issuedBy: string; issuedByEmail: string;
 }) {
   const pdf = await PDFDocument.load(pdfBytes);
-  if (pdf.getPageCount() !== 2) throw new Error("De offerte-PDF moet vóór verzending exact twee pagina's bevatten.");
+  if (pdf.getPageCount() < 1) throw new Error("De offerte-PDF bevat geen pagina's.");
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const page = pdf.getPages()[1];
+  // Offertes may contain two or more pages. The execution registration always
+  // belongs on the final page, independent of the document length.
+  const page = pdf.getPages()[pdf.getPageCount() - 1];
   const { width } = page.getSize();
   const orange = rgb(1, 0.353, 0.078);
   const dark = rgb(0.063, 0.09, 0.082);
