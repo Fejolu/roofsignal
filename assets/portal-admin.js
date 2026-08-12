@@ -151,7 +151,9 @@
   const adminActionMeta = {
     "staff-calendar-feed": ["Agenda-abonnement", "calendar"], "open-employee": ["Medewerkersdossier openen", "folder"],
     "edit-role": ["Rol bewerken", "edit"], "remove-role": ["Teamlid verwijderen", "trash"],
-    "manage-customer": ["Klantdossier openen", "folder"], "edit-customer": ["Klant bewerken", "edit"], "delete-customer": ["Klant verwijderen", "trash"],
+    "manage-customer": ["Klantdossier openen", "folder"], "view-customer-portal": ["Klantportaal bekijken", "view"],
+    "send-account-mail": ["Accountmail opnieuw versturen", "mail"], "send-password-mail": ["Wachtwoord opnieuw instellen", "key"],
+    "edit-customer": ["Klant bewerken", "edit"], "delete-customer": ["Klant verwijderen", "trash"],
     "open-inspection": ["Inspectie openen", "search"], "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
     "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
@@ -165,6 +167,9 @@
     sync: '<path d="M14 6a6 6 0 0 0-10-2L2 6M2 2v4h4M4 12a6 6 0 0 0 10 2l2-2M16 16v-4h-4"/>', check: '<path d="m3 9 3 3 8-8"/>',
     invoice: '<path d="M4 2h9v14l-2-1-2 1-2-1-3 1Z"/><path d="M6 6h5M6 9h5M6 12h3"/>', link: '<path d="M7 11 5.5 12.5a3 3 0 0 1-4-4L4 6M11 7l1.5-1.5a3 3 0 0 1 4 4L14 12M6 9h6"/>',
     credit: '<path d="M3 5h12v9H3Z"/><path d="M3 8h12M6 11h3"/>', bell: '<path d="M5 12V8a4 4 0 0 1 8 0v4l1.5 2h-11Z"/><path d="M7 15a2 2 0 0 0 4 0"/>', document: '<path d="M4 2h7l3 3v11H4Z"/><path d="M11 2v4h4M6.5 9h5M6.5 12h5"/>',
+    view: '<circle cx="9" cy="9" r="2.5"/><path d="M2 9s2.5-4.5 7-4.5S16 9 16 9s-2.5 4.5-7 4.5S2 9 2 9Z"/>',
+    mail: '<path d="M2.5 4.5h13v9h-13Z"/><path d="m3 5 6 5 6-5"/>',
+    key: '<circle cx="6" cy="9" r="3"/><path d="M9 9h6M12 9v2M14 9v2"/>',
   };
   function iconizeAdminActions(root = document) {
     root.querySelectorAll(".portal-table [data-admin-action]").forEach((control) => {
@@ -243,7 +248,7 @@
   }
 
   function customerActions() {
-    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" title="Klantweergave bekijken" aria-label="Klantweergave bekijken">◉</a><button type="button" data-admin-action="send-account-mail" title="Accountmail opnieuw versturen" aria-label="Accountmail opnieuw versturen">✉</button><button type="button" data-admin-action="send-password-mail" title="Wachtwoord opnieuw instellen" aria-label="Wachtwoord opnieuw instellen">⌁</button><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant verwijderen" aria-label="Klant verwijderen">⌫</a></div>';
+    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" data-admin-action="view-customer-portal" title="Klantportaal bekijken" aria-label="Klantportaal bekijken">◉</a><button type="button" data-admin-action="send-account-mail" title="Accountmail opnieuw versturen" aria-label="Accountmail opnieuw versturen">✉</button><button type="button" data-admin-action="send-password-mail" title="Wachtwoord opnieuw instellen" aria-label="Wachtwoord opnieuw instellen">⌁</button><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant verwijderen" aria-label="Klant verwijderen">⌫</a></div>';
   }
 
   function customerRow(customer) {
