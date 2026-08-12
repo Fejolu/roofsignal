@@ -291,6 +291,15 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, recipient, ccRecipient: ccRecipient || null, version, messageId: result?.messageId || null }), { headers: cors });
   } catch (sendError) {
     if (!messageSent && issuedDocument?.id) {
+      await service.from("quote_versions")
+        .delete()
+        .eq("quote_id", quote.id)
+        .eq("version", version)
+        .eq("status", "sent");
+      await service.from("quotes").update({
+        acceptance_token_hash: null,
+        acceptance_token_expires_at: null,
+      }).eq("id", quote.id).eq("acceptance_token_hash", tokenHash);
       await service.from("documents").delete().eq("id", issuedDocument.id);
       await service.storage.from("portal-documents").remove([issuedDocument.storage_path]);
     }

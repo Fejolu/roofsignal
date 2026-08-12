@@ -327,17 +327,44 @@ def test_quote_issue_and_acceptance_create_verifiable_final_document():
     migration = read("supabase/migrations/20260805193000_quote_digital_execution.sql")
     quote_tool = read("tools/create_roofsignal_quote.py")
     assert "stampExecutionRegistration" in issue
-    assert "pdf.getPageCount() !== 2" in issue
+    assert "pdf.getPageCount() < 1" in issue
     assert 'event_type: "issued"' in issue
     assert "issued_document_hash" in issue
     assert "addCustomerAcceptance" in acceptance
-    assert "pdf.getPageCount() !== 2" in acceptance
+    assert "pdf.getPageCount() < 1" in acceptance
     assert 'event_type: "accepted"' in acceptance
     assert "accepted_document_hash" in acceptance
     assert 'action: "acceptAuthenticated"' in backend
     assert "quote_execution_events" in migration
     assert "document_hash text not null" in migration
     assert "Digitale acceptatie nog niet ontvangen" in quote_tool
+
+
+def test_quote_email_contains_visible_acceptance_cta_and_plain_link():
+    issue = read("supabase/functions/send-quote-email/index.ts")
+    assert '\"Klik voor akkoord:\", acceptanceUrl' in issue
+    assert '>Klik voor akkoord</a>' in issue
+    assert 'href="${acceptanceUrl}"' in issue
+    assert 'acceptance_token_hash: tokenHash' in issue
+    assert '.select("id,acceptance_token_expires_at").single()' in issue
+
+
+def test_quote_email_failure_revokes_unmailed_token_and_version():
+    issue = read("supabase/functions/send-quote-email/index.ts")
+    failure_block = issue.split("} catch (sendError) {", 1)[1]
+    assert 'acceptance_token_hash: null' in failure_block
+    assert '.eq("acceptance_token_hash", tokenHash)' in failure_block
+    assert 'from("quote_versions")' in failure_block
+    assert '.eq("version", version)' in failure_block
+
+
+def test_quote_pdf_stamping_supports_variable_page_counts():
+    issue = read("supabase/functions/send-quote-email/index.ts")
+    acceptance = read("supabase/functions/quote-acceptance/index.ts")
+    assert "pdf.getPageCount() !== 2" not in issue
+    assert "pdf.getPageCount() !== 2" not in acceptance
+    assert "pdf.getPages()[pdf.getPageCount() - 1]" in issue
+    assert "pdf.getPages()[pdf.getPageCount() - 1]" in acceptance
 
 
 def test_de_parken_booking_slot_check_qualifies_table_columns():

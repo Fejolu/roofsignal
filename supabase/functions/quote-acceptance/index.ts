@@ -28,7 +28,7 @@ async function addCustomerAcceptance(pdfBytes: Uint8Array, details: {
   const pdf = await PDFDocument.load(pdfBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  if (pdf.getPageCount() !== 2) throw new Error("De uitgegeven offerte moet exact twee pagina's bevatten.");
+  if (pdf.getPageCount() < 1) throw new Error("De uitgegeven offerte bevat geen pagina's.");
   const page = pdf.getPages()[pdf.getPageCount() - 1];
   const { width } = page.getSize();
   const dark = rgb(0.063, 0.09, 0.082);
