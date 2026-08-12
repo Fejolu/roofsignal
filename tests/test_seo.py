@@ -54,3 +54,23 @@ def test_public_footers_end_with_knowledge_base_then_portal():
         assert knowledge >= 0, path.name
         assert portal > knowledge, path.name
         assert 'footer-company-spacer' in footer[0:knowledge], path.name
+
+
+def test_public_navigation_uses_one_approach_and_proposal_destination():
+    pages = list(ROOT.glob("*.html")) + list((ROOT / "de-parken").glob("*.html"))
+    for path in pages:
+        content = path.read_text(encoding="utf-8")
+        assert '<a href="/werkwijze">Werkwijze</a>' not in content, path.name
+        assert '<a href="/tarieven">Tarieven</a>' not in content, path.name
+    rates = read("tarieven.html")
+    assert "Aanpak &amp; offerte" in rates
+    assert 'id="aanpak"' in rates
+    assert "Scope &amp; voorstel" in rates
+
+
+def test_public_site_does_not_publish_catalog_prices():
+    pages = ("index.html", "tarieven.html", "kennisbank-dakinspectie-kosten.html", "inspectie-deventer.html", "de-parken/index.html")
+    for path in pages:
+        content = read(path)
+        assert "Vanaf €" not in content, path
+        assert '"priceCurrency"' not in content, path
