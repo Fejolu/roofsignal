@@ -3,6 +3,10 @@
   const contactPhone = "085 21 28 019";
   const contactEmail = "info@roofsignal.nl";
 
+  function track(name, data) {
+    window.RoofSignalAnalytics?.track(name, data || {});
+  }
+
   function readField(data, ...names) {
     for (const name of names) {
       const value = data.get(name);
@@ -154,6 +158,7 @@
 
       const backend = window.RoofSignalBackend;
 
+      track("Lead start", { form: type, path: window.location.pathname });
       setBusy(form, true);
       if (status) {
         status.className = "form-note form-status pending";
@@ -180,12 +185,14 @@
         form.classList.add("is-complete");
         if (status) renderSuccess(status, type);
         completed = true;
+        track("Lead success", { form: type, path: window.location.pathname });
         window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
       } catch (error) {
         console.error("RoofSignal report request failed.", {
           endpoint: "Supabase lead_requests",
           error,
         });
+        track("Lead error", { form: type, path: window.location.pathname });
         if (status) renderError(status);
         window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
       } finally {

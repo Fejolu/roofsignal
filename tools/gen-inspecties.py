@@ -29,14 +29,17 @@ PROVINCE_LABEL = {
     "Zuid-Holland": "Zuid-Holland",
 }
 
-HEADER = '''<header class="site-header">
-  <a class="logo" href="/" aria-label="RoofSignal Property Intelligence"><span class="mark" aria-hidden="true">\u2302</span><span class="logo-lockup"><span class="logo-wordmark"><span class="logo-roof">ROOF</span><span class="logo-signal">SIGNAL</span></span><span class="logo-tagline">PROPERTY INTELLIGENCE</span></span></a>
-  <details class="mobile-nav"><summary aria-label="Menu"><span></span></summary><div class="mobile-menu"><a href="diensten">Diensten</a><a href="werkgebied">Werkgebied</a><a href="werkwijze">Werkwijze</a><a href="voor-wie">Voor wie</a><a href="tarieven">Tarieven</a><a href="contact">Contact</a></div></details>
-  <nav class="nav"><a href="diensten">Diensten</a><a href="werkgebied">Werkgebied</a><a href="werkwijze">Werkwijze</a><a href="voor-wie">Voor wie</a><a href="tarieven">Tarieven</a><a href="contact">Contact</a></nav>
-  <a class="btn btn-small" href="contact">Vraag een offerte aan</a>
-</header>'''
+def _current_layout():
+    def block(doc, tag):
+        start = doc.find(f"<{tag}")
+        end = doc.find(f"</{tag}>")
+        return doc[start:end + len(f"</{tag}>")]
+    index = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+    werk = open(os.path.join(ROOT, "werkgebied.html"), encoding="utf-8").read()
+    return block(index, "header"), block(werk, "footer")
 
-FOOTER = '''<footer class="footer"><div class="footer-brand"><a class="logo" href="/" aria-label="RoofSignal Property Intelligence"><span class="mark" aria-hidden="true">\u2302</span><span class="logo-lockup"><span class="logo-wordmark"><span class="logo-roof">ROOF</span><span class="logo-signal">SIGNAL</span></span><span class="logo-tagline">PROPERTY INTELLIGENCE</span></span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div class="footer-cols"><div><h4>Meer ontdekken</h4><a href="drone-dakinspectie">Drone dakinspectie</a><a href="dakinspectie-vve">Dakinspectie VvE</a><a href="nen-2767-gebouwschil">NEN 2767 gebouwschil</a><a href="werkgebied">Werkgebied</a><a href="kennisbank">Kennisbank</a></div><div><h4>Service</h4><a href="over-ons">Over ons</a><a href="cases">Cases</a><a href="projecten">Projecten</a><a href="privacy">Privacyverklaring</a><a href="cookies">Cookiebeleid</a><a href="voorwaarden">Algemene voorwaarden</a></div><div><h4>Contact</h4><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span><span>Ferdinand Joosten \u00b7 KVK/BTW-nummer volgt</span><a class="footer-portal-link" href="portal-login">RoofSignal Portaal</a></div></div></footer>'''
+
+HEADER, FOOTER = _current_layout()
 
 
 def slug(name):
@@ -107,6 +110,8 @@ def page(title, description, canonical, schemas, body):
   <link rel="stylesheet" href="{CSS}">
   <script type="application/ld+json">{json_like(service)}</script>
   <script type="application/ld+json">{json_like(webpage)}</script>
+  <script src="assets/analytics-config.js"></script>
+  <script src="assets/analytics.js"></script>
 </head>
 <body>
 {HEADER}
