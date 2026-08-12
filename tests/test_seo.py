@@ -40,3 +40,17 @@ def test_sitemap_contains_unique_public_urls_only():
     assert len(locations) == len(set(locations))
     assert all(url.startswith("https://www.roofsignal.nl/") for url in locations)
     assert not any(re.search(r"/portal-|/404(?:$|/)", url) for url in locations)
+
+
+def test_public_footers_end_with_knowledge_base_then_portal():
+    pages = list(ROOT.glob("*.html")) + [ROOT / "de-parken" / "index.html"]
+    for path in pages:
+        content = path.read_text(encoding="utf-8")
+        if '<footer class="footer"' not in content:
+            continue
+        footer = content.split('<footer class="footer"', 1)[1].split("</footer>", 1)[0]
+        knowledge = footer.find(">Kennisbank</a>")
+        portal = footer.find(">RoofSignal Portaal</a>")
+        assert knowledge >= 0, path.name
+        assert portal > knowledge, path.name
+        assert 'footer-company-spacer' in footer[0:knowledge], path.name
