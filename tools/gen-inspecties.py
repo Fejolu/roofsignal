@@ -105,7 +105,7 @@ def json_like(obj):
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
 
 
-def page(title, description, canonical, schemas, body, segment="werkgebied"):
+def page(title, description, canonical, schemas, body, segment="werkgebied", robots="index,follow"):
     bc, service, webpage = schemas
     head = f'''<!doctype html>
 <html lang="nl">
@@ -115,7 +115,7 @@ def page(title, description, canonical, schemas, body, segment="werkgebied"):
   <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
   <title>{html.escape(title)}</title>
   <meta name="description" content="{html.escape(description)}">
-  <meta name="robots" content="index,follow">
+  <meta name="robots" content="{robots}">
   <link rel="canonical" href="{canonical}">
   <script type="application/ld+json">{json_like(bc)}</script>
   <meta property="og:locale" content="nl_NL">
@@ -169,7 +169,10 @@ def gemeente_page(naam, prov, s):
 <section class="section"><p class="eyebrow orange center">Diensten</p><h2 class="centered-title">Wat we in {html.escape(naam)} doen.</h2><div class="cards four service-cards"><article><h3>Dakinspectie</h3><p>Dak, dakranden, goten, loodwerk en zichtbare risico\u2019s, onafhankelijk gerapporteerd.</p></article><article><h3>Woningscan</h3><p>De gebouwschil van \u00e9\u00e9n woning, met prioriteiten en een helder vervolgadvies.</p></article><article><h3>VvE &amp; MJOP-input</h3><p>Actuele bevindingen per bouwdeel als input voor bestuur, ALV en meerjarenonderhoudsplanning.</p></article><article><h3>Portefeuillescan</h3><p>Objecten vergelijkbaar maken: waar zitten risico\u2019s, prioriteiten en rapportagebehoefte?</p></article></div></section>
 <section class="section split"><div><p class="eyebrow orange">Hoe het werkt</p><h2>Bewijs boven reistijd.</h2><p>We kiezen per object de passende opnamewijze: vanaf maaiveld, vanaf bestaande toegang, met een hoogwerker of met gerichte dronebeelden. Uw dak hoeft niet begaanbaar te zijn.</p></div><div class="trust-list"><div><strong>Onafhankelijk</strong><span>RoofSignal verdient niet aan de herstelopdracht.</span></div><div><strong>Heldere prioriteiten</strong><span>Wat nu, wat later, wat monitoren \u2014 direct bruikbaar.</span></div><div><strong>Eerlijke reiskosten</strong><span>Reisafstand staat duidelijk in de offerte.</span></div><div><strong>Heel Nederland</strong><span>We werken door het hele land en bundelen opdrachten per regio.</span></div></div></section>
 <section class="cta"><h2>Heeft u een onderhoudsvraag in {html.escape(naam)}?</h2>{primary_cta()}<a class="btn ghost" href="inspectie-{pslug}">Meer over {html.escape(prov)}</a></section>'''
-    return page(title, desc, canonical, (bc, service, webpage), body)
+    # Een plaatsnaam alleen is geen lokale bewijslast. Generieke gemeentepagina's
+    # blijven bereikbaar voor bezoekers, maar worden pas indexeerbaar nadat ze
+    # handmatig zijn verrijkt met werkelijke lokale context.
+    return page(title, desc, canonical, (bc, service, webpage), body, robots="noindex,follow")
 
 
 def provincie_page(prov, gemeenten):
@@ -279,10 +282,15 @@ def regenerate_sitemap():
         block = m.group(1)
         loc = re.search(r"<loc>([^<]*)</loc>", block).group(1)
         entries.append((loc, block))
-    # voeg nieuwe generieke pagina's toe
+    # Voeg alleen indexeerbare provincie- en curated pagina's toe. Generieke
+    # gemeentepagina's zijn bewust noindex totdat ze echte lokale waarde hebben.
     new_locs = []
     for p in sorted(glob.glob(os.path.join(ROOT, "inspectie-*.html"))):
         slug_name = os.path.basename(p)[:-5]
+        local_slug = slug_name.removeprefix("inspectie-")
+        province_slugs = {slug(p) for p in PROVINCE_LABEL}
+        if local_slug not in CURATED and local_slug not in province_slugs:
+            continue
         loc = f"{BASE}/{slug_name}"
         if loc not in existing and loc + "/" not in existing:
             new_locs.append((loc, "0.7"))

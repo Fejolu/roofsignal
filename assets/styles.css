@@ -4166,7 +4166,29 @@ button { cursor: pointer; }
   align-items: center;
 }
 
+/* Strategische content: langere artikelen en vierstaps VvE-proces. */
+.article-body {
+  max-width: 900px;
+}
+.article-body h2 {
+  margin-top: 54px;
+}
+.article-body > p:not(.article-meta) {
+  color: var(--rs-graphite-600);
+  font-size: 18px;
+  line-height: 1.75;
+}
+.steps.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.proof-method {
+  border-top: 1px solid var(--rs-line);
+}
+
 @media (max-width: 700px) {
+  .steps.four {
+    grid-template-columns: 1fr;
+  }
   #aanvragen.portal-layout {
     grid-template-columns: 1fr;
   }
