@@ -83,7 +83,9 @@
       form.hidden = true;
       status.textContent = "Dank u. Uw akkoord is geregistreerd. RoofSignal ontvangt hiervan direct bericht en neemt de inspectie op in de planning.";
       summary.insertAdjacentHTML("afterend", '<div class="quote-acceptance-success"><strong>Offerte akkoord</strong><span>De opdracht staat nu klaar voor planning.</span></div>');
+      window.RoofSignalAnalytics?.track("Offerte akkoord", { path: window.location.pathname });
     } catch (error) {
+      window.RoofSignalAnalytics?.track("Offerte akkoord mislukt", { path: window.location.pathname });
       formStatus.textContent = error.message;
       formStatus.dataset.statusTone = "error";
       form.querySelector("button").disabled = false;

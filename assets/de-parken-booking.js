@@ -203,9 +203,14 @@
       status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
       form.classList.add("is-complete");
       button.textContent = "Gereserveerd ✓";
+      window.RoofSignalAnalytics?.track("De Parken boeking voltooid", {
+        path: window.location.pathname,
+        thermography: payload.thermography_interest,
+      });
       [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });
       sendBookingConfirmation(payload, booking).catch((error) => console.warn("Booking saved; confirmation email failed", error));
     } catch (error) {
+      window.RoofSignalAnalytics?.track("De Parken boeking mislukt", { path: window.location.pathname });
       status.className = "form-note form-status error";
       status.textContent = errorCopy(error);
       button.disabled = false;
