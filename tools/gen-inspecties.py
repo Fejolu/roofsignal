@@ -41,6 +41,28 @@ def _current_layout():
 
 HEADER, FOOTER = _current_layout()
 
+# Centrale CTA-strategie. Gegenereerde werkgebiedpagina's bedienen een gemengd
+# publiek en sturen daarom op een concrete offerte; doelgroep-pagina's sturen
+# elders op de portefeuillescan.
+CTA_STRATEGY = {
+    "werkgebied": {"label": "Vraag een offerte aan", "href": "contact"},
+}
+
+
+def primary_cta(segment="werkgebied", css_class="btn"):
+    cta = CTA_STRATEGY[segment]
+    return f'<a class="{css_class}" href="{cta["href"]}" data-primary-cta="{segment}">{cta["label"]}</a>'
+
+
+def header_for(segment="werkgebied"):
+    """Gebruik op iedere gegenereerde pagina dezelfde primaire CTA als in de pagina."""
+    return re.sub(
+        r'<a class="btn btn-small" href="contact"[^>]*>[^<]+</a>',
+        primary_cta(segment, "btn btn-small"),
+        HEADER,
+        count=1,
+    )
+
 
 def slug(name):
     s = name.lower()
@@ -83,7 +105,7 @@ def json_like(obj):
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
 
 
-def page(title, description, canonical, schemas, body):
+def page(title, description, canonical, schemas, body, segment="werkgebied"):
     bc, service, webpage = schemas
     head = f'''<!doctype html>
 <html lang="nl">
@@ -114,7 +136,7 @@ def page(title, description, canonical, schemas, body):
   <script src="assets/analytics.js"></script>
 </head>
 <body>
-{HEADER}
+{header_for(segment)}
 <main>
 {body}
 </main>
@@ -146,7 +168,7 @@ def gemeente_page(naam, prov, s):
     body = f'''<section class="page-hero page-hero-vve"><p class="eyebrow">Werkgebied</p><h1>Inspectie in {html.escape(naam)}.</h1><p>RoofSignal doet onafhankelijke gebouwschilinspecties in {html.escape(naam)}, provincie {html.escape(prov)}. Dakinspectie, woningscan, MJOP-input of portefeuillescan \u2014 \u00e9\u00e9n inspectieprotocol, \u00e9\u00e9n rapportage-aanpak.</p></section>
 <section class="section"><p class="eyebrow orange center">Diensten</p><h2 class="centered-title">Wat we in {html.escape(naam)} doen.</h2><div class="cards four service-cards"><article><h3>Dakinspectie</h3><p>Dak, dakranden, goten, loodwerk en zichtbare risico\u2019s, onafhankelijk gerapporteerd.</p></article><article><h3>Woningscan</h3><p>De gebouwschil van \u00e9\u00e9n woning, met prioriteiten en een helder vervolgadvies.</p></article><article><h3>VvE &amp; MJOP-input</h3><p>Actuele bevindingen per bouwdeel als input voor bestuur, ALV en meerjarenonderhoudsplanning.</p></article><article><h3>Portefeuillescan</h3><p>Objecten vergelijkbaar maken: waar zitten risico\u2019s, prioriteiten en rapportagebehoefte?</p></article></div></section>
 <section class="section split"><div><p class="eyebrow orange">Hoe het werkt</p><h2>Bewijs boven reistijd.</h2><p>We kiezen per object de passende opnamewijze: vanaf maaiveld, vanaf bestaande toegang, met een hoogwerker of met gerichte dronebeelden. Uw dak hoeft niet begaanbaar te zijn.</p></div><div class="trust-list"><div><strong>Onafhankelijk</strong><span>RoofSignal verdient niet aan de herstelopdracht.</span></div><div><strong>Heldere prioriteiten</strong><span>Wat nu, wat later, wat monitoren \u2014 direct bruikbaar.</span></div><div><strong>Eerlijke reiskosten</strong><span>Reisafstand staat duidelijk in de offerte.</span></div><div><strong>Heel Nederland</strong><span>We werken door het hele land en bundelen opdrachten per regio.</span></div></div></section>
-<section class="cta"><h2>Heeft u een onderhoudsvraag in {html.escape(naam)}?</h2><a class="btn" href="contact">Vraag een offerte aan</a><a class="btn ghost" href="inspectie-{pslug}">Meer over {html.escape(prov)}</a></section>'''
+<section class="cta"><h2>Heeft u een onderhoudsvraag in {html.escape(naam)}?</h2>{primary_cta()}<a class="btn ghost" href="inspectie-{pslug}">Meer over {html.escape(prov)}</a></section>'''
     return page(title, desc, canonical, (bc, service, webpage), body)
 
 
@@ -174,7 +196,7 @@ def provincie_page(prov, gemeenten):
     )
     body = f'''<section class="page-hero page-hero-vve"><p class="eyebrow">Werkgebied</p><h1>Inspectie in {html.escape(prov)}.</h1><p>RoofSignal werkt in {html.escape(prov)} met \u00e9\u00e9n onafhankelijk protocol: dakinspectie, woningscan, MJOP-input en portefeuillescan \u2014 van \u00e9\u00e9n woning tot een hele portefeuille.</p></section>
 <section class="section muted"><p class="eyebrow orange center">{html.escape(prov)}</p><h2 class="centered-title">Gemeenten in {html.escape(prov)}.</h2><div class="cards four audience-cards">{cards}</div></section>
-<section class="cta"><h2>Heeft u een onderhoudsvraag in {html.escape(prov)}?</h2><a class="btn" href="contact">Vraag een offerte aan</a><a class="btn ghost" href="werkgebied">Bekijk heel Nederland</a></section>'''
+<section class="cta"><h2>Heeft u een onderhoudsvraag in {html.escape(prov)}?</h2>{primary_cta()}<a class="btn ghost" href="werkgebied">Bekijk heel Nederland</a></section>'''
     return page(title, desc, canonical, (bc, service, webpage), body)
 
 
@@ -236,7 +258,7 @@ def update_werkgebied(by_prov):
         '<div><strong>Landelijke planning</strong><span>We bundelen opdrachten per regio en houden kosten zo laag mogelijk.</span></div>'
         '</div></section>\n'
         '<section class="cta"><h2>Heeft u een onderhoudsvraag, waar in Nederland dan ook?</h2>'
-        '<a class="btn" href="contact">Vraag een offerte aan</a></section>'
+        f'{primary_cta()}</section>'
     )
     start = doc.find("<main>")
     end = doc.find("</main>")

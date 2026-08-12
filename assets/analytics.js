@@ -41,6 +41,22 @@
 
   window.RoofSignalAnalytics = api;
 
+  // Homepage CTA-test: één variant per sessie en overal op de pagina gelijk.
+  const homepageCtas = document.querySelectorAll("[data-homepage-primary-cta]");
+  if (homepageCtas.length) {
+    let variant = window.sessionStorage.getItem("roofsignal-homepage-cta");
+    if (!variant) {
+      variant = Math.random() < 0.5 ? "offerte" : "portefeuillescan";
+      window.sessionStorage.setItem("roofsignal-homepage-cta", variant);
+    }
+    const label = variant === "offerte" ? "Vraag een offerte aan" : "Vraag een portefeuillescan aan";
+    homepageCtas.forEach((link) => {
+      link.textContent = label;
+      link.dataset.ctaVariant = variant;
+    });
+    send("Homepage CTA getoond", { variant, path: window.location.pathname });
+  }
+
   function cleanPath(value) {
     try {
       return new URL(value, window.location.href).pathname;
@@ -55,6 +71,10 @@
     const href = link.getAttribute("href") || "";
     const label = (link.textContent || link.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 100);
     const data = { label, path: window.location.pathname };
+
+    if (link.dataset.ctaVariant) {
+      send("Homepage CTA klik", { ...data, variant: link.dataset.ctaVariant });
+    }
 
     if (href.startsWith("tel:")) return send("Contact telefoon", data);
     if (href.startsWith("mailto:")) return send("Contact e-mail", data);
