@@ -1,9 +1,14 @@
 name: Geplande facturen verwerken
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  # The schedule is restored after the repaired endpoint has passed a dry run.
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Alleen controleren; niets versturen
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -20,10 +25,14 @@ jobs:
       - name: Verwerk facturen waarvan de verzendtijd is bereikt
         env:
           AUTOMATION_SECRET: ${{ secrets.INVOICE_AUTOMATION_SECRET }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          test -n "$AUTOMATION_SECRET"
+          if [ -z "$AUTOMATION_SECRET" ]; then
+            echo "::error title=Factuurautomatisering niet geconfigureerd::GitHub secret INVOICE_AUTOMATION_SECRET ontbreekt."
+            exit 1
+          fi
           curl --fail-with-body --silent --show-error \
             -X POST "https://kakpticlxlaxtebhsuoh.supabase.co/functions/v1/process-scheduled-invoices" \
             -H "x-automation-secret: $AUTOMATION_SECRET" \
             -H "Content-Type: application/json" \
-            -d '{}'
+            -d "{\"dryRun\":${DRY_RUN:-true}}"

@@ -4,6 +4,12 @@
 # working directory name when running `supabase init`.
 project_id = "roofsignal"
 
+# Machine-to-machine endpoint. The function itself requires the private
+# INVOICE_AUTOMATION_SECRET header; disabling the user-JWT gate here prevents
+# the scheduler from being rejected before that check can run.
+[functions.process-scheduled-invoices]
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.

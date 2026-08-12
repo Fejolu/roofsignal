@@ -24,8 +24,12 @@ serve(async(req)=>{
   const expected=Deno.env.get("INVOICE_AUTOMATION_SECRET")||"";
   if(!expected||req.headers.get("x-automation-secret")!==expected)return new Response(JSON.stringify({error:"Geen toestemming."}),{status:403,headers});
   const service=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,{auth:{persistSession:false}});
+  const body=await req.json().catch(()=>({}));
   const {data:queue,error}=await service.from("invoices").select("*,organizations(name,contact_name,contact_email)").in("auto_send_status",["scheduled","failed"]).lte("auto_send_at",new Date().toISOString()).eq("status","draft").order("auto_send_at").limit(20);
   if(error)return new Response(JSON.stringify({error:error.message}),{status:500,headers});
+  if(body?.dryRun===true){
+    return new Response(JSON.stringify({ok:true,dryRun:true,due:(queue||[]).length,items:(queue||[]).map((invoice:any)=>({id:invoice.id,invoiceNumber:invoice.invoice_number,status:invoice.auto_send_status,sendAt:invoice.auto_send_at,recipientConfigured:Boolean(String(invoice.organizations?.contact_email||"").trim()),paymentLinkConfigured:/^https:\/\//i.test(String(invoice.payment_url||""))}))}),{headers});
+  }
   const results=[];
   for(const invoice of queue||[]){
     const locked=await service.from("invoices").update({auto_send_status:"processing",auto_send_attempted_at:new Date().toISOString(),auto_send_error:null}).eq("id",invoice.id).in("auto_send_status",["scheduled","failed"]).select("id").maybeSingle();
@@ -48,4 +52,3 @@ serve(async(req)=>{
   }
   return new Response(JSON.stringify({ok:true,processed:results.length,results}),{headers});
 });
-

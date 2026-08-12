@@ -200,7 +200,9 @@ def test_report_delivery_queues_a_guarded_invoice():
     assert 'auto_send_status:"sent"' in processor
     assert "Voeg eerst een geldige betaallink toe." in document_mail
     assert "voeg de betaallink toe" in admin
-    assert 'cron: "*/15 * * * *"' in workflow
+    assert "dry_run:" in workflow
+    assert "Alleen controleren; niets versturen" in workflow
+    assert '"dryRun"' in workflow or '\\"dryRun\\"' in workflow
 
 
 def test_report_publication_keeps_an_immutable_commercial_snapshot():
