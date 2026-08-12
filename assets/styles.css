@@ -650,6 +650,49 @@ section {
   margin-right: 10px;
 }
 
+.place-grid div {
+  padding: 0;
+  overflow: hidden;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.place-grid div:before {
+  content: none;
+}
+
+.place-grid a,
+.place-grid a:visited {
+  display: flex;
+  align-items: center;
+  min-height: 68px;
+  padding: 17px 20px;
+  color: var(--rs-graphite-900);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.place-grid a:before {
+  content: "✓";
+  flex: 0 0 auto;
+  margin-right: 12px;
+  color: var(--orange);
+  font-weight: 900;
+}
+
+.place-grid div:hover,
+.place-grid div:focus-within {
+  border-color: rgba(255, 90, 25, .55);
+  box-shadow: 0 12px 28px rgba(25, 36, 32, .1);
+  transform: translateY(-1px);
+}
+
+.place-grid a:hover,
+.place-grid a:focus-visible {
+  color: var(--orange);
+  background: #fff8f4;
+  outline: none;
+}
+
 h2 {
   font-size: 42px;
   line-height: 1.05;
