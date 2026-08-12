@@ -491,7 +491,7 @@ def test_admin_dashboard_previews_keep_content_inside_cards():
     assert "grid-template-columns: 34px minmax(0, 1fr) 18px" in styles
     assert "gap: 20px; align-items: start" in styles
     assert 'assets/styles.css?v=20260812&brand=4' in page
-    assert 'assets/portal-admin.js?v=43' in page
+    assert 'assets/portal-admin.js?v=44' in page
     assert ".admin-preview-list strong, .admin-preview-list small { display: block;" in styles
     assert "@media (max-width: 1199px) and (min-width: 901px)" in styles
 
