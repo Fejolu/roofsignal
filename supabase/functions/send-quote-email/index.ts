@@ -195,6 +195,58 @@ serve(async (req) => {
       if (documentError) throw documentError;
       issuedDocument = createdDocument;
     }
+    // Persist the newly issued document and acceptance token before handing the
+    // message to the mail provider. Otherwise a delivered message can contain
+    // a token that the acceptance endpoint does not know when a later database
+    // write fails.
+    if (!testRecipient) {
+      const { error: hideDocumentsError } = await service.from("documents")
+        .update({ customer_visible: false })
+        .eq("quote_id", quote.id)
+        .eq("document_type", "quote")
+        .neq("id", issuedDocument.id);
+      if (hideDocumentsError) throw hideDocumentsError;
+
+      const { error: showDocumentError } = await service.from("documents")
+        .update({ customer_visible: true })
+        .eq("id", issuedDocument.id);
+      if (showDocumentError) throw showDocumentError;
+
+      const { data: issuedQuote, error: quoteUpdateError } = await service.from("quotes").update({
+        status: "sent",
+        sent_at: sentAt.toISOString(),
+        issued_at: sentAt.toISOString(),
+        issued_by: userData.user.id,
+        issued_by_name: issuedBy,
+        issued_by_email: issuedByEmail,
+        issued_document_hash: issuedHash,
+        acceptance_token_hash: tokenHash,
+        acceptance_token_expires_at: expiresAt.toISOString(),
+        acceptance_version: version,
+        accepted_at: null,
+        accepted_by_name: null,
+        accepted_by_email: null,
+      }).eq("id", quote.id).select("id,acceptance_token_expires_at").single();
+      if (quoteUpdateError || !issuedQuote) {
+        throw quoteUpdateError || new Error("Nieuwe akkoordlink kon niet worden opgeslagen.");
+      }
+
+      const { error: versionError } = await service.from("quote_versions").insert({
+        quote_id: quote.id,
+        version,
+        status: "sent",
+        sent_at: sentAt.toISOString(),
+        issued_at: sentAt.toISOString(),
+        issued_by_name: issuedBy,
+        issued_by_email: issuedByEmail,
+        document_id: issuedDocument.id,
+        document_hash: issuedHash,
+        snapshot: { quote, document_id: issuedDocument.id, recipient, cc_recipient: ccRecipient || null, document_hash: issuedHash },
+        created_by: userData.user.id,
+      });
+      if (versionError) throw versionError;
+    }
+
     const result = await sendBrevo({
       sender: { email: fromEmail, name: fromName },
       to: [{ email: recipient, name: quote.organizations?.contact_name || quote.organizations?.name }],
@@ -210,33 +262,6 @@ serve(async (req) => {
     if (testRecipient) {
       return new Response(JSON.stringify({ success: true, test: true, recipient, version, messageId: result?.messageId || null }), { headers: cors });
     }
-    await service.from("documents").update({ customer_visible: false }).eq("quote_id", quote.id).eq("document_type", "quote").neq("id", issuedDocument.id);
-    await service.from("documents").update({ customer_visible: true }).eq("id", issuedDocument.id);
-    await service.from("quotes").update({
-      status: "sent",
-      sent_at: sentAt.toISOString(),
-      issued_at: sentAt.toISOString(),
-      issued_by: userData.user.id,
-      issued_by_name: issuedBy,
-      issued_by_email: issuedByEmail,
-      issued_document_hash: issuedHash,
-      acceptance_token_hash: tokenHash,
-      acceptance_token_expires_at: expiresAt.toISOString(),
-      acceptance_version: version,
-    }).eq("id", quote.id);
-    await service.from("quote_versions").insert({
-      quote_id: quote.id,
-      version,
-      status: "sent",
-      sent_at: sentAt.toISOString(),
-      issued_at: sentAt.toISOString(),
-      issued_by_name: issuedBy,
-      issued_by_email: issuedByEmail,
-      document_id: issuedDocument.id,
-      document_hash: issuedHash,
-      snapshot: { quote, document_id: issuedDocument.id, recipient, cc_recipient: ccRecipient || null, document_hash: issuedHash },
-      created_by: userData.user.id,
-    });
     await service.from("quote_execution_events").insert({
       quote_id: quote.id,
       organization_id: quote.organization_id,
