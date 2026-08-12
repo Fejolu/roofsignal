@@ -157,7 +157,7 @@
     "open-inspection": ["Inspectie openen", "search"], "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
     "schedule-quote": ["Inspectie plannen", "calendar"], "invoice-quote": ["Factuur aanmaken", "invoice"], "send-invoice": ["Factuur versturen", "send"],
-    "resend-appointment": ["Bevestiging opnieuw versturen", "send"], "delete-appointment": ["Afspraak verwijderen", "trash"],
+    "complete-appointment": ["Afspraak voltooien", "check"], "resend-appointment": ["Bevestiging opnieuw versturen", "send"], "delete-appointment": ["Afspraak verwijderen", "trash"],
     "send-invoice-mail": ["Factuur versturen", "send"], "send-invoice-reminder": ["Betalingsherinnering versturen", "bell"],
     "open-invoice": ["Factuur bekijken", "document"], "pay-invoice": ["Betaling registreren", "check"], "set-payment-link": ["Betaallink beheren", "link"], "credit-invoice": ["Factuur crediteren", "credit"],
   };
@@ -173,7 +173,7 @@
     key: '<circle cx="6" cy="9" r="3"/><path d="M9 9h6M12 9v2M14 9v2"/>',
   };
   function iconizeAdminActions(root = document) {
-    root.querySelectorAll(".portal-table [data-admin-action]").forEach((control) => {
+    root.querySelectorAll(".portal-table [data-admin-action], .icon-actions [data-admin-action]").forEach((control) => {
       const meta = adminActionMeta[control.dataset.adminAction]; if (!meta || control.classList.contains("admin-icon-action")) return;
       control.classList.add("admin-icon-action"); control.title = meta[0]; control.setAttribute("aria-label", meta[0]);
       control.innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true">${adminIcons[meta[1]] || adminIcons.folder}</svg>`;
@@ -196,6 +196,7 @@
       planned: { label: "Gepland", tone: "yellow" },
       scheduled: { label: "Gepland", tone: "yellow" },
       delivered: { label: "Opgeleverd", tone: "green" },
+      completed: { label: "Voltooid", tone: "green" },
       published: { label: "Gepubliceerd", tone: "green" },
       paid: { label: "Betaald", tone: "green" },
       open: { label: "Open", tone: "yellow" },
@@ -514,7 +515,7 @@
     renderResourceCalendar(appointments);
     if (!planningList) return;
     planningList.innerHTML = appointments.length
-      ? appointments.map((appointment) => `<div class="record-clickable-row appointment-list-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p><div class="table-actions icon-actions appointment-admin-actions"><button type="button" data-admin-action="resend-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Bevestiging opnieuw versturen</button><button class="text-danger" type="button" data-admin-action="delete-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Afspraak verwijderen</button></div></div>`).join("")
+      ? appointments.map((appointment) => { const isCompleted = appointment.status === "completed"; return `<div class="record-clickable-row appointment-list-row" role="link" tabindex="0" data-record-kind="appointment" data-record-id="${escapeHtml(appointment.id)}"><span>${escapeHtml(formatPortalDate(appointment.starts_at))}</span><strong>${escapeHtml(appointment.title || "Afspraak")}</strong><p>${escapeHtml([appointment.organizations?.name, appointment.properties?.name, appointment.profiles?.full_name || appointment.profiles?.email, statusMeta(appointment.status).label].filter(Boolean).join(" · "))}</p><div class="table-actions icon-actions appointment-admin-actions">${isCompleted ? "" : `<button type="button" data-admin-action="complete-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Afspraak voltooien</button><button type="button" data-admin-action="resend-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Bevestiging opnieuw versturen</button>`}<button class="text-danger" type="button" data-admin-action="delete-appointment" data-appointment-id="${escapeHtml(appointment.id)}">Afspraak verwijderen</button></div></div>`; }).join("")
       : '<div data-empty-row><strong>Geen planning</strong><span>Er zijn geen afspraken geladen.</span></div>';
     iconizeAdminActions(planningList);
   }
@@ -527,6 +528,15 @@
     const result = await window.RoofSignalBackend.deleteAppointment(id);
     if (!result.ok) return setPortalNotice(result.error?.message || "Afspraak verwijderen is mislukt.", "error");
     setPortalNotice("Afspraak is verwijderd. De gekoppelde inspectie kan opnieuw worden gepland.", "success");
+    await loadLiveAdminData();
+  }
+
+  async function completeAppointment(id) {
+    const appointment = liveAppointments.find((item) => item.id === id);
+    if (!appointment || appointment.status === "completed") return;
+    const result = await window.RoofSignalBackend.updateAppointment(id, { status: "completed" });
+    if (!result.ok) return setPortalNotice(result.error?.message || "Afspraak voltooien is mislukt.", "error");
+    setPortalNotice("Afspraak is voltooid.", "success");
     await loadLiveAdminData();
   }
 
@@ -2709,6 +2719,7 @@
     if (action === "sync-quote-items") syncQuoteItems(target.dataset.quoteId);
     if (action === "staff-calendar-feed") createCalendarFeed(target.dataset.profileId);
     if (action === "resend-appointment") resendAppointment(target.dataset.appointmentId);
+    if (action === "complete-appointment") completeAppointment(target.dataset.appointmentId);
     if (action === "delete-appointment") deleteAppointment(target.dataset.appointmentId);
     if (action === "copy-calendar-feed") copyCalendarFeed();
     if (action === "open-employee") openEmployeeDossier(target.dataset.profileId);

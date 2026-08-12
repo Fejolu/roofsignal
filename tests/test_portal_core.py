@@ -510,9 +510,9 @@ def test_admin_dashboard_previews_keep_content_inside_cards():
     assert ".admin-preview-list > .admin-preview-item { display: grid;" in styles
     assert "grid-template-columns: 34px minmax(0, 1fr) 18px" in styles
     assert "gap: 20px; align-items: start" in styles
-    assert 'assets/styles.css?v=20260812&brand=5' in page
-    assert 'assets/portal-admin.js?v=47' in page
-    assert 'assets/supabase-app.js?v=29' in page
+    assert 'assets/styles.css?v=20260812&brand=6' in page
+    assert 'assets/portal-admin.js?v=48' in page
+    assert 'assets/supabase-app.js?v=30' in page
     assert ".admin-preview-list strong, .admin-preview-list small { display: block;" in styles
     assert "@media (max-width: 1199px) and (min-width: 901px)" in styles
 
@@ -547,3 +547,12 @@ def test_admin_appointments_can_be_deleted_without_deleting_the_order():
     assert 'action: "appointment.deleted_by_internal"' in backend
     assert 'data-admin-action="delete-appointment"' in admin
     assert "De gekoppelde klant, offerte en inspectie blijven bestaan" in admin
+
+
+def test_admin_appointments_can_be_completed_with_uniform_icon_actions():
+    backend = read("assets/supabase-app.js")
+    admin = read("assets/portal-admin.js")
+    assert '"complete-appointment": ["Afspraak voltooien", "check"]' in admin
+    assert '.icon-actions [data-admin-action]' in admin
+    assert 'updateAppointment(id, { status: "completed" })' in admin
+    assert 'update({ status: "completed" }).eq("appointment_id", id)' in backend

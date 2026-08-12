@@ -841,6 +841,9 @@
     if (Object.prototype.hasOwnProperty.call(payload, "inspector_id")) {
       await supabase.from("parken_bookings").update({ inspector_id: payload.inspector_id }).eq("appointment_id", id);
     }
+    if (payload.status === "completed") {
+      await supabase.from("parken_bookings").update({ status: "completed" }).eq("appointment_id", id);
+    }
     return { ok: true, data };
   }
 
