@@ -13,7 +13,7 @@ import csv, json, re, unicodedata, glob, os, html
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV = os.path.join(ROOT, "data", "gemeenten.csv")
-CSS = "assets/styles.css?v=20260811&brand=2"
+CSS = "assets/styles.css?v=20260812&brand=2"
 BASE = "https://www.roofsignal.nl"
 
 # Curated pagina's: nooit overschrijven door de generator
