@@ -238,6 +238,11 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: corsHeaders });
   }
 
+  const authorization = req.headers.get("authorization") || "";
+  if (authorization !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+  }
+
   let record: LeadRecord;
   try {
     const body = await req.json();

@@ -38,6 +38,10 @@ serve(async (req) => {
   const cors = headers(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: cors });
+  const authorization = req.headers.get("authorization") || "";
+  if (authorization !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+  }
 
   const body = await req.json().catch(() => ({}));
   const reference = String(body.reference || "").trim().toUpperCase();

@@ -11,7 +11,9 @@
     "send-lead-notification",
     "send-portal-login-link",
     "send-quote-email",
-    "staff-calendar"
+    "staff-calendar",
+    "submit-public-lead",
+    "submit-parken-booking"
   ],
   "required_secrets": [
     "BREVO_API_KEY",
@@ -20,6 +22,8 @@
     "EMAIL_PROVIDER",
     "NOTIFICATION_EMAIL",
     "QUOTE_ACCEPTANCE_IP_SALT",
-    "INVOICE_AUTOMATION_SECRET"
+    "INVOICE_AUTOMATION_SECRET",
+    "TURNSTILE_SECRET_KEY",
+    "FORM_RATE_LIMIT_SALT"
   ]
 }

@@ -110,12 +110,12 @@
     `;
   }
 
-  async function notifyEdgeFunction(payload) {
+  async function submitProtectedLead(payload) {
     const config = window.ROOFSIGNAL_SUPABASE;
     if (!config?.url || !config?.anonKey) {
       throw new Error("Supabase email endpoint is not configured.");
     }
-    const url = `${config.url}/functions/v1/send-lead-notification`;
+    const url = `${config.url}/functions/v1/submit-public-lead`;
 
     const response = await fetch(url, {
       method: "POST",
@@ -123,7 +123,7 @@
         "Content-Type": "application/json",
         Authorization: `Bearer ${config.anonKey}`,
       },
-      body: JSON.stringify({ record: payload }),
+      body: JSON.stringify(payload),
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.success) {
@@ -169,17 +169,16 @@
       let completed = false;
 
       try {
-        const payload = buildPayload(form, type);
+        window.RoofSignalFormSecurity?.ensureReady(form);
+        const payload = {
+          ...buildPayload(form, type),
+          ...window.RoofSignalFormSecurity?.getPayload(form),
+        };
         if (!backend?.isConfigured) {
           throw new Error("Supabase lead endpoint is not configured.");
         }
 
-        const result = await backend.submitLead(payload);
-        if (!result.ok) {
-          throw result.error || new Error("Supabase lead endpoint rejected the request.");
-        }
-
-        await notifyEdgeFunction(payload);
+        await submitProtectedLead(payload);
 
         form.reset();
         form.classList.add("is-complete");
@@ -194,6 +193,7 @@
         });
         track("Lead error", { form: type, path: window.location.pathname });
         if (status) renderError(status);
+        window.RoofSignalFormSecurity?.reset(form);
         window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
       } finally {
         if (completed) {

@@ -143,17 +143,6 @@
     return "De boeking kon niet worden opgeslagen. Probeer het opnieuw of neem contact op via 085 21 28 019.";
   }
 
-  async function sendBookingConfirmation(payload, booking) {
-    const config = window.ROOFSIGNAL_SUPABASE;
-    if (!config?.url || !config?.anonKey) return;
-    const response = await fetch(`${config.url}/functions/v1/send-parken-booking-confirmation`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.anonKey}` },
-      body: JSON.stringify({ reference: booking.reference, email: payload.email }),
-    });
-    if (!response.ok) throw new Error("Confirmation email failed");
-  }
-
   checkButton.addEventListener("click", checkPostcode);
   postcodeInput.addEventListener("input", () => {
     bookingFields.hidden = true;
@@ -194,10 +183,18 @@
     };
 
     try {
+      window.RoofSignalFormSecurity?.ensureReady(form);
+      Object.assign(payload, window.RoofSignalFormSecurity?.getPayload(form));
       const backend = window.RoofSignalBackend;
-      if (!backend?.isConfigured || !backend.submitParkenBooking) throw new Error("Backend unavailable");
-      const result = await backend.submitParkenBooking(payload);
-      if (!result.ok) throw result.error || new Error("Booking rejected");
+      if (!backend?.isConfigured) throw new Error("Backend unavailable");
+      const config = window.ROOFSIGNAL_SUPABASE;
+      const response = await fetch(`${config.url}/functions/v1/submit-parken-booking`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.anonKey}` },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.success) throw new Error(result.error || "Booking rejected");
       const booking = result.booking;
       status.className = "form-note form-status success booking-success";
       status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
@@ -208,11 +205,11 @@
         thermography: payload.thermography_interest,
       });
       [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });
-      sendBookingConfirmation(payload, booking).catch((error) => console.warn("Booking saved; confirmation email failed", error));
     } catch (error) {
       window.RoofSignalAnalytics?.track("De Parken boeking mislukt", { path: window.location.pathname });
       status.className = "form-note form-status error";
       status.textContent = errorCopy(error);
+      window.RoofSignalFormSecurity?.reset(form);
       button.disabled = false;
       button.textContent = "Reserveer mijn Woningscan";
       if (String(error?.message || error || "").includes("SLOT_TAKEN") || String(error?.message || error || "").includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) {
