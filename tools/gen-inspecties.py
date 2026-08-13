@@ -45,7 +45,7 @@ HEADER, FOOTER = _current_layout()
 # publiek en sturen daarom op een concrete offerte; doelgroep-pagina's sturen
 # elders op de portefeuillescan.
 CTA_STRATEGY = {
-    "werkgebied": {"label": "Vraag een offerte aan", "href": "contact"},
+    "werkgebied": {"label": "Vraag aanpak en offerte aan", "href": "contact"},
 }
 
 
@@ -112,7 +112,10 @@ def page(title, description, canonical, schemas, body, segment="werkgebied", rob
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon.svg?v=3" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="site.webmanifest?v=3">
+  <meta name="theme-color" content="#050908">
   <title>{html.escape(title)}</title>
   <meta name="description" content="{html.escape(description)}">
   <meta name="robots" content="{robots}">

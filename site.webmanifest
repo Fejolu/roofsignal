@@ -1,0 +1,23 @@
+{
+  "name": "RoofSignal Property Intelligence",
+  "short_name": "RoofSignal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050908",
+  "theme_color": "#050908",
+  "icons": [
+    {
+      "src": "/assets/icon192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
