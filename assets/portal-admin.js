@@ -153,7 +153,7 @@
     "edit-role": ["Rol bewerken", "edit"], "remove-role": ["Teamlid verwijderen", "trash"],
     "manage-customer": ["Klantdossier openen", "folder"], "view-customer-portal": ["Klantportaal bekijken", "view"],
     "send-account-mail": ["Accountmail opnieuw versturen", "mail"], "send-password-mail": ["Wachtwoord opnieuw instellen", "key"],
-    "edit-customer": ["Klant bewerken", "edit"], "delete-customer": ["Klant verwijderen", "trash"],
+    "edit-customer": ["Klant bewerken", "edit"], "delete-customer": ["Klant archiveren", "archive"],
     "open-inspection": ["Inspectie openen", "search"], "edit-inspection-status": ["Inspectiestatus wijzigen", "edit"], "delete-inspection": ["Inspectie verwijderen", "trash"],
     "send-quote": ["Offerte versturen", "send"], "send-quote-custom": ["Offerte opnieuw versturen", "send"],
     "edit-sent-quote": ["Offerte bewerken", "edit"], "sync-quote-items": ["Offerte synchroniseren", "sync"], "accept-quote": ["Akkoord registreren", "check"],
@@ -172,6 +172,7 @@
     view: '<circle cx="9" cy="9" r="2.5"/><path d="M2 9s2.5-4.5 7-4.5S16 9 16 9s-2.5 4.5-7 4.5S2 9 2 9Z"/>',
     mail: '<path d="M2.5 4.5h13v9h-13Z"/><path d="m3 5 6 5 6-5"/>',
     key: '<circle cx="6" cy="9" r="3"/><path d="M9 9h6M12 9v2M14 9v2"/>',
+    archive: '<path d="M3 6h12v9H3Z"/><path d="M2 3h14v3H2ZM7 9h4"/>',
   };
   function iconizeAdminActions(root = document) {
     root.querySelectorAll(".portal-table [data-admin-action], .icon-actions [data-admin-action]").forEach((control) => {
@@ -251,7 +252,7 @@
   }
 
   function customerActions() {
-    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" data-admin-action="view-customer-portal" title="Klantportaal bekijken" aria-label="Klantportaal bekijken">◉</a><button type="button" data-admin-action="send-account-mail" title="Accountmail opnieuw versturen" aria-label="Accountmail opnieuw versturen">✉</button><button type="button" data-admin-action="send-password-mail" title="Wachtwoord opnieuw instellen" aria-label="Wachtwoord opnieuw instellen">⌁</button><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant verwijderen" aria-label="Klant verwijderen">⌫</a></div>';
+    return '<div class="table-actions icon-actions"><a href="#klanten" data-admin-action="manage-customer" title="Klantdossier openen" aria-label="Klantdossier openen">↗</a><a href="portal-klant.html" data-admin-action="view-customer-portal" title="Klantportaal bekijken" aria-label="Klantportaal bekijken">◉</a><button type="button" data-admin-action="send-account-mail" title="Accountmail opnieuw versturen" aria-label="Accountmail opnieuw versturen">✉</button><button type="button" data-admin-action="send-password-mail" title="Wachtwoord opnieuw instellen" aria-label="Wachtwoord opnieuw instellen">⌁</button><a href="#klanten" data-admin-action="edit-customer" title="Klant bewerken" aria-label="Klant bewerken">✎</a><a class="text-danger" href="#klanten" data-admin-action="delete-customer" title="Klant archiveren" aria-label="Klant archiveren">⌫</a></div>';
   }
 
   function customerRow(customer) {
@@ -608,7 +609,7 @@
   function renderAdminMetrics(customers, inspections, invoices, quotes, tasks = []) {
     const cards = [...document.querySelectorAll("#dashboard article")];
     const openInspections = inspections.filter((inspection) => !["delivered", "cancelled"].includes(inspection.status)).length;
-    const openInvoices = invoices.filter((invoice) => !["paid", "cancelled", "credited"].includes(invoice.status));
+    const openInvoices = invoices.filter((invoice) => !invoice.is_test && ["sent", "open", "overdue"].includes(invoice.status));
     const openAmount = openInvoices.reduce((total, invoice) => total + Number(invoice.amount || 0), 0);
     const openTasks = tasks.filter((task) => !["completed", "cancelled"].includes(task.status)).length;
     const values = [customers.length, openInspections, openTasks, formatMoney(openAmount), quotes.filter((quote) => !["accepted", "rejected", "expired"].includes(quote.status)).length];
@@ -744,15 +745,29 @@
       backend.listEmployeeHrData(),
       backend.listRoleDefinitions(),
     ]);
+    const activeOrganizationIds = new Set(customers.map((customer) => customer.id));
+    const belongsToActiveCustomer = (record) => !record?.organization_id || activeOrganizationIds.has(record.organization_id);
+    const activeInspections = inspections.filter(belongsToActiveCustomer);
+    const activeInvoices = invoices.filter(belongsToActiveCustomer);
+    const activeQuotes = quotes.filter(belongsToActiveCustomer);
+    const activeAppointments = appointments.filter(belongsToActiveCustomer);
+    const activeTasks = tasks.filter(belongsToActiveCustomer);
+    const activeQuoteItems = quoteItems.filter(belongsToActiveCustomer);
+    const activeReports = reports.filter(belongsToActiveCustomer);
+    const activeUpgrades = upgrades.filter(belongsToActiveCustomer);
+    const activeRequests = requests.filter(belongsToActiveCustomer);
+    const activeRequestIds = new Set(activeRequests.map((request) => request.id));
+    const activeRequestMessages = requestMessages.filter((message) => !message?.request_id || activeRequestIds.has(message.request_id));
+
     liveOrganizations = customers;
     liveProfiles = profiles;
-    liveAppointments = appointments;
-    liveInvoices = invoices;
-    liveQuotes = quotes;
-    liveQuoteItems = quoteItems;
-    liveTasks = tasks;
-    liveReports = reports;
-    liveUpgradeRequests = upgrades;
+    liveAppointments = activeAppointments;
+    liveInvoices = activeInvoices;
+    liveQuotes = activeQuotes;
+    liveQuoteItems = activeQuoteItems;
+    liveTasks = activeTasks;
+    liveReports = activeReports;
+    liveUpgradeRequests = activeUpgrades;
     liveHrData = hrData;
     liveRoleDefinitions = roleDefinitions;
     renderCustomers(customers);
@@ -764,13 +779,13 @@
     }
     renderRoles(profiles);
     renderRoleDefinitions(roleDefinitions);
-    renderInspections(inspections);
-    renderInvoices(invoices);
-    renderQuotes(quotes);
-    renderAppointments(appointments);
-    renderAdminSupport(requests, requestMessages, tasks);
-    renderAdminMetrics(customers, inspections, invoices, quotes, tasks);
-    renderAdminDashboardPreviews(customers, quotes, appointments);
+    renderInspections(activeInspections);
+    renderInvoices(activeInvoices);
+    renderQuotes(activeQuotes);
+    renderAppointments(activeAppointments);
+    renderAdminSupport(activeRequests, activeRequestMessages, activeTasks);
+    renderAdminMetrics(customers, activeInspections, activeInvoices, activeQuotes, activeTasks);
+    renderAdminDashboardPreviews(customers, activeQuotes, activeAppointments);
     populateInspectionOrganizations(customers);
     populateWorkflowOrganizations(customers);
     syncCustomerOwnedData();
@@ -1057,9 +1072,13 @@
 
   async function deleteCustomer(row) {
     const name = row.querySelector("td")?.textContent.trim() || "deze klant";
-    if (!confirm(`${name} verwijderen uit dit beheerportaal?`)) return;
+    if (!confirm(`${name} archiveren? Het volledige klantdossier verdwijnt uit de actieve backoffice. Wettelijk te bewaren facturen en rapporten blijven in de administratie behouden.`)) return;
     if (window.RoofSignalBackend?.isConfigured && row.dataset.customerId) {
-      await window.RoofSignalBackend.deleteOrganization(row.dataset.customerId);
+      const result = await window.RoofSignalBackend.deleteOrganization(row.dataset.customerId);
+      if (!result.ok) return setPortalNotice(result.error?.message || "Klant archiveren is mislukt.", "error");
+      setPortalNotice(`${name} en het gekoppelde dossier zijn uit de actieve backoffice gearchiveerd.`, "success");
+      await loadLiveAdminData();
+      return;
     }
     row.remove();
     syncCustomerOwnedData();

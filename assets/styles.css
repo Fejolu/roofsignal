@@ -223,7 +223,8 @@ section {
   top: 0;
   z-index: 10;
   min-height: 74px;
-  background: rgba(5, 9, 8, .96);
+  /* Match the solid background embedded in the canonical brand mark exactly. */
+  background: var(--rs-graphite-950);
   display: flex;
   align-items: center;
   gap: 34px;

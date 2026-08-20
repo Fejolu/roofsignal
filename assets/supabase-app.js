@@ -813,7 +813,7 @@
     if (!supabase) return [];
     const { data, error } = await supabase
       .from("invoices")
-      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,payment_url,bank_account,account_holder,payment_term_days,auto_send_at,auto_send_status,auto_send_error,auto_send_attempted_at,created_at,organizations(name)")
+      .select("id,organization_id,quote_id,property_id,inspection_id,invoice_number,amount,status,due_date,payment_url,bank_account,account_holder,payment_term_days,auto_send_at,auto_send_status,auto_send_error,auto_send_attempted_at,is_test,created_at,organizations(name)")
       .order("created_at", { ascending: false });
     if (error) return [];
     return data || [];
