@@ -514,7 +514,7 @@ def test_admin_dashboard_previews_keep_content_inside_cards():
     assert ".admin-preview-list > .admin-preview-item { display: grid;" in styles
     assert "grid-template-columns: 34px minmax(0, 1fr) 18px" in styles
     assert "gap: 20px; align-items: start" in styles
-    assert 'assets/styles.css?v=20260812&brand=6' in page
+    assert 'assets/styles.css?v=20260820&brand=7' in page
     assert 'assets/portal-admin.js?v=49' in page
     assert 'assets/supabase-app.js?v=31' in page
     assert ".admin-preview-list strong, .admin-preview-list small { display: block;" in styles
