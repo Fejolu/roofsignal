@@ -40,6 +40,14 @@ def test_sitemap_contains_unique_public_urls_only():
     assert len(locations) == len(set(locations))
     assert all(url.startswith("https://www.roofsignal.nl/") for url in locations)
     assert not any(re.search(r"/portal-|/404(?:$|/)", url) for url in locations)
+    assert not any("/inspectie-" in url for url in locations)
+
+
+def test_local_seo_pages_stay_consolidated_on_work_area():
+    assert not list(ROOT.glob("inspectie-*.html"))
+    redirects = read("_redirects")
+    assert "/inspectie-* /werkgebied 301" in redirects
+    assert "/inspectie-*.html /werkgebied 301" in redirects
 
 
 def test_public_footers_end_with_knowledge_base_then_portal():
@@ -69,7 +77,7 @@ def test_public_navigation_uses_one_approach_and_proposal_destination():
 
 
 def test_public_site_does_not_publish_catalog_prices():
-    pages = ("index.html", "tarieven.html", "kennisbank-dakinspectie-kosten.html", "inspectie-deventer.html", "de-parken/index.html")
+    pages = ("index.html", "tarieven.html", "kennisbank-dakinspectie-kosten.html", "werkgebied.html", "de-parken/index.html")
     for path in pages:
         content = read(path)
         assert "Vanaf €" not in content, path

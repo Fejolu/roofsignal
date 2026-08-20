@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Genereert inspectie-pagina's (12 provincies + alle gemeenten) uit data/gemeenten.csv.
+"""Bewaker voor de geconsolideerde landelijke werkgebiedstructuur.
 
 Gebruik:
     python3 tools/gen-inspecties.py
 
-- Schrijft inspectie-{provincie}.html en inspectie-{gemeente}.html
-- Curated pagina's (inspectie-apeldoorn, ...) worden nooit overschreven
-- Vernieuwt de provincie-grid in werkgebied.html
-- Regeneert sitemap.xml (bestaande entries blijven behouden)
+- Lokale plaats- en provinciepagina's zijn samengevoegd op /werkgebied
+- De voormalige generator blijft alleen als bewaker bestaan
+- Een lokale inspectiepagina of sitemapvermelding laat deze controle falen
 """
 import csv, json, re, unicodedata, glob, os, html
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV = os.path.join(ROOT, "data", "gemeenten.csv")
-CSS = "assets/styles.css?v=20260812&brand=2"
+CSS = "assets/styles.css?v=20260820&brand=7"
 BASE = "https://www.roofsignal.nl"
 
 # Curated pagina's: nooit overschrijven door de generator
@@ -207,29 +206,16 @@ def provincie_page(prov, gemeenten):
 
 
 def main():
-    rows, slugs = read_csv()
-    # provincie -> gemeenten (slug, naam)
-    by_prov = {}
-    for s, (naam, prov) in slugs.items():
-        by_prov.setdefault(prov, {})[s] = (naam, prov)
-
-    written = []
-    for prov, gemeenten in sorted(by_prov.items()):
-        pslug = slug(prov)
-        out = os.path.join(ROOT, f"inspectie-{pslug}.html")
-        open(out, "w", encoding="utf-8").write(provincie_page(prov, gemeenten))
-        written.append(out)
-
-    for s, (naam, prov) in slugs.items():
-        if s in CURATED:
-            continue
-        out = os.path.join(ROOT, f"inspectie-{s}.html")
-        open(out, "w", encoding="utf-8").write(gemeente_page(naam, prov, s))
-        written.append(out)
-
-    update_werkgebied(by_prov)
-    regenerate_sitemap()
-    print(f"pagina's geschreven: {len(written)}")
+    local_pages = sorted(glob.glob(os.path.join(ROOT, "inspectie-*.html")))
+    sitemap = open(os.path.join(ROOT, "sitemap.xml"), encoding="utf-8").read()
+    local_urls = re.findall(r"https://www\.roofsignal\.nl/inspectie-[^<]+", sitemap)
+    if local_pages or local_urls:
+        raise SystemExit(
+            "Lokale SEO-pagina's zijn geconsolideerd naar /werkgebied; "
+            f"gevonden: {len(local_pages)} HTML-pagina('s) en "
+            f"{len(local_urls)} sitemap-URL('s)."
+        )
+    print("OK: uitsluitend de landelijke pagina /werkgebied is actief.")
 
 
 def update_werkgebied(by_prov):

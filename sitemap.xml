@@ -68,12 +68,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.roofsignal.nl/inspectie-apeldoorn</loc>
-    <lastmod>2026-07-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.roofsignal.nl/dakinspectie-vve</loc>
     <lastmod>2026-07-21</lastmod>
     <changefreq>monthly</changefreq>
@@ -131,24 +125,6 @@
     <loc>https://www.roofsignal.nl/werkgebied</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.roofsignal.nl/inspectie-deventer</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-zwolle</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-arnhem</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-ede</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-amersfoort</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-veluwe</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.roofsignal.nl/privacy</loc><lastmod>2026-08-11</lastmod><changefreq>yearly</changefreq><priority>0.3</priority>
   </url>
   <url>
@@ -156,42 +132,6 @@
   </url>
   <url>
     <loc>https://www.roofsignal.nl/voorwaarden</loc><lastmod>2026-08-11</lastmod><changefreq>yearly</changefreq><priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-drenthe</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-flevoland</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-friesland</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-gelderland</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-groningen</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-limburg</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-noord-brabant</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-noord-holland</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-overijssel</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-utrecht</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-zeeland</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.roofsignal.nl/inspectie-zuid-holland</loc><lastmod>2026-08-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.roofsignal.nl/kennisbank-mjop-bijwerken</loc>
