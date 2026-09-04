@@ -252,6 +252,7 @@ serve(async (req) => {
     const result = await sendBrevo({
       sender: { email: fromEmail, name: fromName },
       to: [{ email: recipient, name: quote.organizations?.contact_name || quote.organizations?.name }],
+      ...(recipient === "ferry@roofsignal.nl" ? {} : { bcc: [{ email: "ferry@roofsignal.nl", name: "F.J. Joosten" }] }),
       ...(ccRecipient ? { cc: [{ email: ccRecipient, name: "RoofSignal" }] } : {}),
       replyTo: { email: "info@roofsignal.nl", name: "RoofSignal" },
       headers: { "X-Mailin-Track": "0" },

@@ -47,6 +47,7 @@ async function sendResendEmail(apiKey: string, fromEmail: string, fromName: stri
     body: JSON.stringify({
       from: `${fromName} <${fromEmail}>`,
       to: [to],
+      ...(to.toLowerCase() === "ferry@roofsignal.nl" ? {} : { bcc: ["ferry@roofsignal.nl"] }),
       reply_to: "info@roofsignal.nl",
       subject,
       text,
@@ -70,6 +71,7 @@ async function sendBrevoEmail(apiKey: string, fromEmail: string, fromName: strin
     body: JSON.stringify({
       sender: { email: fromEmail, name: fromName },
       to: [{ email: to }],
+      ...(to.toLowerCase() === "ferry@roofsignal.nl" ? {} : { bcc: [{ email: "ferry@roofsignal.nl", name: "F.J. Joosten" }] }),
       replyTo: { email: "info@roofsignal.nl" },
       headers: { "X-Mailin-Track": "0" },
       subject,

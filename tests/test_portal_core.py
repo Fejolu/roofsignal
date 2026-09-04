@@ -207,6 +207,64 @@ def test_report_delivery_queues_a_guarded_invoice():
     assert "github.event_name == 'schedule' && 'false'" in workflow
 
 
+def test_report_email_uses_secure_portal_download_instead_of_large_attachment():
+    document_mail = read("supabase/functions/send-document-email/index.ts")
+    assert 'portal-klant.html#inspecties' in document_mail
+    assert "Bekijk en download rapport" in document_mail
+    assert "createSignedUrl" in document_mail
+    assert "7*24*60*60" in document_mail
+    assert 'if(kind==="invoice")' in document_mail
+    assert 'if(attachment.length)mailPayload.attachment=attachment' in document_mail
+
+
+def test_report_document_opening_uses_the_documents_schema_and_readable_status():
+    backend = read("assets/supabase-app.js")
+    styles = read("assets/styles.css")
+    report_start = backend.index("async function openInspectionReportDocument")
+    report_query = backend[report_start:backend.index("async function createOrganization(payload)", report_start)]
+    assert "file_name" not in report_query
+    assert 'select("id,storage_path,title,version,customer_visible,created_at")' in report_query
+    assert '.order("version", { ascending: false })' in report_query
+    assert '.report-delivery-form > .form-note[data-status-tone="error"]' in styles
+    assert "overflow-wrap: anywhere" in styles
+
+
+def test_invoice_test_email_does_not_mark_customer_invoice_as_sent():
+    document_mail = read("supabase/functions/send-document-email/index.ts")
+    assert 'if(kind==="invoice"&&!body.testRecipient)' in document_mail
+
+
+def test_invoice_email_is_guarded_against_duplicate_submission():
+    document_mail = read("supabase/functions/send-document-email/index.ts")
+    admin = read("assets/portal-admin.js")
+    assert 'invoice.status!=="draft"' in document_mail
+    assert 'auto_send_status:"processing"' in document_mail
+    assert 'auto_send_status.is.null,auto_send_status.neq.processing' in document_mail
+    assert "invoiceMailInFlight" in admin
+    assert "Deze factuur is al eerder verzonden" in admin
+    assert "forceResend" in admin
+
+
+def test_every_backoffice_customer_email_is_bcced_and_document_delivery_is_logged():
+    functions = [
+        "create-portal-customer",
+        "send-portal-login-link",
+        "send-appointment-email",
+        "send-customer-email",
+        "send-quote-email",
+        "send-document-email",
+        "process-scheduled-invoices",
+    ]
+    for name in functions:
+        source = read(f"supabase/functions/{name}/index.ts")
+        assert "bcc" in source.lower(), name
+        assert "ferry@roofsignal.nl" in source, name
+    document_mail = read("supabase/functions/send-document-email/index.ts")
+    assert 'serviceRequest' not in document_mail
+    assert 'customer_activities' in document_mail
+    assert 'Bericht-ID:' in document_mail
+
+
 def test_report_publication_keeps_an_immutable_commercial_snapshot():
     migration = read("supabase/migrations/20260803101500_report_commercial_scope.sql")
     backend = read("assets/supabase-app.js")
@@ -514,9 +572,9 @@ def test_admin_dashboard_previews_keep_content_inside_cards():
     assert ".admin-preview-list > .admin-preview-item { display: grid;" in styles
     assert "grid-template-columns: 34px minmax(0, 1fr) 18px" in styles
     assert "gap: 20px; align-items: start" in styles
-    assert 'assets/styles.css?v=20260820&brand=7' in page
+    assert 'assets/styles.css?v=20260904&brand=8' in page
     assert 'assets/portal-admin.js?v=49' in page
-    assert 'assets/supabase-app.js?v=31' in page
+    assert 'assets/supabase-app.js?v=32' in page
     assert ".admin-preview-list strong, .admin-preview-list small { display: block;" in styles
     assert "@media (max-width: 1199px) and (min-width: 901px)" in styles
 

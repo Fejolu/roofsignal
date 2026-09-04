@@ -454,6 +454,8 @@
     if (summary) summary.textContent = `${selected.label} · ${Object.keys(selected.coverage).join(", ")}.`;
   }
 
+  const invoiceMailInFlight = new Set();
+
   function renderInvoices(invoices = []) {
     if (!invoicesBody) return;
     invoicesBody.innerHTML = invoices.length
@@ -486,9 +488,20 @@
   async function sendInvoiceMail(id, reminder = false) {
     const invoice = liveInvoices.find((item) => item.id === id);
     if (!reminder && !invoice?.payment_url) return setPortalNotice("Voeg eerst de betaallink toe. Een factuur wordt nooit zonder betaalmogelijkheid verzonden.", "error");
-    const result = await window.RoofSignalBackend.sendDocumentEmail("invoice", id, { reminder });
+    if (invoiceMailInFlight.has(id)) return setPortalNotice("Deze factuur wordt al verzonden. Wacht op de bevestiging.", "warning");
+    const forceResend = !reminder && ["sent", "open", "overdue"].includes(invoice?.status);
+    if (forceResend && !confirm("Deze factuur is al eerder verzonden. Wilt u werkelijk nog een exemplaar versturen?")) return;
+    invoiceMailInFlight.add(id);
+    document.querySelectorAll(`[data-invoice-id="${CSS.escape(id)}"][data-admin-action="send-invoice-mail"], [data-invoice-id="${CSS.escape(id)}"][data-admin-action="send-invoice-reminder"]`).forEach((button) => {
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+    });
+    setPortalNotice(reminder ? "Betalingsherinnering wordt verstuurd…" : "Factuur wordt verstuurd…", "");
+    const result = await window.RoofSignalBackend.sendDocumentEmail("invoice", id, { reminder, forceResend });
     setPortalNotice(result.ok ? (reminder ? "De betalingsherinnering is verstuurd." : "De factuurmail is verstuurd.") : result.error?.message || "De factuurmail kon niet worden verstuurd.", result.ok ? "success" : "error");
+    invoiceMailInFlight.delete(id);
     if (result.ok) await loadLiveAdminData();
+    else document.querySelectorAll(`[data-invoice-id="${CSS.escape(id)}"]`).forEach((button) => { button.disabled = false; button.removeAttribute("aria-busy"); });
   }
 
   async function sendCustomerAccessMail(row, action) {
