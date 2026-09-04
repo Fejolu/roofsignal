@@ -2406,6 +2406,37 @@ button { cursor: pointer; }
 .inspection-workspace form > .btn { grid-column: span 3; }
 .inspection-workspace .media-upload-status { grid-column: 1 / -1; margin: 0; min-height: 1.5em; }
 
+.inspection-workspace .report-delivery-form { align-items: start; }
+.inspection-workspace .report-delivery-form > .report-delivery-actions {
+  grid-column: span 3;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.inspection-workspace .report-delivery-form > .report-delivery-actions .btn { width: 100%; }
+.inspection-workspace .report-delivery-form > .form-note {
+  grid-column: 1 / -1;
+  min-height: 1.5em;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--rs-line);
+  border-radius: 10px;
+  background: #fff;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.inspection-workspace .report-delivery-form > .form-note[data-status-tone="success"] {
+  border-color: rgba(35, 122, 69, .35);
+  background: #f1faf4;
+  color: #175a32;
+}
+.inspection-workspace .report-delivery-form > .form-note[data-status-tone="error"] {
+  border-color: rgba(179, 38, 30, .35);
+  background: #fff2f1;
+  color: #8c1d18;
+  font-weight: 800;
+}
+
 .inspection-workspace label,
 .compact-workflow-form label {
   display: grid;
@@ -2512,6 +2543,7 @@ button { cursor: pointer; }
   .compact-workflow-form > .form-note,
   .inspection-workspace form > label,
   .inspection-workspace form > .btn,
+  .inspection-workspace .report-delivery-form > .report-delivery-actions,
   .inspection-workspace .wide-field,
   .inspection-workspace form label:has(textarea) { grid-column: auto; }
   .quote-object-row { grid-template-columns: 1fr; }

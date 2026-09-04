@@ -638,8 +638,9 @@
     if (!supabase || !invoiceId) return { ok: false };
     const { data: document, error } = await supabase
       .from("documents")
-      .select("id,storage_path,title,file_name,created_at")
+      .select("id,storage_path,title,version,created_at")
       .eq("invoice_id", invoiceId)
+      .order("version", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -651,7 +652,7 @@
   async function openInspectionReportDocument(inspectionId) {
     const supabase = await getClient();
     if (!supabase || !inspectionId) return { ok: false };
-    const { data: document, error } = await supabase.from("documents").select("id,storage_path,title,file_name,customer_visible,created_at").eq("inspection_id", inspectionId).eq("document_type", "inspection_report").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: document, error } = await supabase.from("documents").select("id,storage_path,title,version,customer_visible,created_at").eq("inspection_id", inspectionId).eq("document_type", "inspection_report").order("version", { ascending: false }).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (error || !document?.storage_path) return { ok: false, error: error || { message: "Geen rapportbestand gevonden." } };
     const { data, error: signedError } = await supabase.storage.from("portal-documents").createSignedUrl(document.storage_path, 300);
     return signedError || !data?.signedUrl ? { ok: false, error: signedError } : { ok: true, data: { ...document, signedUrl: data.signedUrl } };
