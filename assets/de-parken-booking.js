@@ -17,6 +17,7 @@
   const plannerError = form.querySelector("[data-planner-error]");
   const availabilityMessage = form.querySelector("[data-planner-availability]");
   const interestForm = document.querySelector("[data-neighborhood-interest]");
+  const monthInput = form.querySelector("[data-calendar-month]");
   const slotMap = new Map();
   let unavailableSlots = new Set();
   let selectedDate = "";
@@ -26,25 +27,32 @@
   }
 
   function slotIsFuture(date, time) {
-    // All pilot dates are in September 2026 (Amsterdam summer time).
-    return new Date(`${date}T${time.slice(0, 5)}:00+02:00`).getTime() > Date.now();
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    }).formatToParts(new Date(Date.now())).map(({ type, value }) => [type, value]));
+    const now = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`;
+    return `${date}T${time.slice(0, 5)}:00` > now;
   }
 
   function buildCalendar() {
     calendarDays.innerHTML = "";
     slotMap.clear();
     const formatter = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long" });
-    const firstDayOffset = 1; // 1 september 2026 is dinsdag; kalender start op maandag.
+    const month = Number(monthInput.value);
+    const firstDayOffset = (new Date(2026, month - 1, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(2026, month, 0).getDate();
+    calendarDays.setAttribute("aria-label", `Beschikbare dagen in ${month === 9 ? "september" : "oktober"} 2026`);
     for (let empty = 0; empty < firstDayOffset; empty += 1) {
       const spacer = document.createElement("span");
       spacer.className = "rs-day empty";
       spacer.setAttribute("aria-hidden", "true");
       calendarDays.append(spacer);
     }
-    for (let day = 1; day <= 30; day += 1) {
-      const date = new Date(2026, 8, day);
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const date = new Date(2026, month - 1, day);
       const weekday = date.getDay();
-      const dateValue = `2026-09-${String(day).padStart(2, "0")}`;
+      const dateValue = `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const times = [];
       if (weekday >= 1 && weekday <= 4) times.push({ value: "16:00-18:00", label: "Einde middag · 16:00–18:00" });
       if (weekday === 5 || weekday === 6) {
@@ -236,6 +244,15 @@
     }
   });
 
+  monthInput.value = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam", month: "2-digit" }).format(new Date()) === "10" ? "10" : "9";
+  monthInput.addEventListener("change", () => {
+    selectedDate = "";
+    slotInput.value = "";
+    timePanel.hidden = true;
+    plannerChoice.classList.remove("visible");
+    plannerError.classList.remove("visible");
+    refreshAvailability();
+  });
   refreshAvailability();
   window.addEventListener("focus", refreshAvailability);
   document.addEventListener("visibilitychange", () => {
