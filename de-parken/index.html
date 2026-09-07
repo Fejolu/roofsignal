@@ -123,7 +123,8 @@
   <script src="../assets/supabase-config.js"></script>
   <script src="../assets/supabase-app.js?v=18" defer></script>
   <script src="../assets/form-security.js?v=1" defer></script>
-  <script src="../assets/de-parken-booking.js?v=7" defer></script>
+  <script src="../assets/lead-capture.js?v=2" defer></script>
+  <script src="../assets/de-parken-booking.js?v=8" defer></script>
 </head>
 <body class="de-parken-page">
 <header class="site-header">
@@ -268,6 +269,15 @@
       <button class="btn" type="submit">Reserveer mijn Woningscan</button>
       <p class="form-note" data-booking-status>We gebruiken uw gegevens voor deze boeking en de uitvoering ervan.</p>
     </div>
+  </form>
+  <form class="quote-tool lead-form" data-lead-form="neighborhood" data-neighborhood-interest hidden>
+    <h3>Houd mij op de hoogte</h3>
+    <input type="hidden" name="postcode">
+    <label>E-mailadres<input type="email" name="email" autocomplete="email" required maxlength="254"></label>
+    <label class="booking-check"><input type="checkbox" name="neighborhood_consent" value="yes" required><span>Ja, RoofSignal mag mij e-mailen over Woningscans in volgende wijken. Afmelden kan altijd via info@roofsignal.nl.</span></label>
+    <p class="form-note">We bewaren uw postcode om belangstelling per wijk te herkennen. Lees onze <a href="/privacy">privacyverklaring</a>.</p>
+    <button class="btn" type="submit">Houd mij op de hoogte</button>
+    <p class="form-note" data-lead-status role="status" aria-live="polite"></p>
   </form>
 </section>
 

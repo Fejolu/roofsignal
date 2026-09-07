@@ -29,6 +29,7 @@
 
     return {
       type,
+      neighborhood_consent: data.get("neighborhood_consent") === "yes",
       name: readField(data, "name", "Naam"),
       organization: readField(data, "organization", "Organisatie", "organisatie"),
       email: readField(data, "email", "Email"),
@@ -84,6 +85,11 @@
   }
 
   function renderSuccess(status, type) {
+    if (type === "neighborhood") {
+      status.className = "form-note form-status success";
+      status.textContent = "Bedankt! Uw interesse is opgeslagen. We houden u per e-mail op de hoogte van volgende wijken. Afmelden kan via info@roofsignal.nl.";
+      return;
+    }
     const copy = successCopy(type);
     status.className = "form-note form-status success";
     status.setAttribute("role", "status");
@@ -136,6 +142,7 @@
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (!form.reportValidity()) return;
       const scrollY = window.scrollY;
       const email = form.querySelector("input[type='email']");
       const organization = form.querySelector("[name='organization']");

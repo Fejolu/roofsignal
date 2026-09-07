@@ -484,7 +484,7 @@ def test_de_parken_success_state_does_not_refocus_or_leave_pending_button():
     booking = read("assets/de-parken-booking.js")
     assert 'checkPostcode({ focusFirstField: false })' in booking
     assert 'button.textContent = "Gereserveerd ✓"' in booking
-    assert "de-parken-booking.js?v=7" in page
+    assert "de-parken-booking.js?v=8" in page
     assert "U betaalt na de inspectie" not in booking
 
 

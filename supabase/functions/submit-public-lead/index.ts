@@ -47,8 +47,12 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Menselijke verificatie mislukt. Probeer het opnieuw." }), { status: 403, headers });
   }
 
+  const neighborhood = body.type === "neighborhood";
+  if (neighborhood && (body.neighborhood_consent !== true || !/^[1-9][0-9]{3}[A-Z]{2}$/.test(String(body.postcode || "")))) {
+    return new Response(JSON.stringify({ error: "Postcode en toestemming voor wijkupdates zijn vereist." }), { status: 400, headers });
+  }
   const requestType = allowedTypes.has(String(body.type)) ? String(body.type) : "contact";
-  const name = String(body.name || "").trim().slice(0, 160);
+  const name = String(neighborhood ? "Wijkupdates geïnteresseerde" : body.name || "").trim().slice(0, 160);
   const organization = String(body.organization || "").trim().slice(0, 200) || null;
   const email = String(body.email || "").trim().toLowerCase().slice(0, 254);
   if ((!name && !organization) || !emailPattern.test(email)) {
@@ -64,16 +68,19 @@ serve(async (req) => {
 
   const record = {
     request_type: requestType, name, organization, email,
-    segment: String(body.segment || "").slice(0, 120) || null,
+    segment: neighborhood ? "wijkupdates" : String(body.segment || "").slice(0, 120) || null,
     postcode: String(body.postcode || "").slice(0, 20) || null,
     object_complexity: String(body.complexity || "").slice(0, 120) || null,
     site_access: String(body.site_access || "").slice(0, 120) || null,
     scope: String(body.scope || "").slice(0, 240) || null,
-    message: String(body.message || "").slice(0, 4000) || null,
+    message: neighborhood ? `Toestemming wijkupdates v1: ${new Date().toISOString()}. Ja, RoofSignal mag mij e-mailen over Woningscans in volgende wijken. Afmelden via info@roofsignal.nl.` : String(body.message || "").slice(0, 4000) || null,
     source_path: String(body.source_path || "").slice(0, 240),
   };
   const { data, error } = await service.from("lead_requests").insert(record).select("*").single();
   if (error) return new Response(JSON.stringify({ error: "Aanvraag kon niet worden opgeslagen." }), { status: 500, headers });
+
+  // Interest subscriptions are stored for later wijkupdates; no booking or immediate email.
+  if (neighborhood) return new Response(JSON.stringify({ success: true }), { headers });
 
   const notify = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-lead-notification`, {
     method: "POST",

@@ -16,12 +16,18 @@
   const plannerChoice = form.querySelector("[data-planner-choice]");
   const plannerError = form.querySelector("[data-planner-error]");
   const availabilityMessage = form.querySelector("[data-planner-availability]");
+  const interestForm = document.querySelector("[data-neighborhood-interest]");
   const slotMap = new Map();
   let unavailableSlots = new Set();
   let selectedDate = "";
 
   function normalizePostcode(value) {
     return String(value || "").replace(/\s/g, "").toUpperCase();
+  }
+
+  function slotIsFuture(date, time) {
+    // All pilot dates are in September 2026 (Amsterdam summer time).
+    return new Date(`${date}T${time.slice(0, 5)}:00+02:00`).getTime() > Date.now();
   }
 
   function buildCalendar() {
@@ -49,7 +55,7 @@
           { value: "14:45-16:15", label: "14:45–16:15" },
         );
       }
-      const availableTimes = times.filter((time) => !unavailableSlots.has(`${dateValue}|${time.value}`));
+      const availableTimes = times.filter((time) => slotIsFuture(dateValue, time.value) && !unavailableSlots.has(`${dateValue}|${time.value}`));
       slotMap.set(dateValue, { date, label: formatter.format(date), times: availableTimes });
       const button = document.createElement("button");
       button.type = "button";
@@ -124,11 +130,15 @@
   }
 
   function checkPostcode({ focusFirstField = true } = {}) {
-    const eligible = validPostcodes.has(normalizePostcode(postcodeInput.value));
+    const postcode = normalizePostcode(postcodeInput.value);
+    const valid = /^[1-9][0-9]{3}[A-Z]{2}$/.test(postcode);
+    const eligible = validPostcodes.has(postcode);
+    interestForm.hidden = !valid || eligible;
+    interestForm.querySelector("[name=postcode]").value = postcode;
     postcodeStatus.className = `form-note postcode-status ${eligible ? "success" : "error"}`;
     postcodeStatus.textContent = eligible
       ? "Deze postcode valt binnen de voorlopige pilotselectie. Vul hieronder uw boeking in."
-      : "Deze postcode valt niet binnen de voorlopige selectie. Neem contact op als u denkt dat dit niet klopt.";
+      : valid ? "Deze pilot is alleen beschikbaar voor De Parken. Wilt u op de hoogte blijven van volgende wijken? Laat hieronder uw e-mailadres achter." : "Vul een geldige postcode in, bijvoorbeeld 7316 AB.";
     bookingFields.hidden = !eligible;
     if (eligible && focusFirstField) bookingFields.querySelector("input,select")?.focus();
     return eligible;
@@ -136,6 +146,7 @@
 
   function errorCopy(error) {
     const message = String(error?.message || error || "");
+    if (message.includes("SLOT_EXPIRED")) return "Dit moment is inmiddels verstreken. Kies een toekomstig moment.";
     if (message.includes("PILOT_FULL")) return "De 25 pilotplekken zijn inmiddels bezet.";
     if (message.includes("SLOT_TAKEN")) return "Dit moment is zojuist gereserveerd. Kies een ander moment.";
     if (message.includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) return "Voor dit adres of moment bestaat al een actieve boeking.";
@@ -146,6 +157,7 @@
   checkButton.addEventListener("click", checkPostcode);
   postcodeInput.addEventListener("input", () => {
     bookingFields.hidden = true;
+    interestForm.hidden = true;
     postcodeStatus.textContent = "";
     postcodeStatus.className = "form-note postcode-status";
   });
@@ -156,6 +168,12 @@
     if (!slotInput.value) {
       plannerError.classList.add("visible");
       form.querySelector("[data-planner]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const [chosenDate, chosenTime] = slotInput.value.split("|");
+    if (!slotIsFuture(chosenDate, chosenTime)) {
+      await refreshAvailability();
+      status.textContent = "Dit moment is inmiddels verstreken. Kies een toekomstig moment.";
       return;
     }
     const button = form.querySelector("button[type='submit']");
@@ -212,7 +230,7 @@
       window.RoofSignalFormSecurity?.reset(form);
       button.disabled = false;
       button.textContent = "Reserveer mijn Woningscan";
-      if (String(error?.message || error || "").includes("SLOT_TAKEN") || String(error?.message || error || "").includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) {
+      if (String(error?.message || error || "").includes("SLOT_EXPIRED") || String(error?.message || error || "").includes("SLOT_TAKEN") || String(error?.message || error || "").includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) {
         await refreshAvailability();
       }
     }
