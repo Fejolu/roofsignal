@@ -141,6 +141,7 @@
     const postcode = normalizePostcode(postcodeInput.value);
     const valid = /^[1-9][0-9]{3}[A-Z]{2}$/.test(postcode);
     const eligible = validPostcodes.has(postcode);
+    window.RoofSignalAnalytics?.track("De Parken postcodecontrole", { valid, eligible, path: window.location.pathname });
     interestForm.hidden = !valid || eligible;
     interestForm.querySelector("[name=postcode]").value = postcode;
     postcodeStatus.className = `form-note postcode-status ${eligible ? "success" : "error"}`;

@@ -16,10 +16,10 @@ def test_cloudflare_has_a_real_not_found_page():
     assert content.count("<h1>") == 1
 
 
-def test_homepage_targets_property_intelligence_and_a_concrete_outcome():
+def test_homepage_targets_independent_inspection_and_a_concrete_outcome():
     content = read("index.html")
-    assert "Property Intelligence voor gebouwschil en onderhoud" in content
-    assert "Van gebouwsignalen naar betere vastgoedbesluiten." in content
+    assert "Onafhankelijke dak- en gevelinspectie | RoofSignal" in content
+    assert "Begin met één gebouw." in content
     assert "VvE beheerders" in content
     assert "onderhoudsprioriteiten" in content
 

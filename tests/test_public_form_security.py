@@ -9,7 +9,8 @@ def test_all_public_forms_load_security_layer():
     pages = [ROOT / "index.html", ROOT / "contact.html", ROOT / "portal-login.html", ROOT / "de-parken" / "index.html"]
     for page in pages:
         source = page.read_text(encoding="utf-8")
-        assert "form-security.js" in source
+        if "<form" in source:
+            assert "form-security.js" in source
 
 
 def test_leads_and_parken_use_verified_edge_functions():

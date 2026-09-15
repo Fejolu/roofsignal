@@ -1,0 +1,5 @@
+/downloads/*
+  Content-Type: application/pdf
+  Content-Disposition: attachment
+  X-Content-Type-Options: nosniff
+  X-Robots-Tag: noindex
