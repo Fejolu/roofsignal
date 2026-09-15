@@ -385,7 +385,7 @@ def test_knowledge_base_has_indexable_articles_and_consistent_footer_links():
         assert '<meta name="robots" content="index,follow">' in page
         assert 'rel="canonical"' in page
         assert 'href="kennisbank">Kennisbank</a>' in page
-        contact = page.split('<h4>Contact</h4>', 1)[1].split('</div>', 1)[0]
+        contact = page.split('<h2 class="footer-heading">Contact</h2>', 1)[1].split('</div>', 1)[0]
         assert 'footer-portal-link' in contact
     sitemap = read("sitemap.xml")
     for slug in ["kennisbank", "kennisbank-drone-inspectie-betrouwbaar", "kennisbank-wat-ziet-een-dakinspectie", "kennisbank-van-bevinding-naar-prioriteit"]:
@@ -484,7 +484,7 @@ def test_de_parken_success_state_does_not_refocus_or_leave_pending_button():
     booking = read("assets/de-parken-booking.js")
     assert 'checkPostcode({ focusFirstField: false })' in booking
     assert 'button.textContent = "Gereserveerd ✓"' in booking
-    assert "de-parken-booking.js?v=9" in page
+    assert "de-parken-booking.js?v=10" in page
     assert "U betaalt na de inspectie" not in booking
 
 
