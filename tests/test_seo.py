@@ -58,7 +58,7 @@ def test_public_footers_end_with_knowledge_base_then_portal():
             continue
         footer = content.split('<footer class="footer"', 1)[1].split("</footer>", 1)[0]
         knowledge = footer.find(">Kennisbank</a>")
-        portal = footer.find(">RoofSignal Portaal</a>")
+        portal = footer.find(">RoofSignal Login</a>")
         assert knowledge >= 0, path.name
         assert portal > knowledge, path.name
         assert 'footer-company-spacer' in footer[0:knowledge], path.name

@@ -1,0 +1,8 @@
+.rs-intro .eyebrow a { color: inherit; }
+.rs-knowledge-article { max-width: 780px; }
+.rs-knowledge-article h2 { margin-top: 2.2em; }
+.rs-knowledge-article p, .rs-knowledge-article li { line-height: 1.75; }
+.rs-knowledge-article li { margin-bottom: .8em; }
+.rs-knowledge-article figure { margin: 2rem 0; }
+.rs-knowledge-article figure img { display: block; width: 100%; height: auto; border-radius: 12px; }
+.rs-knowledge-article figcaption { margin-top: .6rem; color: #4b5350; font-size: .9rem; line-height: 1.5; }

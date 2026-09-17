@@ -42,3 +42,11 @@ Ieder artikel linkt naar één primaire dienst, één doelgroep, een relevante c
 - Echte reviews en toestemming voor publicatie
 - Definitieve KvK- en verzekeringsgegevens
 - Nieuwe cases na afgeronde opdrachten
+
+## Publicatie 17 september 2026
+
+- Dakinspectie vóór de herfst: welke signalen verdienen aandacht?
+- URL: /kennisbank-dakinspectie-herfst
+- Gebaseerd op bestaande RoofSignal-inspectierapporten en najaarsonderhoudsinformatie van Vereniging Eigen Huis.
+- Ontsloten via kennisbank, VvE-dakinspectiepagina en sitemap.
+- Zoekvolume en ranking niet vastgesteld; Search Console blijft nodig voor resultaatmeting.

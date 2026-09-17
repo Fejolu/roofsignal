@@ -44,6 +44,14 @@
   }
 
   function successCopy(type) {
+    if (type === "contact") {
+      return {
+        title: "Bericht ontvangen",
+        body: "Bedankt voor uw bericht.",
+        next: "We reageren via het opgegeven e-mailadres. Contact opnemen is geheel vrijblijvend.",
+      };
+    }
+
     if (type === "report") {
       return {
         title: "Voorbeeldrapport aangevraagd.",
@@ -170,7 +178,7 @@
       if (status) {
         status.className = "form-note form-status pending";
         status.setAttribute("role", "status");
-        status.textContent = "Aanvraag wordt verzonden...";
+        status.textContent = type === "contact" ? "Bericht wordt verzonden..." : "Aanvraag wordt verzonden...";
       }
 
       let completed = false;
