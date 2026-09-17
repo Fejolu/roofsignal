@@ -76,9 +76,17 @@ def test_public_navigation_uses_one_approach_and_proposal_destination():
     assert "Scope &amp; voorstel" in rates
 
 
-def test_public_site_does_not_publish_catalog_prices():
-    pages = ("index.html", "tarieven.html", "kennisbank-dakinspectie-kosten.html", "werkgebied.html", "de-parken/index.html")
-    for path in pages:
+def test_public_prices_distinguish_starting_quotes_and_fixed_pilot():
+    for path in ("index.html", "tarieven.html", "kennisbank-dakinspectie-kosten.html"):
         content = read(path)
-        assert "Vanaf €" not in content, path
+        assert "Vanaf €361,79 incl. btw" in content, path
+        assert "Vanaf €750 excl. btw" in content, path
+        assert "Reiskosten" in content, path
+        assert "offerte" in content.lower(), path
+        assert "€1.000" not in content and "€1.250" not in content, path
         assert '"priceCurrency"' not in content, path
+    pilot = read("de-parken/index.html")
+    assert "€361,79 incl. btw" in pilot
+    assert "Vanaf €" not in pilot
+    assert "€356,95" not in pilot and "€295" not in pilot
+    assert "25 bevestigde opdrachten" not in pilot

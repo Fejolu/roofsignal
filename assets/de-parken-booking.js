@@ -156,7 +156,6 @@
   function errorCopy(error) {
     const message = String(error?.message || error || "");
     if (message.includes("SLOT_EXPIRED")) return "Dit moment is inmiddels verstreken. Kies een toekomstig moment.";
-    if (message.includes("PILOT_FULL")) return "De 25 pilotplekken zijn inmiddels bezet.";
     if (message.includes("SLOT_TAKEN")) return "Dit moment is zojuist gereserveerd. Kies een ander moment.";
     if (message.includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) return "Voor dit adres of moment bestaat al een actieve boeking.";
     if (message.includes("ADDRESS_OUTSIDE_PILOT")) return "Dit adres valt niet binnen de pilotselectie.";
@@ -224,7 +223,7 @@
       if (!response.ok || !result.success) throw new Error(result.error || "Booking rejected");
       const booking = result.booking;
       status.className = "form-note form-status success booking-success";
-      status.innerHTML = `<strong>Uw Woningscan is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
+      status.innerHTML = `<strong>Uw RoofSignal Inspectie is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
       form.classList.add("is-complete");
       button.textContent = "Gereserveerd ✓";
       window.RoofSignalAnalytics?.track("De Parken boeking voltooid", {
@@ -238,7 +237,7 @@
       status.textContent = errorCopy(error);
       window.RoofSignalFormSecurity?.reset(form);
       button.disabled = false;
-      button.textContent = "Reserveer mijn Woningscan";
+      button.textContent = "Reserveer mijn inspectie";
       if (String(error?.message || error || "").includes("SLOT_EXPIRED") || String(error?.message || error || "").includes("SLOT_TAKEN") || String(error?.message || error || "").includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) {
         await refreshAvailability();
       }
