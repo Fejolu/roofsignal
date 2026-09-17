@@ -18,6 +18,20 @@
   const availabilityMessage = form.querySelector("[data-planner-availability]");
   const interestForm = document.querySelector("[data-neighborhood-interest]");
   const monthInput = form.querySelector("[data-calendar-month]");
+  const thermalInput = form.querySelector("[name='thermography_selected']");
+  const termsInput = form.querySelector("[name='terms_accepted']");
+  const priceLabel = (selected) => selected ? "€664,29 incl. btw" : "€361,79 incl. btw";
+  function updateOrderTotal() {
+    const label = priceLabel(thermalInput.checked);
+    form.querySelector("[data-booking-total]").textContent = label;
+    form.querySelector("[data-terms-price]").textContent = label;
+    form.querySelector("[data-terms-option]").textContent = thermalInput.checked ? " met thermografische inspectie" : "";
+  }
+  thermalInput.addEventListener("change", () => {
+    termsInput.checked = false;
+    updateOrderTotal();
+  });
+  updateOrderTotal();
   const slotMap = new Map();
   let unavailableSlots = new Set();
   let selectedDate = "";
@@ -155,6 +169,7 @@
 
   function errorCopy(error) {
     const message = String(error?.message || error || "");
+    if (message.includes("OFFER_UPDATED")) return "Deze pagina bevat een ouder aanbod. Vernieuw de pagina en controleer uw keuze en totaalbedrag voordat u opnieuw reserveert.";
     if (message.includes("SLOT_EXPIRED")) return "Dit moment is inmiddels verstreken. Kies een toekomstig moment.";
     if (message.includes("SLOT_TAKEN")) return "Dit moment is zojuist gereserveerd. Kies een ander moment.";
     if (message.includes("ADDRESS_OR_SLOT_ALREADY_BOOKED")) return "Voor dit adres of moment bestaat al een actieve boeking.";
@@ -205,7 +220,8 @@
       source: "de-parken-directmail-2026",
       terms_accepted: data.get("terms_accepted") === "yes",
       early_start_requested: data.get("early_start_requested") === "yes",
-      thermography_interest: data.get("thermography_interest") === "yes",
+      thermography_selected: data.get("thermography_selected") === "yes",
+      offer_version: "parken-2026-09-17-thermography",
     };
 
     try {
@@ -223,12 +239,12 @@
       if (!response.ok || !result.success) throw new Error(result.error || "Booking rejected");
       const booking = result.booking;
       status.className = "form-note form-status success booking-success";
-      status.innerHTML = `<strong>Uw RoofSignal Inspectie is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
+      status.innerHTML = `<strong>Uw RoofSignal Inspectie is gereserveerd.</strong><span>Referentie: ${booking.reference}</span><span>Voorkeursmoment: ${booking.slot_date} · ${booking.slot_time}</span><span>${booking.thermography_selected ? "Met thermografische inspectie" : "Zonder thermografische inspectie"} · totaal ${new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(booking.total_incl_cents / 100)} incl. btw</span><span>U ontvangt de definitieve afspraakbevestiging per e-mail.</span>`;
       form.classList.add("is-complete");
       button.textContent = "Gereserveerd ✓";
       window.RoofSignalAnalytics?.track("De Parken boeking voltooid", {
         path: window.location.pathname,
-        thermography: payload.thermography_interest,
+        thermography: payload.thermography_selected,
       });
       [...form.elements].forEach((element) => { if (element !== status) element.disabled = true; });
     } catch (error) {

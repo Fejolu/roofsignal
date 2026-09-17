@@ -86,6 +86,7 @@
     .booking-check { display:grid !important; grid-template-columns:auto 1fr; align-items:start; gap:10px; font-weight:400 !important; }
     .booking-check input { width:18px; height:18px; margin-top:2px; }
     .booking-check.optional { padding-top:14px; border-top:1px solid rgba(15,23,42,.12); }
+    .booking-total { padding:16px; border-left:4px solid #b8460b; background:#f6f7f6; }
     .booking-success { display:grid; gap:6px; }
     .section-band-muted { background:var(--muted); box-shadow:0 0 0 100vmax var(--muted); clip-path:inset(0 -100vmax); }
     .rs-planner { overflow:hidden; border:1px solid rgba(15,23,42,.14); border-radius:var(--rs-radius); background:#fff; box-shadow:0 18px 45px rgba(15,23,42,.08); }
@@ -126,7 +127,7 @@
   <script src="../assets/supabase-app.js?v=18" defer></script>
   <script src="../assets/form-security.js?v=1" defer></script>
   <script src="../assets/lead-capture.js?v=2" defer></script>
-  <script src="../assets/de-parken-booking.js?v=11" defer></script>
+  <script src="../assets/de-parken-booking.js?v=12" defer></script>
 <link rel="stylesheet" href="/assets/site-public.css?v=20260915">
 </head>
 <body class="de-parken-page rs-public">
@@ -194,7 +195,7 @@
   <div class="cards three price-cards">
     <article><span class="phase">Scope</span><h3>Dak, gevel, goten en schoorsteen</h3><p>Visuele, niet-destructieve beoordeling van veilig en verantwoord zichtbare delen van de buitenschil.</p></article>
     <article><span class="phase">Rapport</span><h3>Heldere samenvatting en bewijs</h3><p>Overzichts- en detailbeelden, onderbouwde bevindingen, risico’s, concrete opvolgtermijnen en onderhoudsadvies in begrijpelijke taal.</p></article>
-    <article class="pilot-price"><span class="phase">Vaste kennismakingsprijs</span><h3><strong>€361,79 incl. btw</strong></h3><p>€299 excl. btw voor de beschreven RoofSignal Inspectie en digitale rapportage. Binnen De Parken zijn de reiskosten inbegrepen; thermografie en bijgebouwen vallen buiten dit vaste aanbod. Controleer hieronder of uw postcode in aanmerking komt.</p></article>
+    <article class="pilot-price"><span class="phase">Vaste kennismakingsprijs</span><h3><strong>€361,79 incl. btw</strong></h3><p>€299 excl. btw voor de beschreven RoofSignal Inspectie en digitale rapportage. Binnen De Parken zijn de reiskosten inbegrepen. Thermografie kunt u toevoegen voor €302,50 incl. btw (€250 excl. btw). Bijgebouwen vallen buiten dit aanbod. Controleer hieronder of uw postcode in aanmerking komt.</p></article>
   </div>
 </section>
 
@@ -267,9 +268,11 @@
         <p class="rs-planner-error" data-planner-error>Kies een beschikbare datum en een tijdstip.</p>
       </div>
       <label>Bijzonderheden (optioneel)<textarea name="notes" rows="3" placeholder="Bijvoorbeeld toegang via een poort of werkzaamheden aan de woning"></textarea></label>
-      <label class="booking-check"><input type="checkbox" name="terms_accepted" value="yes" required><span>Ik geef opdracht voor RoofSignal Inspectie à €361,79 incl. btw en ga akkoord met de productscope, het weersvoorbehoud en de voorwaarden.</span></label>
+      <label class="booking-check optional"><input type="checkbox" name="thermography_selected" value="yes" aria-describedby="thermal-option-note"><span>Voeg voor €302,50 incl. btw (€250 excl. btw) een thermografische inspectie toe.</span></label>
+      <p class="form-note" id="thermal-option-note">De thermische bevindingen komen in hetzelfde inspectierapport. Thermografie vraagt geschikte meetomstandigheden. Zo nodig plannen we de thermische opname apart; dit valt binnen de toeslag, zonder extra reiskosten binnen De Parken.</p>
+      <p class="booking-total" aria-live="polite"><strong>Totaal: <span data-booking-total>€361,79 incl. btw</span></strong><br>Reiskosten binnen De Parken inbegrepen.</p>
+      <label class="booking-check"><input type="checkbox" name="terms_accepted" value="yes" required><span>Ik geef opdracht voor RoofSignal Inspectie<span data-terms-option></span> voor in totaal <span data-terms-price>€361,79 incl. btw</span> en ga akkoord met de productscope, het weersvoorbehoud en de voorwaarden.</span></label>
       <label class="booking-check"><input type="checkbox" name="early_start_requested" value="yes"><span>Als mijn afspraak binnen de wettelijke bedenktijd valt, verzoek ik RoofSignal om de dienst alvast uit te voeren.</span></label>
-      <label class="booking-check optional"><input type="checkbox" name="thermography_interest" value="yes"><span>Houd mij per e-mail op de hoogte over thermische inspecties in Q4. Afmelden kan altijd.</span></label>
       <button class="btn" type="submit">Reserveer mijn inspectie</button>
       <p class="form-note" data-booking-status>We gebruiken uw gegevens voor deze boeking en de uitvoering ervan.</p>
     </div>
