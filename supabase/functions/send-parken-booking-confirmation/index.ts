@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { orderLines } from "../_shared/parken-offer.mjs";
 
 const allowedOrigins = new Set([
   "https://www.roofsignal.nl",
@@ -52,7 +53,7 @@ serve(async (req) => {
 
   const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const { data: booking } = await service.from("parken_bookings")
-    .select("id,reference,name,email,street,house_number,postcode,slot_date,slot_time,status,confirmation_sent_at")
+    .select("id,reference,name,email,street,house_number,postcode,slot_date,slot_time,status,confirmation_sent_at,offer_version,thermography_selected,inspection_excl_cents,thermography_excl_cents,total_incl_cents")
     .eq("reference", reference).eq("email", email).maybeSingle();
   if (!booking) return new Response(JSON.stringify({ error: "Boeking niet gevonden." }), { status: 404, headers: cors });
   if (booking.status === "cancelled" || booking.status === "declined") {
@@ -63,12 +64,14 @@ serve(async (req) => {
   const date = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Amsterdam" })
     .format(new Date(`${booking.slot_date}T12:00:00+02:00`));
   const address = `${booking.street} ${booking.house_number}, ${booking.postcode} Apeldoorn`;
+  const order = orderLines(booking);
+  const orderHtml = order.length ? `<h2 style="font-size:19px">Uw geboekte inspectie</h2>${order.map((line) => `<p style="line-height:1.65">${escapeHtml(line)}</p>`).join("")}` : "";
   const sender = {
     email: Deno.env.get("BREVO_FROM_EMAIL") || "noreply@roofsignal.nl",
     name: Deno.env.get("BREVO_FROM_NAME") || "RoofSignal",
   };
-  const html = `<!doctype html><html><body style="margin:0;background:#f3f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#17201d"><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:28px 12px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:#101715;padding:24px 28px;color:#fff;font-size:20px;font-weight:800">⌂ ROOF<span style="color:#ff5a1f">SIGNAL</span></td></tr><tr><td style="padding:34px 32px"><div style="color:#ff5a1f;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase">De Parken Pilot 2026</div><h1 style="font-size:28px;margin:10px 0 18px">Uw RoofSignal Inspectie is gereserveerd</h1><p>Beste ${escapeHtml(booking.name)},</p><p style="line-height:1.65">Dank voor uw opdracht. We hebben het onderstaande inspectiemoment voor u gereserveerd.</p><div style="background:#f6f7f6;border-left:4px solid #ff5a1f;padding:16px 18px;margin:22px 0"><strong>Datum:</strong> ${escapeHtml(date)}<br><strong>Tijdvenster:</strong> ${escapeHtml(booking.slot_time)}<br><strong>Adres:</strong> ${escapeHtml(address)}<br><strong>Referentie:</strong> ${escapeHtml(booking.reference)}</div><p style="line-height:1.65">De afspraak is weersafhankelijk. Als veilig vliegen of goed inspecteren niet mogelijk is, nemen we contact met u op voor een nieuw moment.</p><p style="line-height:1.65">Wilt u wijzigen of annuleren? Antwoord op deze e-mail of bel 085 21 28 019 en vermeld uw referentie.</p><p style="line-height:1.6">Met vriendelijke groet,<br><strong>F.J. Joosten</strong><br>RoofSignal</p></td></tr></table></td></tr></table></body></html>`;
-  const text = ["Uw RoofSignal Inspectie is gereserveerd", "", `Beste ${booking.name},`, "", `Datum: ${date}`, `Tijdvenster: ${booking.slot_time}`, `Adres: ${address}`, `Referentie: ${booking.reference}`, "", "De afspraak is weersafhankelijk.", "", "Wijzigen of annuleren? Antwoord op deze e-mail of bel 085 21 28 019.", "", "RoofSignal"].join("\n");
+  const html = `<!doctype html><html><body style="margin:0;background:#f3f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#17201d"><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:28px 12px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:#101715;padding:24px 28px;color:#fff;font-size:20px;font-weight:800">⌂ ROOF<span style="color:#ff5a1f">SIGNAL</span></td></tr><tr><td style="padding:34px 32px"><div style="color:#ff5a1f;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase">De Parken Pilot 2026</div><h1 style="font-size:28px;margin:10px 0 18px">Uw RoofSignal Inspectie is gereserveerd</h1><p>Beste ${escapeHtml(booking.name)},</p><p style="line-height:1.65">Dank voor uw opdracht. We hebben het onderstaande inspectiemoment voor u gereserveerd.</p><div style="background:#f6f7f6;border-left:4px solid #ff5a1f;padding:16px 18px;margin:22px 0"><strong>Datum:</strong> ${escapeHtml(date)}<br><strong>Tijdvenster:</strong> ${escapeHtml(booking.slot_time)}<br><strong>Adres:</strong> ${escapeHtml(address)}<br><strong>Referentie:</strong> ${escapeHtml(booking.reference)}</div>${orderHtml}<p style="line-height:1.65">De afspraak is weersafhankelijk. Als veilig vliegen of goed inspecteren niet mogelijk is, nemen we contact met u op voor een nieuw moment.</p><p style="line-height:1.65">Wilt u wijzigen of annuleren? Antwoord op deze e-mail of bel 085 21 28 019 en vermeld uw referentie.</p><p style="line-height:1.6">Met vriendelijke groet,<br><strong>F.J. Joosten</strong><br>RoofSignal</p></td></tr></table></td></tr></table></body></html>`;
+  const text = ["Uw RoofSignal Inspectie is gereserveerd", "", `Beste ${booking.name},`, "", `Datum: ${date}`, `Tijdvenster: ${booking.slot_time}`, `Adres: ${address}`, `Referentie: ${booking.reference}`, "", ...order, "", "De afspraak is weersafhankelijk.", "", "Wijzigen of annuleren? Antwoord op deze e-mail of bel 085 21 28 019.", "", "RoofSignal"].join("\n");
   const result = await sendBrevo({
     sender,
     to: [{ email: booking.email, name: booking.name }],
