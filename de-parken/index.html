@@ -119,6 +119,12 @@
     .rs-planner-head { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:22px 24px; color:#fff; background:var(--dark); }
     .rs-planner-head span { display:block; margin-bottom:5px; color:rgba(255,255,255,.68); font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
     .rs-planner-head strong { font-family:inherit; font-size:1.55rem; }
+    .rs-planner-head { flex-wrap:wrap; }
+    .rs-planner-month { display:flex; align-items:center; gap:10px; }
+    .rs-planner-month strong { font-size:1.05rem; text-align:center; min-width:0; }
+    .rs-month-button { display:grid; place-items:center; flex:0 0 40px; width:40px; height:40px; padding:0; border:1px solid rgba(255,255,255,.45); border-radius:8px; color:#fff; background:transparent; font-family:inherit; font-size:1.5rem; font-weight:700; line-height:1; cursor:pointer; }
+    .rs-month-button:disabled { opacity:.35; cursor:default; }
+    @media (max-width:520px) { .rs-planner-head { flex-direction:column; align-items:stretch !important; gap:12px; } .rs-planner-head>div:first-child { width:100%; } .rs-planner-month { justify-content:space-between; } .rs-planner-head .rs-planner-month strong { font-size:1.05rem; } .rs-planner-head .rs-planner-availability { max-width:none; text-align:left; } }
     .rs-planner-availability { max-width:180px; color:rgba(255,255,255,.78); font-size:.78rem; line-height:1.4; text-align:right; }
     .rs-calendar { padding:22px 24px 24px; }
     .rs-weekdays,.rs-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; }
@@ -153,7 +159,7 @@
   <script src="../assets/supabase-app.js?v=18" defer></script>
   <script src="../assets/form-security.js?v=1" defer></script>
   <script src="../assets/lead-capture.js?v=2" defer></script>
-  <script src="../assets/de-parken-booking.js?v=12" defer></script>
+  <script src="../assets/de-parken-booking.js?v=13" defer></script>
 <link rel="stylesheet" href="/assets/site-public.css?v=20260915">
 </head>
 <body class="de-parken-page rs-public">
@@ -188,7 +194,7 @@
     <h2>Voorkom verrassingen aan uw woning.</h2>
     <p>Veel onderhoud wordt pas besproken wanneer er lekkage, houtrot of zichtbare schade is. RoofSignal inspecteert dak en gevel van buitenaf met een professionele drone en vertaalt de beelden naar heldere bevindingen en prioriteiten.</p>
     <p>De scan is bedoeld voor woningeigenaren die hun onderhoud willen plannen zonder verkoopdruk vanuit een herstelpartij.</p>
-    <div class="local-note"><strong>Speciaal voor De Parken</strong><span>Beperkt beschikbaar in september en oktober, met persoonlijke uitvoering en een helder rapport over uw woning.</span></div>
+    <div class="local-note"><strong>Speciaal voor De Parken</strong><span>Kies een beschikbaar moment dat u past, met persoonlijke uitvoering en een helder rapport over uw woning.</span></div>
   </div>
   <div class="check-grid">
     <div>Dak en dakdetails</div>
@@ -285,8 +291,8 @@
       <div class="planner-field">
         <span class="planner-label">Voorkeursmoment</span>
         <div class="rs-planner" data-planner>
-          <div class="rs-planner-head"><div><span>Beschikbaarheid</span><label for="parken-month">Maand</label><select id="parken-month" data-calendar-month aria-label="Maand kiezen"><option value="9">September 2026</option><option value="10">Oktober 2026</option></select></div><div class="rs-planner-availability" data-planner-availability>Beschikbaarheid wordt gecontroleerd…</div></div>
-          <div class="rs-calendar"><div class="rs-weekdays" aria-hidden="true"><span>Ma</span><span>Di</span><span>Wo</span><span>Do</span><span>Vr</span><span>Za</span><span>Zo</span></div><div class="rs-days" data-calendar-days role="grid" aria-label="Beschikbare dagen in september 2026"></div></div>
+          <div class="rs-planner-head"><div><span>Beschikbaarheid</span><div class="rs-planner-month"><button type="button" class="rs-month-button" data-calendar-previous aria-label="Vorige maand" disabled>‹</button><strong data-calendar-month aria-live="polite"></strong><button type="button" class="rs-month-button" data-calendar-next aria-label="Volgende maand">›</button></div></div><div class="rs-planner-availability" data-planner-availability>Beschikbaarheid wordt gecontroleerd…</div></div>
+          <div class="rs-calendar"><div class="rs-weekdays" aria-hidden="true"><span>Ma</span><span>Di</span><span>Wo</span><span>Do</span><span>Vr</span><span>Za</span><span>Zo</span></div><div class="rs-days" data-calendar-days role="grid" aria-label="Beschikbare dagen"></div></div>
           <div class="rs-times" data-time-panel hidden><strong class="rs-times-label" data-time-label></strong><div class="rs-time-options" data-time-options></div></div>
         </div>
         <input type="hidden" name="slot" value="">

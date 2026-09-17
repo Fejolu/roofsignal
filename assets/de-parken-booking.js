@@ -17,7 +17,9 @@
   const plannerError = form.querySelector("[data-planner-error]");
   const availabilityMessage = form.querySelector("[data-planner-availability]");
   const interestForm = document.querySelector("[data-neighborhood-interest]");
-  const monthInput = form.querySelector("[data-calendar-month]");
+  const monthLabel = form.querySelector("[data-calendar-month]");
+  const previousMonth = form.querySelector("[data-calendar-previous]");
+  const nextMonth = form.querySelector("[data-calendar-next]");
   const thermalInput = form.querySelector("[name='thermography_selected']");
   const termsInput = form.querySelector("[name='terms_accepted']");
   const priceLabel = (selected) => selected ? "€664,29 incl. btw" : "€361,79 incl. btw";
@@ -35,6 +37,13 @@
   const slotMap = new Map();
   let unavailableSlots = new Set();
   let selectedDate = "";
+  function currentMonth() {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit",
+    }).formatToParts(new Date()).map(({ type, value }) => [type, value]));
+    return new Date(Number(parts.year), Number(parts.month) - 1, 1, 12);
+  }
+  let displayedMonth = currentMonth();
 
   function normalizePostcode(value) {
     return String(value || "").replace(/\s/g, "").toUpperCase();
@@ -52,11 +61,12 @@
   function buildCalendar() {
     calendarDays.innerHTML = "";
     slotMap.clear();
-    const formatter = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long" });
-    const month = Number(monthInput.value);
-    const firstDayOffset = (new Date(2026, month - 1, 1).getDay() + 6) % 7;
-    const daysInMonth = new Date(2026, month, 0).getDate();
-    calendarDays.setAttribute("aria-label", `Beschikbare dagen in ${month === 9 ? "september" : "oktober"} 2026`);
+    const formatter = new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const year = displayedMonth.getFullYear();
+    const month = displayedMonth.getMonth();
+    const firstDayOffset = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    calendarDays.setAttribute("aria-label", `Beschikbare dagen in ${monthLabel.textContent}`);
     for (let empty = 0; empty < firstDayOffset; empty += 1) {
       const spacer = document.createElement("span");
       spacer.className = "rs-day empty";
@@ -64,9 +74,9 @@
       calendarDays.append(spacer);
     }
     for (let day = 1; day <= daysInMonth; day += 1) {
-      const date = new Date(2026, month - 1, day);
+      const date = new Date(year, month, day, 12);
       const weekday = date.getDay();
-      const dateValue = `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const dateValue = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const times = [];
       if (weekday >= 1 && weekday <= 4) times.push({ value: "16:00-18:00", label: "Einde middag · 16:00–18:00" });
       if (weekday === 5 || weekday === 6) {
@@ -93,6 +103,11 @@
   }
 
   async function refreshAvailability() {
+    if (displayedMonth < currentMonth()) displayedMonth = currentMonth();
+    monthLabel.textContent = new Intl.DateTimeFormat("nl-NL", { month: "long", year: "numeric" }).format(displayedMonth);
+    previousMonth.disabled = displayedMonth <= currentMonth();
+    calendarDays.innerHTML = "";
+    slotMap.clear();
     const backend = window.RoofSignalBackend;
     availabilityMessage.textContent = "Beschikbaarheid wordt gecontroleerd…";
     try {
@@ -107,12 +122,16 @@
         timePanel.hidden = true;
         plannerChoice.classList.remove("visible");
       } else if (selectedDate) {
-        selectDate(selectedDate);
+        const chosenTime = slotInput.value.split("|")[1] || "";
+        selectDate(selectedDate, chosenTime);
       }
       availabilityMessage.textContent = "Selecteer eerst een datum en daarna een tijdstip.";
       return true;
     } catch (error) {
       unavailableSlots = new Set();
+      selectedDate = "";
+      slotInput.value = "";
+      plannerChoice.classList.remove("visible");
       calendarDays.innerHTML = "";
       slotMap.clear();
       timePanel.hidden = true;
@@ -121,7 +140,7 @@
     }
   }
 
-  function selectDate(dateValue) {
+  function selectDate(dateValue, retainedTime = "") {
     selectedDate = dateValue;
     slotInput.value = "";
     plannerChoice.classList.remove("visible");
@@ -137,6 +156,7 @@
       button.textContent = time.label;
       button.addEventListener("click", () => selectTime(time, button));
       timeOptions.append(button);
+      if (time.value === retainedTime) selectTime(time, button);
     });
     timePanel.hidden = false;
   }
@@ -260,15 +280,19 @@
     }
   });
 
-  monthInput.value = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam", month: "2-digit" }).format(new Date()) === "10" ? "10" : "9";
-  monthInput.addEventListener("change", () => {
+  function changeMonth(offset) {
+    const next = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + offset, 1, 12);
+    if (next < currentMonth()) return;
+    displayedMonth = next;
     selectedDate = "";
     slotInput.value = "";
     timePanel.hidden = true;
     plannerChoice.classList.remove("visible");
     plannerError.classList.remove("visible");
     refreshAvailability();
-  });
+  }
+  previousMonth.addEventListener("click", () => changeMonth(-1));
+  nextMonth.addEventListener("click", () => changeMonth(1));
   refreshAvailability();
   window.addEventListener("focus", refreshAvailability);
   document.addEventListener("visibilitychange", () => {
