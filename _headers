@@ -1,4 +1,5 @@
 /downloads/*
+  Cache-Control: public, max-age=0, must-revalidate
   Content-Type: application/pdf
   Content-Disposition: attachment
   X-Content-Type-Options: nosniff
