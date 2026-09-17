@@ -1,0 +1,69 @@
+/* One inspection product with an optional thermal extension. */
+.rates-main-product {
+  border-top: 4px solid var(--rs-orange);
+}
+.rates-main-product .rates-package-top > p:last-child {
+  min-height: 0;
+  max-width: 780px;
+  font-size: 16px;
+}
+.rates-main-product ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 36px;
+}
+.rates-main-product li {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.rates-product-note {
+  margin: 0 27px 24px;
+  padding: 18px;
+  border-left: 3px solid var(--rs-orange);
+  color: var(--rates-muted);
+  background: #f5f7f9;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.rates-product-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0 27px 27px;
+}
+.rates-example-link {
+  color: #a93c08;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.rates-thermal-addon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 32px;
+  margin-top: 28px;
+  padding: 32px;
+  border: 1px solid #e7d7ca;
+  border-radius: var(--rs-radius);
+  background: #fff8f3;
+}
+.rates-thermal-addon h3 {
+  margin: 0 0 14px;
+  font-size: 28px;
+  letter-spacing: -.035em;
+}
+.rates-thermal-addon p,
+.rates-thermal-addon li {
+  color: #475467;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.rates-thermal-addon p { margin: 0; }
+.rates-thermal-addon ul { margin: 0 0 18px; padding-left: 20px; }
+.rates-thermal-addon li + li { margin-top: 8px; }
+@media (max-width: 760px) {
+  .rates-main-product ul,
+  .rates-thermal-addon { grid-template-columns: minmax(0, 1fr); }
+  .rates-thermal-addon { gap: 20px; padding: 24px; }
+}
