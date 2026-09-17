@@ -3628,7 +3628,8 @@ button { cursor: pointer; }
     top: auto;
     right: auto;
     display: block;
-    margin-left: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
     z-index: 20;
   }
   .mobile-nav summary {
