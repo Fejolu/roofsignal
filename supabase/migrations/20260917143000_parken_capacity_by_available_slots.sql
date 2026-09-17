@@ -4,17 +4,16 @@ do $$
 declare
   definition text;
   revised text;
-  quota_block constant text := $quota$  if (select count(*) from public.parken_bookings where status not in ('cancelled','declined')) >= 25 then
-    raise exception 'PILOT_FULL';
-  end if;
-$quota$;
+  -- Live SQL was entered with different indentation. Match only this exact
+  -- quota condition and exception, allowing whitespace between its statements.
+  quota_pattern constant text := $quota$if \(select count\(\*\) from public\.parken_bookings where status not in \('cancelled','declined'\)\) >= 25 then[[:space:]]+raise exception 'PILOT_FULL';[[:space:]]+end if;$quota$;
 begin
   select pg_get_functiondef('public.create_parken_booking(text,text,text,text,text,text,date,text,text,text,boolean,boolean,boolean)'::regprocedure)
     into definition;
-  if position(quota_block in definition) = 0 then
-    raise exception 'Expected Parken quota block not found; review booking function before release';
+  if (select count(*) from regexp_matches(definition, quota_pattern, 'g')) <> 1 then
+    raise exception 'Expected exactly one Parken quota block; review booking function before release';
   end if;
-  revised := replace(definition, quota_block, '');
+  revised := regexp_replace(definition, quota_pattern, '');
   if position('PILOT_FULL' in revised) > 0
      or position('pg_advisory_xact_lock' in revised) = 0
      or position('SLOT_TAKEN' in revised) = 0
