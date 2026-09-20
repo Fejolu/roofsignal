@@ -1,0 +1,53 @@
+name: Pilotaanmeldingen naar inbox en Odoo
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Alleen verzendstatus controleren
+        type: boolean
+        default: true
+      test_only:
+        description: Uitsluitend de gemarkeerde interne test verwerken
+        type: boolean
+        default: false
+      prepare_test:
+        description: Interne test klaarzetten (reserveert geen inspectiemoment)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: roofsignal-parken-integrations
+  cancel-in-progress: false
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 3
+    steps:
+      - name: Controleer en verwerk de wachtrij
+        env:
+          AUTOMATION_SECRET: ${{ secrets.PARKEN_AUTOMATION_SECRET }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+          TEST_ONLY: ${{ github.event_name == 'schedule' && 'false' || inputs.test_only }}
+          PREPARE_TEST: ${{ github.event_name == 'schedule' && 'false' || inputs.prepare_test }}
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request,urllib.error,sys
+          secret=os.environ.get('AUTOMATION_SECRET','')
+          if not secret:
+              sys.exit('PARKEN_AUTOMATION_SECRET ontbreekt.')
+          payload={k:os.environ.get(v,'false')=='true' for k,v in [('dryRun','DRY_RUN'),('testOnly','TEST_ONLY'),('prepareTest','PREPARE_TEST')]}
+          request=urllib.request.Request('https://kakpticlxlaxtebhsuoh.supabase.co/functions/v1/process-parken-integrations',
+              data=json.dumps(payload).encode(),headers={'Content-Type':'application/json','x-automation-secret':secret},method='POST')
+          try:
+              with urllib.request.urlopen(request,timeout=90) as response:
+                  result=json.load(response)
+          except urllib.error.HTTPError as error:
+              print(error.read().decode())
+              sys.exit('Pilotverwerking vraagt aandacht; controleer de wachtrij.')
+          print(json.dumps(result))
+          if not result.get('ok'):sys.exit(1)
+          PY

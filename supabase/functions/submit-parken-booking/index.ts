@@ -28,7 +28,12 @@ serve(async (req) => {
   const { data, error } = await service.rpc("create_parken_booking_with_options", { p_name: body.name, p_email: body.email, p_phone: body.phone, p_street: body.street, p_house_number: body.house_number, p_postcode: body.postcode, p_slot_date: body.slot_date, p_slot_time: body.slot_time, p_notes: body.notes || "", p_source: body.source || "de-parken-directmail-2026", ...options });
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers });
   const booking = Array.isArray(data) ? data[0] : data;
-  const confirmation = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-parken-booking-confirmation`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` }, body: JSON.stringify({ reference: booking.reference, email: body.email }) });
-  if (!confirmation.ok) return new Response(JSON.stringify({ error: "Reservering opgeslagen; bevestiging kon niet worden verstuurd." }), { status: 502, headers });
+  // Customer confirmation and internal handoff are independent. The database
+  // outbox remains queued if the immediate internal dispatch fails.
+  const [confirmation] = await Promise.allSettled([
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-parken-booking-confirmation`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` }, body: JSON.stringify({ reference: booking.reference, email: body.email }), signal: AbortSignal.timeout(25000) }),
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-parken-integrations`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` }, body: JSON.stringify({ reference: booking.reference }), signal: AbortSignal.timeout(25000) }),
+  ]);
+  if (confirmation.status !== 'fulfilled' || !confirmation.value.ok) return new Response(JSON.stringify({ error: "Reservering opgeslagen; bevestiging kon niet worden verstuurd." }), { status: 502, headers });
   return new Response(JSON.stringify({ success: true, booking }), { headers });
 });

@@ -3,6 +3,7 @@
   "functions": [
     "create-portal-customer",
     "process-scheduled-invoices",
+    "process-parken-integrations",
     "quote-acceptance",
     "send-appointment-email",
     "send-parken-booking-confirmation",
@@ -24,6 +25,7 @@
     "QUOTE_ACCEPTANCE_IP_SALT",
     "INVOICE_AUTOMATION_SECRET",
     "TURNSTILE_SECRET_KEY",
-    "FORM_RATE_LIMIT_SALT"
+    "FORM_RATE_LIMIT_SALT",
+    "PARKEN_AUTOMATION_SECRET"
   ]
 }

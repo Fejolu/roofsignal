@@ -10,6 +10,10 @@ project_id = "roofsignal"
 [functions.process-scheduled-invoices]
 verify_jwt = false
 
+# The worker accepts only the service-role bearer or its private scheduler secret.
+[functions.process-parken-integrations]
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.
