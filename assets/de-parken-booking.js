@@ -390,6 +390,7 @@
       early_start_requested: data.get("early_start_requested") === "yes",
       thermography_selected: data.get("thermography_selected") === "yes",
       offer_version: "parken-2026-09-17-thermography",
+      terms_version: "2026-09-21",
     };
 
     try {

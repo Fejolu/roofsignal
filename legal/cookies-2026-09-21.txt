@@ -1,0 +1,40 @@
+Cookies en websitegebruik.
+Versie 21 september 2026
+
+1. Functionele opslag en beveiliging
+
+
+De website gebruikt Cloudflare voor hosting en beveiliging. Formulieren gebruiken Cloudflare Turnstile om geautomatiseerd misbruik tegen te gaan. Daarbij worden technische gegevens over browser en verbinding verwerkt. Afhankelijk van de beveiligingscontrole kunnen noodzakelijke cookies of vergelijkbare technieken worden gebruikt. Voor noodzakelijk technisch gebruik vragen wij geen toestemming.
+
+
+Bij inloggen op een klant- of beheeromgeving kan functionele browseropslag nodig zijn om uw sessie en gekozen dossier te onthouden. De Odoo-klantomgeving staat op roofsignal.odoo.com en gebruikt eigen functionele sessietechnieken. De openbare website geeft uw login of dossiergegevens niet door aan de statistiekdienst.
+
+
+2. Beperkte websitegebruiksstatistieken
+
+
+RoofSignal gebruikt Umami Cloud om de openbare website te verbeteren. Wij tellen paginaweergaven en vaste gebeurtenissen, bijvoorbeeld het downloaden van een voorbeeldrapport, een klik op een contactlink en het slagen of mislukken van een aanvraag. Umami gebruikt hiervoor geen analyticscookies en volgt bezoekers niet over verschillende websites voor advertenties.
+
+
+Onze inrichting verwijdert zoekparameters en fragmenten uit pagina-adressen. Namen, e-mailadressen, postcodes, vrije formuliertekst en boekingsreferenties worden niet als meetgegevens meegestuurd. Offerte-akkoordpagina’s, inlog- en beheerpagina’s en de herroepingspagina zijn uitgesloten. Er worden geen sessieopnamen of persoonlijke advertentieprofielen gemaakt. Uw IP-adres wordt bij de verbinding technisch ontvangen door de dienst; cookieloos betekent niet dat er geen gegevensverwerking plaatsvindt.
+
+
+Wij beperken deze statistieken tot websiteverbetering met geringe privacy-impact. Daarvoor is volgens de Nederlandse cookieregels geen toestemming nodig. Wij respecteren de browsersignalen Do Not Track en Global Privacy Control: bij zo’n signaal laden wij de statistiekdienst niet. Meer over de techniek staat in de documentatie van Umami.
+
+
+3. Geen advertentiecookies
+
+
+Wij gebruiken op deze website geen Meta-pixel, Google Analytics, advertentiecookies of socialmediatrackers. Als wij later toestemmingplichtige metingen of marketingtechnieken toevoegen, laden wij die pas nadat u daarvoor heeft gekozen. U moet ze dan ook kunnen weigeren en uw keuze kunnen intrekken.
+
+
+4. Uw browserinstellingen en privacy
+
+
+U kunt cookies en lokale opslag verwijderen of blokkeren via uw browser. Dat kan het inloggen of beveiligde formulieren beïnvloeden. U kunt Do Not Track of Global Privacy Control gebruiken om de Umami-meting op deze website uit te schakelen. In de privacyverklaring staat wie gegevens verwerkt, waarvoor en hoe u uw rechten kunt gebruiken.
+
+
+5. Vragen en wijzigingen
+
+
+Vragen over deze inrichting kunt u stellen via info@roofsignal.nl. Wij werken deze pagina bij als de gebruikte technieken veranderen.
