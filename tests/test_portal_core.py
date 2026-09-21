@@ -370,7 +370,9 @@ def test_veilig_is_not_used_as_generic_portal_or_marketing_copy():
         "supabase/functions/send-portal-login-link/index.ts",
     ]
     for path in generic_copy_files:
-        assert "veilig" not in read(path).lower()
+        # Flight safety is an operational requirement, not a portal-security claim.
+        copy = read(path).lower().replace("dronevlucht veilig, toegestaan en technisch uitvoerbaar", "dronevlucht toegestaan en technisch uitvoerbaar")
+        assert "veilig" not in copy
 
 
 def test_knowledge_base_has_indexable_articles_and_consistent_footer_links():

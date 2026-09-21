@@ -4,11 +4,13 @@ export function bookingOptions(body) {
   if (body.offer_version !== PARKEN_OFFER_VERSION) throw new Error("OFFER_UPDATED");
   if (typeof body.thermography_selected !== "boolean") throw new Error("INVALID_OPTION");
   if (body.terms_accepted !== true) throw new Error("TERMS_REQUIRED");
+  if (body.terms_version !== undefined && body.terms_version !== "2026-09-21") throw new Error("OFFER_UPDATED");
   return {
     p_offer_version: PARKEN_OFFER_VERSION,
     p_thermography_selected: body.thermography_selected,
     p_terms_accepted: true,
     p_early_start_requested: body.early_start_requested === true,
+    ...(body.terms_version ? { p_terms_version: body.terms_version } : {}),
   };
 }
 

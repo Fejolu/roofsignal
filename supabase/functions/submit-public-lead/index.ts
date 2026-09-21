@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { withdrawalRecord, withdrawalReceipt } from "../_shared/withdrawal.mjs";
 
 const origins = new Set(["https://www.roofsignal.nl", "https://roofsignal.nl", "http://localhost:8080", "http://127.0.0.1:8080"]);
 const allowedTypes = new Set(["report", "price", "contact", "access"]);
@@ -47,6 +48,12 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Menselijke verificatie mislukt. Probeer het opnieuw." }), { status: 403, headers });
   }
 
+  const withdrawal = body.type === "withdrawal";
+  let withdrawalData;
+  if (withdrawal) {
+    try { withdrawalData = withdrawalRecord(body); }
+    catch (error) { return new Response(JSON.stringify({ error: error.message }), { status: 400, headers }); }
+  }
   const neighborhood = body.type === "neighborhood";
   if (neighborhood && (body.neighborhood_consent !== true || !/^[1-9][0-9]{3}[A-Z]{2}$/.test(String(body.postcode || "")))) {
     return new Response(JSON.stringify({ error: "Postcode en toestemming voor wijkupdates zijn vereist." }), { status: 400, headers });
@@ -62,11 +69,12 @@ serve(async (req) => {
   const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const ipHash = await digest(`${Deno.env.get("FORM_RATE_LIMIT_SALT") || "roofsignal"}:${ip}`);
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count } = await service.from("public_form_attempts").select("id", { head: true, count: "exact" }).eq("ip_hash", ipHash).eq("form_type", requestType).gte("created_at", since);
+  const rateType = withdrawal ? "withdrawal" : requestType;
+  const { count } = await service.from("public_form_attempts").select("id", { head: true, count: "exact" }).eq("ip_hash", ipHash).eq("form_type", rateType).gte("created_at", since);
   if ((count || 0) >= 5) return new Response(JSON.stringify({ error: "Te veel aanvragen. Probeer het later opnieuw." }), { status: 429, headers });
-  await service.from("public_form_attempts").insert({ ip_hash: ipHash, form_type: requestType });
+  await service.from("public_form_attempts").insert({ ip_hash: ipHash, form_type: rateType });
 
-  const record = {
+  const record = withdrawalData || {
     request_type: requestType, name, organization, email,
     segment: neighborhood ? "wijkupdates" : String(body.segment || "").slice(0, 120) || null,
     postcode: String(body.postcode || "").slice(0, 20) || null,
@@ -82,11 +90,17 @@ serve(async (req) => {
   // Interest subscriptions are stored for later wijkupdates; no booking or immediate email.
   if (neighborhood) return new Response(JSON.stringify({ success: true }), { headers });
 
+  let notified = false;
+  try {
   const notify = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-lead-notification`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
     body: JSON.stringify({ record: data }),
+    signal: AbortSignal.timeout(25000),
   });
-  if (!notify.ok) return new Response(JSON.stringify({ error: "Aanvraag opgeslagen; bevestiging kon niet worden verstuurd." }), { status: 502, headers });
+  notified = notify.ok;
+  } catch { /* A persisted declaration remains received if mail is unavailable. */ }
+  if (withdrawal) return new Response(JSON.stringify({ success: true, emailSent: notified, receipt: withdrawalReceipt(data) }), { headers });
+  if (!notified) return new Response(JSON.stringify({ error: "Aanvraag opgeslagen; bevestiging kon niet worden verstuurd." }), { status: 502, headers });
   return new Response(JSON.stringify({ success: true }), { headers });
 });

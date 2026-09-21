@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { orderLines } from "../_shared/parken-offer.mjs";
+import { bookingLegal } from "../_shared/booking-legal.mjs";
 
 const allowedOrigins = new Set([
   "https://www.roofsignal.nl",
@@ -53,7 +54,7 @@ serve(async (req) => {
 
   const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const { data: booking } = await service.from("parken_bookings")
-    .select("id,reference,name,email,street,house_number,postcode,slot_date,slot_time,status,confirmation_sent_at,offer_version,thermography_selected,inspection_excl_cents,thermography_excl_cents,total_incl_cents")
+    .select("id,reference,name,email,street,house_number,postcode,slot_date,slot_time,status,confirmation_sent_at,offer_version,thermography_selected,inspection_excl_cents,thermography_excl_cents,total_incl_cents,terms_version,terms_accepted_at,early_start_requested_at")
     .eq("reference", reference).eq("email", email).maybeSingle();
   if (!booking) return new Response(JSON.stringify({ error: "Boeking niet gevonden." }), { status: 404, headers: cors });
   if (booking.status === "cancelled" || booking.status === "declined") {
@@ -65,6 +66,7 @@ serve(async (req) => {
     .format(new Date(`${booking.slot_date}T12:00:00+02:00`));
   const address = `${booking.street} ${booking.house_number}, ${booking.postcode} Apeldoorn`;
   const order = orderLines(booking);
+  const legal = bookingLegal(booking);
   const orderHtml = order.length ? `<h2 style="font-size:19px">Uw geboekte inspectie</h2>${order.map((line) => `<p style="line-height:1.65">${escapeHtml(line)}</p>`).join("")}` : "";
   const sender = {
     email: Deno.env.get("BREVO_FROM_EMAIL") || "noreply@roofsignal.nl",
@@ -78,8 +80,9 @@ serve(async (req) => {
     replyTo: { email: "info@roofsignal.nl", name: "RoofSignal" },
     headers: { "X-Mailin-Track": "0" },
     subject: `RoofSignal bevestiging – ${booking.reference}`,
-    textContent: text,
-    htmlContent: html,
+    textContent: text + (legal.lines.length ? "\n\nAFSPRAKEN EN BEDENKTIJD\n\n" + legal.lines.join("\n\n") : ""),
+    htmlContent: legal.lines.length ? html.replace("</body>", `<section style="max-width:600px;margin:0 auto;padding:24px"><h2 style="font-size:20px">Afspraken en bedenktijd</h2>${legal.lines.map(line => `<p style="line-height:1.6">${escapeHtml(line)}</p>`).join("")}<p><a href="https://www.roofsignal.nl/herroepen">Overeenkomst herroepen</a></p></section></body>`) : html,
+    ...(legal.attachments.length ? { attachment: legal.attachments } : {}),
   });
   await service.from("parken_bookings").update({ confirmation_sent_at: new Date().toISOString(), confirmation_message_id: result?.messageId || null, status: "confirmed" }).eq("id", booking.id);
   return new Response(JSON.stringify({ success: true }), { headers: cors });

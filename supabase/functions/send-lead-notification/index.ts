@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { isWithdrawal, withdrawalReceipt } from "../_shared/withdrawal.mjs";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -276,19 +277,29 @@ serve(async (req: Request): Promise<Response> => {
 
   const hasEmailProvider = Boolean((Deno.env.get("RESEND_API_KEY") || Deno.env.get("BREVO_API_KEY") || "").trim());
   if (!hasEmailProvider) {
-    console.log("[NO-EMAIL-PROVIDER] Would send email:", JSON.stringify(record));
-    return new Response(JSON.stringify({ success: true, mode: "dry-run" }), {
-      headers: corsHeaders,
+    console.error("E-mailprovider ontbreekt; bericht niet verzonden.");
+    return new Response(JSON.stringify({ success: false, error: "E-mailprovider ontbreekt." }), {
+      status: 503, headers: corsHeaders,
     });
   }
 
   const fromEmail = Deno.env.get("BREVO_FROM_EMAIL") || "noreply@roofsignal.nl";
   const fromName = Deno.env.get("BREVO_FROM_NAME") || "RoofSignal";
-  const toEmail = Deno.env.get("NOTIFICATION_EMAIL") || "info@roofsignal.nl";
+  const toEmail = isWithdrawal(record) ? "ferry@roofsignal.nl" : Deno.env.get("NOTIFICATION_EMAIL") || "info@roofsignal.nl";
   const subject = EMAIL_SUBJECTS[record.request_type] || `RoofSignal – Nieuwe lead (${record.request_type})`;
   const applicant = applicantCopy(record);
 
   try {
+    if (isWithdrawal(record)) {
+      const receipt = withdrawalReceipt(record);
+      const html = `<html lang="nl"><body style="font:16px Arial,sans-serif;color:#17201d"><h1 style="font-size:24px">Herroeping ontvangen</h1><div style="white-space:pre-wrap">${escapeHtml(receipt)}</div></body></html>`;
+      const internal = `${receipt}\n\nINTERN: koppel aan de opdracht en verwerk in Odoo én de oude planning/backoffice. Stop nog niet uitgevoerde werkzaamheden; beoordeel identiteit en financiële afwikkeling. Vraag geen reden als voorwaarde voor herroeping.`;
+      await Promise.all([
+        sendEmail(fromEmail, fromName, toEmail, "RoofSignal – HERROEPING ontvangen", internal, `<pre style="white-space:pre-wrap">${escapeHtml(internal)}</pre>`, record.email),
+        sendEmail(fromEmail, fromName, record.email, "RoofSignal – bevestiging van uw herroeping", receipt, html, "info@roofsignal.nl"),
+      ]);
+      return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+    }
     const [internal, confirmation] = await Promise.all([
       sendEmail(fromEmail, fromName, toEmail, subject, formatLeadBody(record), createHtmlBody(record), record.email),
       sendEmail(fromEmail, fromName, record.email, applicant.subject, formatApplicantBody(record), createApplicantHtmlBody(record), toEmail),

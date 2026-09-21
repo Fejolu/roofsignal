@@ -25,7 +25,8 @@ serve(async (req) => {
   const { count } = await service.from("public_form_attempts").select("id", { head: true, count: "exact" }).eq("ip_hash", ipHash).eq("form_type", "parken").gte("created_at", since);
   if ((count || 0) >= 3) return new Response(JSON.stringify({ error: "Te veel reserveringspogingen. Probeer het later opnieuw." }), { status: 429, headers });
   await service.from("public_form_attempts").insert({ ip_hash: ipHash, form_type: "parken" });
-  const { data, error } = await service.rpc("create_parken_booking_with_options", { p_name: body.name, p_email: body.email, p_phone: body.phone, p_street: body.street, p_house_number: body.house_number, p_postcode: body.postcode, p_slot_date: body.slot_date, p_slot_time: body.slot_time, p_notes: body.notes || "", p_source: body.source || "de-parken-directmail-2026", ...options });
+  const rpcName = options.p_terms_version ? "create_parken_booking_with_terms" : "create_parken_booking_with_options";
+  const { data, error } = await service.rpc(rpcName, { p_name: body.name, p_email: body.email, p_phone: body.phone, p_street: body.street, p_house_number: body.house_number, p_postcode: body.postcode, p_slot_date: body.slot_date, p_slot_time: body.slot_time, p_notes: body.notes || "", p_source: body.source || "de-parken-directmail-2026", ...options });
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers });
   const booking = Array.isArray(data) ? data[0] : data;
   // Customer confirmation and internal handoff are independent. The database
