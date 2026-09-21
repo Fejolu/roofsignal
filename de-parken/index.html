@@ -160,7 +160,7 @@
   <script src="../assets/supabase-app.js?v=18" defer></script>
   <script src="../assets/form-security.js?v=1" defer></script>
   <script src="../assets/lead-capture.js?v=2" defer></script>
-  <script src="../assets/de-parken-booking.js?v=13" defer></script>
+  <script src="../assets/de-parken-booking.js?v=14" defer></script>
 <link rel="stylesheet" href="/assets/site-public.css?v=20260915">
 </head>
 <body class="de-parken-page rs-public">
@@ -285,9 +285,9 @@
       <label>Postcode<input name="postcode" autocomplete="postal-code" placeholder="7316 AB" required></label>
       <button class="btn" type="button" data-check-postcode>Controleer</button>
     </div>
-    <p class="form-note postcode-status" data-postcode-status></p>
+    <p class="form-note postcode-status" data-postcode-status role="status"></p>
     <div class="booking-fields" data-booking-fields hidden>
-      <div class="booking-two"><label>Straat<input name="street" autocomplete="address-line1" required></label><label>Huisnummer + toevoeging<input name="house_number" required></label></div>
+      <div class="booking-two"><label>Straat<input name="street" autocomplete="address-line1" list="parken-streets" required><datalist id="parken-streets" data-street-options></datalist></label><label>Huisnummer + toevoeging<input name="house_number" required></label></div>
       <div class="booking-two"><label>Naam<input name="name" autocomplete="name" required></label><label>Telefoon<input name="phone" type="tel" autocomplete="tel" required></label></div>
       <label>E-mailadres<input type="email" name="email" autocomplete="email" required></label>
       <div class="planner-field">

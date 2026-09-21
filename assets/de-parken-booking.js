@@ -3,7 +3,131 @@
   if (!form) return;
 
   const validPostcodes = new Set(`7311AA 7311AB 7311AC 7311AD 7311AE 7311AG 7311AJ 7311AL 7311LV 7315BR 7315BS 7315BT 7315BV 7315EB 7316AA 7316AB 7316AC 7316AD 7316AE 7316AG 7316AH 7316AK 7316AL 7316AM 7316AN 7316AP 7316AR 7316AS 7316AT 7316AV 7316AW 7316BA 7316BB 7316BC 7316BD 7316BE 7316BG 7316BH 7316BJ 7316BK 7316BL 7316BM 7316BN 7316BP 7316BR 7316BS 7316BT 7316BV 7316BW 7316BX 7316BZ 7316CA 7316CD 7316CE 7316CG 7316CH 7316CJ 7316CK 7316CL 7316CM 7316CN 7316CP 7316CR 7316CS 7316CT 7316CV 7316CW 7316CX 7316CZ 7316DA 7316DB 7316DC 7316DD 7316DE 7316DG 7316DH 7316DJ 7316DK 7316DL 7316DM 7316DN 7316DP 7316DR 7316DS 7316DT 7316DV 7316DW 7316DX 7316DZ 7316EA 7316EB 7316EC 7316ED 7316EE 7316EG 7316EH 7316EJ 7316EK 7316EL 7316EM 7316EN 7316EP 7316ER 7316ES 7316ET 7317AC 7317AD 7317AE 7317AH 7317AJ 7317AP 7317AR 7317CA 7317CB 7317CC 7317CE`.split(" "));
+  // PDOK Locatieserver / BAG postcode-straatnamen, gecontroleerd op 2026-09-21.
+  // Lokale kopie: geen externe adresopvraag tijdens het boeken.
+  const postcodeStreets = {
+    "7311AA": ["Kerklaan", "Van Huutstraat"],
+    "7311AB": ["Kerklaan"],
+    "7311AC": ["Kerklaan"],
+    "7311AD": ["Kerklaan"],
+    "7311AE": ["Kerklaan"],
+    "7311AG": ["Kerklaan", "Van Huutstraat"],
+    "7311AJ": ["Paslaan"],
+    "7311AL": ["Paslaan"],
+    "7311LV": ["Deventerstraat"],
+    "7315BR": ["Koninginnelaan"],
+    "7315BS": ["Koninginnelaan"],
+    "7315BT": ["Koninginnelaan"],
+    "7315BV": ["Koninginnelaan"],
+    "7315EB": ["Koninginnelaan"],
+    "7316AA": ["Regentesselaan"],
+    "7316AB": ["Regentesselaan"],
+    "7316AC": ["Regentesselaan"],
+    "7316AD": ["Regentesselaan"],
+    "7316AE": ["Regentesselaan"],
+    "7316AG": ["Regentesselaan"],
+    "7316AH": ["Van der Houven van Oordtlaan"],
+    "7316AK": ["Mr. Van Rhemenslaan"],
+    "7316AL": ["Oranjelaan"],
+    "7316AM": ["Prins Hendrikplein"],
+    "7316AN": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316AP": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316AR": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316AS": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316AT": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316AV": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316AW": ["Jhr. Mr. G.W. Molleruslaan"],
+    "7316BA": ["Generaal Van Swietenlaan"],
+    "7316BB": ["Generaal Van Swietenlaan"],
+    "7316BC": ["Generaal Van der Heydenlaan"],
+    "7316BD": ["Burg. Tutein Noltheniuslaan"],
+    "7316BE": ["Burg. Tutein Noltheniuslaan"],
+    "7316BG": ["Burg. Tutein Noltheniuslaan"],
+    "7316BH": ["Burg. Tutein Noltheniuslaan"],
+    "7316BJ": ["Burg. Tutein Noltheniuslaan"],
+    "7316BK": ["Burg. Tutein Noltheniuslaan"],
+    "7316BL": ["Burg. Tutein Noltheniuslaan"],
+    "7316BM": ["Kastanjelaan"],
+    "7316BN": ["Kastanjelaan"],
+    "7316BP": ["Alexanderlaan"],
+    "7316BR": ["Wilhelminapark"],
+    "7316BS": ["Wilhelminapark"],
+    "7316BT": ["Wilhelminapark"],
+    "7316BV": ["Canadalaan"],
+    "7316BW": ["Canadalaan"],
+    "7316BX": ["Canadalaan"],
+    "7316BZ": ["Canadalaan"],
+    "7316CA": ["Van Aelstlaan"],
+    "7316CD": ["Generaal Van Heutszlaan"],
+    "7316CE": ["Generaal Van Heutszlaan"],
+    "7316CG": ["Generaal Van Heutszlaan"],
+    "7316CH": ["Generaal Van Heutszlaan"],
+    "7316CJ": ["Generaal Van Heutszlaan"],
+    "7316CK": ["Generaal Van Heutszlaan"],
+    "7316CL": ["Generaal Van Heutszlaan"],
+    "7316CM": ["Verzetsstrijderspark"],
+    "7316CN": ["Prinsesselaan"],
+    "7316CP": ["Catharinalaan"],
+    "7316CR": ["Catharinalaan"],
+    "7316CS": ["Anna Paulownalaan"],
+    "7316CT": ["Anna Paulownalaan"],
+    "7316CV": ["Prinsenlaan"],
+    "7316CW": ["Prinsenlaan"],
+    "7316CX": ["Van Haersma de Withlaan"],
+    "7316CZ": ["Van Haersma de Withlaan"],
+    "7316DA": ["Frisolaan"],
+    "7316DB": ["Frisolaan"],
+    "7316DC": ["Frisolaan"],
+    "7316DD": ["Frisolaan"],
+    "7316DE": ["Vijverlaan"],
+    "7316DG": ["Mr. Van Hasseltlaan"],
+    "7316DH": ["Mr. Van Hasseltlaan"],
+    "7316DJ": ["Mr. Van Hasseltlaan"],
+    "7316DK": ["Mr. Van Hasseltlaan"],
+    "7316DL": ["Mr. Van Hasseltlaan"],
+    "7316DM": ["Mr. Van Hasseltlaan"],
+    "7316DN": ["Frederikslaan"],
+    "7316DP": ["Frederikslaan"],
+    "7316DR": ["Louisalaan"],
+    "7316DS": ["Mariannalaan"],
+    "7316DT": ["Mariannalaan"],
+    "7316DV": ["Mariannalaan"],
+    "7316DW": ["Bas Backerlaan"],
+    "7316DX": ["Bas Backerlaan"],
+    "7316DZ": ["Bas Backerlaan"],
+    "7316EA": ["Nassaulaan"],
+    "7316EB": ["Emmalaan"],
+    "7316EC": ["Emmalaan"],
+    "7316ED": ["Emmalaan"],
+    "7316EE": ["Emmalaan"],
+    "7316EG": ["Graaf Van Lijndenlaan"],
+    "7316EH": ["Graaf Van Lijndenlaan"],
+    "7316EJ": ["Graaf Van Lijndenlaan"],
+    "7316EK": ["Graaf Van Lijndenlaan"],
+    "7316EL": ["Prins Mauritslaan"],
+    "7316EM": ["Prins Mauritslaan"],
+    "7316EN": ["Prins Mauritslaan"],
+    "7316EP": ["Laan van Kerschoten"],
+    "7316ER": ["Laan van Kerschoten"],
+    "7316ES": ["Laan van Kerschoten"],
+    "7316ET": ["Laan van Kerschoten"],
+    "7317AC": ["Vlijtseweg"],
+    "7317AD": ["Vlijtseweg"],
+    "7317AE": ["Vlijtseweg"],
+    "7317AH": ["Vlijtseweg"],
+    "7317AJ": ["Vlijtseweg"],
+    "7317AP": ["Vlijtsekade"],
+    "7317AR": ["Dukdalf"],
+    "7317CA": ["Thuishaven"],
+    "7317CB": ["Bolderstraat"],
+    "7317CC": ["De Kwekerij"],
+    "7317CE": ["Vlijtsemolen"]
+  };
   const postcodeInput = form.querySelector("[name='postcode']");
+  const streetInput = form.querySelector("[name='street']");
+  const houseNumberInput = form.querySelector("[name='house_number']");
+  const streetOptions = form.querySelector("[data-street-options]");
+  let addressPostcode = "";
   const postcodeStatus = form.querySelector("[data-postcode-status]");
   const bookingFields = form.querySelector("[data-booking-fields]");
   const status = form.querySelector("[data-booking-status]");
@@ -175,15 +299,34 @@
     const postcode = normalizePostcode(postcodeInput.value);
     const valid = /^[1-9][0-9]{3}[A-Z]{2}$/.test(postcode);
     const eligible = validPostcodes.has(postcode);
+    const streets = eligible ? (postcodeStreets[postcode] || []) : [];
+    if (eligible) {
+      streetOptions.replaceChildren(...streets.map((street) => {
+        const option = document.createElement("option");
+        option.value = street;
+        return option;
+      }));
+      if (addressPostcode !== postcode) {
+        streetInput.value = streets.length === 1 ? streets[0] : "";
+        if (addressPostcode) houseNumberInput.value = "";
+        addressPostcode = postcode;
+      } else if (!streetInput.value.trim() && streets.length === 1) {
+        streetInput.value = streets[0];
+      }
+    }
     window.RoofSignalAnalytics?.track("De Parken postcodecontrole", { valid, eligible, path: window.location.pathname });
     interestForm.hidden = !valid || eligible;
     interestForm.querySelector("[name=postcode]").value = postcode;
     postcodeStatus.className = `form-note postcode-status ${eligible ? "success" : "error"}`;
     postcodeStatus.textContent = eligible
-      ? "Deze postcode valt binnen de voorlopige pilotselectie. Vul hieronder uw boeking in."
+      ? streets.length === 1
+        ? "Deze postcode valt binnen de pilotselectie in Apeldoorn. De straat is alvast ingevuld; vul uw huisnummer en overige gegevens aan."
+        : streets.length > 1
+          ? "Deze postcode valt binnen de pilotselectie in Apeldoorn en hoort bij meerdere straten. Kies of vul uw straat in en voeg uw huisnummer toe."
+          : "Deze postcode valt binnen de pilotselectie in Apeldoorn. Vul hieronder uw adres en overige gegevens in."
       : valid ? "Deze pilot is alleen beschikbaar voor De Parken. Wilt u op de hoogte blijven van volgende wijken? Laat hieronder uw e-mailadres achter." : "Vul een geldige postcode in, bijvoorbeeld 7316 AB.";
     bookingFields.hidden = !eligible;
-    if (eligible && focusFirstField) bookingFields.querySelector("input,select")?.focus();
+    if (eligible && focusFirstField) (streetInput.value.trim() ? houseNumberInput : streetInput).focus();
     return eligible;
   }
 
@@ -198,6 +341,11 @@
   }
 
   checkButton.addEventListener("click", checkPostcode);
+  postcodeInput.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    checkPostcode();
+  });
   postcodeInput.addEventListener("input", () => {
     bookingFields.hidden = true;
     interestForm.hidden = true;
