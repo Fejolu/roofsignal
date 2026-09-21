@@ -17,7 +17,7 @@
 .rs-section h2 { max-width:860px;font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.14;margin:0 0 28px;letter-spacing:-.02em; }
 .rs-section p { line-height:1.65;max-width:86ch; }
 .rs-section h3 { font-size:1.35rem;line-height:1.3;margin:0 0 14px; }
-.rs-section a:not(.btn),.rs-contact a { color:#a83403; text-decoration:underline;text-underline-offset:3px; }
+.rs-section a:not(.btn),.rs-contact a,.rs-public a.rs-text-link { color:#a83403; text-decoration:underline;text-underline-offset:3px; }
 .rs-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:22px;margin-block:28px; }
 .rs-card { padding:26px;border:1px solid #dfe3df;border-top:3px solid #ff5a14;border-radius:8px;background:#fafbf9; }
 .rs-card p { margin:0; }
