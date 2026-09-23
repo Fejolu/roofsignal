@@ -62,8 +62,33 @@
 .rates-thermal-addon p { margin: 0; }
 .rates-thermal-addon ul { margin: 0 0 18px; padding-left: 20px; }
 .rates-thermal-addon li + li { margin-top: 8px; }
+.rates-credentials {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: 48px;
+  padding-bottom: 0;
+}
+.rates-credentials .rates-heading { margin-bottom: 0; }
+.rates-credentials-list {
+  margin: 0;
+  padding: 8px 28px;
+  list-style: none;
+  border: 1px solid var(--rates-line);
+  border-top: 3px solid var(--rs-orange);
+  border-radius: var(--rs-radius);
+  background: #fff;
+}
+.rates-credentials-list li { padding: 20px 0; }
+.rates-credentials-list li + li { border-top: 1px solid var(--rates-line); }
+.rates-credentials-list strong { display: block; margin-bottom: 5px; font-size: 17px; }
+.rates-credentials-list span { display: block; color: var(--rates-muted); font-size: 14px; line-height: 1.6; }
+.rates-credentials-list a { color: #a93c08; text-underline-offset: 3px; }
 @media (max-width: 760px) {
   .rates-main-product ul,
-  .rates-thermal-addon { grid-template-columns: minmax(0, 1fr); }
+  .rates-thermal-addon,
+  .rates-credentials { grid-template-columns: minmax(0, 1fr); }
   .rates-thermal-addon { gap: 20px; padding: 24px; }
+  .rates-credentials { gap: 24px; }
+  .rates-credentials-list { padding: 4px 24px; }
 }
