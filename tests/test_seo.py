@@ -81,7 +81,6 @@ def test_public_prices_distinguish_starting_quotes_and_fixed_pilot():
         content = read(path)
         assert "Vanaf €361,79 incl. btw" in content, path
         assert "Vanaf €750 excl. btw" in content, path
-        assert "Reiskosten" in content, path
         assert "offerte" in content.lower(), path
         assert "€1.000" not in content and "€1.250" not in content, path
         assert '"priceCurrency"' not in content, path

@@ -40,11 +40,9 @@ def _current_layout():
 
 HEADER, FOOTER = _current_layout()
 
-# Centrale CTA-strategie. Gegenereerde werkgebiedpagina's bedienen een gemengd
-# publiek en sturen daarom op een concrete offerte; doelgroep-pagina's sturen
-# elders op de portefeuillescan.
+# Gebruik dezelfde primaire inspectieaanvraag als op de openbare website.
 CTA_STRATEGY = {
-    "werkgebied": {"label": "Vraag aanpak en offerte aan", "href": "contact"},
+    "werkgebied": {"label": "Vraag een inspectie aan", "href": "contact"},
 }
 
 
