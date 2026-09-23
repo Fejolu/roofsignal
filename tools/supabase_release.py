@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -23,6 +24,7 @@ SECRET_PATTERNS = (
     re.compile(r"sbp_[A-Za-z0-9_-]{20,}"),
     re.compile(r"eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}"),
 )
+SMOKE_RETRY_DELAYS = (2, 5)
 
 
 class ReleaseError(RuntimeError):
@@ -172,19 +174,33 @@ def smoke_test_functions(manifest: dict) -> None:
     failures: list[str] = []
     for function in manifest["functions"]:
         url = f"https://{manifest['project_ref']}.supabase.co/functions/v1/{function}"
-        request = urllib.request.Request(url, method="OPTIONS")
-        try:
-            with urllib.request.urlopen(request, timeout=15) as response:
-                status = response.status
-        except urllib.error.HTTPError as exc:
-            status = exc.code
-        except OSError as exc:
-            failures.append(f"{function}: {exc}")
-            continue
-        if status == 404 or status >= 500:
-            failures.append(f"{function}: HTTP {status}")
-        else:
-            print(f"✓ {function}: bereikbaar (HTTP {status})")
+        for attempt in range(1, len(SMOKE_RETRY_DELAYS) + 2):
+            request = urllib.request.Request(url, method="OPTIONS")
+            try:
+                with urllib.request.urlopen(request, timeout=15) as response:
+                    status = response.status
+            except urllib.error.HTTPError as exc:
+                status = exc.code
+                exc.close()
+            except OSError as exc:
+                status = None
+                detail = str(exc)
+
+            # Protected and POST-only endpoints may reject OPTIONS while reachable.
+            if status is not None and (200 <= status < 300 or status in (401, 403, 405)):
+                print(f"✓ {function}: bereikbaar (HTTP {status}, poging {attempt})")
+                break
+            if status is not None:
+                detail = f"HTTP {status}"
+            # A fresh deployment may briefly be absent or unavailable at the edge.
+            retryable = status is None or status in (404, 408, 429) or status >= 500
+            if retryable and attempt <= len(SMOKE_RETRY_DELAYS):
+                delay = SMOKE_RETRY_DELAYS[attempt - 1]
+                print(f"! {function}: {detail}; nieuwe bereikbaarheidstest over {delay}s")
+                time.sleep(delay)
+                continue
+            failures.append(f"{function}: {detail} (na {attempt} poging(en))")
+            break
     if failures:
         raise ReleaseError("Rooktest mislukt:\n- " + "\n- ".join(failures))
 

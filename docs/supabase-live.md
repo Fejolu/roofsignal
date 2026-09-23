@@ -25,7 +25,7 @@ Deze controleert:
 
 ## Productie publiceren
 
-Publiceer via de GitHub-workflow **Supabase productie-release**. Een wijziging op `main` start deze workflow uitsluitend wanneer Supabase-code, de releasecontrole of de bijbehorende tests zijn gewijzigd. De workflow kan daarnaast handmatig opnieuw worden gestart. Stel in de afgeschermde GitHub-omgeving `production` deze secrets in:
+Publiceer via de GitHub-workflow **Supabase productie-release**. Een wijziging op `main` start deze workflow uitsluitend wanneer Supabase-code, het releasescript of de releaseworkflow zelf zijn gewijzigd. Losse testwijzigingen starten alleen **RoofSignal controles**: deze controleert het manifest en voert alle tests uit, zonder productiegegevens of publicatierechten. Bij een productie-release blijven alle tests vooraf verplicht. De releaseworkflow kan daarnaast handmatig opnieuw worden gestart. Stel in de afgeschermde GitHub-omgeving `production` deze secrets in:
 
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_DB_PASSWORD`
@@ -49,6 +49,8 @@ De release stopt direct als een controle faalt. De volgorde is altijd:
 6. alle vastgelegde Edge Functions publiceren;
 7. de geteste Auth- en projectconfiguratie toepassen;
 8. iedere functie op bereikbaarheid testen.
+
+De bereikbaarheidscontrole gebruikt uitsluitend `OPTIONS` en verstuurt geen klantmails of boekingen. Tijdelijke verbindingsfouten, HTTP 404 (mogelijke vertraging na publicatie), 408, 429 en serverfouten krijgen maximaal twee nieuwe pogingen na 2 en 5 seconden. Aanhoudende fouten laten de release nog steeds mislukken. HTTP 401, 403 en 405 gelden bij deze beperkte controle als bereikbaar: een beschermde functie mag een verzoek zonder aanmelding of met een andere methode weigeren. Dit is geen volledige functionele test van de achterliggende mail- of boekingsverwerking.
 
 Wachtwoorden en API-sleutels worden nooit in de repository of het manifest opgeslagen of weergegeven.
 

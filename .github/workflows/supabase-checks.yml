@@ -1,0 +1,40 @@
+name: RoofSignal controles
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/supabase-checks.yml"
+      - "supabase/**"
+      - "tools/supabase_release.py"
+      - "tests/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/supabase-checks.yml"
+      - "supabase/**"
+      - "tools/supabase_release.py"
+      - "tests/**"
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Tests zonder productiepublicatie
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Installeer testomgeving
+        run: python -m pip install pytest
+      - name: Controleer manifest en broncode
+        run: python -c 'from tools.supabase_release import load_manifest, static_preflight; static_preflight(load_manifest())'
+      - name: Voer alle tests uit
+        run: python -m pytest -q -p no:cacheprovider

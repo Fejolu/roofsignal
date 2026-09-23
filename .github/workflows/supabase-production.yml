@@ -9,7 +9,6 @@ on:
       - ".github/workflows/supabase-production.yml"
       - "supabase/**"
       - "tools/supabase_release.py"
-      - "tests/**"
 
 permissions:
   contents: read
