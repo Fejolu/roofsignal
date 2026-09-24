@@ -160,7 +160,7 @@
   <script src="../assets/supabase-app.js?v=18" defer></script>
   <script src="../assets/form-security.js?v=20260921" defer></script>
   <script src="../assets/lead-capture.js?v=2" defer></script>
-  <script src="../assets/de-parken-booking.js?v=15" defer></script>
+  <script src="../assets/de-parken-booking.js?v=16" defer></script>
 <link rel="stylesheet" href="/assets/site-public.css?v=20260915">
 </head>
 <body class="de-parken-page rs-public">
@@ -280,7 +280,7 @@
     <p>De pilot geldt uitsluitend voor geselecteerde grondgebonden woningen in De Parken en is beschikbaar zolang de planning ruimte biedt. Kies hieronder een beschikbaar moment.</p>
     <div class="local-note"><strong>Weer en uitvoering</strong><span>Vooraf beoordelen we of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is. Bij onveilig of ongeschikt weer verplaatsen we de afspraak kosteloos.</span></div>
   </div>
-  <form class="quote-tool lead-form parken-booking-form" data-parken-booking>
+  <form class="quote-tool lead-form parken-booking-form" data-parken-booking data-terms-version="2026-09-24">
     <div class="postcode-check">
       <label>Postcode<input name="postcode" autocomplete="postal-code" placeholder="7316 AB" required></label>
       <button class="btn" type="button" data-check-postcode>Controleer</button>
@@ -305,7 +305,7 @@
       <label class="booking-check optional"><input type="checkbox" name="thermography_selected" value="yes" aria-describedby="thermal-option-note"><span>Voeg voor €302,50 incl. btw (€250 excl. btw) een thermografische inspectie met een drone toe.</span></label>
       <p class="form-note" id="thermal-option-note">De thermische bevindingen komen in hetzelfde inspectierapport. Ook de thermische opname gebeurt met een drone en vraagt geschikte meet- en vliegomstandigheden. Zo nodig plannen we de thermische opname apart; dit valt binnen de toeslag, zonder extra reiskosten binnen De Parken.</p>
       <p class="booking-total" aria-live="polite"><strong>Totaal: <span data-booking-total>€361,79 incl. btw</span></strong><br>Reiskosten binnen De Parken inbegrepen.</p>
-      <label class="booking-check"><input type="checkbox" name="terms_accepted" value="yes" required><span>Ik geef opdracht voor RoofSignal Inspectie<span data-terms-option></span> voor in totaal <span data-terms-price>€361,79 incl. btw</span> en ga akkoord met de beschreven productscope, het weersvoorbehoud en de <a href="/voorwaarden" target="_blank" rel="noopener">algemene voorwaarden</a> (versie 21 september 2026).</span></label>
+      <label class="booking-check"><input type="checkbox" name="terms_accepted" value="yes" required><span>Ik geef opdracht voor RoofSignal Inspectie<span data-terms-option></span> voor in totaal <span data-terms-price>€361,79 incl. btw</span> en ga akkoord met de beschreven productscope, het weersvoorbehoud en de <a href="/legal/voorwaarden-2026-09-24.txt" target="_blank" rel="noopener">algemene voorwaarden</a> (versie 24 september 2026).</span></label>
       <p class="form-note">U heeft als consument 14 dagen bedenktijd vanaf de dag na het sluiten van de overeenkomst. <a href="/voorwaarden#bedenktijd" target="_blank" rel="noopener">Lees over herroepen en bewaar de voorwaarden</a>. U kunt <a href="/herroepen" target="_blank" rel="noopener">online herroepen</a> of contact opnemen. Zonder onderstaand verzoek voeren wij de inspectie pas na de bedenktijd uit.</p>
       <label class="booking-check"><input type="checkbox" name="early_start_requested" value="yes"><span>Ik verzoek RoofSignal om tijdens de bedenktijd te beginnen. Bij herroeping betaal ik een evenredig bedrag voor het al uitgevoerde deel. Ik erken dat mijn herroepingsrecht vervalt zodra de dienst, inclusief het rapport, volledig is uitgevoerd.</span></label>
       <button class="btn" type="submit">Boek met betalingsverplichting</button>

@@ -1,0 +1,122 @@
+Privacyverklaring.
+Versie 24 september 2026
+
+1. Wie is verantwoordelijk?
+
+
+RoofSignal, Burg. Tutein Noltheniuslaan 4, 7316 BH Apeldoorn, Nederland, KvK 42152250, bepaalt hoe de hieronder beschreven persoonsgegevens worden gebruikt. Voor vragen of privacyverzoeken: info@roofsignal.nl of 085 21 28 019.
+
+
+2. Welke gegevens gebruiken wij en waarom?
+
+
+
+Vragen en offertes: naam, contactgegevens, eventuele organisatie, objectgegevens en uw bericht. Wij gebruiken die om te reageren en een offerte te maken. Grondslag: op uw verzoek stappen zetten vóór een overeenkomst; bij algemene of zakelijke contactvragen ons gerechtvaardigd belang om correspondentie te behandelen.
+
+
+Boeking en uitvoering: naam, e-mail, telefoon, objectadres, gekozen tijdvenster, thermografieoptie, bijzonderheden, overeengekomen prijs en vastlegging van uw akkoord. Ook bewaren wij een eventueel verzoek om binnen de bedenktijd te beginnen. Dit is nodig voor de overeenkomst, planning, bewijs van afspraken en behandeling van klachten of herroeping.
+
+
+Inspectie en rapport: objectinformatie, gewone en eventueel thermische beelden, waarnemingen en rapportages. Voor de opdrachtgever verwerken wij deze om de opdracht uit te voeren. Voor onvermijdelijk in beeld komende derden wegen wij het belang van de objectinspectie af tegen hun privacy. De opname richt zich op het object, niet op personen. Onnodig herkenbare personen, kentekens of privéruimten worden vermeden en bij delen verwijderd of onherkenbaar gemaakt.
+
+
+Geanonimiseerde voorbeeldrapporten: wij kunnen een aparte voorbeeldversie van een inspectierapport maken om onze dienstverlening te laten zien. Voor de noodzakelijke interne selectie en anonimisering baseren wij ons op ons gerechtvaardigd belang om onze werkzaamheden met praktijkvoorbeelden toe te lichten. Vooraf wegen wij dit af tegen uw privacy en die van andere betrokkenen, beperken wij het gebruikte materiaal en controleren wij de herleidbaarheid. Een zwaarder wegend privacybelang gaat voor. U kunt tegen deze voorbereiding bezwaar maken via info@roofsignal.nl; wij gebruiken uw dossier dan niet voor dit doel. Voor herkenbare publicatie vragen wij vooraf afzonderlijke toestemming. Zie ook onderdeel 6.
+
+
+Offertes, facturen en betaling: contact- en bedrijfsgegevens, factuurregels, bedragen, betaalstatus en waar nodig rekening- of transactiegegevens. Grondslagen: uitvoering van de overeenkomst en wettelijke administratieplicht. Wij ontvangen geen volledige betaalkaartgegevens via het websiteformulier.
+
+
+Wijkupdates: e-mailadres, postcode en registratie van uw toestemming. Dit gebruiken wij alleen voor de updates waarvoor u zich heeft ingeschreven. Afmelden kan altijd via info@roofsignal.nl of de afmeldmogelijkheid in een update. Een gewone aanvraag of boeking is geen nieuwsbriefinschrijving.
+
+
+Beveiliging en websiteverbetering: technische verzoekgegevens, zoals IP-adres, browsertype, tijdstip en beveiligingssignalen, en beperkte websitegebruiksstatistieken. Grondslag: ons gerechtvaardigd belang om misbruik tegen te gaan en de website te verbeteren, met beperking van de verzamelde gegevens. Zie ook het cookiebeleid.
+
+
+
+Gegevens komen meestal rechtstreeks van u. Bij een opdracht via een VvE of beheerder kunnen object- en contactgegevens ook van die opdrachtgever komen. Geef alleen gegevens door die nodig zijn voor uw vraag of opdracht. Deel geen BSN, identiteitsbewijs of medische informatie via onze formulieren.
+
+
+3. Website, boekingen en klantomgeving
+
+
+Websiteaanvragen en pilotboekingen worden opgeslagen in Supabase. Een pilotboeking wordt per e-mail aan u bevestigd en intern naar RoofSignal en een afgeschermd Odoo-project gestuurd. Odoo wordt gebruikt voor klantregistratie, offertes, facturen en het klantenportaal. Het eerdere backofficesysteem wordt nog gebruikt voor de websiteplanning en bestaande dossiers. Verwerking is dus niet uitsluitend in Odoo ondergebracht.
+
+
+Verplichte velden zijn aangegeven. Zonder de noodzakelijke contact-, object- en boekingsgegevens kunnen wij een aanvraag of opdracht niet verwerken. Optionele bijzonderheden en toestemming voor wijkupdates zijn niet verplicht voor een inspectie.
+
+
+4. Dienstverleners en ontvangers
+
+
+
+Cloudflare: hosting en beveiliging van de website, inclusief Turnstile tegen formuliermisbruik.
+
+
+Supabase: opslag en verwerking van websiteaanvragen, boekingen en bestaande backofficegegevens.
+
+
+Brevo: verzending van automatische aanvraag-, boekings- en andere transactionele e-mails.
+
+
+Antagonist: hosting van de zakelijke mailboxen.
+
+
+Odoo: klantadministratie, offertes, facturen, inspectietaken en klanttoegang.
+
+
+Mollie: verwerking van betalingen die u via een Mollie-betaallink doet. Mollie heeft voor onder meer wettelijke betaal- en fraudetaken een eigen verantwoordelijkheid; zie de privacyverklaring van Mollie.
+
+
+Umami Cloud: beperkte, cookieloze websitegebruiksstatistieken zoals beschreven in het cookiebeleid.
+
+
+
+Daarnaast kunnen een administrateur of adviseur gegevens ontvangen voor de betreffende opdracht, en bevoegde instanties wanneer dat wettelijk verplicht is. Wij verkopen persoonsgegevens niet. Leveranciers krijgen alleen toegang voor de dienst waarvoor zij worden ingezet. Contractuele rollen en privacyafspraken verschillen per dienst; een betaaldienst is niet voor al zijn werkzaamheden onze verwerker.
+
+
+Sommige leveranciers werken internationaal en kunnen gegevens buiten de Europese Economische Ruimte verwerken. Daarbij moeten passende waarborgen gelden, zoals een geldig adequaatheidsbesluit of de standaardcontractbepalingen van de Europese Commissie met noodzakelijke aanvullende maatregelen. U kunt via info@roofsignal.nl informatie over de voor uw gegevens relevante ontvangers en waarborgen opvragen. Wij doen geen algemene belofte dat alle gegevens uitsluitend in Nederland of de EU blijven.
+
+
+5. Hoe lang bewaren wij gegevens?
+
+
+Wij bewaren gegevens zolang dat nodig is voor het doel waarvoor ze zijn verzameld. Voor een inspectiedossier hangt dit af van de lopende opdracht, afspraken over beschikbaarheid van het rapport en de noodzaak om bevindingen bij een klacht of geschil te onderbouwen. Niet alle ruwe beelden zijn daarvoor nodig: onbruikbare of onnodige opnamen en duplicaten komen voor verwijdering in aanmerking zodra zij niet meer nodig zijn voor selectie, rapportage of een lopende kwestie.
+
+
+Losse vragen en niet-aanvaarde offertes bewaren wij in beginsel maximaal twee jaar na het laatste inhoudelijke contact. Fiscale basisadministratie bewaren wij doorgaans zeven jaar op grond van de wettelijke bewaarplicht; dit betekent niet dat alle inspectiefoto’s zeven jaar moeten worden bewaard. Bij een lopend geschil of andere wettelijke plicht kan langere bewaring noodzakelijk zijn. Bij wijkupdates eindigt actief gebruik na afmelding; een minimale registratie van de afmelding kan nodig blijven om die te respecteren.
+
+
+Technische loggegevens en misbruikregistraties worden gebruikt voor beveiliging en foutonderzoek. De bewaartermijn hangt af van de betreffende dienst en een eventueel lopend incident. Verwijdering moet in alle relevante systemen worden verwerkt, waaronder mailboxen, Supabase, Odoo en eventuele documentopslag; verwijderen uit één scherm is niet altijd verwijdering uit het hele dossier. Een resterende reservekopie kan tot afloop van de herstelcyclus blijven bestaan.
+
+
+6. Beveiliging, publicatie en beoordeling
+
+
+Wij gebruiken versleutelde verbindingen en afgeschermde toegang tot administratie en dossiers. Rapporten worden gedeeld met de opdrachtgever en door deze aangewezen ontvangers.
+
+
+Voor een openbaar voorbeeld gebruiken wij een afzonderlijke kopie, met inachtneming van de voorwaarden die voor de opdracht gelden. Wij verwijderen of bewerken persoonsgegevens, dossierkenmerken, locatiegegevens en metadata, en controleren tekst, foto’s, kaarten, links en eventuele 3D-modellen op indirecte herkenbaarheid. Een karakteristiek gebouw of herkenbare omgeving kan alsnog naar een bewoner of opdrachtgever leiden. Bij twijfel publiceren wij niet zonder afzonderlijke toestemming voor het concrete materiaal en gebruik. Vertrouwelijke informatie en beveiligingsgevoelige details blijven buiten het voorbeeld.
+
+
+Alleen een daadwerkelijk geanonimiseerde voorbeeldversie kan zonder afzonderlijke publicatietoestemming worden gebruikt. Voor zover het selecteren en anonimiseren persoonsgegevens betreft, blijft de AVG van toepassing. Herkenbare publicatie berust op voorafgaande, specifieke en vrijwillige toestemming van de betrokken personen en, waar nodig, toestemming van andere rechthebbenden. Een opdrachtgever kan niet automatisch namens alle bewoners of andere personen toestemming geven. Weigeren heeft geen gevolgen voor de inspectie; toestemming kan voor toekomstig gebruik worden ingetrokken. Het ontvangen klantrapport en de overeengekomen bewaartermijnen voor het dossier worden hierdoor niet gewijzigd.
+
+
+De inhoudelijke inspectiebeoordeling en vrijgave van een rapport blijven mensenwerk. Wij nemen geen uitsluitend geautomatiseerde besluiten over u die rechtsgevolgen hebben of u op vergelijkbare wijze aanzienlijk treffen.
+
+
+7. Uw rechten
+
+
+U kunt vragen om inzage, correctie, verwijdering, beperking of — waar van toepassing — overdracht van uw persoonsgegevens. U kunt bezwaar maken tegen verwerking op basis van een gerechtvaardigd belang. Toestemming kunt u altijd voor toekomstig gebruik intrekken; de rechtmatigheid van eerder gebruik blijft daardoor onveranderd. Bij direct marketing respecteren wij uw bezwaar.
+
+
+Mail uw verzoek naar info@roofsignal.nl. Wij vragen alleen aanvullende identificatie als dat nodig is om gegevens niet aan een verkeerde persoon te geven; stuur niet uit uzelf een identiteitsbewijs. Wij reageren in beginsel binnen één maand. Als de wettelijke verlenging nodig is wegens complexiteit of aantal verzoeken, laten wij binnen die maand weten waarom. Niet ieder verwijderverzoek kan volledig worden uitgevoerd, bijvoorbeeld door een fiscale bewaarplicht; wij leggen dat dan uit.
+
+
+U kunt een klacht indienen bij de Autoriteit Persoonsgegevens. Neem bij vragen ook gerust eerst contact met ons op.
+
+
+8. Wijzigingen
+
+
+Wij passen deze verklaring aan wanneer de uitvoering verandert. Bij een wezenlijk nieuw gebruik informeren wij betrokkenen en vragen wij waar nodig vooraf toestemming. Een nieuwe tekst geeft niet met terugwerkende kracht toestemming voor ander gebruik.

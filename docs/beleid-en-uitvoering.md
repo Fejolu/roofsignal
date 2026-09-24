@@ -1,5 +1,9 @@
 # Beleid en uitvoering — 21 september 2026
 
+Aanvulling 24 september 2026: de voorwaarden en privacyverklaring beschrijven nu
+het gebruik van geanonimiseerde voorbeeldrapporten. Zie [de werkafspraak](voorbeeldrapporten.md)
+voor anonimisering, belangenafweging, publicatiecontrole en versiegebonden toepassing.
+
 ## Wat is op de website en in de code geregeld?
 
 - Eén product: RoofSignal Inspectie (dak/gevel met drone), thermografie optioneel.
