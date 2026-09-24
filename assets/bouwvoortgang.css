@@ -1,0 +1,11 @@
+.rs-public .page-hero-bouwvoortgang {
+  min-height: 440px;
+  background: radial-gradient(ellipse at top right, #273d33, #050908 72%);
+}
+.construction-intro { max-width: 1040px; }
+.rs-public .page-hero-bouwvoortgang h1 { max-width: 900px; }
+.rs-public .page-hero-bouwvoortgang .eyebrow { font-size: .85rem; }
+.rs-public .page-hero-bouwvoortgang .btn.ghost { color: #fff; border-color: #b5beba; }
+.construction-lead { max-width: 850px; }
+.construction-lead + .cards { margin-top: 30px; }
+#oplevering, #3d-registratie { scroll-margin-top: 110px; }

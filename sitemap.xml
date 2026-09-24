@@ -8,7 +8,7 @@
   </url>
   <url>
     <loc>https://www.roofsignal.nl/diensten</loc>
-    <lastmod>2026-09-21</lastmod>
+    <lastmod>2026-09-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -176,7 +176,7 @@
   </url>
   <url>
     <loc>https://www.roofsignal.nl/toepassingen</loc>
-    <lastmod>2026-09-21</lastmod>
+    <lastmod>2026-09-24</lastmod>
   </url>
   <url>
     <loc>https://www.roofsignal.nl/dakinspectie-apeldoorn</loc>
@@ -187,4 +187,10 @@
     <lastmod>2026-09-15</lastmod>
   </url>
   <url><loc>https://www.roofsignal.nl/kennisbank-dakinspectie-herfst</loc><lastmod>2026-09-21</lastmod></url>
+  <url>
+    <loc>https://www.roofsignal.nl/bouwvoortgang</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
