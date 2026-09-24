@@ -1,8 +1,10 @@
-import { TERMS_VERSION, TERMS_TEXT } from './terms-20260921.mjs';
+import { termsTextForVersion } from './terms-registry.mjs';
 
 export function bookingLegal(booking) {
   // Do not attach newly written terms to a historical agreement.
-  if (booking.terms_version !== TERMS_VERSION) return { lines: [], attachments: [] };
+  const TERMS_VERSION = booking.terms_version;
+  const TERMS_TEXT = termsTextForVersion(TERMS_VERSION);
+  if (!TERMS_TEXT) return { lines: [], attachments: [] };
   const lines = [
     `Bij uw boeking geaccepteerde voorwaarden: versie ${TERMS_VERSION}. Een bewaarbare kopie is bijgevoegd.`,
     `Overeenkomst gesloten: ${booking.terms_accepted_at}.`,

@@ -7,6 +7,7 @@ import { withdrawalRecord, withdrawalReceipt, isWithdrawal } from '../supabase/f
 import { bookingLegal } from '../supabase/functions/_shared/booking-legal.mjs';
 import { bookingOptions, PARKEN_OFFER_VERSION } from '../supabase/functions/_shared/parken-offer.mjs';
 import { TERMS_TEXT } from '../supabase/functions/_shared/terms-20260921.mjs';
+import { TERMS_TEXT as EXAMPLE_REPORT_TERMS } from '../supabase/functions/_shared/terms-20260924.mjs';
 
 test('explicit current terms are stored and historical agreements do not acquire new terms', () => {
   const body = { offer_version: PARKEN_OFFER_VERSION, terms_accepted: true, thermography_selected: false, terms_version: '2026-09-21' };
@@ -17,6 +18,23 @@ test('explicit current terms are stored and historical agreements do not acquire
   assert.match(legal.lines.join('\n'), /niet verzocht/);
   assert.match(bookingLegal({ terms_version: '2026-09-21', early_start_requested_at: '2026-09-21' }).lines.join('\n'), /inclusief het rapport/);
   assert.equal(Buffer.from(legal.attachments[0].content, 'base64').toString('utf8'), TERMS_TEXT);
+});
+
+test('each agreement receives its own immutable terms, including delayed confirmations', () => {
+  for (const [version, text] of [['2026-09-21', TERMS_TEXT], ['2026-09-24', EXAMPLE_REPORT_TERMS]]) {
+    const options = bookingOptions({ offer_version: PARKEN_OFFER_VERSION, terms_accepted: true, thermography_selected: false, terms_version: version });
+    assert.equal(options.p_terms_version, version);
+    const legal = bookingLegal({ terms_version: version, terms_accepted_at: '2026-09-24T12:00:00Z' });
+    assert.equal(legal.attachments[0].name, `RoofSignal-voorwaarden-${version}.txt`);
+    assert.equal(Buffer.from(legal.attachments[0].content, 'base64').toString('utf8'), text);
+    assert.equal(text, fs.readFileSync(new URL(`../legal/voorwaarden-${version}.txt`, import.meta.url), 'utf8'));
+    assert.ok(legal.lines[0].includes(version));
+  }
+  assert.doesNotMatch(TERMS_TEXT, /van ieder door RoofSignal opgesteld/);
+  assert.match(EXAMPLE_REPORT_TERMS, /van ieder door RoofSignal opgesteld/);
+  for (const version of [null, 'future', 'constructor', '__proto__']) {
+    assert.deepEqual(bookingLegal({ terms_version: version }), { lines: [], attachments: [] });
+  }
 });
 
 test('withdrawal cannot be submitted without an explicit declaration and never changes a booking', () => {
