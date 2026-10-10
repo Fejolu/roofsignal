@@ -1,0 +1,261 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import * as bookingCore from '../inspectie-boeken/booking-core.mjs';
+
+const page = fs.readFileSync(new URL('../inspectie-boeken/index.html', import.meta.url), 'utf8');
+const controller = fs.readFileSync(new URL('../inspectie-boeken/booking.js', import.meta.url), 'utf8')
+  .replace(/^import .*;\n/gm, '');
+const publicConfiguration = fs.readFileSync(new URL('../inspectie-boeken/booking-config.js', import.meta.url), 'utf8');
+const connectedConfiguration = { mode: 'connected', apiBase: '/api/consumer-booking' };
+const statusToken = 'abcdefghijklmnopqrstuvwxyz_123456';
+const recoveryRecord = {
+  version: 1, requestId: '2e4fdd95-6013-4a5a-8c8d-867d4e8bea23',
+  quoteId: 'test_quote_0123456789', slotId: 's1', currency: 'EUR', totalCents: 36179
+};
+
+// This small DOM fake retains the real HTML hierarchy: a message inside a
+// hidden form must count as hidden. It does not simulate layout or replace
+// the desktop/mobile browser check required before live booking.
+class Element {
+  constructor(tagName, attributes = {}) {
+    this.tagName = tagName.toLowerCase();
+    this.attributes = attributes;
+    this.id = attributes.id || '';
+    this.className = attributes.class || '';
+    this.value = attributes.value || '';
+    this.name = attributes.name || '';
+    this.type = attributes.type || '';
+    this.hidden = Object.hasOwn(attributes, 'hidden');
+    this.disabled = Object.hasOwn(attributes, 'disabled');
+    this.checked = Object.hasOwn(attributes, 'checked');
+    this.required = Object.hasOwn(attributes, 'required');
+    this.parentElement = null;
+    this.childNodes = [];
+    this.listeners = new Map();
+  }
+  get children() { return this.childNodes.filter(node => node instanceof Element); }
+  get textContent() {
+    return this.childNodes.map(node => node instanceof Element ? node.textContent : node).join('');
+  }
+  set textContent(text) { this.replaceChildren(String(text)); }
+  append(...nodes) {
+    for (const node of nodes) {
+      if (node instanceof Element) { node.remove(); node.parentElement = this; }
+      this.childNodes.push(node);
+    }
+  }
+  replaceChildren(...nodes) {
+    for (const child of this.children) child.parentElement = null;
+    this.childNodes = [];
+    this.append(...nodes);
+  }
+  remove() {
+    if (this.parentElement) {
+      this.parentElement.childNodes = this.parentElement.childNodes.filter(node => node !== this);
+      this.parentElement = null;
+    }
+  }
+  matches(selector) {
+    if (selector.startsWith('#')) return this.id === selector.slice(1);
+    if (selector.startsWith('.')) return this.className.split(/\s+/).includes(selector.slice(1));
+    if (/^\[[\w-]+\]$/.test(selector)) return Object.hasOwn(this.attributes, selector.slice(1, -1));
+    return this.tagName === selector.toLowerCase();
+  }
+  querySelectorAll(selectors) {
+    const alternatives = selectors.split(',').map(selector => selector.trim());
+    return this.children.flatMap(child => [
+      ...(alternatives.some(selector => child.matches(selector)) ? [child] : []),
+      ...child.querySelectorAll(selectors)
+    ]);
+  }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
+  addEventListener(type, handler) {
+    const handlers = this.listeners.get(type) || [];
+    handlers.push(handler);
+    this.listeners.set(type, handlers);
+  }
+  async dispatch(type) {
+    const event = { type, target: this, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+    for (const handler of this.listeners.get(type) || []) await handler(event);
+    return event;
+  }
+  reportValidity() { return true; }
+  scrollIntoView() {}
+  focus() {}
+}
+
+function documentFromHtml(html) {
+  const document = new Element('#document');
+  const stack = [document];
+  const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+  const tokens = html.match(/<!--[\s\S]*?-->|<![^>]*>|<\/?[A-Za-z][^>]*>|[^<]+/g) || [];
+  for (const token of tokens) {
+    if (token.startsWith('<!')) continue;
+    const closing = token.match(/^<\/([\w:-]+)/);
+    if (closing) {
+      const index = stack.findLastIndex(node => node.tagName === closing[1].toLowerCase());
+      if (index > 0) stack.length = index;
+      continue;
+    }
+    const opening = token.match(/^<([\w:-]+)([\s\S]*?)\/?\s*>$/);
+    if (!opening) { stack.at(-1).append(token); continue; }
+    const attributes = {};
+    for (const match of opening[2].matchAll(/([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)) {
+      attributes[match[1]] = match[2] ?? match[3] ?? match[4] ?? '';
+    }
+    const element = new Element(opening[1], attributes);
+    stack.at(-1).append(element);
+    if (!voidTags.has(element.tagName) && !token.endsWith('/>')) stack.push(element);
+  }
+  document.getElementById = id => document.querySelector(`#${id}`);
+  document.createElement = tag => new Element(tag);
+  return document;
+}
+
+function visible(element) {
+  for (let current = element; current; current = current.parentElement) {
+    if (current.hidden) return false;
+  }
+  return true;
+}
+
+async function settle() {
+  // All fetch responses are local resolved promises. Drain their microtasks,
+  // without waiting for a network or timer and without rewriting the module.
+  await new Promise(setImmediate);
+}
+
+async function bookingPage({ configuration, record, returnToken = null, respond } = {}) {
+  const document = documentFromHtml(page);
+  const location = new URL(`https://www.roofsignal.nl/inspectie-boeken/${returnToken ? `?booking=${returnToken}` : ''}`);
+  const requests = [];
+  const navigations = [];
+  const storageOperations = [];
+  const stored = new Map(record ? [[bookingCore.RECOVERY_STORAGE_KEY, JSON.stringify(record)]] : []);
+  const window = {
+    location: {
+      get href() { return location.href; }, get search() { return location.search; },
+      assign(url) { navigations.push(String(url)); }
+    },
+    history: { replaceState(_state, _title, url) { location.href = new URL(url, location).href; } }
+  };
+  const context = vm.createContext({
+    ...bookingCore, window, document, URL, URLSearchParams, crypto,
+    setTimeout, clearTimeout, AbortSignal: { timeout: () => new AbortController().signal },
+    sessionStorage: {
+      getItem(key) { storageOperations.push(['get', key]); return stored.get(key) ?? null; },
+      setItem(key, value) { storageOperations.push(['set', key]); stored.set(key, value); },
+      removeItem(key) { storageOperations.push(['remove', key]); stored.delete(key); }
+    },
+    fetch: async (url, options = {}) => {
+      const request = {
+        url: String(url), path: new URL(url, location).pathname,
+        method: options.method || 'GET', body: options.body ? JSON.parse(options.body) : null
+      };
+      requests.push(request);
+      assert.ok(respond, `Unexpected request in local preview: ${request.path}`);
+      // Deliberately no fallback to global fetch: test data never leaves Node.
+      const data = await respond(request);
+      return Response.json(data);
+    }
+  });
+  vm.runInContext(publicConfiguration, context, { filename: 'booking-config.js' });
+  if (configuration !== undefined) window.ROOFSIGNAL_BOOKING = configuration;
+  vm.runInContext(controller, context, { filename: 'booking.js' });
+  await settle();
+  const get = id => {
+    const element = document.getElementById(id);
+    assert.ok(element, `Missing page element: ${id}`);
+    return element;
+  };
+  return { document, get, requests, navigations, storageOperations, stored };
+}
+
+function statusRetry(document) {
+  return document.querySelectorAll('button').find(button => visible(button) && !button.disabled && /betaalstatus.*controleren/i.test(button.textContent));
+}
+
+test('Recovery errors after a Mollie return remain visible while the same payment is retained', async () => {
+  let recoverCalls = 0;
+  const ui = await bookingPage({
+    configuration: connectedConfiguration, record: recoveryRecord, returnToken: statusToken,
+    respond(request) {
+      if (request.path.endsWith('/status')) return { status: 'pending' };
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      if (++recoverCalls > 1) throw new Error('Simulated recovery timeout');
+      return { requestId: recoveryRecord.requestId, state: 'pending' };
+    }
+  });
+  assert.equal(ui.get('booking-form').hidden, true);
+  assert.equal(ui.get('checkout-button').disabled, false);
+  await ui.get('booking-form').dispatch('submit');
+  await settle();
+  assert.match(ui.get('booking-error').textContent, /verbinding is onderbroken/i);
+  assert.ok(visible(ui.get('booking-error')), 'Recovery errors must not be hidden with the form');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  assert.equal(recoverCalls, 2);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('A failed return-status retry leaves another visible retry without creating a new payment', async () => {
+  let statusCalls = 0;
+  const ui = await bookingPage({
+    configuration: connectedConfiguration, returnToken: statusToken,
+    respond(request) {
+      assert.ok(request.path.endsWith('/status'));
+      if (++statusCalls === 2) throw new Error('Simulated status timeout');
+      return { status: 'open' };
+    }
+  });
+  const firstRetry = statusRetry(ui.document);
+  assert.ok(firstRetry, 'An open payment must expose a status retry');
+  await firstRetry.dispatch('click');
+  await settle();
+  assert.match(ui.get('booking-status').textContent, /verbinding is onderbroken/i);
+  assert.ok(visible(ui.get('booking-status')));
+  const nextRetry = statusRetry(ui.document);
+  assert.ok(nextRetry, 'A network error must leave status checking available');
+  await nextRetry.dispatch('click');
+  await settle();
+  assert.equal(statusCalls, 3);
+  assert.equal(ui.get('booking-form').hidden, true);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('The checked-in preview never reads recovery storage or sends customer input', async () => {
+  const ui = await bookingPage({ record: recoveryRecord, returnToken: statusToken });
+  ui.get('postcode').value = '7316 BH';
+  ui.get('houseNumber').value = '4';
+  ui.get('name').value = 'Private preview value';
+  await ui.get('check-address').dispatch('click');
+  const submit = await ui.get('booking-form').dispatch('submit');
+  await settle();
+  assert.equal(submit.defaultPrevented, true);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.document.querySelectorAll('input').filter(input => input.name === 'slot').length, 0);
+  assert.match(ui.get('address-status').textContent, /conceptpagina/i);
+  assert.deepEqual(ui.requests, []);
+  assert.deepEqual(ui.storageOperations, []);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('An invalid integration destination keeps inputs disabled and sends no request', async () => {
+  const ui = await bookingPage({
+    configuration: { mode: 'connected', apiBase: 'https://untrusted.invalid/collect' },
+    record: recoveryRecord, returnToken: statusToken
+  });
+  assert.ok(ui.get('booking-form').querySelectorAll('input, textarea, select').every(input => input.disabled));
+  assert.equal(ui.get('check-address').disabled, true);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.ok(visible(ui.get('booking-error')));
+  assert.match(ui.get('booking-error').textContent, /niet juist ingesteld/i);
+  assert.deepEqual(ui.requests, []);
+  assert.deepEqual(ui.storageOperations, []);
+});

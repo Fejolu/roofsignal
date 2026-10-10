@@ -1,3 +1,7 @@
+# Keep consumer booking and its assets outside the legacy location redirects.
+/inspectie-boeken /inspectie-boeken/ 301
+/inspectie-boeken.html /inspectie-boeken/ 301
+/inspectie-boeken/* /inspectie-boeken/:splat 200
 /inspectie-*.html /werkgebied 301
 /inspectie-* /werkgebied 301
 /dakinspectie-deventer /werkgebied 301

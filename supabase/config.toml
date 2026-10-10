@@ -4,6 +4,11 @@
 # working directory name when running `supabase init`.
 project_id = "roofsignal"
 
+# Private test routes authenticate the service-role bearer in the function.
+# Mollie webhooks independently fetch and verify the provider payment.
+[functions.consumer-booking]
+verify_jwt = false
+
 # Machine-to-machine endpoint. The function itself requires the private
 # INVOICE_AUTOMATION_SECRET header; disabling the user-JWT gate here prevents
 # the scheduler from being rejected before that check can run.
