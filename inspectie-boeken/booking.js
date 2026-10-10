@@ -82,7 +82,7 @@ async function api(path, options = {}) {
       credentials: apiBase.startsWith('/') ? 'same-origin' : 'omit',
       cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error',
       headers: { 'content-type': 'application/json', ...options.headers },
-      signal: AbortSignal.timeout(20000)
+      signal: AbortSignal.timeout(60000)
     });
   } catch {
     throw new BookingError('De verbinding is onderbroken. Controleer uw bestaande betaalopdracht voordat u opnieuw probeert te boeken.');
@@ -147,11 +147,14 @@ el('check-address').addEventListener('click', async () => {
       houseNumber: normalizeHouseNumber(el('houseNumber').value)
     };
     for (const id of ['postcode', 'houseNumber']) if (!el(id).reportValidity()) return;
+    if (!window.RoofSignalFormSecurity) throw new Error('Formulierbeveiliging wordt nog geladen. Probeer het over een ogenblik opnieuw.');
+    window.RoofSignalFormSecurity.ensureReady(form);
+    const turnstileToken = window.RoofSignalFormSecurity.getPayload(form).turnstile_token;
     const thermal = el('thermal').checked;
     clearQuote(); const requestRevision = revision;
     loading = true; el('check-address').disabled = true; updateSummary();
     message('address-status', 'Adres en reiskosten controleren…');
-    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal }) });
+    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, turnstileToken }) });
     if (requestRevision !== revision) return;
     quote = validateQuote(received, thermal, Date.now(), address);
     el('street').value = quote.address.street;
@@ -167,6 +170,7 @@ el('check-address').addEventListener('click', async () => {
   } catch (error) {
     clearQuote(); message('address-status', error.message);
   } finally {
+    window.RoofSignalFormSecurity?.reset(form);
     loading = false; el('check-address').disabled = false; updateSummary();
   }
 });

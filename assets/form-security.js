@@ -1,5 +1,5 @@
 (() => {
-  const protectedForms = document.querySelectorAll("[data-lead-form], [data-parken-booking], [data-withdrawal-form]");
+  const protectedForms = document.querySelectorAll("[data-lead-form], [data-parken-booking], [data-withdrawal-form], [data-consumer-booking]");
   if (!protectedForms.length) return;
 
   const config = window.ROOFSIGNAL_SUPABASE || {};
@@ -25,8 +25,8 @@
     widget.dataset.theme = "light";
     widget.dataset.size = "flexible";
     widget.dataset.appearance = "interaction-only";
-    widget.dataset.action = form.hasAttribute("data-withdrawal-form") ? "withdrawal" : form.dataset.leadForm || "parken_booking";
-    const button = form.querySelector("button[type='submit']");
+    widget.dataset.action = form.hasAttribute("data-consumer-booking") ? "consumer_quote" : form.hasAttribute("data-withdrawal-form") ? "withdrawal" : form.dataset.leadForm || "parken_booking";
+    const button = form.querySelector(form.hasAttribute("data-consumer-booking") ? '#check-address' : "button[type='submit']");
     button?.before(widget);
     form.dataset.securityReady = "ready";
   }

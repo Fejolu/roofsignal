@@ -1,5 +1,4 @@
 // Payment invariants shared by the Edge Function and fault-injection tests.
-export const CONSUMER_MODE = 'test';
 export const PROFILE_ID = 'pfl_Bef5DYX9w5';
 export const RETRY_WINDOW_MS = 40 * 60 * 1000;
 export const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
@@ -15,7 +14,7 @@ export function paymentBody(attempt, quote, publicBase) {
     description:`RoofSignal Inspectie ${attempt.reference}`,
     profileId:PROFILE_ID, testmode:attempt.mode==='test', method:'ideal', locale:'nl_NL',
     redirectUrl:`https://www.roofsignal.nl/inspectie-boeken/?booking=${attempt.status_token}`,
-    webhookUrl:`${publicBase}/webhook`,
+    webhookUrl:`${publicBase}/webhook?mode=${attempt.mode}`,
     metadata:{consumerRequestId:attempt.id,quoteId:quote.id,integration:'roofsignal-consumer-v1',mode:attempt.mode}
   };
 }

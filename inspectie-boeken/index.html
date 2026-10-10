@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="/assets/site-public.css?v=20260915">
     <link rel="stylesheet" href="./booking.css">
     <script src="./booking-config.js" defer></script>
+    <script src="/assets/supabase-config.js" defer></script>
+    <script src="/assets/form-security.js" defer></script>
     <script src="./booking.js" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
@@ -103,7 +105,7 @@
         </div>
 
         <div class="booking-layout">
-          <form id="booking-form" class="booking-form" method="post" novalidate>
+          <form id="booking-form" class="booking-form" method="post" data-consumer-booking novalidate>
             <fieldset class="form-step" aria-describedby="address-description">
               <legend><span class="step-number" aria-hidden="true">1</span><span>Uw adres</span></legend>
               <p class="step-description" id="address-description">Dit aanbod geldt voor het hoofdgebouw van één grondgebonden woning. Heeft u een appartement, bijgebouw of ander object? <a href="/contact">Vraag een voorstel aan.</a></p>

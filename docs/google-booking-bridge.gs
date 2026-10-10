@@ -46,19 +46,19 @@ function prioritizeSlots(slots) {
  */
 const RS_CALENDAR = 'ferry.joosten@gmail.com';
 const RS_ORIGIN = 'Burg. Tutein Noltheniuslaan 4, 7316 BH Apeldoorn, Nederland';
-const RS_MODE = 'test'; // A separate reviewed deployment is required for live.
+const RS_MODES = ['test','live']; // Caller is always the OAuth-authorized owner.
 
 // Deploy as an API executable with access restricted to the owner. Never as a
 // public web app. The caller must use OAuth from the same Google Cloud project.
 function initializeRoofSignalBridge() {
   CalendarApp.getCalendarById(RS_CALENDAR).getName();
   Maps.newDirectionFinder().setOrigin(RS_ORIGIN).setDestination('Markt 1, Apeldoorn, Nederland').setMode(Maps.DirectionFinder.Mode.DRIVING).getDirections();
-  return {ok:true,mode:RS_MODE};
+  return {ok:true,modes:RS_MODES};
 }
 function executeRoofSignal(data) {
   if(Session.getEffectiveUser().getEmail()!==RS_CALENDAR)throw Error('UNAUTHORIZED');
-  if(!data||JSON.stringify(data).length>12000||data.mode!==RS_MODE)throw Error('INVALID_REQUEST');
-  if(data.action==='health')return {ok:true,mode:RS_MODE,calendar:RS_CALENDAR,timeZone:BOOKING_TIME_ZONE,inspectionMinutes:INSPECTION_MINUTES};
+  if(!data||JSON.stringify(data).length>12000||!RS_MODES.includes(data.mode))throw Error('INVALID_REQUEST');
+  if(data.action==='health')return {ok:true,mode:data.mode,calendar:RS_CALENDAR,timeZone:BOOKING_TIME_ZONE,inspectionMinutes:INSPECTION_MINUTES};
   if(!['route','availability','hold','confirm','release'].includes(data.action))throw Error('UNKNOWN_ACTION');
   const lock=LockService.getScriptLock();
   if(!lock.tryLock(20000))throw Error('CALENDAR_BUSY');
@@ -123,7 +123,7 @@ function rsDaySlots(calendar,day,destination,cache,excludeMarker,existingHold=fa
 }
 function rsMarker(data) {
   if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(data.requestId||''))throw Error('INVALID_REQUEST_ID');
-  return 'RoofSignal consumer reservation '+RS_MODE+' '+data.requestId;
+  return 'RoofSignal consumer reservation '+data.mode+' '+data.requestId;
 }
 function rsFind(calendar,start,marker) {
   return calendar.getEvents(new Date(start.getTime()-86400000),new Date(start.getTime()+2*86400000),{search:marker})
@@ -157,13 +157,13 @@ function rsDispatch(data) {
   if(existing.length) {
     const event=existing[0];
     if(event.getStartTime().getTime()!==start.getTime()||event.getEndTime().toISOString()!==match.end||event.getLocation()!==destination)throw Error('CALENDAR_REVIEW_REQUIRED');
-    if(data.action==='confirm')event.setTitle((RS_MODE==='test'?'[TEST] ':'')+'RoofSignal Inspectie · '+data.reference);
+    if(data.action==='confirm')event.setTitle((data.mode==='test'?'[TEST] ':'')+'RoofSignal Inspectie · '+data.reference);
     return {eventId:event.getId(),start:match.start,end:match.end,confirmed:data.action==='confirm'};
   }
   if(data.action==='confirm')throw Error('CALENDAR_HOLD_MISSING');
   // The unique marker is part of the initial insert. If the response or process
   // is lost afterwards, a retry finds this exact event under the script lock.
-  const event=calendar.createEvent((RS_MODE==='test'?'[TEST] ':'')+'RoofSignal · betaling in behandeling',start,new Date(match.end),{location:destination,description:marker,sendInvites:false});
+  const event=calendar.createEvent((data.mode==='test'?'[TEST] ':'')+'RoofSignal · betaling in behandeling',start,new Date(match.end),{location:destination,description:marker,sendInvites:false});
   event.setVisibility(CalendarApp.Visibility.PRIVATE);
   return {eventId:event.getId(),start:match.start,end:match.end,confirmed:false};
 }

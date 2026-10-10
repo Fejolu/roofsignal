@@ -135,6 +135,7 @@ async function bookingPage({ configuration, record, returnToken = null, respond 
   const storageOperations = [];
   const stored = new Map(record ? [[bookingCore.RECOVERY_STORAGE_KEY, JSON.stringify(record)]] : []);
   const window = {
+    RoofSignalFormSecurity: { ensureReady() { return true; }, getPayload() { return {turnstile_token:'unit-test-only'}; }, reset() {} },
     location: {
       get href() { return location.href; }, get search() { return location.search; },
       assign(url) { navigations.push(String(url)); }
