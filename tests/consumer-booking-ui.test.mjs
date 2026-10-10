@@ -143,7 +143,7 @@ async function bookingPage({ configuration, record, returnToken = null, respond 
   };
   const context = vm.createContext({
     ...bookingCore, window, document, URL, URLSearchParams, crypto,
-    setTimeout, clearTimeout, AbortSignal: { timeout: () => new AbortController().signal },
+    setTimeout: (...args) => setTimeout(...args).unref(), clearTimeout, AbortSignal: { timeout: () => new AbortController().signal },
     sessionStorage: {
       getItem(key) { storageOperations.push(['get', key]); return stored.get(key) ?? null; },
       setItem(key, value) { storageOperations.push(['set', key]); stored.set(key, value); },
@@ -258,4 +258,55 @@ test('An invalid integration destination keeps inputs disabled and sends no requ
   assert.match(ui.get('booking-error').textContent, /niet juist ingesteld/i);
   assert.deepEqual(ui.requests, []);
   assert.deepEqual(ui.storageOperations, []);
+});
+
+async function submitNewOrder(checkoutResponse) {
+  const quote = {
+    quoteId: recoveryRecord.quoteId, serviceable: true, currency: 'EUR',
+    baseCents: 36179, thermalCents: 0, travelCents: 0, totalCents: 36179,
+    travelDescription: 'Lokale test; geen werkelijke route.', termsVersion: 'test',
+    expiresAt: new Date(Date.now() + 600000).toISOString(),
+    address: {postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}
+  };
+  const slot = {id:'s1', start:new Date(Date.now()+86400000).toISOString(), end:new Date(Date.now()+89100000).toISOString()};
+  const ui = await bookingPage({configuration:connectedConfiguration, respond(request) {
+    if (request.path.endsWith('/quote')) return quote;
+    if (request.path.endsWith('/availability')) return {quoteId:quote.quoteId,slots:[slot]};
+    assert.ok(request.path.endsWith('/checkout'));
+    return checkoutResponse(request.body);
+  }});
+  ui.get('postcode').value='1234 AB'; ui.get('houseNumber').value='12';
+  await ui.get('check-address').dispatch('click');
+  const choice = ui.get('slots').querySelector('input');
+  assert.ok(choice); await choice.dispatch('change');
+  ui.get('name').value='Test'; ui.get('email').value='test@example.invalid';
+  ui.get('termsAccepted').checked=true; ui.get('earlyStartRequested').checked=true;
+  await ui.get('booking-form').dispatch('submit'); await settle();
+  return ui;
+}
+
+test('A slot lost during checkout releases only a durably closed attempt and invites another choice', async () => {
+  const ui=await submitNewOrder(attempt=>({requestId:attempt.requestId,state:'not_created',code:'REQUEST_NOT_CREATED',reason:'SLOT_UNAVAILABLE',paymentCreated:false,requestClosed:true}));
+  assert.equal(ui.stored.size,0);
+  assert.equal(ui.get('postcode').disabled,false);
+  assert.match(ui.get('booking-status').textContent,/inmiddels bezet/);
+  assert.equal(ui.get('booking-error').textContent,'');
+  assert.deepEqual(ui.navigations,[]);
+});
+
+test('A still-pending initial checkout retains the same recovery record without claiming an error or redirect', async () => {
+  const ui=await submitNewOrder(attempt=>({requestId:attempt.requestId,state:'pending'}));
+  assert.equal(ui.stored.size,1);
+  assert.equal(ui.get('postcode').disabled,true);
+  assert.match(ui.get('booking-status').textContent,/nog gecontroleerd/);
+  assert.equal(ui.get('booking-error').textContent,'');
+  assert.deepEqual(ui.navigations,[]);
+});
+
+test('An initial paid result is shown without recreating or reopening payment', async () => {
+  const ui=await submitNewOrder(attempt=>({...attempt,reference:'TEST',currency:'EUR',totalCents:36179,state:'closed',status:'confirmed',requestClosed:true}));
+  assert.equal(ui.stored.size,1);
+  assert.match(ui.get('booking-status').textContent,/inspectie is geboekt/);
+  assert.equal(ui.get('checkout-button').textContent,'Een nieuwe inspectie boeken');
+  assert.deepEqual(ui.navigations,[]);
 });

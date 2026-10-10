@@ -124,7 +124,7 @@ el('check-address').addEventListener('click', async () => {
     const thermal = el('thermal').checked;
     clearQuote(); const requestRevision = revision;
     loading = true; el('check-address').disabled = true; updateSummary();
-    message('address-status', 'Adres, uitvoerbaarheid en reiskosten controleren…');
+    message('address-status', 'Adres en reiskosten controleren…');
     const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal }) });
     if (requestRevision !== revision) return;
     quote = validateQuote(received, thermal, Date.now(), address);
@@ -188,26 +188,34 @@ function handleCheckoutError(error) {
   message('booking-error', `${error.message}${recovery ? ' Gebruik de knop om uw bestaande betaalopdracht te controleren. De gegevens blijven vergrendeld; start geen tweede boeking.' : ''}`);
 }
 
+function applyAttemptResponse(data, resume = false) {
+  const result = validateRecoveryResponse(data, recovery);
+  if (result.state === 'not_created') {
+    releaseRecovery();
+    message('booking-status', data.reason === 'SLOT_UNAVAILABLE'
+      ? 'Dit moment is inmiddels bezet. Er is geen betaling aangemaakt. Controleer uw adres opnieuw en kies een ander moment.'
+      : 'Er is geen betaling aangemaakt. Controleer uw adres opnieuw voordat u een nieuwe opdracht start.');
+  } else if (result.state === 'closed') {
+    if (['confirmed', 'paid_review_required'].includes(result.status)) closedStatus = result.status;
+    else releaseRecovery();
+    message('booking-status', paymentMessage(result.status));
+  } else if (result.state === 'checkout_ready') {
+    message('booking-status', resume
+      ? 'Uw betaalopdracht is gereed. U gaat nu naar de beveiligde betaalpagina van Mollie.'
+      : 'Uw bestaande betaalopdracht is gevonden. Gebruik de knop om verder te gaan naar dezelfde beveiligde betaalpagina.');
+    if (resume) window.location.assign(result.checkoutUrl);
+  } else {
+    message('booking-status', 'Uw bestaande betaalopdracht wordt nog gecontroleerd. Start geen tweede boeking. Controleer de status over een ogenblik opnieuw.');
+  }
+}
+
 async function recoverExisting(resume = false) {
   if (!connected || !recovery || loading || recoveryBlocked) return;
   loading = true; lockOrder(); updateSummary();
   message('booking-error', '');
   try {
     const data = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId: recovery.requestId }) });
-    const result = validateRecoveryResponse(data, recovery);
-    if (result.state === 'not_created') {
-      releaseRecovery();
-      message('booking-status', 'Er is geen betaling aangemaakt. Controleer uw adres opnieuw voordat u een nieuwe opdracht start.');
-    } else if (result.state === 'closed') {
-      if (['confirmed', 'paid_review_required'].includes(result.status)) closedStatus = result.status;
-      else releaseRecovery();
-      message('booking-status', paymentMessage(result.status));
-    } else if (result.state === 'checkout_ready') {
-      message('booking-status', 'Uw bestaande betaalopdracht is gevonden. Gebruik de knop om verder te gaan naar dezelfde beveiligde betaalpagina.');
-      if (resume) window.location.assign(result.checkoutUrl);
-    } else {
-      message('booking-status', 'Uw bestaande betaalopdracht wordt nog gecontroleerd. Start geen tweede boeking. Controleer de status over een ogenblik opnieuw.');
-    }
+    applyAttemptResponse(data, resume);
   } catch (error) { handleCheckoutError(error); }
   finally { loading = false; updateSummary(); }
 }
@@ -249,9 +257,7 @@ form.addEventListener('submit', async event => {
   loading = true; updateSummary();
   try {
     const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt) });
-    const checkoutUrl = validateCheckout(payment, recovery);
-    message('booking-status', 'Uw betaalopdracht is gereed. U gaat nu naar de beveiligde betaalpagina van Mollie.');
-    window.location.assign(checkoutUrl);
+    applyAttemptResponse(payment, true);
   } catch (error) {
     handleCheckoutError(error);
   } finally { loading = false; updateSummary(); }
