@@ -217,8 +217,18 @@ Deno.serve(async(req:Request)=>{
    if(!UUID.test(body.requestId))throw Error('INVALID_REQUEST');
    const a=await one('consumer_attempts','id',body.requestId);
    if(!a||a.mode!=='test'||!['confirmed','failed','canceled','expired'].includes(a.status))throw Error('TEST_RELEASE_NOT_ALLOWED');
-   const result=await bridge('release',{requestId:a.id,start:a.slot_start});
-   return respond({released:result.released===true});
+   if(a.test_released_at)return respond({released:true});
+   const job=await claim(a.id);
+   if(a.status==='confirmed'&&!job.claimed)throw Error('TEST_RELEASE_BUSY');
+   try{
+    const result=await bridge('release',{requestId:a.id,start:a.slot_start});
+    if(result.released!==true)throw Error('TEST_RELEASE_FAILED');
+    await checked(db.from('consumer_mail_outbox').update({status:'canceled'}).eq('request_id',a.id).in('status',['pending','review']));
+    await checked(db.from('consumer_attempts').update({test_released_at:now()}).eq('id',a.id).eq('mode','test'));
+    return respond({released:true});
+   }finally{
+    if(job.claimed)await checked(db.from('consumer_attempts').update({lease_token:null,locked_until:null}).eq('id',a.id).eq('lease_token',job.attempt.lease_token));
+   }
   }
   return respond({error:'NOT_FOUND'},404);
  }catch(e:any){return respond({error:safeError(e),...(admin&&e?.diagnostic?{diagnostic:e.diagnostic}:{})},503);}
