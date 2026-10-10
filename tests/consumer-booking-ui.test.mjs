@@ -237,8 +237,8 @@ test('Missing human verification does not send an address or request availabilit
   assert.equal(ui.requests.length,0);
   assert.match(ui.get('address-status').textContent,/Bevestig eerst/);
 });
-test('The checked-in preview never reads recovery storage or sends customer input', async () => {
-  const ui = await bookingPage({ record: recoveryRecord, returnToken: statusToken });
+test('Explicit preview never reads recovery storage or sends customer input', async () => {
+  const ui = await bookingPage({ configuration: { mode: 'preview' }, record: recoveryRecord, returnToken: statusToken });
   ui.get('postcode').value = '7316 BH';
   ui.get('houseNumber').value = '4';
   ui.get('name').value = 'Private preview value';

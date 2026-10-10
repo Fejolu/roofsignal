@@ -2,7 +2,7 @@
 
 ## Werkelijke status — 10 oktober 2026
 
-Het VvE-Warmtefondsartikel staat live sinds commit `0ea2eda` en is vanuit de kennisbank bereikbaar. De consumentenboeking staat **niet live**: de publieke configuratie blijft `preview`. De besloten proefketen werkt met echte agenda-, route-, e-mail- en Mollie-testkoppelingen. Dat is geen voltooide publieke boekingsflow.
+Het VvE-Warmtefondsartikel staat live sinds commit `0ea2eda` en is vanuit de kennisbank bereikbaar. De consumentenboeking staat **niet live**. Op deze branch is de frontend voor livegebruik klaargezet (`connected`, indexeerbaar, zonder conceptteksten, met links in het dienstenmenu en de particuliere prijskaarten). Deze wijziging is nog niet naar `main` gepubliceerd; de servervlag voor publieke boekingen staat uit. De besloten proefketen werkt met echte agenda-, route-, e-mail- en Mollie-testkoppelingen. Dat is geen voltooide publieke boekingsflow.
 
 Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websitepublicatie via bestaande Cloudflare Pages-koppeling aan `main`; Supabase uitsluitend via `Supabase productie-release` en `tools/supabase_release.py`.
 
@@ -81,7 +81,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 
 ## Routecontract (privétest geïmplementeerd; publieke activatie nog nodig)
 
-Wijzig pas na backendimplementatie en geslaagde integratietests de configuratie in `inspectie-boeken/booking-config.js`:
+De configuratie in `inspectie-boeken/booking-config.js` staat op deze branch klaar voor livegebruik. Publiceer deze pas na het afronden van de bovenstaande blokkades:
 
 ```js
 window.ROOFSIGNAL_BOOKING = Object.freeze({
@@ -94,7 +94,7 @@ Deze instelling activeert alleen browserverzoeken. Zij creëert géén integrati
 
 De adapter verstuurt op dit moment geen `Authorization`- of `apikey`-header. De functie is met passende toegangscontroles publiek aanroepbaar, maar livecreatie staat uit. Publieke activatie vereist inrichting met passende CORS, inputcontrole, misbruikbeperking en beperkte quote-/hersteltokens, of via een eigen gateway lopen. Een publieke authheader mag alleen worden toegevoegd wanneer de daadwerkelijke serverconfiguratie dat vereist. CORS op zichzelf is geen toegangscontrole. De adapter weigert redirects en gebruikt geen cross-origin cookies.
 
-Verwijder bij activatie de conceptmelding en concepttitel, pas `noindex` in zowel de HTML als `_headers` aan en controleer canonieke URL en de bestaande robots-/sitemapconfiguratie. Voeg pas dan links in de relevante bestaande navigatie en tariefpagina toe.
+De conceptmelding en concepttitel zijn op deze branch verwijderd, HTML en `_headers` zijn voor indexering aangepast, de canonieke URL staat vast en de boekingsroute is aan de sitemap en bestaande navigatie toegevoegd. Controleer deze na de uiteindelijke publicatie op de echte URL.
 
 ### POST /api/consumer-booking/quote
 

@@ -43,7 +43,7 @@ class BookingMarkup(HTMLParser):
             self.in_booking_form = False
 
 
-def test_consumer_preview_starts_disabled_and_remains_noindex():
+def test_consumer_booking_starts_disabled_until_javascript_guards_are_attached():
     markup = BookingMarkup()
     markup.feed((BOOKING / 'index.html').read_text(encoding='utf-8'))
     assert markup.controls, 'The booking form must contain its input controls'
@@ -52,7 +52,7 @@ def test_consumer_preview_starts_disabled_and_remains_noindex():
     )
     for identifier in ('check-address', 'checkout-button'):
         assert 'disabled' in markup.elements[identifier], identifier
-    assert 'noindex' in re.split(r'[,\s]+', markup.meta['robots'].lower())
+    assert 'index' in re.split(r'[,\s]+', markup.meta['robots'].lower())
 
 
 def test_consumer_route_and_assets_are_not_captured_by_legacy_work_area_redirects():

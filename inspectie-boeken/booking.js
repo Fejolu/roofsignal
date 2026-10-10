@@ -1,7 +1,7 @@
 import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs';
 
-// Deliberately off until the LIVE site's existing server integrations are wired
-// and verified. No public key, calendar token or Mollie secret belongs here.
+// Missing or invalid configuration fails closed. All calendar and payment
+// credentials remain on the server.
 let configuration;
 let configurationError = '';
 try { configuration = resolveBookingConfiguration(window.ROOFSIGNAL_BOOKING); }
