@@ -13,6 +13,7 @@ const el = id => document.getElementById(id);
 const form = el('booking-form');
 let quote = null;
 let selectedSlot = null;
+let availableSlots = [];
 let loading = false;
 let checkoutAttempt = null;
 let recovery = null;
@@ -54,6 +55,9 @@ function clearQuote() {
   clearTimeout(quoteExpiryTimer);
   quote = null;
   selectedSlot = null;
+  availableSlots = [];
+  el('slot-day-field').hidden = true;
+  el('slot-day').replaceChildren();
   el('street').value = '';
   el('city').value = '';
   el('termsAccepted').checked = false;
@@ -90,14 +94,34 @@ async function api(path, options = {}) {
   return data;
 }
 
+const slotDay = slot => new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(slot.start));
+
 function renderSlots(slots) {
+  availableSlots = slots;
   el('slots').replaceChildren();
+  el('slot-day-field').hidden = !slots.length;
   if (!slots.length) {
     message('slot-status', 'Er zijn nu geen online momenten beschikbaar voor deze inspectie. Neem contact op om een afspraak af te stemmen.');
     return;
   }
   message('slot-status', 'Kies een moment. Alle tijden zijn lokale Nederlandse tijden. De beschikbaarheid wordt bij het afrekenen opnieuw gecontroleerd.');
-  for (const slot of slots) {
+  const dates = [...new Set(slots.map(slotDay))];
+  const selector = el('slot-day'); selector.replaceChildren();
+  for (const day of dates) {
+    const option = document.createElement('option'); option.value = day;
+    const daySlots = slots.filter(slot => slotDay(slot) === day);
+    option.textContent = new Intl.DateTimeFormat('nl-NL', {timeZone:'Europe/Amsterdam',weekday:'long',day:'numeric',month:'long'}).format(new Date(daySlots[0].start))
+      + (daySlots.some(slot => slot.recommended === true) ? ' · Aanbevolen' : '');
+    selector.append(option);
+  }
+  selector.value = dates[0];
+  renderSelectedDay();
+}
+
+function renderSelectedDay() {
+  selectedSlot = null;
+  el('slots').replaceChildren();
+  for (const slot of availableSlots.filter(slot => slotDay(slot) === el('slot-day').value)) {
     const label = document.createElement('label'); label.className = 'slot-choice';
     const input = document.createElement('input');
     input.type = 'radio'; input.name = 'slot'; input.value = slot.id; input.required = true;
@@ -106,7 +130,9 @@ function renderSlots(slots) {
     input.addEventListener('change', () => { selectedSlot = slot; updateSummary(); });
     label.append(input, text); el('slots').append(label);
   }
+  updateSummary();
 }
+el('slot-day').addEventListener('change', renderSelectedDay);
 
 el('check-address').addEventListener('click', async () => {
   if (loading || recovery || recoveryBlocked) return;

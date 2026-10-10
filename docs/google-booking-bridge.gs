@@ -66,18 +66,24 @@ function executeRoofSignal(data) {
 }
 
 function rsLocation(value) {
-  if(typeof value!=='string'||!value.trim()||value.length>250||/[\r\n]/.test(value))throw Error('INVALID_LOCATION');
-  return value.trim();
+  if(typeof value!=='string'||value.length>1000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value))throw Error('INVALID_LOCATION');
+  const location=value.trim().replace(/\s*[\r\n]+\s*/g,', ').replace(/[\t ]+/g,' ');
+  if(!location||location.length>250)throw Error('INVALID_LOCATION');
+  return location;
 }
 function rsRoute(from,to,cache) {
   from=rsLocation(from);to=rsLocation(to);
   const key=from+'\n'+to;
+  if(cache[key]===null)throw Error('ROUTE_UNAVAILABLE');
   if(cache[key])return cache[key];
   if(from===to)return {distanceMeters:0,durationSeconds:0};
   const response=Maps.newDirectionFinder().setOrigin(from).setDestination(to)
     .setRegion('nl').setLanguage('nl').setMode(Maps.DirectionFinder.Mode.DRIVING).setAlternatives(false).getDirections();
+  if(response&&['ZERO_RESULTS','NOT_FOUND','INVALID_REQUEST'].includes(response.status)) {
+    cache[key]=null;throw Error('ROUTE_UNAVAILABLE');
+  }
   const leg=response&&response.status==='OK'&&response.routes[0]&&response.routes[0].legs[0];
-  if(!leg||!Number.isSafeInteger(leg.distance.value)||!Number.isFinite(leg.duration.value))throw Error('ROUTE_UNAVAILABLE');
+  if(!leg||!Number.isSafeInteger(leg.distance.value)||leg.distance.value<0||!Number.isFinite(leg.duration.value)||leg.duration.value<0)throw Error('ROUTE_SERVICE_UNAVAILABLE');
   const route={distanceMeters:leg.distance.value,durationSeconds:leg.duration.value,provider:'Google Maps via Apps Script',calculatedAt:new Date().toISOString()};
   cache[key]=route;return route;
 }
@@ -101,11 +107,16 @@ function rsDaySlots(calendar,day,destination,cache,excludeMarker,existingHold=fa
   if(weekday===0||weekday===6)return [];
   const events=rsEvents(calendar,day,excludeMarker),slots=[];
   const dayStart=rsLocalTime(day,540),dayEnd=rsLocalTime(day,960);
-  const routeSeconds=(from,to)=>rsRoute(from,to,cache).durationSeconds;
+  // An unusable appointment location blocks the adjacent gap, not every other
+  // day. Service/quota failures still abort availability: they are not no-route.
+  const routeSeconds=(from,to)=>{
+    try{return rsRoute(from,to,cache).durationSeconds;}
+    catch(error){if(['INVALID_LOCATION','ROUTE_UNAVAILABLE'].includes(error.message))return NaN;throw error;}
+  };
   for(let minute=540;minute+INSPECTION_MINUTES<=960;minute+=15) {
     const start=rsLocalTime(day,minute);
     if(!canFitInspection({start:start.getTime(),dayStart:dayStart.getTime(),dayEnd:dayEnd.getTime(),events,routeSeconds,origin:RS_ORIGIN,destination,existingHold}))continue;
-    const recommended=events.some(event=>event.location&&rsRoute(event.location,destination,cache).durationSeconds<=900);
+    const recommended=events.some(event=>event.location&&routeSeconds(event.location,destination)<=900);
     slots.push({start:start.toISOString(),end:new Date(start.getTime()+INSPECTION_MINUTES*60000).toISOString(),recommended});
   }
   return slots;

@@ -10,6 +10,7 @@ Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websi
 
 - Eén grondgebonden woning/hoofdgebouw; uitsluitend drone-inspectie. Afwijkende objecten en bijgebouwen via offerte.
 - Basis €361,79 inclusief btw; thermografie + €302,50; samen €664,29 vóór reizen.
+- Digitaal inspectierapport **binnen twee werkdagen na de inspectie**.
 - Online **één gecombineerd bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie, onder geschikte meet- en vliegomstandigheden.
 - Twee vooraf afgesproken bezoeken: offerte met **twee reiskostentoeslagen**. Verplaatsen door ongeschikt weer: geen extra kosten.
 - Reizen: **enkele autorit over de weg vanaf 7316 BH 4**. <=25 km €0; >25–75 km €42,35; >75–150 km €90,75; >150 km offerte. Grenzen op ongeronde meters.
@@ -25,10 +26,10 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - `MOLLIE_TEST_API_KEY` is in de bestaande Supabase-secrets opgeslagen; een readonly testopvraag gaf HTTP 200. Er is nog geen consumenten-proefbetaling afgerond. Odoo-toegang is niet gewijzigd.
 - Google Apps Script-project `RoofSignal boekingsagenda - test` is aangemaakt. De eigenaar heeft Calendar-toegang verleend; de initialisatie met Calendar en Maps is geslaagd.
 - **De gebruiker heeft openbaar bereikbare Apps Script-webapps geweigerd.** Er is geen openbare implementatie gemaakt. De nieuwe bron gebruikt een privé API executable met Google OAuth, alleen toegankelijk voor de eigenaar. Geen publieke `doPost`-route en geen terugval op een gedeelde sleutel.
-- Google Cloud-project `RoofSignal boekingskoppeling` (`velvety-mason-511210-s4`, nummer `494508271756`) is met expliciet akkoord aangemaakt; Apps Script API is actief. De OAuth-client is aangemaakt, de clientgegevens zijn in Supabase opgeslagen en uitsluitend `ferry.joosten@gmail.com` staat als testgebruiker ingesteld. Een API-implementatie is aangemaakt met toegang **Alleen ikzelf**; de implementatie-ID is in Supabase opgeslagen. De gebruiker moet de nieuwe Google-waarschuwing zelf beoordelen en de OAuth-toestemming afronden. Een werkelijke API-opvraag is nog niet geslaagd. De eerdere ongebruikte scriptproperty is geen actieve serverkoppeling.
+- Google Cloud-project `RoofSignal boekingskoppeling` (`velvety-mason-511210-s4`, nummer `494508271756`) is met expliciet akkoord aangemaakt; Apps Script API is actief. De OAuth-client is aangemaakt, de clientgegevens zijn in Supabase opgeslagen en uitsluitend `ferry.joosten@gmail.com` staat als testgebruiker ingesteld. Een API-implementatie is aangemaakt met toegang **Alleen ikzelf**; de implementatie-ID is in Supabase opgeslagen. De gebruiker heeft de waarschuwing beoordeeld en de toestemming afgerond. Het eigenaarsaccount is gecontroleerd; het refresh-token staat uitsluitend in Supabase. Een werkelijke privé API-healthcheck gaf HTTP 200 en bevestigde de juiste agenda, tijdzone en inspectieduur. De eerdere ongebruikte scriptproperty is geen actieve serverkoppeling.
 - De server verwacht `CONSUMER_GOOGLE_CLIENT_ID`, `CONSUMER_GOOGLE_CLIENT_SECRET`, `CONSUMER_GOOGLE_REFRESH_TOKEN` en `CONSUMER_GOOGLE_DEPLOYMENT_ID`, uitsluitend als Supabase-secrets.
 - De Google OAuth-app staat nog op **Testing**. Google laat een refresh-token met Calendar-rechten dan na zeven dagen verlopen. Vóór livegang moet deze tijdelijke teststatus worden opgelost en opnieuw worden geautoriseerd; de API-implementatie en de controle op het eigenaarsaccount moeten besloten blijven. Een geslaagde test is dus nog geen blijvend werkende productiekoppeling.
-- De nieuwe Edge Function is standaard uitgeschakeld. Zelfs met `CONSUMER_TEST_ENABLED=true` vereisen alle testroutes een service-role bearer, behalve de webhook, die ieder betaalbericht bij Mollie verifieert. Geen browser ontvangt die sleutel. De code kan uitsluitend testbetalingen maken; alleen `ferry@roofsignal.nl` is als testklant toegestaan.
+- De nieuwe Edge Function en migratie zijn via de gecontroleerde release gepubliceerd. `CONSUMER_TEST_ENABLED=true` staat aan. Alle testroutes vereisen de Supabase-secretkey via `apikey` of de exacte runtime service-role bearer, behalve de webhook, die ieder betaalbericht bij Mollie verifieert. Geen browser ontvangt die sleutel. De code kan uitsluitend testbetalingen maken; alleen `ferry@roofsignal.nl` is als testklant toegestaan.
 - Testmails staan apart uit. `CONSUMER_TEST_EMAIL_ENABLED=true` stuurt de klant- en interne proefbevestiging uitsluitend naar `ferry@roofsignal.nl`.
 
 ## Wat de code afdekt
@@ -46,17 +47,19 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 
 ## Nog nodig vóór publieke activatie
 
-1. Besloten Google OAuth/API-koppeling voltooien en echte agenda/routes testen.
-2. Testbackend via gecontroleerde release publiceren; proefbetalingen (betaald, mislukt, geannuleerd/verlopen), webhooks, netwerkherstel, gelijktijdige aanvragen en bevestigingsmails daadwerkelijk testen.
-3. Productievoorwaarden/privacystukken laten aansluiten: bevestigde afspraak onder uitvoeringsvoorbehoud, vooruitbetaling, rapporttermijn, reisregeling en Google-verwerking. De bestaande pilotvoorwaarden niet stilzwijgend overschrijven. De privétest gebruikt nog een expliciete testversie.
+1. De aangepaste Apps Script-bron publiceren als nieuwe versie van dezelfde besloten API-implementatie. De huidige versie loopt bij de echte beschikbaarheidscontrole vast op `INVALID_LOCATION`. De bron normaliseert meerregelige adressen en sluit gaten naast onbruikbare locaties veilig uit, zonder andere dagen te blokkeren. De Mac is momenteel vergrendeld; de gebruiker is gevraagd Safari weer beschikbaar te maken. Daarna echte agenda-/reistijdbeschikbaarheid opnieuw testen.
+2. Laatste geteste serverwijziging via de gecontroleerde release publiceren; proefbetalingen (betaald, mislukt, geannuleerd/verlopen), webhooks, netwerkherstel, gelijktijdige aanvragen en bevestigingsmails daadwerkelijk testen.
+3. De voorbereide consumentenaanvulling `legal/consumentenboeking-2026-10-10.txt` en privacytekst meenemen bij publieke activatie. De aanvulling legt rapporttermijn, vooruitbetaling, reisregeling, uitvoeringsvoorbehoud en herroeping vast; de bestaande pilotvoorwaarden blijven afzonderlijk. De testbevestiging bevat beide voorwaardenbestanden en de berekende rapport- en herroepingsdatum.
 4. Publieke formulierbeveiliging, misbruikbegrenzing, automatische herhaalverwerking en signalering van uitzonderingen activeren en verifiëren. De huidige testroutes zijn bewust geen publieke API.
 5. Mollie-liveaccount controleren (eerder stond “Payouts paused”), afzonderlijke livetoegang configureren, daarna pas publieke activatie en Cloudflare-routing live controleren.
 
 ## Validatie tot nu toe
 
 - Bestaande plus nieuwe pytest-controles: 97 geslaagd.
-- 44 Node-gedragstests: prijsgrenzen, dataherstel, betaalidentiteit, netwerkfouten, reistijden en geen dubbele betaling bij herhaling. Ook een inmiddels bezet tijdslot en een nog lopende of reeds betaalde initiële checkout worden direct correct getoond.
+- 56 Node-gedragstests: prijsgrenzen, dataherstel, betaalidentiteit, netwerkfouten, reistijden en geen dubbele betaling bij herhaling. Ook een inmiddels bezet tijdslot en een nog lopende of reeds betaalde initiële checkout worden direct correct getoond.
 - Migratie toegepast in geïsoleerde PostgreSQL/PGlite-test: herstelblokkades, overlappende claims, unieke e-mailopdrachten, vergrendeling en toegangsrechten gecontroleerd.
+- Echte besloten Supabase/Google-healthcheck: HTTP 200. PDOK-adrescontrole en Google-autoroute voor het eigen RoofSignal-adres slagen: basisprijs €361,79, reiskosten €0. Anonieme toegang tot testroutes geeft HTTP 403. De agendabeschikbaarheid is nog niet geslaagd; er zijn nog geen testbetalingen of eigen agendareserveringen gemaakt.
+- Release `44bc894` (run `38048246949`) geslaagd, inclusief migratie-/functiecontrole en OPTIONS-smokechecks. Dit bevestigt de infrastructuur, niet de volledige boekingsketen.
 - Desktop en 390px-mobiele beginweergave lokaal bekeken; volledige mobiele interactiecontrole volgt bij gekoppelde testflow.
 - Geen echte klantbetalingen, boekingen of consumentenmails door deze code gemaakt.
 
@@ -69,7 +72,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - [Mollie-idempotentie](https://docs.mollie.com/reference/api-idempotency)
 - [Mollie-betaling aanmaken](https://docs.mollie.com/reference/create-payment)
 
-## Routecontract (voorstel; nog te implementeren of mappen)
+## Routecontract (privétest geïmplementeerd; publieke activatie nog nodig)
 
 Wijzig pas na backendimplementatie en geslaagde integratietests de configuratie in `inspectie-boeken/booking-config.js`:
 

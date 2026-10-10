@@ -89,13 +89,13 @@
 .consumer-booking-page .booking-main .field-row--address { grid-template-columns: 1fr 1fr auto; align-items: end; gap: 12px; }
 .consumer-booking-page .booking-main .field label { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 7px; font-size: 12px; line-height: 1.5; font-weight: 700; }
 .consumer-booking-page .booking-main .required-label, .consumer-booking-page .booking-main .optional-label { color: #58645e; font-size: 12px; font-weight: 400; }
-.consumer-booking-page .booking-main .field input, .consumer-booking-page .booking-main .field textarea { width: 100%; border: 1px solid #c8d3d3; background: var(--booking-white); color: var(--booking-ink); padding: 11px 13px; font-size: 13px; line-height: 1.7; transition: border-color .15s ease, box-shadow .15s ease; }
+.consumer-booking-page .booking-main .field input, .consumer-booking-page .booking-main .field textarea, .consumer-booking-page .booking-main .field select { width: 100%; border: 1px solid #c8d3d3; background: var(--booking-white); color: var(--booking-ink); padding: 11px 13px; font-size: 13px; line-height: 1.7; transition: border-color .15s ease, box-shadow .15s ease; }
 .consumer-booking-page .booking-main .field input { min-height: 46px; }
 .consumer-booking-page .booking-main .field textarea { display: block; resize: vertical; min-height: 108px; }
 .consumer-booking-page .booking-main .field input::placeholder, .consumer-booking-page .booking-main .field textarea::placeholder { color: #64716b; opacity: 1; }
 .consumer-booking-page .booking-main .field input[readonly] { background: #f4f6f4; color: var(--booking-muted); }
-.consumer-booking-page .booking-main .field input:focus, .consumer-booking-page .booking-main .field textarea:focus { border-color: var(--booking-blue); box-shadow: 0 0 0 3px rgb(27 90 122 / 9%); outline: 2px solid transparent; outline-offset: 2px; }
-.consumer-booking-page .booking-main .field input:focus-visible, .consumer-booking-page .booking-main .field textarea:focus-visible { outline-color: var(--booking-blue); }
+.consumer-booking-page .booking-main .field input:focus, .consumer-booking-page .booking-main .field textarea:focus, .consumer-booking-page .booking-main .field select:focus { border-color: var(--booking-blue); box-shadow: 0 0 0 3px rgb(27 90 122 / 9%); outline: 2px solid transparent; outline-offset: 2px; }
+.consumer-booking-page .booking-main .field input:focus-visible, .consumer-booking-page .booking-main .field textarea:focus-visible, .consumer-booking-page .booking-main .field select:focus-visible { outline-color: var(--booking-blue); }
 .consumer-booking-page .booking-main .field input[aria-invalid="true"], .consumer-booking-page .booking-main .field textarea[aria-invalid="true"] { border-color: #b34833; }
 .consumer-booking-page .booking-main #postcode { text-transform: uppercase; }
 .consumer-booking-page .booking-main .address-button { margin-bottom: 17px; min-height: 46px; padding-inline: 14px; font-size: 12px; }
@@ -118,6 +118,10 @@
 .consumer-booking-page .booking-main .option-card__price { flex-shrink: 0; margin-left: auto; font-size: 13px; font-weight: 700; text-align: right; }
 .consumer-booking-page .booking-main .field-help { margin: 12px 0 0; font-size: 12px; line-height: 1.8; color: var(--booking-muted); }
 .consumer-booking-page .booking-main .slots { min-height: 150px; }
+.consumer-booking-page .booking-main .slot-choice { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 10px; padding: 14px; border: 1px solid #d9dfdc; border-radius: 10px; cursor: pointer; }
+.consumer-booking-page .booking-main .slot-choice:has(input:checked) { border-color: #b83900; background: #fff8f3; }
+.consumer-booking-page .booking-main .slot-choice input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 3px; }
+.consumer-booking-page .booking-main .slot-choice span { font-size: 14px; line-height: 1.5; }
 .consumer-booking-page .booking-main .calendar-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 174px; padding: 25px 20px; border: 1px dashed #c7d5d8; border-radius: 10px; background: #f8faf8; text-align: center; }
 .consumer-booking-page .booking-main .calendar-empty svg { fill: none; stroke: #879fa9; stroke-width: 1.25; stroke-linecap: round; margin-bottom: 14px; }
 .consumer-booking-page .booking-main .calendar-empty strong { margin-bottom: 7px; font-size: 12px; font-weight: 400; }
@@ -217,8 +221,8 @@
 .consumer-booking-page .booking-main .booking-hero h1 { font-weight: 800; }
 .consumer-booking-page .booking-main .hero-price__amount { font-weight: 750; }
 .consumer-booking-page .booking-main .summary-total > strong { font-weight: 750; }
-.consumer-booking-page .booking-main .field input:disabled, .consumer-booking-page .booking-main .field textarea:disabled { opacity: 1; background: #f4f4f2; color: #58645e; }
-.consumer-booking-page .booking-main .field input:focus, .consumer-booking-page .booking-main .field textarea:focus { border-color: #1370ad; box-shadow: 0 0 0 3px rgb(19 112 173 / 10%); }
+.consumer-booking-page .booking-main .field input:disabled, .consumer-booking-page .booking-main .field textarea:disabled, .consumer-booking-page .booking-main .field select:disabled { opacity: 1; background: #f4f4f2; color: #58645e; }
+.consumer-booking-page .booking-main .field input:focus, .consumer-booking-page .booking-main .field textarea:focus, .consumer-booking-page .booking-main .field select:focus { border-color: #1370ad; box-shadow: 0 0 0 3px rgb(19 112 173 / 10%); }
 .consumer-booking-page .booking-main :focus-visible { outline: 3px solid #1370ad; outline-offset: 4px; }
 @media (max-width: 640px) {
   .consumer-booking-page .booking-main .container { width: calc(100% - 40px); }
@@ -232,10 +236,12 @@
   .consumer-booking-page .booking-main .value-item { padding: 20px 0; border-left: 0; border-top: 1px solid var(--booking-line); }
   .consumer-booking-page .booking-main .form-step { padding: 20px 16px; }
   .consumer-booking-page .booking-main .field input,
-  .consumer-booking-page .booking-main .field textarea { font-size: 16px; }
+  .consumer-booking-page .booking-main .field textarea, .consumer-booking-page .booking-main .field select { font-size: 16px; }
   .consumer-booking-page .booking-main .booking-section { padding-block: 36px; }
   .consumer-booking-page .booking-main .summary-contact { padding-top: 0; }
   .consumer-booking-page .booking-main .button { max-width: 100%; }
   .consumer-booking-page .booking-main .booking-status, .consumer-booking-page .booking-main .booking-feedback .error-message { font-size: 13px; }
   .consumer-booking-page .booking-main .booking-status-actions > button { width: 100%; }
 }
+
+.consumer-booking-page .booking-main .field select { min-width: 0; min-height: 46px; border-radius: 7px; }

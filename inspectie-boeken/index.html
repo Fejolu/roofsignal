@@ -165,6 +165,10 @@
             <fieldset class="form-step" aria-describedby="date-description">
               <legend><span class="step-number" aria-hidden="true">3</span><span>Uw inspectiemoment</span></legend>
               <p class="step-description" id="date-description">Kies na de adrescontrole een beschikbaar moment. Na betaling ontvangt u de afspraakbevestiging. Bij ongeschikte vlieg- of meetomstandigheden verplaatsen we de afspraak kosteloos.</p>
+              <div id="slot-day-field" class="field" hidden>
+                <label for="slot-day">Kies een beschikbare dag</label>
+                <select disabled id="slot-day" aria-controls="slots"></select>
+              </div>
               <div id="slots" class="slots" role="group" aria-label="Beschikbare inspectiemomenten" aria-describedby="slot-status">
                 <div class="calendar-empty">
                   <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false"><rect x="7" y="9" width="26" height="25" rx="4"></rect><path d="M13 6v7M27 6v7M7 18h26M14 24h3M23 24h3M14 29h3"></path></svg>
@@ -206,7 +210,7 @@
                 <span>Ik geef opdracht voor de gekozen inspectie tegen het volledige bedrag in het overzicht. Ik ga akkoord met de beschreven scope, het weersvoorbehoud, de <a href="/legal/voorwaarden-2026-09-24.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-10.txt" target="_blank" rel="noopener noreferrer">aanvullende boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
               </label>
               <div class="withdrawal-note">
-                <p>U heeft als consument 14 dagen bedenktijd. Zonder uw onderstaande verzoek beginnen we pas na die termijn. U kunt uw overeenkomst <a href="/herroepen">online herroepen</a> of contact opnemen.</p>
+                <p>U ontvangt het digitale rapport binnen twee werkdagen na de inspectie. U heeft als consument 14 dagen bedenktijd; bij een einddatum in het weekend of op een feestdag kan die termijn langer zijn. Zonder uw onderstaande verzoek beginnen we pas na die termijn. U kunt uw overeenkomst <a href="/herroepen">online herroepen</a> of contact opnemen.</p>
               </div>
               <label class="checkbox-row" for="earlyStartRequested">
                 <input disabled id="earlyStartRequested" name="earlyStartRequested" type="checkbox" value="true">

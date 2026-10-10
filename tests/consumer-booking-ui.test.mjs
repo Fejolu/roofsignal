@@ -310,3 +310,31 @@ test('An initial paid result is shown without recreating or reopening payment', 
   assert.equal(ui.get('checkout-button').textContent,'Een nieuwe inspectie boeken');
   assert.deepEqual(ui.navigations,[]);
 });
+
+test('Changing the available day clears the old slot and renders only that day',async()=>{
+  const first=new Date(Date.now()+3*86400000);first.setUTCHours(9,0,0,0);
+  const second=new Date(first.getTime()+86400000);
+  const slots=[first,second].map((date,i)=>({id:'day-'+i,start:date.toISOString(),end:new Date(date.getTime()+2700000).toISOString(),recommended:i===1}));
+  const quote={quoteId:recoveryRecord.quoteId,serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
+    travelDescription:'Simulated test route',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),
+    address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}};
+  const ui=await bookingPage({configuration:connectedConfiguration,respond(request){
+    if(request.path.endsWith('/quote'))return quote;
+    if(request.path.endsWith('/availability'))return {quoteId:quote.quoteId,slots};
+    assert.fail('No payment should start during day selection');
+  }});
+  ui.get('postcode').value='1234AB';ui.get('houseNumber').value='12';
+  await ui.get('check-address').dispatch('click');
+  const selector=ui.get('slot-day');
+  assert.equal(selector.hidden,false);assert.equal(selector.children.length,2);
+  assert.match(selector.children[0].textContent,/Aanbevolen/);
+  assert.equal(ui.get('slots').querySelectorAll('input').length,1);
+  assert.equal(ui.get('slots').querySelector('input').value,'day-1');
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.notEqual(ui.get('summary-date').textContent,'Nog te kiezen');
+  selector.value=selector.children[1].value;await selector.dispatch('change');
+  assert.equal(ui.get('summary-date').textContent,'Nog te kiezen');
+  assert.equal(ui.get('checkout-button').disabled,true);
+  assert.equal(ui.get('slots').querySelector('input').value,'day-0');
+  assert.equal(ui.stored.size,0);
+});

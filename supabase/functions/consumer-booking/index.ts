@@ -6,6 +6,7 @@ import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
 import {earlyStartRequired,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
 import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
+import {googleExecutionError} from '../_shared/consumer-google.mjs';
 
 // Deliberate TEST-ONLY gate. No environment switch can activate real payments.
 // Live activation needs a reviewed code change after real chain verification.
@@ -35,7 +36,7 @@ async function bridge(action:string,data:any={}) {
  if(!response.ok)throw Error('GOOGLE_API_HTTP_'+response.status+'_'+String(operation.error?.status||'ERROR').replace(/[^A-Z_]/g,''));
  if(operation.error){
   const detail=operation.error?.details?.[0];
-  const error=Error(safeError({message:detail?.errorMessage}));
+  const error=Error(googleExecutionError(detail?.errorMessage));
   // Only the authenticated private test caller can see the Apps Script error.
   // This is an execution error, never an OAuth response or request payload.
   Object.assign(error,{diagnostic:{type:String(detail?.errorType||''),message:String(detail?.errorMessage||'').slice(0,400)}});
