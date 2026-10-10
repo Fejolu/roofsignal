@@ -6,3 +6,5 @@
 .rs-knowledge-article figure { margin: 2rem 0; }
 .rs-knowledge-article figure img { display: block; width: 100%; height: auto; border-radius: 12px; }
 .rs-knowledge-article figcaption { margin-top: .6rem; color: #4b5350; font-size: .9rem; line-height: 1.5; }
+.rs-knowledge-article .lead-form { margin-top: 2rem; scroll-margin-top: 110px; }
+.rs-knowledge-article .lead-form label span { display: inline; font-weight: 400; }

@@ -23,6 +23,8 @@
     const data = new FormData(form);
     const messageLines = [];
     appendDetail(messageLines, "Bericht", readField(data, "message", "Bericht"));
+    appendDetail(messageLines, "Aantal woningen", readField(data, "home_count"));
+    appendDetail(messageLines, "Vergaderdatum", readField(data, "meeting_date"));
     appendDetail(messageLines, "Telefoon", readField(data, "phone", "Telefoon"));
     appendDetail(messageLines, "Objecten/adressen", readField(data, "buildings", "Gebouwen", "objecten"));
     appendDetail(messageLines, "Demo-data", data.get("demo_data") ? "Ja" : "");
