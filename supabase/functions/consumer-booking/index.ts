@@ -33,7 +33,14 @@ async function bridge(action:string,data:any={}) {
   body:JSON.stringify({function:'executeRoofSignal',parameters:[{action,mode:MODE,...data}],devMode:false}),signal:AbortSignal.timeout(45000)});
  const operation=await response.json();
  if(!response.ok)throw Error('GOOGLE_API_HTTP_'+response.status+'_'+String(operation.error?.status||'ERROR').replace(/[^A-Z_]/g,''));
- if(operation.error)throw Error(safeError({message:operation.error?.details?.[0]?.errorMessage}));
+ if(operation.error){
+  const detail=operation.error?.details?.[0];
+  const error=Error(safeError({message:detail?.errorMessage}));
+  // Only the authenticated private test caller can see the Apps Script error.
+  // This is an execution error, never an OAuth response or request payload.
+  Object.assign(error,{diagnostic:{type:String(detail?.errorType||''),message:String(detail?.errorMessage||'').slice(0,400)}});
+  throw error;
+ }
  const result=operation.response?.result;if(result?.ok!==true)throw Error('CALENDAR_UNAVAILABLE');return result;
 }
 async function mollie(path:string,options:RequestInit={}) {
@@ -205,6 +212,13 @@ Deno.serve(async(req:Request)=>{
    const results=[];for(const item of due){const job=await claim(item.id);if(job.claimed){const a=await progress(job.attempt);results.push({id:a.id,status:a.status,error:a.last_error});}}
    return respond({processed:results});
   }
+  if(path==='/test-release'){
+   if(!UUID.test(body.requestId))throw Error('INVALID_REQUEST');
+   const a=await one('consumer_attempts','id',body.requestId);
+   if(!a||a.mode!=='test'||!['confirmed','failed','canceled','expired'].includes(a.status))throw Error('TEST_RELEASE_NOT_ALLOWED');
+   const result=await bridge('release',{requestId:a.id,start:a.slot_start});
+   return respond({released:result.released===true});
+  }
   return respond({error:'NOT_FOUND'},404);
- }catch(e){return respond({error:safeError(e)},503);}
+ }catch(e:any){return respond({error:safeError(e),...(admin&&e?.diagnostic?{diagnostic:e.diagnostic}:{})},503);}
 });
