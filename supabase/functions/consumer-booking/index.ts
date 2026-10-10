@@ -3,6 +3,7 @@ import {calculateTravel} from '../_shared/consumer-travel-pricing.mjs';
 import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment} from '../_shared/consumer-payment.mjs';
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
+import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
 
 // Deliberate TEST-ONLY gate. No environment switch can activate real payments.
 // Live activation needs a reviewed code change after real chain verification.
@@ -10,7 +11,8 @@ const MODE='test';
 const TERMS='2026-10-10-consumer-test';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
-const serviceKey=env('SUPABASE_SERVICE_ROLE_KEY');
+const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
+const serviceKey=adminKeys.secret||adminKeys.legacy;
 const db=createClient(env('SUPABASE_URL'),serviceKey,{auth:{persistSession:false}});
 const base=env('SUPABASE_URL')+'/functions/v1/consumer-booking';
 const now=()=>new Date().toISOString();
@@ -164,7 +166,7 @@ Deno.serve(async(req:Request)=>{
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
  if(env('CONSUMER_TEST_ENABLED')!=='true')return respond({error:'De online boeking is nog niet beschikbaar.'},503);
  const url=new URL(req.url),path=url.pathname.split('/consumer-booking')[1]||'/';
- const admin=Boolean(serviceKey)&&req.headers.get('authorization')==='Bearer '+serviceKey;
+ const admin=isConsumerAdmin(req.headers,adminKeys);
  try{
   if(path==='/webhook'&&req.method==='POST'){
    const raw=await req.text();if(raw.length>200)return respond({error:'INVALID_REQUEST'},400);
