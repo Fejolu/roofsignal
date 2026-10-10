@@ -127,7 +127,7 @@ async function settle() {
   await new Promise(setImmediate);
 }
 
-async function bookingPage({ configuration, record, returnToken = null, respond } = {}) {
+async function bookingPage({ configuration, record, returnToken = null, respond, securityReady = true } = {}) {
   const document = documentFromHtml(page);
   const location = new URL(`https://www.roofsignal.nl/inspectie-boeken/${returnToken ? `?booking=${returnToken}` : ''}`);
   const requests = [];
@@ -135,7 +135,7 @@ async function bookingPage({ configuration, record, returnToken = null, respond 
   const storageOperations = [];
   const stored = new Map(record ? [[bookingCore.RECOVERY_STORAGE_KEY, JSON.stringify(record)]] : []);
   const window = {
-    RoofSignalFormSecurity: { ensureReady() { return true; }, getPayload() { return {turnstile_token:'unit-test-only'}; }, reset() {} },
+    RoofSignalFormSecurity: { ensureReady() { if(!securityReady)throw Error('Bevestig eerst dat u geen geautomatiseerde aanvraag verstuurt.');return true; }, getPayload() { return {turnstile_token:'unit-test-only'}; }, reset() {} },
     location: {
       get href() { return location.href; }, get search() { return location.search; },
       assign(url) { navigations.push(String(url)); }
@@ -230,6 +230,13 @@ test('A failed return-status retry leaves another visible retry without creating
   assert.deepEqual(ui.navigations, []);
 });
 
+test('Missing human verification does not send an address or request availability', async () => {
+  const ui=await bookingPage({configuration:connectedConfiguration,securityReady:false});
+  ui.get('postcode').value='7316BH';ui.get('houseNumber').value='4';
+  await ui.get('check-address').dispatch('click');
+  assert.equal(ui.requests.length,0);
+  assert.match(ui.get('address-status').textContent,/Bevestig eerst/);
+});
 test('The checked-in preview never reads recovery storage or sends customer input', async () => {
   const ui = await bookingPage({ record: recoveryRecord, returnToken: statusToken });
   ui.get('postcode').value = '7316 BH';

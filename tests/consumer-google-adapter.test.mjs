@@ -61,3 +61,12 @@ test('The server recognizes an occupied slot across the actual Apps Script error
   assert.equal(googleExecutionError('Exception: private event details'),'CALENDAR_UNAVAILABLE');
   assert.equal(googleExecutionError(undefined),'CALENDAR_UNAVAILABLE');
 });
+test('Calendar markers separate test/live reservations and the executable stays owner-only',()=>{
+ const {context}=setup();const requestId='601f78aa-31f3-4c63-941d-07b31df84902';
+ assert.notEqual(context.rsMarker({requestId,mode:'test'}),context.rsMarker({requestId,mode:'live'}));
+ context.Session={getEffectiveUser:()=>({getEmail:()=> 'other@example.invalid'})};
+ assert.throws(()=>context.executeRoofSignal({action:'health',mode:'live'}),/UNAUTHORIZED/);
+ context.Session={getEffectiveUser:()=>({getEmail:()=> 'ferry.joosten@gmail.com'})};
+ assert.equal(context.executeRoofSignal({action:'health',mode:'live'}).mode,'live');
+ assert.throws(()=>context.executeRoofSignal({action:'health',mode:'anything'}),/INVALID_REQUEST/);
+});

@@ -8,6 +8,13 @@ const p=(status='paid')=>({id:'tr_example123',mode:'test',profileId:'pfl_Bef5DYX
 test('Mollie amount and metadata use saved server quote and restrict to iDEAL',()=>{
  const result=paymentBody(a(),q,'https://example.com');assert.deepEqual(result.amount,{currency:'EUR',value:'664.29'});assert.equal(result.testmode,true);assert.equal(result.method,'ideal');assert.equal(result.metadata.consumerRequestId,id);
 });
+test('Test and live payment callbacks select separate modes without changing amount or identity',()=>{
+ for(const mode of ['test','live']){
+  const result=paymentBody({...a(),mode},q,'https://example.com');
+  assert.equal(result.testmode,mode==='test');assert.equal(result.webhookUrl,'https://example.com/webhook?mode='+mode);
+  assert.equal(result.metadata.mode,mode);assert.equal(result.amount.value,'664.29');
+ }
+});
 test('payment verification rejects amount, profile, mode, request, currency and identifier mismatches',()=>{
  for(const mutate of [v=>v.amount.value='664.28',v=>v.profileId='other',v=>v.mode='live',v=>v.metadata.consumerRequestId='other',v=>v.metadata.mode='live',v=>v.amount.currency='USD',v=>v.id='invalid']){
   const payment=p();mutate(payment);assert.throws(()=>verifyPayment(payment,a(),q));

@@ -87,6 +87,7 @@
 .consumer-booking-page .booking-main .field { min-width: 0; margin-bottom: 17px; }
 .consumer-booking-page .booking-main .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; }
 .consumer-booking-page .booking-main .field-row--address { grid-template-columns: 1fr 1fr auto; align-items: end; gap: 12px; }
+.consumer-booking-page .booking-main .field-row--address > .form-turnstile { grid-column: 1 / -1; min-width: 0; }
 .consumer-booking-page .booking-main .field label { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 7px; font-size: 12px; line-height: 1.5; font-weight: 700; }
 .consumer-booking-page .booking-main .required-label, .consumer-booking-page .booking-main .optional-label { color: #58645e; font-size: 12px; font-weight: 400; }
 .consumer-booking-page .booking-main .field input, .consumer-booking-page .booking-main .field textarea, .consumer-booking-page .booking-main .field select { width: 100%; border: 1px solid #c8d3d3; background: var(--booking-white); color: var(--booking-ink); padding: 11px 13px; font-size: 13px; line-height: 1.7; transition: border-color .15s ease, box-shadow .15s ease; }
@@ -134,7 +135,7 @@
 .consumer-booking-page .booking-main .withdrawal-note { margin: 18px 0 15px; padding-left: 29px; }
 .consumer-booking-page .booking-main .withdrawal-note p { margin: 0; color: var(--booking-muted); font-size: 12px; line-height: 1.9; }
 .consumer-booking-page .booking-main .error-message { border: 1px solid #e0b3a9; background: #fff1ee; color: #8b3226; padding: 13px 15px; margin-top: 20px; border-radius: 8px; font-size: 12px; }
-.consumer-booking-page .booking-main .booking-summary { position: sticky; top: 24px; }
+.consumer-booking-page .booking-main .booking-summary { position: sticky; top: 90px; max-height: calc(100dvh - 106px); overflow-y: auto; }
 .consumer-booking-page .booking-main .summary-card { padding: 28px 25px 24px; background: var(--booking-white); border: 1px solid #cddbdc; border-top: 3px solid var(--booking-blue); border-radius: 0 0 var(--booking-radius) var(--booking-radius); box-shadow: var(--booking-shadow); }
 .consumer-booking-page .booking-main .summary-card .eyebrow { font-size: 12px; margin-bottom: 12px; }
 .consumer-booking-page .booking-main .summary-card h2 { margin-bottom: 8px; font-size: 29px; line-height: 1.2; letter-spacing: -.6px; }
@@ -202,7 +203,7 @@
 .consumer-booking-page .booking-main .value-item h3 { font-size: 13px; }
 .consumer-booking-page .booking-main .value-item p { font-size: 12px; }
 .consumer-booking-page .booking-main .booking-layout { grid-template-columns: minmax(0, 1fr); }
-.consumer-booking-page .booking-main .booking-summary { position: static; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: start; gap: 14px; }
+.consumer-booking-page .booking-main .booking-summary { position: static; max-height: none; overflow: visible; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: start; gap: 14px; }
 .consumer-booking-page .booking-main .summary-contact { padding-top: 28px; }
 .consumer-booking-page .booking-main .field-row--address { grid-template-columns: 1fr 1fr auto; }
 .consumer-booking-page .booking-main .address-button { grid-column: auto; margin-top: 0; }

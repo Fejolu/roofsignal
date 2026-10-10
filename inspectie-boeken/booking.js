@@ -35,6 +35,7 @@ function updateSummary() {
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
   message('summary-travel-details', quote ? quote.travelDescription : '');
   el('summary-total').textContent = quote ? money(quote.totalCents) : recovery ? money(recovery.totalCents) : `${money(subtotal(thermal))} + reiskosten`;
+  message('summary-total-hint', quote || recovery ? 'Dit is het volledige bedrag voor uw gekozen inspectie en bezoek.' : 'Het definitieve totaal verschijnt na de adrescontrole.');
   el('summary-date').textContent = selectedSlot ? slotLabel(selectedSlot) : 'Nog te kiezen';
   if (recovery && !quote) {
     for (const id of ['summary-base', 'summary-thermal', 'summary-travel']) el(id).textContent = 'In uw bestaande opdracht';
