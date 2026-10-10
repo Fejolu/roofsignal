@@ -1,4 +1,5 @@
 // UI guards only. The connected server must independently enforce every rule.
+import {earlyStartRequired} from './booking-dates.mjs';
 export const BASE_CENTS = 36179;
 export const THERMAL_CENTS = 30250;
 export const TIME_ZONE = 'Europe/Amsterdam';
@@ -84,16 +85,8 @@ export function validateSlots(data, now = Date.now(), expectedQuoteId = null) {
   }).sort((a, b) => Number(b.recommended === true) - Number(a.recommended === true) || Date.parse(a.start) - Date.parse(b.start));
 }
 
-function amsterdamDay(value) {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value);
-  const part = key => Number(parts.find(p => p.type === key).value);
-  return Date.UTC(part('year'), part('month') - 1, part('day'));
-}
-
 export function needsEarlyStart(start, now = new Date()) {
-  // Withdrawal period starts the day after the agreement. Server repeats this
-  // against the actual agreement date and considers any statutory extension.
-  return amsterdamDay(new Date(start)) < amsterdamDay(now) + 15 * 86400000;
+  return earlyStartRequired(start, now);
 }
 
 export function slotLabel(slot) {

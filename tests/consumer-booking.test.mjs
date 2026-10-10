@@ -72,7 +72,9 @@ test('Nearby recommended slots are offered first while other valid times remain 
 });
 test('Early service considers Dutch calendar dates across autumn DST', () => {
   assert.equal(needsEarlyStart('2026-10-24T08:00:00Z',new Date(now)),true);
-  assert.equal(needsEarlyStart('2026-10-25T08:00:00Z',new Date(now)),false);
+  assert.equal(needsEarlyStart('2026-10-25T08:00:00Z',new Date(now)),true);
+  assert.equal(needsEarlyStart('2026-10-26T08:00:00Z',new Date(now)),true);
+  assert.equal(needsEarlyStart('2026-10-27T08:00:00Z',new Date(now)),false);
 });
 test('Checkout verifies the same currency, quote, slot, request and amount', () => {
   assert.equal(validateCheckout(checkout, expected), checkout.checkoutUrl);

@@ -4,11 +4,13 @@ import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,cu
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
+import {earlyStartRequired,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
+import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
 
 // Deliberate TEST-ONLY gate. No environment switch can activate real payments.
 // Live activation needs a reviewed code change after real chain verification.
 const MODE='test';
-const TERMS='2026-10-10-consumer-test';
+const TERMS='2026-10-10-consumer';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
 const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
@@ -30,7 +32,8 @@ async function bridge(action:string,data:any={}) {
   headers:{'Content-Type':'application/json',Authorization:'Bearer '+token.access_token},
   body:JSON.stringify({function:'executeRoofSignal',parameters:[{action,mode:MODE,...data}],devMode:false}),signal:AbortSignal.timeout(45000)});
  const operation=await response.json();
- if(!response.ok||operation.error)throw Error(safeError({message:operation.error?.details?.[0]?.errorMessage}));
+ if(!response.ok)throw Error('GOOGLE_API_HTTP_'+response.status+'_'+String(operation.error?.status||'ERROR').replace(/[^A-Z_]/g,''));
+ if(operation.error)throw Error(safeError({message:operation.error?.details?.[0]?.errorMessage}));
  const result=operation.response?.result;if(result?.ok!==true)throw Error('CALENDAR_UNAVAILABLE');return result;
 }
 async function mollie(path:string,options:RequestInit={}) {
@@ -84,15 +87,16 @@ async function receipt(a:any,q:any,job:any) {
  const lines=['INTERNE TEST — geen echte opdracht of betalingsverplichting.',`Referentie: ${a.reference}`,`Inspectiemoment: ${date} (45 minuten)`,`Adres: ${q.destination}`,
   `Thermografie: ${q.thermal?'ja, één gecombineerd bezoek':'nee'}`,`Totaal inclusief btw: ${amount}`,q.travel_description,'Betaling in Mollie-testmodus gecontroleerd; afspraak geregistreerd.',
   'Uitvoering onder weer-, meet- en vliegvoorbehoud. Bij ongeschikt weer verplaatsen we kosteloos. Een vooraf gewenst afzonderlijk bezoek vereist een offerte met reiskosten per bezoek.',
-  'Digitaal inspectierapport met beelden, bevindingen, beperkingen, onderhoudsprioriteiten en vervolgstappen. De oplevertermijn stemmen we vóór een echte opdracht af.',
-  'U heeft als consument 14 dagen bedenktijd vanaf de dag na het sluiten van de overeenkomst. Herroepen kan via https://www.roofsignal.nl/herroepen of info@roofsignal.nl.',
+  'Digitaal inspectierapport met beelden, bevindingen, beperkingen, onderhoudsprioriteiten en vervolgstappen, binnen twee werkdagen na de inspectie.',
+  `Bij uitvoering op het geboekte moment is de uiterste rapportdatum: ${reportDueDay(a.slot_start)}.`,
+  `Uw bedenktijd loopt tot en met ${withdrawalLastDay(a.terms_accepted_at)}. Herroepen kan via https://www.roofsignal.nl/herroepen of info@roofsignal.nl.`,
   a.terms.earlyStartRequested?'Uw vastgelegde keuze: beginnen tijdens de bedenktijd; bij herroeping een evenredig bedrag voor het geleverde deel. Na volledige uitvoering, inclusief het rapport, vervalt het herroepingsrecht.':'Geen verzoek om uitvoering binnen de bedenktijd.',
   `Akkoord vastgelegd: ${a.terms_accepted_at}`,`Voorwaarden: ${TERMS}`,'','Met vriendelijke groet,','RoofSignal'];
  const text=lines.join('\n');
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:'ferry@roofsignal.nl',name:'RoofSignal test'}],
   subject:`[TEST] ${job.recipient_kind==='customer'?'Klantbevestiging':'Nieuwe boeking'} ${a.reference}`,
   textContent:text,headers:{'X-Mailin-Track':'0',idempotencyKey:job.id},tags:['consumer-booking-test'],
-  attachment:[{name:'RoofSignal-voorwaarden.txt',content:btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT)))}]};
+  attachment:[{name:'RoofSignal-voorwaarden.txt',content:btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+CONSUMER_TERMS)))}]};
 }
 async function deliver(a:any,q:any) {
  // Tests send only to the user's RoofSignal inbox, never the submitted address.
@@ -152,9 +156,7 @@ async function checkout(body:any){
  if(customer.email!=='ferry@roofsignal.nl')throw Error('TEST_EMAIL_REQUIRED');
  const q=await one('consumer_quotes','id',body.quoteId),s=await one('consumer_slots','id',body.slotId);
  if(!q||!s||s.quote_id!==q.id||q.terms_version!==body.terms.version||q.terms_version!==TERMS)throw Error('INVALID_REQUEST');
- // Conservative: require explicit early-start permission for every test. Live
- // activation must implement the statutory calendar/holiday deadline exactly.
- if(body.terms.earlyStartRequested!==true)throw Error('EARLY_START_REQUIRED_FOR_TEST');
+ if(earlyStartRequired(s.start_at)&&body.terms.earlyStartRequested!==true)throw Error('EARLY_START_REQUIRED');
  const payload={quoteId:q.id,slotId:s.id,customer,terms:body.terms};
  const result=await claim(body.requestId,{...payload,fingerprint:await sha(JSON.stringify(payload))});
  return await view(result.claimed?await progress(result.attempt):result.attempt);
