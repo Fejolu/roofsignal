@@ -48,7 +48,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 ## Nog nodig vóór publieke activatie
 
 1. De aangepaste Apps Script-bron publiceren als nieuwe versie van dezelfde besloten API-implementatie. De huidige versie loopt bij de echte beschikbaarheidscontrole vast op `INVALID_LOCATION`. De bron normaliseert meerregelige adressen en sluit gaten naast onbruikbare locaties veilig uit, zonder andere dagen te blokkeren. De Mac is momenteel vergrendeld; de gebruiker is gevraagd Safari weer beschikbaar te maken. Daarna echte agenda-/reistijdbeschikbaarheid opnieuw testen.
-2. Laatste geteste serverwijziging via de gecontroleerde release publiceren; proefbetalingen (betaald, mislukt, geannuleerd/verlopen), webhooks, netwerkherstel, gelijktijdige aanvragen en bevestigingsmails daadwerkelijk testen.
+2. Proefbetalingen (betaald, mislukt, geannuleerd/verlopen), webhooks, netwerkherstel, gelijktijdige aanvragen en bevestigingsmails daadwerkelijk testen.
 3. De voorbereide consumentenaanvulling `legal/consumentenboeking-2026-10-10.txt` en privacytekst meenemen bij publieke activatie. De aanvulling legt rapporttermijn, vooruitbetaling, reisregeling, uitvoeringsvoorbehoud en herroeping vast; de bestaande pilotvoorwaarden blijven afzonderlijk. De testbevestiging bevat beide voorwaardenbestanden en de berekende rapport- en herroepingsdatum.
 4. Publieke formulierbeveiliging, misbruikbegrenzing, automatische herhaalverwerking en signalering van uitzonderingen activeren en verifiëren. De huidige testroutes zijn bewust geen publieke API.
 5. Mollie-liveaccount controleren (eerder stond “Payouts paused”), afzonderlijke livetoegang configureren, daarna pas publieke activatie en Cloudflare-routing live controleren.
@@ -59,7 +59,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - 56 Node-gedragstests: prijsgrenzen, dataherstel, betaalidentiteit, netwerkfouten, reistijden en geen dubbele betaling bij herhaling. Ook een inmiddels bezet tijdslot en een nog lopende of reeds betaalde initiële checkout worden direct correct getoond.
 - Migratie toegepast in geïsoleerde PostgreSQL/PGlite-test: herstelblokkades, overlappende claims, unieke e-mailopdrachten, vergrendeling en toegangsrechten gecontroleerd.
 - Echte besloten Supabase/Google-healthcheck: HTTP 200. PDOK-adrescontrole en Google-autoroute voor het eigen RoofSignal-adres slagen: basisprijs €361,79, reiskosten €0. Anonieme toegang tot testroutes geeft HTTP 403. De agendabeschikbaarheid is nog niet geslaagd; er zijn nog geen testbetalingen of eigen agendareserveringen gemaakt.
-- Release `44bc894` (run `38048246949`) geslaagd, inclusief migratie-/functiecontrole en OPTIONS-smokechecks. Dit bevestigt de infrastructuur, niet de volledige boekingsketen.
+- Release `b55df75` (run `38048765502`) geslaagd, inclusief migratie-/functiecontrole en OPTIONS-smokechecks. Dit bevestigt de infrastructuur, niet de volledige boekingsketen.
 - Desktop en 390px-mobiele beginweergave lokaal bekeken; volledige mobiele interactiecontrole volgt bij gekoppelde testflow.
 - Geen echte klantbetalingen, boekingen of consumentenmails door deze code gemaakt.
 
