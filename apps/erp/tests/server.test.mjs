@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {createDevServer} from '../src/dev-server.mjs';
-import {openDatabase,command,USERS} from '../src/database.mjs';
+import {openDatabase,command,write,USERS} from '../src/database.mjs';
 
 test('HTTP session, CSRF checks, private file download and disk persistence',async t=>{
   const dir=await mkdtemp(path.join(tmpdir(),'roofsignal-erp-'));
@@ -35,4 +35,36 @@ test('HTTP session, CSRF checks, private file download and disk persistence',asy
   await app.close();closed=true;
   const reopened=await openDatabase(dataDir);const stored=await command(reopened,USERS.staff,'snapshot');
   assert.equal(stored.reports.find(r=>r.id===report.id).status,'withdrawn');assert.equal(stored.reports.find(r=>r.id===report.id).has_file,true);await reopened.close();
+});
+
+test('caller lookup stays behind staff session and CSRF protection and creates no customer',async t=>{
+  const dir=await mkdtemp(path.join(tmpdir(),'roofsignal-erp-phone-'));
+  const app=await createDevServer({dataDir:path.join(dir,'database'),port:0,seed:false});
+  t.after(async()=>{await app.close();await rm(dir,{recursive:true,force:true});});
+  const post=(body,cookie,origin=app.url)=>fetch(app.url+'/api/command',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(body)});
+  const login=async account=>{
+    const response=await fetch(app.url+'/api/dev-session',{method:'POST',headers:{Origin:app.url,'Content-Type':'application/json'},body:JSON.stringify({account})});
+    return response.headers.get('set-cookie').split(';')[0];
+  };
+  const lookup={action:'phone.lookup',payload:{phone:'06 1234 5601'}};
+  const customer=await write(app.db,USERS.staff,'organization.create',{name:'Fictieve telefoonproef',kind:'business',phone:'+31 6 1234 5601'});
+  assert.equal((await post(lookup)).status,401);
+  const clientCookie=await login('customer');
+  assert.equal((await post(lookup,clientCookie)).status,403);
+  const staffCookie=await login('staff');
+  assert.equal((await post(lookup,staffCookie,'https://outside.invalid')).status,403);
+  const response=await post(lookup,staffCookie);
+  assert.equal(response.status,200);
+  const found=await response.json();
+  assert.equal(found.match,'single');
+  assert.equal(found.phone,'+31612345601');
+  assert.equal(found.customers[0].id,customer.id);
+  const unknown=await post({action:'phone.lookup',payload:{phone:'+31612345602'}},staffCookie);
+  assert.equal(unknown.status,200);
+  assert.equal((await unknown.json()).match,'none');
+  assert.equal((await app.db.query('select count(*)::int as n from erp.organizations')).rows[0].n,1);
+  assert.equal((await post({action:'phone.lookup',payload:{phone:'not a number'}},staffCookie)).status,400);
+  assert.equal((await fetch(app.url+'/api/voys')).status,401);
+  // No external Voys ingress is activated by the local lookup feature.
+  assert.equal((await fetch(app.url+'/api/voys',{headers:{Cookie:staffCookie}})).status,404);
 });

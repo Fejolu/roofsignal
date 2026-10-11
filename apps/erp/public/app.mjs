@@ -1,6 +1,8 @@
-import {esc,date,label,badge,icon,empty,button,field,area,select} from './view.mjs';
+import {esc,date,label,badge,icon,empty,button,field,area,select,callPhoneFromHash,callDestination} from './view.mjs';
 const app=document.querySelector('#app'),dialog=document.querySelector('#dialog'),account=document.querySelector('#account');
-let data=null,query='',toastTimer,loadVersion=0;
+let data=null,query='',toastTimer,loadVersion=0,phoneLookupVersion=0,handledCallRoute=null,pendingCallRoute=null;
+let callView={status:'idle',phone:'',result:null,error:''};
+function cancelPhoneLookup(){++phoneLookupVersion;if(callView.status==='loading')callView={status:'idle',phone:'',result:null,error:''};}
 const byId=(list,id)=>list.find(x=>x.id===id);
 const orgName=id=>byId(data.organizations,id)?.name||'Dossier';
 const property=id=>byId(data.properties,id);
@@ -30,14 +32,14 @@ async function load() {
   catch(e){if(version!==loadVersion)return;data=null;if(e.status===401)welcome();else app.innerHTML=`<main class="welcome error-banner"><h1>Werkruimte niet beschikbaar</h1><p>${esc(e.message)}</p>${button('Opnieuw proberen','reload')}</main>`;}
 }
 async function login(value) {
-  if(!value)return;++loadVersion;data=null;account.disabled=true;app.innerHTML='<div class="welcome">Proefaccount openen…</div>';
-  try {await request('/api/dev-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:value})});account.value=value;query='';location.hash='overview';await load();}
+  if(!value)return;const pendingCall=value==='staff'?(pendingCallRoute||(/^#call(?:\/|$)/.test(location.hash)?location.hash:null)):null;pendingCallRoute=null;++loadVersion;cancelPhoneLookup();handledCallRoute=null;data=null;if(dialog.open)dialog.close();account.disabled=true;app.innerHTML='<div class="welcome">Proefaccount openen…</div>';
+  try {await request('/api/dev-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:value})});account.value=value;query='';location.hash=pendingCall||'overview';await load();}
   catch(e){welcome();toast(e.message);}
   finally{account.disabled=false;}
 }
 function navigation(active) {
-  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken']]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
-  const selected={object:'objects',order:'orders',report:'reports'}[active]||active;
+  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken']]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
+  const selected={customer:'customers',call:'telephony',object:'objects',order:'orders',report:'reports'}[active]||active;
   return tabs.map(([key,title])=>`<a href="#${key}" class="${selected===key?'active':''}" ${selected===key?'aria-current="page"':''}>${icon(key)}${title}</a>`).join('');
 }
 function overview() {
@@ -52,7 +54,43 @@ function overview() {
 }
 function customers() {
   if(!data.staff)return denied();
-  return head('Relaties','Klanten','Opdrachtgevers en contactgegevens.',button('Klant toevoegen','organization.new'))+panel(`Alle klanten <span class="count">${data.organizations.length}</span>`,data.organizations.filter(matches).map(o=>row(o.name,`${label(o.kind)}${o.contact_name?' · '+o.contact_name:''}${o.email?' · '+o.email:''}`,button('Object toevoegen','property.new',o.id,true))).join('')||empty('Geen klanten gevonden'));
+  return head('Relaties','Klanten','Opdrachtgevers en contactgegevens.',button('Klant toevoegen','organization.new'))+panel(`Alle klanten <span class="count">${data.organizations.length}</span>`,data.organizations.filter(matches).map(o=>row(o.name,`${label(o.kind)}${o.contact_name?' · '+o.contact_name:''}${o.email?' · '+o.email:''}`,button('Object toevoegen','property.new',o.id,true),`#customer/${o.id}`)).join('')||empty('Geen klanten gevonden'));
+}
+function customerPage(id) {
+  if(!data.staff)return denied();const o=byId(data.organizations,id);if(!o)return denied();
+  const objects=data.properties.filter(p=>p.organization_id===id),orders=data.orders.filter(p=>p.organization_id===id);
+  return `<a class="back" href="#customers">← Terug naar klanten</a>`+head(label(o.kind),o.name,o.contact_name||'Klantdossier',button('Object toevoegen','property.new',id))+
+    `<div class="columns"><div>${panel('Objecten',objects.map(p=>row(p.name,`${p.address}, ${p.city}`,'',objectLink(p))).join('')||empty('Nog geen objecten','Voeg een object toe voor een eerste inspectieopdracht.'))}${panel('Opdrachten',orders.map(p=>row(p.title,label(p.service),badge(p.status),`#order/${p.id}`)).join('')||empty('Nog geen opdrachten'))}</div><div>${panel('Contactgegevens',`<dl class="facts customer-facts"><div><dt>Contactpersoon</dt><dd>${esc(o.contact_name||'Nog niet ingevuld')}</dd></div><div><dt>Telefoonnummer</dt><dd>${o.phone?`<a href="tel:${esc(o.phone)}">${esc(o.phone)}</a>`:'Nog niet ingevuld'}</dd></div><div><dt>E-mailadres</dt><dd>${o.email?`<a href="mailto:${esc(o.email)}">${esc(o.email)}</a>`:'Nog niet ingevuld'}</dd></div></dl>`)}</div></div>`;
+}
+function telephonyPage() {
+  if(!data.staff)return denied();
+  const {status,phone,result,error}=callView;
+  let content=status==='paused'?`<p class="call-status">Er staat een oproep klaar. Rond uw formulier af of open de beller.</p>${button('Open beller','call.open')}`:status==='loading'?'<p class="call-status" role="status">Klant zoeken…</p>':status==='error'?`<p class="form-error" role="alert">${esc(error)}</p>`:status==='withheld'?'<p class="call-status">Dit nummer is afgeschermd. Vraag de beller naar zijn naam of klantgegevens.</p>':status==='new'?`<p class="call-status">${esc(result.phone)} is nog niet bekend.</p>${button('Nieuwe klantkaart openen','organization.new',result.phone)}`:status==='choose'?`<p>Dit telefoonnummer hoort bij meerdere klanten. Kies het juiste dossier.</p>${result.customers.map(o=>row(o.name,`${label(o.kind)}${o.contact_name?' · '+o.contact_name:''}`,'',`#customer/${o.id}`)).join('')}`:status==='matched'?'<p class="call-status">Het klantdossier is gevonden.</p>':'<p class="call-status">Een bekende beller opent het klantdossier. Voor een onbekend nummer opent een nieuwe klantkaart.</p>';
+  return head('Klantcontact','Telefonie','Open tijdens een gesprek direct het juiste dossier.')+`<div class="columns"><div>${panel('Nummer opzoeken',`<form class="form call-form" data-phone-lookup>${field('phone','Telefoonnummer','tel',phone,false)}<button class="btn" ${status==='loading'?'disabled':''}>Klant zoeken</button></form><div class="call-result" aria-live="polite">${content}</div>`)}</div><div>${panel('Voys',`<div class="panelbody"><span class="tag orange">Nog niet verbonden</span><p class="hint">U bekijkt een lokale proef met fictieve klanten. De Voys-koppeling is nog niet actief.</p></div>`)}</div></div>`;
+}
+async function lookupPhone(phone,route=location.hash) {
+  if(!data?.staff)return;const version=++phoneLookupVersion;
+  callView={status:'loading',phone,result:null,error:''};render();
+  try {
+    const result=await rpc('phone.lookup',{phone});
+    if(version!==phoneLookupVersion||location.hash!==route||!data?.staff||dialog.open)return;
+    const destination=callDestination(result);
+    callView={status:destination.kind==='customer'?'matched':destination.kind,phone:result.phone||'',result,error:''};
+    if(destination.kind==='customer'){location.hash=`customer/${destination.id}`;render();}
+    else {render();if(destination.kind==='new')newCustomer(destination.phone,true);}
+  }catch(e){if(version!==phoneLookupVersion||location.hash!==route||!data?.staff||dialog.open)return;callView={status:'error',phone,result:null,error:'Klant zoeken lukt nu niet. Controleer het nummer en probeer het opnieuw.'};render();}
+}
+function holdIncomingCall(){
+  pendingCallRoute=location.hash;handledCallRoute=location.hash;callView={status:'paused',phone:'',result:null,error:''};
+  if(dialog.open&&!dialog.querySelector('.pending-call'))dialog.insertAdjacentHTML('afterbegin',`<div class="pending-call" role="status"><p>Een oproep staat klaar. Uw formulier blijft open totdat u kiest.</p><div class="buttons">${button('Open beller','call.open')}${button('Later','call.ignore','',true)}</div></div>`);
+}
+function startCallRoute() {
+  if(!data?.staff||handledCallRoute===location.hash)return;
+  if(dialog.open){holdIncomingCall();return;}
+  if(pendingCallRoute===location.hash){callView={status:'paused',phone:'',result:null,error:''};return;}
+  handledCallRoute=location.hash;
+  try {void lookupPhone(callPhoneFromHash(location.hash));}
+  catch(e){callView={status:'error',phone:'',result:null,error:e.message};render();}
 }
 function objects() {
   return head('Doorlopende dossiers',data.staff?'Objecten':'Mijn objecten','Elke inspectie bouwt voort op hetzelfde objectdossier.',data.staff?button('Object toevoegen','property.new'):'')+`<div class="cards">${data.properties.filter(matches).map(p=>`<article class="card"><div class="property-icon">${icon('objects')}</div><small>${esc(orgName(p.organization_id))}</small><h2>${esc(p.name)}</h2><p>${esc(p.address)}<br>${esc(p.postcode)} ${esc(p.city)}</p><small>${data.inspections.filter(i=>i.property_id===p.id&&i.organization_id===p.organization_id).length} inspectieronden</small><div class="buttons"><a class="btn secondary" href="${objectLink(p)}">Open objectdossier →</a></div></article>`).join('')||empty('Nog geen objecten beschikbaar','RoofSignal koppelt uw objecten aan uw account.')}</div>`;
@@ -98,15 +136,21 @@ function denied(){return head('Dossier','Niet beschikbaar','Dit onderdeel is nie
 function render() {
   if(!data)return;
   const [route='overview',id,org]=location.hash.slice(1).split('/');
-  const content=({overview,customers,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage})[route];
-  const page=content?content():route==='object'?objectPage(id,org):route==='order'?orderPage(id):route==='report'?reportPage(id):denied();
+  const content=({overview,customers,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage})[route];
+  const page=content?content():route==='customer'?customerPage(id):route==='object'?objectPage(id,org):route==='order'?orderPage(id):route==='report'?reportPage(id):denied();
   const search=['customers','objects','orders','reports','requests'].includes(route)?`<input id="search" class="search" type="search" value="${esc(query)}" placeholder="Zoek in dit overzicht…" aria-label="Zoeken in dit overzicht">`:`<small>${esc(data.person.name)}</small>`;
-  app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><div class="wordmark">ROOF<span>SIGNAL</span></div><small>PROPERTY INTELLIGENCE</small></div><div><p class="nav-label">${data.staff?'Werkruimte':'Klantportaal'}</p><nav class="nav" aria-label="Werkruimten">${navigation(route)}</nav></div><div class="sidebar-foot"><strong>${esc(data.person.name)}</strong><small>${data.staff?'RoofSignal backoffice':'Uw persoonlijke dossier'}</small><button data-action="logout">Uitloggen →</button></div></aside><div class="workspace"><header class="topbar"><span>${data.staff?'RoofSignal / Backoffice':'RoofSignal / Klantportaal'}</span>${search}<button class="text-button mobile-signout" data-action="logout">Uitloggen</button></header><main class="page" id="main">${page}</main></div></div>`;
+  app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><div class="wordmark">ROOF<span>SIGNAL</span></div><small>PROPERTY INTELLIGENCE</small></div><div><p class="nav-label">${data.staff?'Werkruimte':'Klantportaal'}</p><nav class="nav" aria-label="Werkruimten">${navigation(route)}</nav></div><div class="sidebar-foot"><strong>${esc(data.person.name)}</strong><small>${data.staff?'RoofSignal backoffice':'Uw persoonlijke dossier'}</small><button data-action="logout">Uitloggen →</button></div></aside><div class="workspace"><header class="topbar"><span>${data.staff?'RoofSignal / Backoffice':'RoofSignal / Klantportaal'}</span>${search}${data.staff&&pendingCallRoute?button('Oproep openen','call.open','',true):''}<button class="text-button mobile-signout" data-action="logout">Uitloggen</button></header><main class="page" id="main">${page}</main></div></div>`;
+  if(route==='call'&&data.staff)startCallRoute();
 }
 
 function showForm(title,command,fields,context={},submit='Opslaan') {
   dialog.innerHTML=`<div class="dialoghead"><h2 id="dialog-title">${esc(title)}</h2><button class="close" type="button" data-action="close" aria-label="Sluiten">×</button></div><form class="form" data-command="${esc(command)}">${fields}<p class="form-error" role="alert" hidden></p><div class="buttons"><button type="button" class="btn secondary" data-action="close">Annuleren</button><button type="submit" class="btn">${esc(submit)}</button></div></form>`;
   dialog.querySelector('form')._context=context;dialog.showModal();
+}
+function newCustomer(phone='',fromCall=false){
+  if(!data?.staff)return;cancelPhoneLookup();
+  showForm('Klant toevoegen','organization.create',field('name','Klantnaam')+select('kind','Type klant',['private','vve','business','manager'].map(k=>[k,label(k)]))+field('contact_name','Contactpersoon','text','',false)+field('email','E-mailadres','email','',false)+field('phone','Telefoonnummer','tel',phone,false),{},'Klant toevoegen');
+  if(fromCall)dialog.querySelector('form').dataset.callRoute=location.hash;
 }
 function objectOptions(org,requestOnly=false){return data.properties.filter(p=>(!org||p.organization_id===org)&&(!requestOnly||p.can_request)).map(p=>[`${p.id}/${p.organization_id}`,`${p.name} · ${orgName(p.organization_id)}`]);}
 function newOrder(selected='') {
@@ -123,9 +167,11 @@ function newObservation(id) {
 function action(name,id='') {
   if(name==='close'){dialog.close();return;}
   if(name==='reload'){load();return;}
-  if(name==='logout'){request('/api/logout',{method:'POST'}).then(()=>{++loadVersion;data=null;account.value='';welcome();}).catch(e=>toast(e.message));return;}
-  if(!data)return;
-  if(name==='organization.new')showForm('Klant toevoegen','organization.create',field('name','Klantnaam')+select('kind','Type klant',['private','vve','business','manager'].map(k=>[k,label(k)]))+field('contact_name','Contactpersoon','text','',false)+field('email','E-mailadres','email','',false)+field('phone','Telefoonnummer','tel','',false),{},'Klant toevoegen');
+  if(name==='logout'){request('/api/logout',{method:'POST'}).then(()=>{++loadVersion;cancelPhoneLookup();handledCallRoute=null;pendingCallRoute=null;data=null;if(dialog.open)dialog.close();account.value='';welcome();}).catch(e=>toast(e.message));return;}
+  if(!data)return;cancelPhoneLookup();
+  if(name==='call.open'&&data.staff){const route=pendingCallRoute||location.hash;pendingCallRoute=null;handledCallRoute=null;if(dialog.open)dialog.close();if(location.hash===route)render();else location.hash=route;return;}
+  if(name==='call.ignore'&&data.staff){pendingCallRoute=null;handledCallRoute=location.hash;dialog.querySelector('.pending-call')?.remove();callView={status:'idle',phone:'',result:null,error:''};render();return;}
+  if(name==='organization.new')newCustomer(id);
   if(name==='property.new') {
     if(!data.organizations.length){toast('Voeg eerst een klant toe.');return;}
     showForm('Object toevoegen','property.create',select('organization_id','Klant',data.organizations.map(o=>[o.id,o.name]),id)+field('name','Objectnaam')+field('address','Straat en huisnummer(s)')+`<div class="form-grid">${field('postcode','Postcode','text','',false)}${field('city','Plaats')}</div>`,{},'Object toevoegen');
@@ -148,7 +194,7 @@ document.addEventListener('click',e=>{
   const target=e.target.closest('[data-action]');if(target)action(target.dataset.action,target.dataset.id);
 });
 account.addEventListener('change',()=>login(account.value));
-window.addEventListener('hashchange',()=>{query='';render();window.scrollTo({top:0});});
+window.addEventListener('hashchange',()=>{cancelPhoneLookup();handledCallRoute=null;query='';if(data?.staff&&/^#call(?:\/|$)/.test(location.hash)&&dialog.open)holdIncomingCall();render();window.scrollTo({top:0});});
 document.addEventListener('input',e=>{
   if(e.target.id==='search'){const cursor=e.target.selectionStart;query=e.target.value.toLocaleLowerCase('nl');render();const search=document.querySelector('#search');search.focus();search.setSelectionRange(cursor,cursor);}
   const form=e.target.closest('form[data-command]');if(form)delete form.dataset.requestId;
@@ -167,6 +213,7 @@ document.addEventListener('change',async e=>{
   }
 });
 document.addEventListener('submit',async e=>{
+  const callForm=e.target.closest('form[data-phone-lookup]');if(callForm){e.preventDefault();void lookupPhone(new FormData(callForm).get('phone')||'');return;}
   const form=e.target.closest('form[data-command]');if(!form)return;e.preventDefault();
   const payload={...Object.fromEntries(new FormData(form)),...form._context};
   if(payload.object){[payload.property_id,payload.organization_id]=payload.object.split('/');delete payload.object;}
@@ -178,7 +225,7 @@ document.addEventListener('submit',async e=>{
     await load();
     if(form.dataset.command==='order.create')location.hash=`order/${result.id}`;
     if(form.dataset.command==='property.create')location.hash=`object/${result.id}/${payload.organization_id}`;
-    if(form.dataset.command==='organization.create')location.hash='customers';
+    if(form.dataset.command==='organization.create')location.hash=`customer/${result.id}`;
     if(form.dataset.command==='report.save')location.hash=`report/${result.id}`;
     toast('Opgeslagen.');
   }catch(err){error.textContent=err.message;error.hidden=false;buttons.forEach(b=>b.disabled=false);}

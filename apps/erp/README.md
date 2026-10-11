@@ -29,6 +29,9 @@ is nadrukkelijk geen productielogin. Geen echte dossiers in deze proefomgeving i
 ## Wat werkt
 
 - Backoffice met overzicht, klanten, objecten, opdrachten, rapporten en verzoeken.
+- Klantkaart met contactgegevens, objecten en opdrachten; nummerherkenning in de werkruimte Telefonie.
+- Een bekend nummer opent de klantkaart. Een onbekend nummer opent een ingevuld nieuw-klantformulier;
+  meerdere matches worden ter keuze getoond. Zoeken maakt nooit automatisch een klant aan.
 - Klanten en objecten toevoegen; opdrachten met scope, dienst, deadline en interne notitie.
 - Meerdere inspectieronden per opdracht, werkelijke inspectiedatum en afzonderlijk datumvoorstel.
 - Nieuwe bevindingen en vervolgwaarnemingen op hetzelfde aandachtspunt.
@@ -45,10 +48,30 @@ Een datumvoorstel reserveert geen agendatijd. Een herstelmelding wijzigt geen
 inspectieoordeel. Vrijgegeven rapporten en waarnemingen worden niet overschreven.
 Nieuwe opdrachten nodigen geen klant uit en versturen geen e-mail.
 
+### Voys en telefoonherkenning
+
+De werkruimte **Telefonie** en de route `#call/<URL-gecodeerd-nummer>` bereiden de
+klantweergave bij een inkomend gesprek voor. Alleen de medewerker kan nummers
+opzoeken. De server vergelijkt volledige, genormaliseerde telefoonnummers;
+afgeschermde nummers en zoekfouten worden afzonderlijk afgehandeld. Een wachtende
+oproep kan na de proeflogin worden geopend. Nieuwe klantgegevens worden pas na
+bevestiging opgeslagen.
+
+Voys is nog niet verbonden. Er is geen openbare webhook of nieuwe toegang tot
+Voys aangemaakt. De echte verbinding volgt in de beveiligde online ERP-omgeving
+via [Voys gespreksnotificaties](https://help.voys.nl/gespreksnotificaties), met
+afzendercontrole en meldingen voor de juiste medewerker. De lokale proefserver
+ontvangt geen echte telefoongesprekken. De functionele afspraken staan in
+[het ERP-ontwerp](../../docs/eigen-erp-klantportaal.md#9-telefonie-en-voys).
+
 ## Technische opzet
 
 `public/` bevat de Nederlandstalige interface. `db/001_foundation.sql` bevat het
 Postgres-gegevensmodel en de afgeschermde `public.roofsignal_erp`-RPC.
+`db/002_telephony.sql` voegt medewerkers-only nummerherkenning toe, zonder directe
+tabeltoegang. De oorspronkelijke opdrachten blijven achter een private functie
+beschikbaar. Deze lokale uitbreiding wordt ook bij bestaande proefdatabases
+toegepast bij herstart, met behoud van dossiers.
 `src/dev-server.mjs` is uitsluitend de lokale adapter. Dezelfde RPC wordt lokaal
 onder de ongeprivilegieerde `authenticated`-rol uitgevoerd. Voor de databaseproeven
 gebruiken we [PGlite](https://pglite.dev/docs/about), een lokale Postgres-runtime.
@@ -81,6 +104,8 @@ De automatische tests voeren de echte SQL/RPC en HTTP-routes uit:
 - Klantverzoeken, herstelmelding versus beoordeling en profielwijziging zonder rolverhoging.
 - Afgeschermde PDF-upload/download, sessie, CSRF en opslag na herstart.
 - Verkeerde koppelingen tussen 3D-modelversie en waarneming geweigerd.
+- Volledige nummerherkenning, gedeelde nummers, afgeschermde nummers en onbekende bellers;
+  toegang beperkt tot actieve medewerkers, geen automatische klantaanmaak, behoud na database-update.
 
 PGlite is geen vervanging voor een productieproef met meerdere gelijktijdige
 Postgres-sessies, de echte Supabase-authenticatie en de uiteindelijke bestandsopslag.

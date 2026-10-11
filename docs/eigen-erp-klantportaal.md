@@ -164,7 +164,55 @@ zijn overeengekomen. Toegang kan daarop worden afgestemd, zonder al prijzen of
 abonnementen voor 3D vast te stellen. Een technisch dossierrecht geeft niet automatisch
 toegang tot alle facturen van dezelfde beheerportefeuille.
 
-## 9. Bouwvolgorde
+## 9. Telefonie en Voys
+
+Vastgesteld door Ferry op 11 oktober 2026: de eigen backoffice moet bij een
+inkomende oproep de beller herkennen aan het telefoonnummer. Eén bestaande match
+opent de klantkaart met contactgegevens, objecten en opdrachten. Een onbekend
+nummer opent een nieuwe klantkaart met het nummer ingevuld. Er wordt pas een klant
+opgeslagen nadat een medewerker de gegevens heeft aangevuld en bevestigd.
+
+Bij een gedeeld nummer worden alle passende klanten getoond om de juiste relatie
+te kiezen. Een afgeschermd nummer geeft een algemene oproepmelding; het wordt niet
+als telefoonnummer of nieuwe klant opgeslagen. Een tijdelijke fout in het zoeken
+wordt als fout getoond en niet als een onbekende beller behandeld. Nationale en
+internationale schrijfwijzen van hetzelfde nummer worden op de server gelijkgetrokken.
+
+Nummerherkenning is alleen beschikbaar voor ingelogde medewerkers. Zij verleent
+geen identiteit, portaaltoegang of wijzigingsrechten aan de beller. Bij meerdere
+medewerkers moet de melding worden gekoppeld aan de medewerker die de oproep
+ontvangt. Een nieuw gesprek mag een onopgeslagen formulier niet zonder afstemming
+overschrijven. Dubbele en vertraagde oproepmeldingen mogen geen dubbele klantkaarten
+of contactmomenten aanmaken.
+
+Voys ondersteunt hiervoor
+[gespreksnotificaties](https://help.voys.nl/gespreksnotificaties): een server ontvangt
+onder meer het gespreksnummer, beller, bestemming en gebeurtenissen zoals overgaan,
+opnemen en beëindigen. In de lokale ERP-proefomgeving wordt de klantkaart en de
+herkenningsroute voorbereid. De huidige proeflogin en lokale server zijn geen
+online Voys-koppeling. De daadwerkelijke verbinding volgt in de besloten online
+omgeving, met gecontroleerde toegang voor Voys en geautoriseerde meldingen aan
+medewerkers. De afzendercontrole en Voys-inrichting moeten vóór activering worden
+bevestigd en getest; telefoon- of klantgegevens worden niet via een openbare zoek-URL
+beschikbaar gemaakt.
+
+Een gespreksregistratie in het dossier (richting, begin/einde, behandelaar en
+notities), een terugbelactie en bellen vanuit de klantkaart kunnen hierop volgen.
+Gespreksopnames, transcripties en AI-samenvattingen zijn geen onderdeel van deze
+eerste herkenningsfunctie.
+
+### Acceptatieproeven voor nummerherkenning
+
+- Een bekende beller opent precies de juiste klantkaart met diens objecten en opdrachten.
+- Een onbekend nummer opent een ingevuld nieuw-klantformulier, zonder automatisch record.
+- Meerdere matches worden getoond; er wordt niet willekeurig een klant gekozen.
+- `06…`, `00316…` en `+316…` vinden hetzelfde opgeslagen nummer.
+- Afgeschermde nummers, fouten en vertraagde zoekantwoorden openen geen verkeerde kaart.
+- Klanten, financiële contacten en ingetrokken medewerkers kunnen geen nummers opzoeken.
+- De oproeproute blijft beschikbaar na inloggen en overschrijft geen actief invoerformulier.
+- De echte Voys-proef volgt pas met een beveiligde online backoffice en expliciete inrichting.
+
+## 10. Bouwvolgorde
 
 1. **Fundament:** eigen ERP-gegevensmodel, objectidentiteit, organisaties, rechten,
    publicatiestatussen, inspectiehistorie en koppelingen. Ontwerp de portaaltoegang meteen mee.
@@ -178,7 +226,7 @@ toegang tot alle facturen van dezelfde beheerportefeuille.
 Oplevercriteria voor de volledige gekozen fase zijn functionele proeven; een
 schets of aanwezige knop geldt niet als een werkende koppeling.
 
-## 10. Acceptatieproeven vóór ingebruikname
+## 11. Acceptatieproeven vóór ingebruikname
 
 - Klant A kan geen object, PDF, factuur, foto of 3D-bestand van klant B ophalen,
   ook niet via een directe URL of aangepast verzoek.
@@ -196,6 +244,7 @@ schets of aanwezige knop geldt niet als een werkende koppeling.
 ## Bronnen en beslisbasis
 
 - Ferry, 11 oktober 2026: eigen ERP bevestigd; klantportaal en klikbaar 3D-dossier toegevoegd.
+- Ferry, 11 oktober 2026: Voys-nummerherkenning en een nieuwe klantkaart voor onbekende bellers toegevoegd.
 - [Medewerkershandboek](../../outputs/roofsignal-medewerkershandboek.md): vastgestelde producten,
   staffels, reisafspraken en versiebeheer.
 - [Consumentenboeking](consumer-booking.md): bestaande boekingsroutes en geaccepteerde afspraken.

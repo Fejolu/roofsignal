@@ -33,6 +33,8 @@ export async function openDatabase(dataDir) {
       await db.query('insert into erp.people(user_id,name) values($1,$2)',[USERS[key],name]);
     }
   }
+  // Additive local updates preserve existing practice dossiers on restart.
+  await db.exec(await readFile(new URL('../db/002_telephony.sql',import.meta.url),'utf8'));
   return db;
 }
 
