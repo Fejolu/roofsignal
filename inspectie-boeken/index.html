@@ -22,7 +22,7 @@
     <script src="./vve-kvk.js?v=20261011-kvk" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
-    <script src="./booking.js?v=20261011-after-withdrawal" type="module"></script>
+    <script src="./booking.js?v=20261011-pay-button" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
     <a class="rs-skip" href="#main-content">Naar de inhoud</a>
@@ -165,7 +165,7 @@
               <h3 id="consent-title">Controleer uw opdracht</h3>
               <label class="checkbox-row" for="termsAccepted">
                 <input disabled id="termsAccepted" name="termsAccepted" type="checkbox" value="true" required>
-                <span>Ik boek deze inspectie tegen het getoonde totaalbedrag en ga akkoord met de <a href="/legal/voorwaarden-2026-09-24.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-11.txt" target="_blank" rel="noopener noreferrer">boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
+                <span>Ik boek deze inspectie tegen het getoonde totaalbedrag en ga akkoord met de <a href="/legal/voorwaarden-2026-09-24.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-11-betalen.txt" target="_blank" rel="noopener noreferrer">boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
               </label>
               <div class="withdrawal-note">
                 <p>Bij ongeschikt weer verplaatsen we kosteloos. U heeft minimaal 14 dagen bedenktijd.</p>
@@ -186,7 +186,8 @@
                 <strong id="summary-total">€361,79</strong>
               </div>
               <div class="summary-date"><span class="summary-date__label">Inspectiemoment</span><strong id="summary-date">Nog geen moment gekozen</strong></div>
-              <button class="button button--primary checkout-button" id="checkout-button" type="submit" form="booking-form" disabled>Boek met betalingsverplichting <span aria-hidden="true">→</span></button>
+              <button class="button button--primary checkout-button" id="checkout-button" type="submit" form="booking-form" disabled>Betalen</button>
+              <a class="button button--primary checkout-button" id="checkout-link" rel="noreferrer" hidden>Betalen</a>
               <noscript><p class="no-script">Voor adrescontrole, beschikbaarheid en boeken is JavaScript nodig. Neem voor een inspectie contact op met RoofSignal.</p></noscript>
             </div>
           </aside>

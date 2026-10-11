@@ -243,7 +243,7 @@ Invoer: `{requestId,quoteId,slotId,customer:{name,email,phone,notes},terms:{acce
 
 Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` altijd
 `false`; `true` is geen ondersteunde boekingskeuze. `terms.version` moet overeenkomen
-met de opgeslagen prijsopgave en de actuele versie `2026-10-11-consumer`.
+met de opgeslagen prijsopgave en de actuele versie `2026-10-11-consumer-pay`.
 
 Server leest de opgeslagen prijsopgave, controleert verval, adres en scope,
 valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw,
@@ -277,6 +277,8 @@ De adapter accepteert alleen dezelfde request-ID, quote-ID, slot-ID, valuta en t
 Vóór het eerste checkoutverzoek slaat de browser onder `roofsignal.consumerBooking.pending.v1` uitsluitend `{version:1,requestId,quoteId,slotId,currency,totalCents}` in `sessionStorage` op. `requestId` is een UUIDv4. Geen naam, adres, e-mailadres, telefoonnummer, opmerkingen, betaal-URL of credential opslaan. Als schrijven of teruglezen niet betrouwbaar lukt, wordt geen nieuw checkoutverzoek verstuurd. In conceptmodus wordt de opslag niet gelezen of gewijzigd.
 
 Na een onzekere uitkomst worden de invoervelden vergrendeld. Een volgende poging en een paginaverversing gebruiken `/recover`; zij maken niet opnieuw een checkout aan. De Mollie-idempotentiesleutel wordt volgens de documentatie slechts één uur bewaard: eigen duurzame server-idempotentie en capaciteitsvergrendeling blijven noodzakelijk.
+
+De primaire actie heet **Betalen**. Zodra de server een `checkout_ready`-antwoord geeft, toont de samenvatting een echte link naar de geverifieerde Mollie-betaalpagina van diezelfde opdracht. De browser controleert de opdrachtidentiteit, valuta, totaalprijs en toegestane HTTPS-host vóór het tonen van de link. Een klik op deze link maakt geen nieuwe betaalopdracht aan. Bij een nog lopende voorbereiding blijft **Betalen** beschikbaar om uitsluitend het bestaande request-ID opnieuw op te halen. Bij een fout of een niet-betaalbare status wordt een eerder getoonde link verwijderd. De betaal-URL blijft alleen in geheugen; zij komt niet in `sessionStorage`.
 
 ### POST /api/consumer-booking/recover
 
@@ -371,7 +373,7 @@ Een lokale timer mag een nog betaalbare Mollie-poging niet vrijgeven. Reconcilia
 
 ### GET /api/consumer-booking/status?token=...
 
-Server verifieert token en verwerkt/reconcilieert de bestaande poging. Antwoord bevat minimaal `{status}` met `confirmed`, `paid_review_required`, `open`, `pending`, `failed`, `canceled` of `expired`. Alleen beperkte informatie teruggeven, nooit de ruwe Mollie-response of volledig klantdossier. Zet Cache-Control: no-store en een passend Referrer-Policy; neem statustokens niet op in analytics en serverlogs. Zonder verifieerbare status blijft de afspraak onbevestigd.
+Server verifieert token en verwerkt/reconcilieert de bestaande poging. Antwoord bevat `{status, ...view}` met `confirmed`, `paid_review_required`, `open`, `pending`, `failed`, `canceled` of `expired`, plus dezelfde beperkte opdrachtidentiteit en herstelstatus als `/recover`. Alleen bij een geverifieerde open betaling bevat `view` een bruikbare Mollie-checkout-URL. Zo kan de terugkeerpagina ook zonder lokale browseropslag **Betalen** tonen, buiten het eventueel verborgen boekingsformulier. Met een bestaand lokaal herstelrecord moet de serverresponse daar exact bij aansluiten. Alleen beperkte informatie teruggeven, nooit de ruwe Mollie-response of volledig klantdossier. Zet Cache-Control: no-store en een passend Referrer-Policy; neem statustokens niet op in analytics en serverlogs. Zonder verifieerbare status blijft de afspraak onbevestigd.
 
 ## Controle en plaatsing
 
@@ -403,3 +405,5 @@ Voor de consumentenboeking zijn uitsluitend expliciete proefbetalingen, gemarkee
 - https://docs.mollie.com/docs/handling-payment-status — statusafhandeling en niet zelf voorspellen van verval.
 - https://docs.mollie.com/reference/api-idempotency — API-idempotentie vervangt geen eigen duurzame idempotentie.
 - https://docs.mollie.com/reference/testing — gescheiden testbetalingen.
+
+De betaalknop heet **Betalen**. Nieuwe prijsopgaven gebruiken `2026-10-11-consumer-pay` en `legal/consumentenboeking-2026-10-11-betalen.txt`; daarin is uitsluitend de knopnaam bijgewerkt. De twee eerder geaccepteerde voorwaardenversies blijven onveranderd beschikbaar voor bestaande opdrachten. De Mollie-link komt uitsluitend uit de geverifieerde actuele betaalstatus; een terugkeerpagina kan diezelfde link op basis van het geheime statustoken tonen, ook zonder lokale herstelopslag.

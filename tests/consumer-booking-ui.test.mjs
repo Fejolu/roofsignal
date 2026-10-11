@@ -37,6 +37,7 @@ class Element {
   }
   setAttribute(name, value) { this.attributes[name] = String(value); }
   getAttribute(name) { return this.attributes[name] ?? null; }
+  removeAttribute(name) { delete this.attributes[name]; }
   get children() { return this.childNodes.filter(node => node instanceof Element); }
   get textContent() {
     return this.childNodes.map(node => node instanceof Element ? node.textContent : node).join('');
@@ -180,6 +181,179 @@ function statusRetry(document) {
   return document.querySelectorAll('button').find(button => visible(button) && !button.disabled && /betaalstatus.*controleren/i.test(button.textContent));
 }
 
+const mollieCheckout = 'https://www.mollie.com/checkout/test-payment-identity';
+const readyPayment = (overrides = {}) => ({
+  ...recoveryRecord, reference: 'ROOFSIGNAL-TEST', state: 'checkout_ready',
+  status: 'open', checkoutUrl: mollieCheckout, ...overrides
+});
+
+test('A recovered payment exposes a real Betalen anchor for the same Mollie order', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return readyPayment();
+    }
+  });
+  const pay = ui.get('checkout-link');
+  assert.equal(pay.tagName, 'a');
+  assert.equal(pay.textContent, 'Betalen');
+  assert.equal(pay.getAttribute('href'), mollieCheckout);
+  assert.ok(visible(pay));
+  assert.equal(ui.get('checkout-button').hidden, true);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  assert.equal(ui.requests.length, 1);
+  await pay.dispatch('click');
+  assert.equal(ui.requests.length, 1, 'Following the existing link must not create or recover a second payment');
+  assert.deepEqual(ui.navigations, [], 'Reload must leave the payment choice to the customer');
+});
+
+test('Betalen retries a pending order with its original requestId and then exposes its checkout link', async () => {
+  let recoveryCalls = 0;
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return ++recoveryCalls === 1 ? { requestId: recoveryRecord.requestId, state: 'pending' } : readyPayment();
+    }
+  });
+  assert.equal(ui.get('checkout-button').textContent, 'Betalen');
+  assert.ok(visible(ui.get('checkout-button')));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+  assert.equal(ui.get('checkout-link').hidden, true);
+  assert.match(ui.get('booking-status').textContent, /betaalpagina wordt klaargezet/i);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(recoveryCalls, 2);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.ok(visible(ui.get('checkout-link')));
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+});
+
+test('The initial Betalen action retains one payment identity and leaves a usable link if navigation is interrupted', async () => {
+  const ui = await submitNewOrder(attempt => readyPayment({ requestId: attempt.requestId }));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.ok(visible(ui.get('checkout-link')));
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  const stored = JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY));
+  assert.deepEqual(Object.keys(stored).sort(), Object.keys(recoveryRecord).sort());
+  assert.equal(stored.requestId, ui.requests.find(request => request.path.endsWith('/checkout')).body.requestId);
+  assert.equal(stored.checkoutUrl, undefined);
+});
+
+test('A Mollie return without local storage exposes its server-identified payment outside the hidden form', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, returnToken: statusToken,
+    respond(request) {
+      assert.ok(request.path.endsWith('/status'));
+      return readyPayment();
+    }
+  });
+  assert.equal(ui.get('booking-form').hidden, true);
+  assert.ok(visible(ui.get('checkout-link')));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(recoveryRecord.totalCents));
+  assert.equal(ui.stored.size, 0, 'A return response must not store a payment URL or create a new local attempt');
+  assert.equal(ui.requests.length, 1);
+});
+
+test('Closed, pending or failed status checks remove an earlier payment link', async () => {
+  for (const next of [
+    { ...readyPayment(), state: 'closed', requestClosed: true, status: 'expired' },
+    { requestId: recoveryRecord.requestId, state: 'pending', status: 'pending' },
+    new Error('Simulated status failure')
+  ]) {
+    let statusCalls = 0;
+    const ui = await bookingPage({ configuration: connectedConfiguration, returnToken: statusToken,
+      respond(request) {
+        assert.ok(request.path.endsWith('/status'));
+        if (++statusCalls === 1) return readyPayment();
+        if (next instanceof Error) throw next;
+        return next;
+      }
+    });
+    assert.ok(visible(ui.get('checkout-link')));
+    await statusRetry(ui.document).dispatch('click');
+    await settle();
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  }
+});
+
+test('Recovery refuses checkout URLs from another host or another order', async () => {
+  for (const response of [
+    readyPayment({ checkoutUrl: 'https://mollie.com.attacker.invalid/pay' }),
+    readyPayment({ checkoutUrl: 'http://www.mollie.com/pay' }),
+    readyPayment({ checkoutUrl: 'https://user:secret@www.mollie.com/pay' }),
+    readyPayment({ quoteId: 'another_quote_0123456789' }),
+    readyPayment({ totalCents: 1 })
+  ]) {
+    const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+      respond() { return response; }
+    });
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.ok(visible(ui.get('booking-error')));
+    assert.deepEqual(ui.navigations, []);
+    assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  }
+});
+
+test('A return-token payment must match the browser order when a recovery record already exists', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, returnToken: statusToken,
+    respond(request) {
+      if (request.path.endsWith('/recover')) return readyPayment();
+      return readyPayment({ slotId: 'another-slot' });
+    }
+  });
+  assert.equal(ui.get('booking-form').hidden, true);
+  assert.equal(ui.get('checkout-link').hidden, true);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+  assert.match(ui.get('booking-status').textContent, /hoort niet bij/);
+  assert.ok(statusRetry(ui.document));
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('A confirmed return removes payment and offers only a new inspection without charging again', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, returnToken: statusToken,
+    respond(request) {
+      if (request.path.endsWith('/recover')) return readyPayment();
+      return readyPayment({ state: 'closed', status: 'confirmed', requestClosed: true });
+    }
+  });
+  assert.equal(ui.get('checkout-link').hidden, true);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+  assert.equal(ui.get('checkout-button').textContent, 'Een nieuwe inspectie boeken');
+  assert.match(ui.get('booking-status').textContent, /betaling is ontvangen/);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('booking-form').hidden, false);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+});
+
+test('A verified expired return allows a fresh booking with or without a local recovery record', async () => {
+  for (const record of [undefined, recoveryRecord]) {
+    const ui = await bookingPage({ configuration: connectedConfiguration, record, returnToken: statusToken,
+      respond(request) {
+        if (request.path.endsWith('/recover')) return { requestId: recoveryRecord.requestId, state: 'pending' };
+        return readyPayment({ state: 'closed', status: 'expired', requestClosed: true });
+      }
+    });
+    assert.equal(ui.get('booking-form').hidden, false);
+    assert.equal(ui.get('postcode').disabled, false);
+    assert.equal(ui.get('check-address').disabled, false);
+    assert.equal(ui.get('checkout-button').textContent, 'Betalen');
+    assert.equal(ui.get('checkout-button').disabled, true, 'A fresh booking still needs an address, moment and consent');
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.equal(ui.stored.size, 0);
+    assert.match(ui.get('booking-status').textContent, /betaalopdracht is verlopen/);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  }
+});
+
 test('Recovery errors after a Mollie return remain visible while the same payment is retained', async () => {
   let recoverCalls = 0;
   const ui = await bookingPage({
@@ -309,7 +483,7 @@ test('A still-pending initial checkout retains the same recovery record without 
   const ui=await submitNewOrder(attempt=>({requestId:attempt.requestId,state:'pending'}));
   assert.equal(ui.stored.size,1);
   assert.equal(ui.get('postcode').disabled,true);
-  assert.match(ui.get('booking-status').textContent,/nog gecontroleerd/);
+  assert.match(ui.get('booking-status').textContent,/betaalpagina wordt klaargezet/);
   assert.equal(ui.get('booking-error').textContent,'');
   assert.deepEqual(ui.navigations,[]);
 });

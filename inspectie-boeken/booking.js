@@ -22,6 +22,8 @@ let checkoutAttempt = null;
 let recovery = null;
 let recoveryBlocked = false;
 let closedStatus = null;
+let checkoutUrl = null;
+let returnOrder = null;
 let revision = 0;
 let quoteExpiryTimer;
 let checkingReturnStatus = false;
@@ -36,18 +38,31 @@ function updateSummary() {
   el('summary-base').textContent = money(BASE_CENTS);
   el('summary-thermal').textContent = thermal ? money(THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
-  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery ? money(recovery.totalCents) : money(subtotal(thermal));
+  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : money(subtotal(thermal));
   el('address-result').hidden = !quote;
   el('summary-date').textContent = selectedSlot ? slotLabel(selectedSlot) : 'Nog te kiezen';
-  if (recovery && !quote) {
+  if ((recovery || returnOrder) && !quote) {
     for (const id of ['summary-base', 'summary-thermal', 'summary-travel']) el(id).textContent = 'In uw bestaande opdracht';
     el('summary-date').textContent = 'Bij uw bestaande betaalopdracht';
   }
-  const ready = connected && !recoveryBlocked && !loading && (recovery || (quote && selectedSlot && el('termsAccepted').checked));
+  const ready = connected && !recoveryBlocked && !loading && !checkingReturnStatus && (recovery || (quote && selectedSlot && el('termsAccepted').checked));
   el('checkout-button').disabled = !ready;
-  el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : recovery ? 'Bestaande betaalopdracht controleren' : quote ? `Boek en betaal ${money(quote.totalCents)}` : 'Boek en betaal';
+  el('checkout-button').hidden = Boolean(checkoutUrl);
+  el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : 'Betalen';
+  el('checkout-link').hidden = !checkoutUrl;
   el('check-address').disabled = configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
   updateCalendarControls();
+}
+
+function clearPaymentLink() {
+  checkoutUrl = null;
+  el('checkout-link').removeAttribute('href');
+  el('checkout-link').hidden = true;
+}
+
+function showPaymentLink(validatedUrl) {
+  checkoutUrl = validatedUrl;
+  el('checkout-link').setAttribute('href', validatedUrl);
 }
 
 function clearQuote() {
@@ -89,7 +104,7 @@ async function api(path, options = {}) {
       signal: AbortSignal.timeout(60000)
     });
   } catch {
-    throw new BookingError('De verbinding is onderbroken. Controleer uw bestaande betaalopdracht voordat u opnieuw probeert te boeken.');
+    throw new BookingError('De verbinding is onderbroken. Probeer over een ogenblik opnieuw.');
   }
   let data;
   try { data = await response.json(); }
@@ -272,7 +287,8 @@ function releaseRecovery() {
     recoveryBlocked = true;
     throw new BookingError('De afgehandelde betaalopdracht kan niet veilig worden gewist. Neem contact op met RoofSignal.');
   }
-  recovery = null; checkoutAttempt = null; closedStatus = null;
+  recovery = null; checkoutAttempt = null; closedStatus = null; returnOrder = null;
+  clearPaymentLink();
   lockOrder(false); form.hidden = false;
   const url = new URL(window.location.href);
   url.searchParams.delete('booking');
@@ -281,15 +297,17 @@ function releaseRecovery() {
 }
 
 function handleCheckoutError(error) {
+  clearPaymentLink();
   message('booking-status', '');
   if (recovery && canReleaseAttempt(error.data, recovery.requestId)) {
     try { releaseRecovery(); }
     catch (storageError) { message('booking-error', storageError.message); return; }
   }
-  message('booking-error', `${error.message}${recovery ? ' Gebruik de knop om uw bestaande betaalopdracht te controleren. De gegevens blijven vergrendeld; start geen tweede boeking.' : ''}`);
+  message('booking-error', `${error.message}${recovery ? ' Klik op Betalen om opnieuw te proberen.' : ''}`);
 }
 
 function applyAttemptResponse(data, resume = false) {
+  clearPaymentLink();
   const result = validateRecoveryResponse(data, recovery);
   if (result.state === 'not_created') {
     releaseRecovery();
@@ -301,18 +319,21 @@ function applyAttemptResponse(data, resume = false) {
     else releaseRecovery();
     message('booking-status', paymentMessage(result.status));
   } else if (result.state === 'checkout_ready') {
+    showPaymentLink(result.checkoutUrl);
     message('booking-status', resume
-      ? 'Uw betaalopdracht is gereed. U gaat nu naar de beveiligde betaalpagina van Mollie.'
-      : 'Uw bestaande betaalopdracht is gevonden. Gebruik de knop om verder te gaan naar dezelfde beveiligde betaalpagina.');
+      ? 'U gaat naar de beveiligde betaalpagina van Mollie.'
+      : 'Uw betaalpagina staat klaar. Klik op Betalen.');
     if (resume) window.location.assign(result.checkoutUrl);
   } else {
-    message('booking-status', 'Uw bestaande betaalopdracht wordt nog gecontroleerd. Start geen tweede boeking. Controleer de status over een ogenblik opnieuw.');
+    message('booking-status', 'Uw betaalpagina wordt klaargezet. Probeer over een ogenblik opnieuw via Betalen.');
   }
 }
 
 async function recoverExisting(resume = false) {
   if (!connected || !recovery || loading || recoveryBlocked) return;
+  clearPaymentLink();
   loading = true; lockOrder(); updateSummary();
+  message('booking-status', 'Uw betaalpagina ophalen…');
   message('booking-error', '');
   try {
     const data = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId: recovery.requestId }) });
@@ -377,6 +398,8 @@ async function showReturnStatus() {
   if (!connected || checkingReturnStatus || !token || !/^[A-Za-z0-9_-]{32,200}$/.test(token)) return;
   // A redirect parameter can select a record; it never proves payment.
   checkingReturnStatus = true;
+  clearPaymentLink();
+  updateSummary();
   form.hidden = true;
   el('booking-status-actions').replaceChildren();
   message('booking-status', 'Uw betaalstatus controleren…');
@@ -384,13 +407,31 @@ async function showReturnStatus() {
   try {
     const data = await api(`/status?token=${encodeURIComponent(token)}`);
     const status = data?.status;
+    if (data.state === 'checkout_ready') {
+      // The opaque return token identifies the server order when this browser
+      // has no local record. Never trust a URL without validating its order.
+      const expected = recovery || validateRecoveryRecord({
+        version: 1, requestId: data.requestId, quoteId: data.quoteId,
+        slotId: data.slotId, currency: data.currency, totalCents: data.totalCents
+      });
+      const result = validateRecoveryResponse(data, expected);
+      returnOrder = expected;
+      showPaymentLink(result.checkoutUrl);
+    } else if (data.state === 'closed' && recovery) {
+      applyAttemptResponse(data);
+    }
     message('booking-status', paymentMessage(status));
-    if (['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) form.hidden = false;
+    if (['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) {
+      returnOrder = null;
+      form.hidden = false;
+    }
     retryRequired = !['confirmed', 'paid_review_required', 'failed', 'canceled', 'expired'].includes(status);
   } catch (error) {
+    clearPaymentLink();
     message('booking-status', `${error.message} Uw afspraak is nog niet bevestigd. U kunt de betaalstatus opnieuw controleren.`);
   } finally {
     checkingReturnStatus = false;
+    updateSummary();
     // A failed retry must leave another retry available. Keep action controls
     // outside the live-region text and outside the potentially hidden form.
     if (retryRequired) {
