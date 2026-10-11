@@ -8,6 +8,7 @@ import {earlyStartRequired,withdrawalLastDay,reportDueDay} from '../_shared/cons
 import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
 import {googleExecutionError} from '../_shared/consumer-google.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
+import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
@@ -69,7 +70,7 @@ async function createQuote(body:any,mode:string) {
  const address=await addressLookup(body.address),destination=`${address.street} ${address.houseNumber}, ${address.postcode} ${address.city}, Nederland`;
  const route=await bridge('route',{destination},mode);const travel=calculateTravel(route.distanceMeters,POLICY,1);
  if(travel.status!=='ready')throw Error('OUTSIDE_ONLINE_AREA');
- const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,thermal:body.thermal,distance_meters:route.distanceMeters,route,
+ const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
   travel_cents:travel.travelCents,travel_description:travel.travelDescription,total_cents:36179+(body.thermal?30250:0)+travel.travelCents,
   terms_version:TERMS,policy_version:POLICY.version,expires_at:new Date(Date.now()+20*60000).toISOString()}).select('*').single());return quoteView(q);
 }
@@ -102,7 +103,7 @@ async function receipt(a:any,q:any,job:any) {
   `Uw bedenktijd loopt tot en met ${withdrawalLastDay(a.terms_accepted_at)}. Herroepen kan via https://www.roofsignal.nl/herroepen of info@roofsignal.nl.`,
   a.terms.earlyStartRequested?'Uw vastgelegde keuze: beginnen tijdens de bedenktijd; bij herroeping een evenredig bedrag voor het geleverde deel. Na volledige uitvoering, inclusief het rapport, vervalt het herroepingsrecht.':'Geen verzoek om uitvoering binnen de bedenktijd.',
   `Akkoord vastgelegd: ${a.terms_accepted_at}`,`Voorwaarden: ${TERMS}`,'','Met vriendelijke groet,','RoofSignal'];
- if(job.recipient_kind==='internal')lines.unshift(`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
+ if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],

@@ -3,15 +3,21 @@
   const path = window.location.pathname.replace(/\.html$/, "").replace(/\/$/, "") || "/";
   const privatePage = /(?:portal|admin|offerte-akkoord|herroepen|login|dashboard|auth|betaling)/i.test(path);
   const optedOut = navigator.globalPrivacyControl === true || ["1", "yes"].includes(String(navigator.doNotTrack || window.doNotTrack || ""));
-  window.RoofSignalAnalytics = { track() {} };
+  window.RoofSignalAnalytics = { campaign: null, track() {} };
   if (!cfg.enabled || !cfg.websiteId || privatePage || optedOut) return;
   // Only known public paths: URL path segments can themselves contain identifiers.
   const pages = new Set(cfg.publicPaths || []);
   if (!pages.has(path)) return;
+  // Fixed campaign labels only. No click IDs, attribution cookies or storage.
+  const campaigns = new Set(['search_consument_apeldoorn', 'google_bedrijfsprofiel', 'parken_flyer']);
+  const candidate = new URLSearchParams(window.location.search || '').get('rs_campaign');
+  const campaign = campaigns.has(candidate) ? candidate : null;
   const events = new Set([
     "Praktijkrapport download", "Contact telefoon", "Contact e-mail", "CTA klik",
     "Formulier verzendpoging", "Lead start", "Lead success", "Lead error",
     "De Parken postcodecontrole", "De Parken boeking voltooid", "De Parken boeking mislukt",
+    "Campagne bezoek", "Inspectie prijs gecontroleerd", "Inspectie beschikbaarheid",
+    "Inspectie moment gekozen", "Inspectie betaling gestart", "Inspectie stap mislukt",
   ]);
   let ready = false;
   const queue = [];
@@ -22,6 +28,8 @@
     }
     if (["contact", "price", "report", "access", "neighborhood", "de-parken-boeking"].includes(data.form)) clean.form = data.form;
     if (["zutphen", "deventer", "thermografie"].includes(data.report)) clean.report = data.report;
+    if (campaign) clean.campaign = campaign;
+    if (["adres", "beschikbaarheid", "betaling"].includes(data.step)) clean.step = data.step;
     return clean;
   }
   // Rebuild every outgoing payload; no title, query, referrer, screen or identity.
@@ -38,7 +46,7 @@
     if (!ready) { if (queue.length < 50) queue.push([name, safe]); return; }
     window.umami.track(name, safe);
   }
-  window.RoofSignalAnalytics = { track: send };
+  window.RoofSignalAnalytics = { campaign, track: send };
   const script = document.createElement("script");
   script.async = true;
   script.src = cfg.scriptUrl;
@@ -51,6 +59,7 @@
     ready = Boolean(window.umami && typeof window.umami.track === "function");
     if (!ready) return;
     window.umami.track();
+    if (campaign) send("Campagne bezoek");
     while (queue.length) { const [name, data] = queue.shift(); send(name, data); }
   });
   document.head.appendChild(script);

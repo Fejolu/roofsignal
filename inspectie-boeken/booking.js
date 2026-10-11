@@ -128,7 +128,7 @@ function renderSelectedDay() {
     input.type = 'radio'; input.name = 'slot'; input.value = slot.id; input.required = true;
     const text = document.createElement('span');
     text.textContent = slotLabel(slot) + (slot.recommended === true ? ' · Aanbevolen: we zijn al in de buurt' : '');
-    input.addEventListener('change', () => { selectedSlot = slot; updateSummary(); });
+    input.addEventListener('change', () => { selectedSlot = slot; updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen'); });
     label.append(input, text); el('slots').append(label);
   }
   updateSummary();
@@ -155,9 +155,10 @@ el('check-address').addEventListener('click', async () => {
     clearQuote(); const requestRevision = revision;
     loading = true; el('check-address').disabled = true; updateSummary();
     message('address-status', 'Adres en reiskosten controleren…');
-    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, turnstileToken }) });
+    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, turnstileToken, campaign: window.RoofSignalAnalytics?.campaign || null }) });
     if (requestRevision !== revision) return;
     quote = validateQuote(received, thermal, Date.now(), address);
+    window.RoofSignalAnalytics?.track('Inspectie prijs gecontroleerd', { thermography: thermal });
     el('street').value = quote.address.street;
     el('city').value = quote.address.city;
     message('address-status', `Prijs voor dit adres gecontroleerd. Reiskosten: ${money(quote.travelCents)}. Totaal: ${money(quote.totalCents)} inclusief btw.`);
@@ -167,8 +168,11 @@ el('check-address').addEventListener('click', async () => {
     message('slot-status', 'Beschikbare momenten ophalen…');
     const availability = await api(`/availability?quoteId=${encodeURIComponent(quote.quoteId)}`);
     if (requestRevision !== revision) return;
-    renderSlots(validateSlots(availability, Date.now(), quote.quoteId));
+    const checkedSlots = validateSlots(availability, Date.now(), quote.quoteId);
+    renderSlots(checkedSlots);
+    window.RoofSignalAnalytics?.track('Inspectie beschikbaarheid', { eligible: checkedSlots.length > 0 });
   } catch (error) {
+    window.RoofSignalAnalytics?.track('Inspectie stap mislukt', { step: quote ? 'beschikbaarheid' : 'adres' });
     clearQuote(); message('address-status', error.message);
   } finally {
     window.RoofSignalFormSecurity?.reset(form);
@@ -288,8 +292,11 @@ form.addEventListener('submit', async event => {
   loading = true; updateSummary();
   try {
     const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt) });
+    // This is a funnel step, never proof of payment or a counted sale.
+    window.RoofSignalAnalytics?.track('Inspectie betaling gestart');
     applyAttemptResponse(payment, true);
   } catch (error) {
+    window.RoofSignalAnalytics?.track('Inspectie stap mislukt', { step: 'betaling' });
     handleCheckoutError(error);
   } finally { loading = false; updateSummary(); }
 });
