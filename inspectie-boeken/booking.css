@@ -307,3 +307,10 @@
 .consumer-booking-page .booking-main .booking-details summary { width: fit-content; cursor: pointer; color: var(--booking-blue); text-decoration: underline; text-underline-offset: 3px; }
 .consumer-booking-page .booking-main .booking-details > div { padding-top: 12px; }
 .consumer-booking-page .booking-main .booking-details p:last-child { margin-bottom: 0; }
+.consumer-booking-page .booking-main .kvk-input-row { display: flex; align-items: stretch; gap: 12px; }
+.consumer-booking-page .booking-main .kvk-input-row input { flex: 1; min-width: 0; }
+.consumer-booking-page .booking-main .kvk-input-row .button { flex-shrink: 0; }
+.consumer-booking-page .booking-main .kvk-input-row [hidden] { display: none; }
+@media (max-width: 640px) {
+  .consumer-booking-page .booking-main .kvk-input-row { flex-direction: column; }
+}
