@@ -6,16 +6,16 @@
 .rs-public .site-header > .header-booking-cta { display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-height:44px;white-space:nowrap;margin:0; }
 .rs-public .btn.ghost { color:#1b211f; border:1px solid #636b67; background:transparent; }
 .rs-public .hero .btn.ghost,.rs-public .local-hero .btn.ghost,.rs-public .cta .btn.ghost { color:#fff; border-color:#b5beba; }
-.rs-public .rs-booking-cta { display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px;align-items:center;padding:56px max(7vw,calc((100vw - 1180px)/2)); }
-.rs-booking-cta-copy { min-width:0; }
-.rs-booking-cta h2 { font-size:clamp(28px,2.4vw,38px);line-height:1.2;overflow-wrap:normal;word-break:normal; }
-.rs-booking-cta p { max-width:62ch;margin:16px 0 0;line-height:1.6; }
-.rs-booking-cta .rs-booking-cta-note { color:#b5beba;font-size:.95rem; }
-.rs-booking-cta .actions { display:grid;gap:12px;margin:0; }
-.rs-public .rs-booking-cta .btn { width:100%;margin:0;min-height:48px;display:flex;align-items:center;justify-content:center; }
+.rs-public .rs-cta { display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px;align-items:center;padding:56px max(7vw,calc((100vw - 1180px)/2)); }
+.rs-cta-copy { min-width:0; }
+.rs-cta h2 { font-size:clamp(28px,2.4vw,38px);line-height:1.2;overflow-wrap:normal;word-break:normal; }
+.rs-cta p { max-width:62ch;margin:16px 0 0;line-height:1.6; }
+.rs-cta .rs-cta-note { color:#b5beba;font-size:.95rem; }
+.rs-cta .actions { display:grid;gap:12px;margin:0; }
+.rs-public .rs-cta .btn { width:100%;margin:0;min-height:48px;display:flex;align-items:center;justify-content:center; }
 @media(max-width:800px) {
- .rs-public .rs-booking-cta { grid-template-columns:1fr;gap:28px;padding:40px 24px; }
- .rs-booking-cta .actions { width:100%;max-width:360px; }
+ .rs-public .rs-cta { grid-template-columns:1fr;gap:28px;padding:40px 24px; }
+ .rs-cta .actions { width:100%;max-width:360px; }
 }
 .rs-public .hero .orange,.rs-public .local-hero .orange,.rs-public .page-hero .orange { color:#ff9769; }
 .rs-public a:focus-visible,.rs-public button:focus-visible,.rs-public input:focus-visible,.rs-public select:focus-visible,.rs-public textarea:focus-visible,.rs-public summary:focus-visible { outline:3px solid #1370ad;outline-offset:4px; }
@@ -92,3 +92,37 @@
  .rs-public .site-header .mobile-menu { position:absolute;top:calc(100% + 8px);max-height:calc(100dvh - 150px);overflow-y:auto; }
 }
 @media(prefers-reduced-motion:reduce) { .rs-public * { scroll-behavior:auto!important;transition:none!important; } }
+
+/* Shared public content: links, readable wrapping and consistent spacing. */
+.rs-public main a:where(:not(.btn):not(.button):not(.publication-list > a)) {
+ color:var(--rs-text-link,#a83403);text-decoration:underline;text-underline-offset:3px;
+}
+.rs-public .knowledge-card-dark a { color:#ff9769; }
+.rs-public :is(h1,h2,h3) { overflow-wrap:normal;word-break:normal;hyphens:auto; }
+.rs-public :is(p,li,.btn,.button) { overflow-wrap:break-word;word-break:normal; }
+.rs-public :is(.cards,.rs-grid,.rs-downloads,.split,.rs-evidence,.rs-contact-grid,.article-shell) > * { min-width:0; }
+.rs-public .section { padding-block:64px; }
+.rs-public .section:not(.muted) + .section:not(.muted) { padding-top:24px; }
+.rs-public :is(.cards,.rs-grid) article > :last-child { margin-bottom:0; }
+.rs-public .cards article:has(> a:last-child) { display:flex;flex-direction:column;align-items:flex-start; }
+.rs-public .cards article > a:last-child { margin-top:auto; }
+.rs-public .rs-cta-copy > :first-child { margin-top:0; }
+.rs-public .rs-cta-copy > :last-child { margin-bottom:0; }
+.rs-public .footer a { overflow-wrap:break-word; }
+@media(max-width:900px) {
+ .rs-public .footer .footer-cols { grid-template-columns:repeat(2,minmax(0,1fr));gap:32px; }
+}
+@media(max-width:700px) {
+ .rs-public :is(.page-hero,.knowledge-hero,.rs-intro,.rates-hero,.local-hero-content) h1 {
+  font-size:clamp(28px,7.2vw,38px);line-height:1.15;overflow-wrap:normal;word-break:normal;hyphens:auto;
+ }
+ .rs-public :is(.page-hero,.knowledge-hero) { min-height:0;padding:48px 24px; }
+ .rs-public .page-hero .eyebrow { font-size:12px; }
+ .rs-public .section { padding-block:40px; }
+ .rs-public .section:not(.muted) + .section:not(.muted) { padding-top:16px; }
+ .rs-public .rates-section { padding-block:40px; }
+ .rs-public .rates-credentials { padding-bottom:0; }
+ .rs-public .rates-cta { padding:40px 24px; }
+ .rs-public .footer { padding:40px 24px;gap:32px; }
+ .rs-public .footer .footer-cols { grid-template-columns:1fr;gap:28px; }
+}
