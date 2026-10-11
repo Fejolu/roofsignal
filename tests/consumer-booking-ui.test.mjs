@@ -321,12 +321,12 @@ test('An initial paid result is shown without recreating or reopening payment', 
   assert.deepEqual(ui.navigations,[]);
 });
 
-async function calendarPage(slots, checkoutResponse = null) {
+async function calendarPage(slots, checkoutResponse = null, inline = false) {
   const quote={quoteId:recoveryRecord.quoteId,serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
     travelDescription:'Simulated test route',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),
     address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}};
   const ui=await bookingPage({configuration:connectedConfiguration,respond(request){
-    if(request.path.endsWith('/quote'))return quote;
+    if(request.path.endsWith('/quote'))return {...quote,...(inline?{availability:{quoteId:inline==='wrong-id'?'another_quote_012345':quote.quoteId,slots}}:{})};
     if(request.path.endsWith('/availability'))return {quoteId:quote.quoteId,slots};
     if(checkoutResponse && request.path.endsWith('/checkout')) return checkoutResponse(request.body);
     assert.fail('No payment should start during calendar selection');
@@ -338,6 +338,22 @@ async function calendarPage(slots, checkoutResponse = null) {
 const calendarButton = (ui, day) => ui.get('calendar-days').querySelectorAll('button').find(button => button.value === day);
 const calendarSlot = (id, start, recommended = false) => ({id, start, end:new Date(Date.parse(start)+2700000).toISOString(), recommended});
 const futureYear = new Date().getUTCFullYear() + 1;
+
+test('Combined address result opens the real calendar without a second network request',async()=>{
+ const ui=await calendarPage([calendarSlot('fast',`${futureYear}-10-14T09:00:00Z`)],null,true);
+ assert.equal(ui.get('booking-calendar').hidden,false);
+ assert.equal(ui.get('slots').querySelector('input').value,'fast');
+ assert.equal(ui.requests.length,1);
+ assert.ok(ui.requests[0].path.endsWith('/quote'));
+ assert.equal(ui.get('checkout-button').disabled,true,'A customer must still choose a time and consent');
+ const empty=await calendarPage([],null,true);
+ assert.equal(empty.requests.length,1);
+ assert.equal(empty.get('booking-calendar').hidden,true);
+ const wrong=await calendarPage([calendarSlot('wrong',`${futureYear}-10-14T09:00:00Z`)],null,'wrong-id');
+ assert.equal(wrong.get('booking-calendar').hidden,true);
+ assert.equal(wrong.get('checkout-button').disabled,true);
+ assert.equal(wrong.requests.length,1,'Invalid inline data is rejected, not silently replaced');
+});
 
 test('address details and early-start consent appear only when relevant and reset when the choice changes', async () => {
   const initial = await bookingPage({ configuration: connectedConfiguration });

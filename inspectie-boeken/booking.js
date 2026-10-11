@@ -223,7 +223,7 @@ el('check-address').addEventListener('click', async () => {
     const thermal = el('thermal').checked;
     clearQuote(); const requestRevision = revision;
     loading = true; el('check-address').disabled = true; updateSummary();
-    message('address-status', 'Adres en reiskosten controleren…');
+    message('address-status', 'Adres en beschikbare momenten controleren…');
     const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, turnstileToken, campaign: window.RoofSignalAnalytics?.campaign || null }) });
     if (requestRevision !== revision) return;
     quote = validateQuote(received, thermal, Date.now(), address);
@@ -235,7 +235,9 @@ el('check-address').addEventListener('click', async () => {
       if (!recovery) { clearQuote(); message('address-status', 'Uw prijsopgave is verlopen. Controleer uw adres opnieuw voor actuele prijzen en tijden.'); }
     }, Math.min(Date.parse(quote.expiresAt) - Date.now(), 2147483647));
     message('slot-status', 'Beschikbare momenten ophalen…');
-    const availability = await api(`/availability?quoteId=${encodeURIComponent(quote.quoteId)}`);
+    // The current server prepares both in one call. Retain the separate route
+    // for old server versions during rollout; malformed inline data fails closed.
+    const availability = received.availability ?? await api(`/availability?quoteId=${encodeURIComponent(quote.quoteId)}`);
     if (requestRevision !== revision) return;
     const checkedSlots = validateSlots(availability, Date.now(), quote.quoteId);
     renderSlots(checkedSlots);

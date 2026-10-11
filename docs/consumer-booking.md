@@ -138,6 +138,25 @@ De conceptmelding en concepttitel zijn op deze branch verwijderd, HTML en `_head
 
 ### POST /api/consumer-booking/quote
 
+Sinds de snelheidsverbetering van 11 oktober 2026 bevat het succesvolle antwoord ook
+`availability: {quoteId, slots, sourceCheckedAt}` volgens het hieronder beschreven
+beschikbaarheidscontract. De browser controleert deze gegevens en toont de agenda
+zonder een tweede netwerkverzoek. Alleen bij een oudere server zonder dit veld
+gebruikt de browser nog de afzonderlijke beschikbaarheidsroute.
+
+De besloten Google-koppeling verwerkt `plan` (autoroute en agenda) in één uitvoering.
+De kalender wordt voor het hele venster van 21 dagen eenmaal uitgelezen; de tijden
+worden vervolgens lokaal per dag berekend. Routeafstanden en statische autorijtijden
+worden maximaal één uur hergebruikt, met afzonderlijke sleutels per rijrichting.
+Vrij/bezet-gegevens worden niet gecachet. Bij reserveren en bevestigen worden agenda
+en benodigde routes opnieuw gecontroleerd onder de bestaande scriptvergrendeling.
+De uitrolvolgorde is Google-script, consumentenbackend, website; de oudere routes
+blijven ondersteund. Toegangsrechten, reistarieven en inspectieduur blijven gelijk.
+
+Bronnen: [Google: batchbewerkingen](https://developers.google.com/apps-script/guides/support/best-practices),
+[agenda over een datumbereik](https://developers.google.com/apps-script/reference/calendar/calendar#getEvents(Date,Date)),
+[tijdelijke routecache](https://developers.google.com/apps-script/reference/cache/cache).
+
 Invoer:
 
 ```ts
