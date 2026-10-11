@@ -5,12 +5,10 @@
   },
   "section_01": {
     "item_01": {
-      "src": "/assets/hero-roofsignal-mobile.webp",
-      "alt": ""
+      "src": "/assets/hero-roofsignal-mobile.webp"
     },
     "item_02": {
-      "src": "/assets/hero-roofsignal-v6.webp",
-      "alt": ""
+      "src": "/assets/hero-roofsignal-v6.webp"
     },
     "item_03": "Voor VvE’s, beheerders en vastgoedeigenaren",
     "item_04": "Onafhankelijke dak- en gevelinspectie.",
@@ -35,7 +33,7 @@
     "item_04": "Werkelijke inspectie · Zutphen",
     "item_05": "Los materiaal bij een dakdoorvoer",
     "item_06": "Op de inspectiebeelden lag los hard materiaal bij een grote dakdoorvoer. Het rapport adviseert dit op korte termijn te laten verwijderen en de aansluiting te controleren.",
-    "item_07": "<strong>Wat de VvE ontvangt:</strong> de foto, de waarneming, het risico, de prioriteit en een concrete vervolgstap bij elkaar.",
+    "item_07": "<p><strong>Wat de VvE ontvangt:</strong> de foto, de waarneming, het risico, de prioriteit en een concrete vervolgstap bij elkaar.</p>",
     "item_08": {
       "label": "Download voorbeeldrapport Zutphen (PDF)",
       "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
@@ -57,7 +55,7 @@
       "label": "Download voorbeeldrapport Zutphen (PDF)",
       "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
     },
-    "item_09": "<a href=\"/cases#zutphen\">Lees de bevindingen uit Zutphen</a>",
+    "item_09": "<p><a href=\"/cases#zutphen\">Lees de bevindingen uit Zutphen</a></p>",
     "item_10": {
       "src": "/assets/praktijk/deventer-dakdetail.webp",
       "alt": "Dakdetail uit het Deventer inspectierapport: aansluiting van de dakpannen"
@@ -70,7 +68,7 @@
       "label": "Download voorbeeldrapport Deventer (PDF)",
       "href": "/downloads/RoofSignal-praktijkrapport-deventer-geanonimiseerd.pdf"
     },
-    "item_16": "<a href=\"/cases#deventer\">Lees de bevindingen uit Deventer</a>"
+    "item_16": "<p><a href=\"/cases#deventer\">Lees de bevindingen uit Deventer</a></p>"
   },
   "section_04": {
     "item_01": "Uw eerste inspectie",
@@ -86,11 +84,11 @@
     "item_01": "Wat kost RoofSignal Inspectie?",
     "item_02": "Particulieren",
     "item_03": "RoofSignal Inspectie van dak én gevel, inclusief een onderbouwd inspectierapport.",
-    "item_04": "<a href=\"/inspectie-boeken/\">Boek een inspectie van uw woning →</a>",
+    "item_04": "<p><a href=\"/inspectie-boeken/\">Boek een inspectie van uw woning →</a></p>",
     "item_05": "VvE’s en VvE-beheerders",
     "item_06": "Dezelfde inspectiestandaard, afgestemd op de omvang en bereikbaarheid van uw gebouw.",
     "item_07": "Grotere objecten en overheden",
-    "item_08": "<strong>Offerte op maat</strong>",
+    "item_08": "<p><strong>Offerte op maat</strong></p>",
     "item_09": "Voor grotere complexen, meerdere gebouwen of een bijzondere onderzoeksvraag bepalen we de inzet vooraf.",
     "item_10": "De vanafprijzen gelden voor één object binnen de beschreven omvang met reguliere bereikbaarheid. De uiteindelijke prijs hangt af van de omvang, bouwvorm, bereikbaarheid en uw onderzoeksvraag. Thermische inspectie met een drone is een optionele uitbreiding met een afzonderlijke prijs.",
     "item_11": {
@@ -101,16 +99,16 @@
   "section_06": {
     "item_01": "Een passende aanpak voor uw gebouw.",
     "item_02": "VvE’s en VvE-beheerders",
-    "item_03": "Geef het bestuur foto’s, prioriteiten en aanknopingspunten voor onderhoud en het MJOP. <a href=\"/dakinspectie-vve\">Dakinspectie voor uw VvE</a>.",
+    "item_03": "<p>Geef het bestuur foto’s, prioriteiten en aanknopingspunten voor onderhoud en het MJOP. <a href=\"/dakinspectie-vve\">Dakinspectie voor uw VvE</a>.</p>",
     "item_04": "Vastgoedbeheerders",
-    "item_05": "Start met een pilotgebouw en bepaal daarna welke objecten een actuele opname nodig hebben. <a href=\"/vastgoedbeheerders\">Aanpak voor uw portefeuille</a>.",
+    "item_05": "<p>Start met een pilotgebouw en bepaal daarna welke objecten een actuele opname nodig hebben. <a href=\"/vastgoedbeheerders\">Aanpak voor uw portefeuille</a>.</p>",
     "item_06": "Bedrijfspanden",
-    "item_07": "Breng zichtbare aandachtspunten aan dak en gevel in kaart en plan vervolgonderzoek rond het gebruik van het gebouw. <a href=\"/bedrijfspanden\">Inspectie van een bedrijfspand</a>."
+    "item_07": "<p>Breng zichtbare aandachtspunten aan dak en gevel in kaart en plan vervolgonderzoek rond het gebruik van het gebouw. <a href=\"/bedrijfspanden\">Inspectie van een bedrijfspand</a>.</p>"
   },
   "section_07": {
     "item_01": "Onafhankelijk van de herstelopdracht.",
     "item_02": "RoofSignal verkoopt geen reparaties en verdient niet aan extra herstelwerk. U kiest zelf de uitvoerende partij.",
-    "item_03": "<a href=\"/over-ons\">Meer over RoofSignal</a> · <a href=\"/dakinspectie-apeldoorn\">Dakinspectie in Apeldoorn</a> · <a href=\"/werkgebied\">Ons werkgebied</a>"
+    "item_03": "<p><a href=\"/over-ons\">Meer over RoofSignal</a> · <a href=\"/dakinspectie-apeldoorn\">Dakinspectie in Apeldoorn</a> · <a href=\"/werkgebied\">Ons werkgebied</a></p>"
   },
   "section_08": {
     "item_01": "Uw volgende stap",
