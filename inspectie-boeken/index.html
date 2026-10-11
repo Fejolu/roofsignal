@@ -12,13 +12,13 @@
     <link rel="icon" href="/assets/roofsignal-bimi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/public.css?v=20260924-navigation">
     <link rel="stylesheet" href="/assets/site-public.css?v=20261011-booking-cta">
-    <link rel="stylesheet" href="./booking.css?v=20261011-vve">
+    <link rel="stylesheet" href="./booking.css?v=20261011-vve-thermal">
     <script src="./booking-config.js" defer></script>
     <script src="/assets/supabase-config.js" defer></script>
     <script src="/assets/supabase-app.js?v=23" defer></script>
     <script src="/assets/form-security.js" defer></script>
-    <script src="/assets/lead-capture.js?v=20261011-vve" defer></script>
-    <script src="./vve-inquiry.js?v=20261011" defer></script>
+    <script src="/assets/lead-capture.js?v=20261011-vve-thermal" defer></script>
+    <script src="./vve-inquiry.js?v=20261011-thermal" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
     <script src="./booking.js?v=20261011-calendar" type="module"></script>
@@ -281,8 +281,8 @@
                   <div class="field"><label for="vve-object-scope">Omvang van uw aanvraag</label><select id="vve-object-scope" name="object_scope"><option value="single">Eén gebouw / inspectieobject</option><option value="multiple">Meerdere gebouwen</option><option value="unknown">Nog af te stemmen</option></select></div>
                 </div>
                 <p class="field-help" id="vve-count-help">Tel de adressen binnen het te inspecteren object, niet de hele beheerportefeuille.</p>
-                <div class="vve-estimate" role="status" aria-live="polite" aria-atomic="true"><span>Uw basisprijs</span><strong id="vve-estimate">Vul het aantal adressen in</strong><span id="vve-estimate-vat"></span></div>
-                <label class="checkbox-row vve-thermal" for="vve-thermal"><input id="vve-thermal" name="thermal_interest" type="checkbox" value="yes"><span>Ik heb ook interesse in thermografie <span class="optional-label">— prijs in overleg</span></span></label>
+                <label class="checkbox-row vve-thermal" for="vve-thermal"><input id="vve-thermal" name="thermal_interest" type="checkbox" value="yes"><span>Thermografische inspectie toevoegen<br><span class="optional-label" id="vve-thermal-price">Vul het aantal adressen in voor de toeslag</span></span></label>
+                <div class="vve-estimate" role="status" aria-live="polite" aria-atomic="true"><span id="vve-estimate-label">Uw basisprijs</span><strong id="vve-estimate">Vul het aantal adressen in</strong><span id="vve-estimate-vat"></span></div>
                 <div class="field"><label for="vve-message">Uw vraag of bijzonderheden <span class="optional-label">optioneel</span></label><textarea id="vve-message" name="message" rows="3" maxlength="2000" placeholder="Bijvoorbeeld aandacht voor het dak, achterstallig onderhoud of uw MJOP."></textarea></div>
                 <h3 class="vve-contact-title">Uw contactgegevens</h3>
                 <div class="field"><label for="vve-name">Naam contactpersoon</label><input id="vve-name" name="name" autocomplete="name" maxlength="160" required></div>
