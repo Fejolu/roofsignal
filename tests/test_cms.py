@@ -26,7 +26,11 @@ def fields(entries):
 
 
 def test_config_and_page_slots_are_complete():
-    config = yaml.safe_load((ROOT / ".pages.yml").read_text())
+    source = (ROOT / ".pages.yml").read_text()
+    # Pages CMS uses npm 'yaml' with its default alias expansion limit. A large
+    # generated field list with shared anchors can crash its server-side render.
+    assert not any(isinstance(event, yaml.events.AliasEvent) for event in yaml.parse(source))
+    config = yaml.safe_load(source)
     def check_fields(schema, data):
         for field in schema:
             assert field["name"] in data

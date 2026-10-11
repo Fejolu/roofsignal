@@ -127,7 +127,7 @@ content:
     - name: item_07
       label: 'Tekst · Wat de VvE ontvangt: de foto, de waarneming, het risico, de prior…'
       type: rich-text
-      options: &id001
+      options:
         format: html
         switcher: false
         media: false
@@ -198,7 +198,10 @@ content:
     - name: item_09
       label: Tekst · Lees de bevindingen uit Zutphen
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
     - name: item_10
       label: Afbeelding
       type: object
@@ -239,7 +242,10 @@ content:
     - name: item_16
       label: Tekst · Lees de bevindingen uit Deventer
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
   - name: section_04
     label: 4. Zo wordt uw onderhoudsvraag een bruikbaar rapport.
     type: object
@@ -290,7 +296,10 @@ content:
     - name: item_04
       label: Tekst · Boek een inspectie van uw woning →
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
     - name: item_05
       label: Kop · VvE’s en VvE-beheerders
       type: string
@@ -305,7 +314,10 @@ content:
     - name: item_08
       label: Tekst · Offerte op maat
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
     - name: item_09
       label: Tekst · Voor grotere complexen, meerdere gebouwen of een bijzondere onder…
       type: text
@@ -340,7 +352,10 @@ content:
     - name: item_03
       label: Tekst · Geef het bestuur foto’s, prioriteiten en aanknopingspunten voor o…
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
     - name: item_04
       label: Kop · Vastgoedbeheerders
       type: string
@@ -348,7 +363,10 @@ content:
     - name: item_05
       label: Tekst · Start met een pilotgebouw en bepaal daarna welke objecten een act…
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
     - name: item_06
       label: Kop · Bedrijfspanden
       type: string
@@ -356,7 +374,10 @@ content:
     - name: item_07
       label: Tekst · Breng zichtbare aandachtspunten aan dak en gevel in kaart en plan…
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
   - name: section_07
     label: 7. Onafhankelijk van de herstelopdracht.
     type: object
@@ -371,7 +392,10 @@ content:
     - name: item_03
       label: Tekst · Meer over RoofSignal · Dakinspectie in Apeldoorn · Ons werkgebied
       type: rich-text
-      options: *id001
+      options:
+        format: html
+        switcher: false
+        media: false
   - name: section_08
     label: 8. Begin met één gebouw.
     type: object
@@ -526,7 +550,10 @@ content:
       - name: item_08
         label: Tekst · Hoe vertaalt RoofSignal een bevinding naar een bruikbare priorite…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Begin bij de concrete vraag. Bouw verder aan uw vastgoedinzicht.
       type: object
@@ -635,7 +662,10 @@ content:
       - name: item_04
         label: Tekst · Bekijk bouwvoortgang met drones →
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_07
       label: 7. Eerst een voorbeeldrapport bekijken of direct een offerte aanvragen?
       type: object
@@ -832,7 +862,10 @@ content:
       - name: item_05
         label: Tekst · Bespreek de mogelijkheden voor uw project →
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. Een voorstel dat past bij uw project.
       type: object
@@ -1005,7 +1038,10 @@ content:
       - name: item_04
         label: Tekst · Bekijk bouwvoortgang met drones →
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Nieuwe toepassingen, zorgvuldig begrensd.
       type: object
@@ -1030,7 +1066,10 @@ content:
       - name: item_06
         label: 'Tekst · Afbakening: geen noodreparatie, constructieve vrijgave of vervang…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_07
         label: Kop · Publiek vastgoed
         type: string
@@ -1041,7 +1080,10 @@ content:
       - name: item_09
         label: 'Tekst · Afbakening: start met een representatieve deelportefeuille en voo…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. Een concrete pilotvraag bespreken?
       type: object
@@ -1345,11 +1387,17 @@ content:
       - name: item_08
         label: 'Tekst · Voorbereiding: deel het adres, het aantal appartementen, eerdere …'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_09
         label: 'Tekst · Doorlooptijd: opnamedatum en opleverdatum leggen we in het voorst…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Een echte VvE-daknulmeting als voorbeeld.
       type: object
@@ -1377,7 +1425,10 @@ content:
       - name: item_04
         label: Tekst · Lees de VvE-case uit Zutphen .
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. VvE-dakinspectie op aanvraag.
       type: object
@@ -1437,7 +1488,10 @@ content:
       - name: item_03
         label: Tekst · Zoekt u doorlopende samenwerking als beheerder? Bekijk onze aanpa…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_08
       label: 8. Begin met één gebouw.
       type: object
@@ -1489,7 +1543,10 @@ content:
       - name: item_02
         label: Tekst · Welke onderhoudspunten staan nog open en hoe loopt het regenwater…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
   - name: vve-beheerders
     label: Vve beheerders
     type: file
@@ -1606,7 +1663,10 @@ content:
       - name: item_04
         label: Tekst · Bekijk de scope van een VvE-dakinspectie en hoe de bevindingen bi…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. Heldere verwachtingen.
       type: object
@@ -1798,7 +1858,10 @@ content:
       - name: item_08
         label: Tekst · Lees de bevindingen uit Zutphen
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_09
         label: Afbeelding
         type: object
@@ -1839,7 +1902,10 @@ content:
       - name: item_15
         label: Tekst · Lees de bevindingen uit Deventer
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_16
         label: Tekst · Deze voorbeelden tonen rapportage op objectniveau. Voor uw portef…
         type: text
@@ -1854,14 +1920,20 @@ content:
       - name: item_02
         label: Tekst · De prijs volgt uit omvang, bereikbaarheid en rapportdiepte per ge…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_03
         label: Tekst · RoofSignal inspecteert uitsluitend met drones. De beoordeling is …
         type: text
       - name: item_04
         label: Tekst · Meer weten over het bewaren en volgen van informatie? Lees over h…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_07
       label: 7. Bespreek uw eerste pilotgebouw.
       type: object
@@ -1991,7 +2063,10 @@ content:
       - name: item_03
         label: Tekst · Bekijk twee inspectierapporten van een woning en een VvE . Deze l…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Inspectieprijs en afbakening.
       type: object
@@ -2003,7 +2078,10 @@ content:
       - name: item_02
         label: Tekst · Oppervlak, aantal dakvlakken, bereikbaarheid en rapportage bepale…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_03
         label: Tekst · RoofSignal inspecteert uitsluitend met drones. De beoordeling is …
         type: text
@@ -2166,7 +2244,10 @@ content:
       - name: item_04
         label: Tekst · Lees de context van deze inspectie of wanneer u een MJOP bijwerkt…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. Scope, kosten en opleverdatum.
       type: object
@@ -2178,14 +2259,20 @@ content:
       - name: item_02
         label: Tekst · De offerte sluit aan op het gebouw en de diepte die nodig is voor…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_03
         label: Tekst · RoofSignal inspecteert uitsluitend met drones. De beoordeling is …
         type: text
       - name: item_04
         label: Tekst · Lees ook de afbakening van onze indicatieve conditiebeoordeling .
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_07
       label: 7. Maak uw onderhoudsvraag en planning concreet.
       type: object
@@ -2536,7 +2623,10 @@ content:
       - name: item_09
         label: Tekst · Lees de bevindingen uit Zutphen
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_10
         label: Afbeelding
         type: object
@@ -2577,7 +2667,10 @@ content:
       - name: item_16
         label: Tekst · Lees de bevindingen uit Deventer
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. Kosten en afspraken vooraf.
       type: object
@@ -2589,14 +2682,20 @@ content:
       - name: item_02
         label: Tekst · Buiten de wijkpilot hangt de inspectieprijs af van gebouw, omvang…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_03
         label: Tekst · RoofSignal inspecteert uitsluitend met drones. De beoordeling is …
         type: text
       - name: item_04
         label: Tekst · Bel 085 21 28 019 of mail info@roofsignal.nl . Voor andere plaats…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_07
       label: 7. Begin met één gebouw.
       type: object
@@ -2785,7 +2884,10 @@ content:
       - name: item_04
         label: Tekst · Lees de case uit Deventer · Wat bepaalt de betrouwbaarheid?
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_07
       label: 7. Wat kost een drone-dakinspectie?
       type: object
@@ -2797,7 +2899,10 @@ content:
       - name: item_02
         label: Tekst · De inzet van een drone bepaalt niet alleen de prijs. De omvang, b…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_08
       label: 8. Begin met één gebouw.
       type: object
@@ -2957,7 +3062,10 @@ content:
       - name: item_04
         label: Tekst · Meer over inspectie als input voor het MJOP .
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_06
       label: 6. Begin met één gebouw.
       type: object
@@ -3540,7 +3648,10 @@ content:
       - name: item_02
         label: Kop · Deskundig inspecteren. Verantwoord vliegen.
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
         required: true
       - name: item_03
         label: Tekst · Een zorgvuldige inspectie begint bij vakkennis, veilig werken en …
@@ -3548,23 +3659,38 @@ content:
       - name: item_04
         label: Tekst · Beoordeling op basis van NEN 2767-principes We beschrijven zichtb…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_05
         label: Tekst · VOL-VCA-diploma De inspecteur beschikt over het diploma Veilighei…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_06
         label: Tekst · Vliegbewijzen A1/A3 en A2 De dronepiloot beschikt over de Europes…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_07
         label: Tekst · Geregistreerd bij de RDW RoofSignal is geregistreerd als drone-ex…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_08
         label: Tekst · Verzekerd vliegen De dronevluchten worden verzekerd uitgevoerd.
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Eén product, een prijs voor uw object.
       type: object
@@ -3589,7 +3715,10 @@ content:
       - name: item_06
         label: Tekst · Boek een inspectie van uw woning →
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_07
         label: Kop · VvE’s en VvE-beheerders
         type: string
@@ -3604,7 +3733,10 @@ content:
       - name: item_10
         label: Tekst · Offerte op maat
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_11
         label: Tekst · Voor grotere complexen, meerdere gebouwen of een bijzondere onder…
         type: text
@@ -3898,7 +4030,10 @@ content:
       - name: item_03
         label: Tekst · Lees de praktijkgevallen of download beide geanonimiseerde rappor…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
   - name: contact
     label: Contact
     type: file
@@ -3942,11 +4077,17 @@ content:
       - name: item_02
         label: Tekst · 085 21 28 019 info@roofsignal.nl
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_03
         label: Tekst · RoofSignal Apeldoorn, Nederland
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_04
         label: Kop · Wat gebeurt er na uw bericht?
         type: string
@@ -3957,7 +4098,10 @@ content:
       - name: item_06
         label: Tekst · Bekijk een inspectierapport .
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
   - name: cases
     label: Cases
     type: file
@@ -4012,19 +4156,31 @@ content:
       - name: item_03
         label: 'Tekst · Opdracht: een visuele daknulmeting voor een VvE met vijf appartem…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_04
         label: 'Tekst · Opgeleverd: 12 bevindingen met risico, prioriteit en maatregel, g…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_05
         label: 'Tekst · Vervolg: laat de urgente situatie veilig controleren en pak water…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_06
         label: 'Tekst · Onderhoudsreservering: het rapport bevat een indicatieve raming v…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_07
         label: Knop / link · Download voorbeeldrapport Zutphen (PDF)
         type: object
@@ -4041,7 +4197,10 @@ content:
       - name: item_08
         label: Tekst · Bekijk de dakinspectie voor VvE’s of lees hoe bevindingen bruikba…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_03
       label: '3. Woning in Deventer: van dakdetail naar hersteladvies.'
       type: object
@@ -4064,19 +4223,31 @@ content:
       - name: item_03
         label: 'Tekst · Opdracht: een Plus-inspectie van dak, gevel en afvoer van een een…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_04
         label: 'Tekst · Opgeleverd: 10 bevindingen op basis van 71 inspectiebeelden. Eén …'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_05
         label: 'Tekst · Vervolg: het rapport adviseerde dit punt direct waterkerend te la…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_06
         label: 'Tekst · Onderhoudsreservering: het rapport geeft een indicatie voor het p…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_07
         label: Knop / link · Download voorbeeldrapport Deventer (PDF)
         type: object
@@ -4093,7 +4264,10 @@ content:
       - name: item_08
         label: Tekst · Lees over drone-dakinspecties en hoe een bevinding een prioriteit…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_04
       label: 4. Wat deze voorbeelden aantonen.
       type: object
@@ -4225,7 +4399,10 @@ content:
       - name: item_08
         label: Tekst · Lees de bevindingen uit Zutphen
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_09
         label: Afbeelding
         type: object
@@ -4266,7 +4443,10 @@ content:
       - name: item_15
         label: Tekst · Lees de bevindingen uit Deventer
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_03
       label: 3. Een bruikbaar dossier voor de volgende stap.
       type: object
@@ -4281,7 +4461,10 @@ content:
       - name: item_03
         label: Tekst · Lees de complete praktijkbeschrijvingen of bekijk hoe u een onder…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_04
       label: 4. Begin met één gebouw.
       type: object
@@ -4402,7 +4585,10 @@ content:
       - name: item_08
         label: Tekst · Lees de bevindingen uit Zutphen
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_09
         label: Afbeelding
         type: object
@@ -4443,7 +4629,10 @@ content:
       - name: item_15
         label: Tekst · Lees de bevindingen uit Deventer
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_03
       label: 3. Zo leest u deze openbare versies.
       type: object
@@ -4529,7 +4718,10 @@ content:
       - name: item_02
         label: Kop · Beter kijken. Beter begrijpen. Beter onderhouden.
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
         required: true
       - name: item_03
         label: Tekst · Praktische uitleg, vakinhoudelijke verdieping en nieuws over insp…
@@ -4889,7 +5081,10 @@ content:
       - name: item_01
         label: Tekst · Kennisbank · Dakonderhoud
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_02
         label: 'Kop · Dakinspectie vóór de herfst: welke signalen verdienen aandacht?'
         type: string
@@ -4904,7 +5099,10 @@ content:
       - name: item_01
         label: Tekst · Door RoofSignal · 17 september 2026 · 4 minuten lezen
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_02
         label: Afbeelding
         type: object
@@ -4932,7 +5130,10 @@ content:
       - name: item_07
         label: Tekst · Bladeren, mos en ander vuil kunnen zich verzamelen in goten en bi…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_08
         label: Tekst · Let vanuit een veilige positie op zichtbaar vuil, water dat over …
         type: text
@@ -4946,7 +5147,10 @@ content:
       - name: item_11
         label: Tekst · Dat onderscheid komt terug in het RoofSignal-inspectierapport van…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_12
         label: Tekst · Voor uw eigen dossier helpt het om foto's steeds aan dezelfde loc…
         type: text
@@ -4960,7 +5164,10 @@ content:
       - name: item_15
         label: Tekst · Bij de woninginspectie in Deventer is bijvoorbeeld een onvoldoend…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_16
         label: Kop · Vijf vragen voor uw najaarscontrole
         type: string
@@ -4968,27 +5175,45 @@ content:
       - name: item_17
         label: Tekst · Waar verzamelt zich vuil? Denk aan goten, afvoeren en lage aanslu…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_18
         label: Tekst · Wat is veranderd? Vergelijk nieuwe sporen of beschadigingen met e…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_19
         label: Tekst · Welke bevindingen staan nog open? Neem de bestaande termijnen en …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_20
         label: Tekst · Wat kon eerder niet worden beoordeeld? Een onderdeel buiten beeld…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_21
         label: Tekst · Wie pakt het vervolg op? Leg vast wie controle, onderhoud of hers…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_22
         label: Tekst · Bij een VvE helpt dit overzicht om de onderhoudsvraag met bestuur…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_23
         label: Kop · Wanneer voegt een dakinspectie iets toe?
         type: string
@@ -4999,11 +5224,17 @@ content:
       - name: item_25
         label: Tekst · Een visuele opname geeft informatie over wat zichtbaar is. Verbor…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_26
         label: Tekst · RoofSignal legt bevindingen vast met foto's, beperkingen en aanbe…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
   - name: kennisbank-dakinspectie-kosten
     label: Dakinspectie kosten
     type: file
@@ -5065,7 +5296,10 @@ content:
       - name: item_07
         label: Tekst · Offerte op maat
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_08
         label: Tekst · Voor grotere complexen, meerdere gebouwen of een bijzondere onder…
         type: text
@@ -5075,7 +5309,10 @@ content:
       - name: item_10
         label: Tekst · Reiskosten worden apart vermeld. U ontvangt vóór de opdracht een …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_11
         label: Knop / link · Bekijk RoofSignal Inspectie
         type: object
@@ -5132,7 +5369,10 @@ content:
       - name: item_03
         label: Tekst · Bekijk RoofSignal Inspectie en de thermische uitbreiding . Heeft …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Inspectieprijs en herstelraming zijn verschillende bedragen.
       type: object
@@ -5158,11 +5398,17 @@ content:
       - name: item_02
         label: Tekst · Bekijk zelf de geanonimiseerde inspectierapporten uit Zutphen en …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_03
         label: 'Tekst · Voor een VvE: dakinspectie voor uw VvE . Voor de opnamemethode: w…'
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_07
       label: 7. Begin met één gebouw.
       type: object
@@ -5262,15 +5508,24 @@ content:
       - name: item_07
         label: Tekst · Wat vraagt op korte termijn actie? Denk aan scheuren, verschoven …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_08
         label: Tekst · Wat kan wachten? Normale veroudering zonder acuut risico hoeft ge…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_09
         label: Tekst · Wat kost het realistisch? Zichtbare gebreken met een herstelindic…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_10
         label: Tekst · Wie deze drie vragen niet kan beantwoorden, draagt het risico van…
         type: text
@@ -5304,7 +5559,10 @@ content:
       - name: item_19
         label: Tekst · Bekijk de rapportniveaus of bespreek uw woning met RoofSignal .
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_20
         label: Kop · Veelgestelde vragen over het dak bij woningaankoop
         type: string
@@ -5508,15 +5766,24 @@ content:
       - name: item_05
         label: Tekst · Wat moet nu? Bevindingen met direct risico op schade, veiligheid …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_06
         label: Tekst · Wat kan wachten? Planbare bevindingen met een concrete opvolgterm…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_07
         label: Tekst · Wat kost het? Een herstelindicatie per bevinding en op hoofdlijne…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_08
         label: Kop · Van rapport naar een onderbouwd voorstel
         type: string
@@ -5559,11 +5826,17 @@ content:
       - name: item_19
         label: Tekst · Lees hoe RoofSignal onderhoud bespreekbaar maakt of bespreek uw V…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_20
         label: Tekst · Overweegt uw VvE dakonderhoud te combineren met verduurzaming? Le…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_21
         label: Kop · Veelgestelde vragen over dakonderhoud en de VvE
         type: string
@@ -5811,7 +6084,10 @@ content:
       - name: item_22
         label: Tekst · Bekijk de werkwijze voor drone-dakinspectie of bespreek uw object…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_23
         label: Knop / link · Wat levert het op?
         type: object
@@ -5939,7 +6215,10 @@ content:
       - name: item_02
         label: Kop · Wanneer moet een MJOP worden bijgewerkt?
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
         required: true
       - name: item_03
         label: Tekst · Een onderhoudsplan is een beslismiddel, geen statisch archiefstuk…
@@ -5979,7 +6258,10 @@ content:
       - name: item_09
         label: Tekst · Gaat uw VvE ook verduurzamen? Lees hoe dakonderhoud sinds septemb…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_03
       label: 3. Actuele input voor uw onderhoudsoverleg?
       type: object
@@ -6091,7 +6373,10 @@ content:
       - name: item_12
         label: Tekst · Bekijk hoe RoofSignal werkt of bespreek een concrete onderhoudsvr…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_13
         label: Knop / link · Controleerbaar bewijs
         type: object
@@ -6229,7 +6514,10 @@ content:
       - name: item_01
         label: Tekst · Kennisbank · VvE & dakonderhoud
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_02
         label: 'Kop · VvE kan dakonderhoud meefinancieren bij verduurzaming: wat verand…'
         type: string
@@ -6244,7 +6532,10 @@ content:
       - name: item_01
         label: Tekst · Door RoofSignal · 10 oktober 2026 · 5 minuten lezen
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_02
         label: Afbeelding
         type: object
@@ -6279,7 +6570,10 @@ content:
       - name: item_09
         label: Tekst · Ten hoogste 50% van de lening .
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_10
         label: Kop · Is dakbedekking onderhoud of verduurzaming?
         type: string
@@ -6287,7 +6581,10 @@ content:
       - name: item_11
         label: Tekst · Het Warmtefonds noemt vervanging van dakpannen en dakbedekking al…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_12
         label: 'Tekst · Vraag uitvoerders daarom om herkenbare posten: de bestaande toest…'
         type: text
@@ -6298,7 +6595,10 @@ content:
       - name: item_14
         label: Tekst · Bij sluiting van het bouwdepot controleert het Warmtefonds de ver…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_15
         label: 'Tekst · Ons praktische advies: laat wijzigingen in het werk meteen terugk…'
         type: text
@@ -6312,14 +6612,20 @@ content:
       - name: item_18
         label: Tekst · Een onafhankelijke drone-inspectie van RoofSignal kan de zichtbar…
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_19
         label: Tekst · De opname is visueel en gebeurt uitsluitend met drones. Verborgen…
         type: text
       - name: item_20
         label: Tekst · Bekijk het geanonimiseerde voorbeeldrapport van de VvE-inspectie …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_21
         label: Tekst · Vraag bij iedere openstaande bevinding om een concrete vervolgsta…
         type: text
@@ -6439,7 +6745,10 @@ content:
       - name: item_12
         label: Tekst · Lees meer over de landelijke inzet van RoofSignal of bespreek de …
         type: rich-text
-        options: *id001
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_13
         label: Knop / link · Dakvlakken
         type: object

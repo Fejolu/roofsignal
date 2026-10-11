@@ -18,3 +18,6 @@
 /dakinspectie-veluwe.html /werkgebied 301
 /werkwijze /tarieven#aanpak 301
 /werkwijze.html /tarieven#aanpak 301
+# Authenticated editor; no CMS or credentials hosted on the public website.
+/beheer https://app.pagescms.org/Fejolu/roofsignal/main 302
+/beheer/ https://app.pagescms.org/Fejolu/roofsignal/main 302
