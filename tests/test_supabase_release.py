@@ -1,4 +1,5 @@
 import json
+import subprocess
 from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
@@ -8,6 +9,28 @@ import pytest
 from tools import supabase_release
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_edge_function_typescript_parses_before_production_deploy():
+    # Parse without executing Deno APIs or contacting providers. Node's --check
+    # does not reliably parse TypeScript; the explicit parser catches invalid
+    # expressions before the production bundler is reached.
+    script = """
+        import fs from 'node:fs';
+        import {stripTypeScriptTypes} from 'node:module';
+        const root = 'supabase/functions';
+        for (const file of fs.readdirSync(root, {recursive: true})) {
+            if (!file.endsWith('.ts')) continue;
+            const path = root + '/' + file;
+            try { stripTypeScriptTypes(fs.readFileSync(path, 'utf8')); }
+            catch (error) { throw new Error(path + ': ' + error.message); }
+        }
+    """
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script], cwd=ROOT,
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_invoice_automation_is_part_of_the_controlled_release():

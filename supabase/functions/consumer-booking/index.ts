@@ -124,10 +124,12 @@ async function receipt(a:any,q:any,job:any) {
  if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
+ const consumerTerms=q.terms_version==='2026-10-10-consumer'?LEGACY_CONSUMER_TERMS:CONSUMER_TERMS;
+ const attachmentContent=btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+consumerTerms)));
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],
   subject:`${test?'[TEST] ':''}${customer?'Bevestiging van uw inspectie':'Nieuwe boeking'} ${a.reference}`,
   textContent:text,headers:{'X-Mailin-Track':'0',idempotencyKey:job.id},tags:['consumer-booking-'+a.mode],
-  attachment:[{name:'RoofSignal-voorwaarden.txt',content:btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+(q.terms_version==='2026-10-10-consumer'?LEGACY_CONSUMER_TERMS:CONSUMER_TERMS)))))}]};
+  attachment:[{name:'RoofSignal-voorwaarden.txt',content:attachmentContent}]};
 }
 async function deliver(a:any,q:any) {
  // Tests send only to the user's RoofSignal inbox, never the submitted address.
