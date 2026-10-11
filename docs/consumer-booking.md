@@ -16,7 +16,9 @@ inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
   Eén algemene online woningboeking omvat één bezoek van maximaal 45 minuten.
   Twee vooraf afgesproken bezoeken vragen een offerte met twee reiskostentoeslagen;
   verplaatsen wegens ongeschikt weer kost niets extra.
-- Particulieren kiezen een moment na de volledige bedenktijd en betalen via Mollie.
+- Particulieren kiezen een beschikbaar moment en betalen via Mollie. Uitvoering binnen
+  de bedenktijd vereist hun afzonderlijke, uitdrukkelijke verzoek. Zonder dat verzoek
+  wordt pas na de bedenktijd begonnen.
   Het digitale rapport volgt binnen twee werkdagen na de inspectie.
 - VvE’s melden hun object vrijblijvend aan met de staffelprijs in beeld. Deze route
   reserveert geen agenda en maakt geen betaling. Vanaf 21 adressen, meerdere gebouwen
@@ -24,8 +26,8 @@ inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
 - Thermische afwijkingen worden beoordeeld met de opnameomstandigheden en zijn
   aanwijzingen, geen automatisch bewijs van een gebrek of oorzaak.
 
-Nieuwe prijsopgaven gebruiken voorwaardenversie `2026-10-11-consumer-thermal` en
-`legal/consumentenboeking-2026-10-11-thermografie.txt`. Bestaande prijsopgaven en
+Nieuwe prijsopgaven gebruiken voorwaardenversie `2026-10-11-consumer-kort` en
+`legal/consumentenboeking-2026-10-11-kort.txt`. Bestaande prijsopgaven en
 opdrachten houden hun opgeslagen product, prijs en voorwaardenversie. De
 Parken-pilot behoudt haar afzonderlijke aanbod en reisafspraken.
 
@@ -33,33 +35,46 @@ De actuele dienstteksten staan in de Pages CMS-bronnen voor Diensten, Aanpak &
 offerte, de homepage en Dakinspectie VvE. De lokale kopie van het medewerkershandboek
 is bijgewerkt; deze wijziging publiceert geen Odoo-artikel of Obsidian-vaultbestand.
 
-## Planning na de bedenktijd — besluit 11 oktober 2026
+## Korte toestemming voor eerdere uitvoering — correctie 11 oktober 2026
 
-De gebruiker heeft bevestigd dat de algemene online consumentenboeking uitsluitend
-inspecties **na de volledige bedenktijd** aanbiedt. De eerdere mogelijkheid om vanaf
-de volgende kalenderdag te boeken vervalt voor deze route. De inline link
-“Boeking herroepen” en de extra checkbox voor uitvoering binnen de bedenktijd zijn
-uit de boekingspagina verwijderd. De klant geeft nog steeds zelf akkoord op de
-getoonde totaalprijs en de algemene en aanvullende boekingsvoorwaarden; er wordt
-geen toestemming voor vroege uitvoering afgeleid of automatisch aangevinkt.
+Ferry heeft zijn eerdere antwoord gecorrigeerd: uitvoering binnen de bedenktijd
+blijft mogelijk met het voorgestelde **korte, afzonderlijke akkoord**:
 
-De browser verstuurt voor de bestaande API-vorm altijd
-`terms.earlyStartRequested: false`. De backend geeft bij zowel de gecombineerde
-prijsopgave als de afzonderlijke beschikbaarheidsroute alleen momenten terug
-waarvan de Nederlandse kalenderdatum ná `withdrawalLastDay` ligt. Deze termijn
-begint op de dag na de overeenkomst en houdt rekening met verlenging door weekends,
-algemeen erkende feestdagen en daarmee gelijkgestelde dagen. Het laatste moment
-van de bedenktijd blijft uitgesloten. Bij checkout wordt de einddatum opnieuw
-berekend; een inmiddels te vroeg moment wordt vóór het aanmaken van een betaling
-afgewezen, ook bij een gewijzigd of verouderd browserverzoek. Een aangeleverde
-`earlyStartRequested: true` wordt voor nieuwe algemene boekingen niet aanvaard.
+> Ik verzoek om uitvoering binnen de bedenktijd. Na volledige uitvoering, inclusief rapport, vervalt mijn herroepingsrecht
 
-Nieuwe prijsopgaven en opdrachten gebruiken versie `2026-10-11-consumer` en
-`legal/consumentenboeking-2026-10-11.txt`. De oude gepubliceerde voorwaarden blijven
-beschikbaar. Bestaande opdrachten houden hun vastgelegde toestemming en
-voorwaardenversie; herstel en bevestiging gebruiken hun destijds overeengekomen
-voorwaarden. De Parken-pilot en de vrijblijvende VvE-aanmelding hebben een eigen
-route en behouden hun afzonderlijke afspraken.
+Het vakje is niet vooraf aangevinkt. Alleen een datum kiezen of de algemene
+voorwaarden accepteren geeft geen toestemming voor vroegere uitvoering. De klant
+krijgt vóór betalen ook duidelijk te zien dat bij herroeping alleen het al
+uitgevoerde deel evenredig verschuldigd is. De lange voormalige checkbox en de
+inline link “Boeking herroepen” keren niet terug; de afzonderlijke herroepingsroute
+blijft beschikbaar.
+
+Beschikbare toekomstige momenten kunnen vanaf de volgende kalenderdag worden
+getoond, binnen de bestaande werkdagen, reistijden en agendabeperkingen. Een keuze
+binnen de toepasselijke bedenktijd vereist bij checkout uitdrukkelijk
+`terms.earlyStartRequested: true`. Zonder die toestemming kan alleen een moment na
+de volledige bedenktijd worden afgerekend. De API vereist een echte boolean;
+ontbrekende of anders getypte toestemming wordt afgewezen.
+
+De server berekent bij checkout opnieuw het einde van de bedenktijd via
+`withdrawalLastDay`. De termijn begint op de dag na de overeenkomst en houdt
+rekening met verlenging door weekends, algemeen erkende feestdagen en daarmee
+gelijkgestelde dagen. Ook een inspectie op de laatste dag vereist eerdere-starttoestemming.
+Een te vroeg moment zonder toestemming wordt vóór het maken van een betaling
+geweigerd. Zowel de keuze als het moment van aanvaarding worden bewaard; de
+bevestiging vermeldt de vastgelegde keuze en bevat de overeengekomen voorwaarden.
+
+Nieuwe prijsopgaven en opdrachten gebruiken versie `2026-10-11-consumer-kort` en
+`legal/consumentenboeking-2026-10-11-kort.txt`. De eerdere versies, inclusief de
+versies die uitsluitend planning na de bedenktijd toelieten, blijven ongewijzigd
+beschikbaar. Bestaande opdrachten houden hun eigen voorwaarden en vastgelegde
+keuze; herstel en bevestiging maken daarvoor geen nieuwe opdracht onder gewijzigde
+afspraken. De Parken-pilot en vrijblijvende VvE-aanmelding behouden hun eigen route.
+
+Primaire broncontrole: [ACM — Bedenktijd](https://www.acm.nl/nl/verkoop-aan-consumenten/klantenservice/bedenktijd),
+onder meer starten en volledige uitvoering van diensten tijdens de bedenktijd.
+De bestaande algemene voorwaarden van 11 oktober 2026 regelen dit al; alleen de
+aanvullende boekingsvoorwaarden krijgen een nieuwe, onveranderlijke versie.
 
 ## VvE-objectaanmelding — besluit 11 oktober 2026
 
@@ -120,7 +135,7 @@ Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websi
   voor de gekozen inspectie of combinatie, onder geschikte meet- en vliegomstandigheden.
 - Twee vooraf afgesproken bezoeken: offerte met **twee reiskostentoeslagen**. Verplaatsen door ongeschikt weer: geen extra kosten.
 - Reizen: **enkele autorit over de weg vanaf 7316 BH 4**. <=25 km €0; >25–75 km €42,35; >75–150 km €90,75; >150 km offerte. Grenzen op ongeronde meters.
-- Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, uitsluitend na de volledige Nederlandse bedenktijd voor nieuwe algemene online consumentenboekingen.
+- Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, vanaf de volgende kalenderdag. Uitvoering binnen de volledige Nederlandse bedenktijd vereist voor nieuwe algemene consumentenboekingen het afzonderlijke korte akkoord.
 - Planning houdt rekening met autoroutes tussen afspraken. Nabije afspraken worden aanbevolen zonder andere afspraken te verplaatsen.
 - Implementatiekeuze: 15 minuten marge bovenop berekende reistijd; ook heen-/terugreis binnen de werktijden. Ontbrekende locaties van aangrenzende bezette afspraken blokkeren automatische inpassing.
 
@@ -145,7 +160,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - PDOK-adrescontrole met exacte postcode/huisnummermatch; Google-autoroute bepaalt de serverprijs. PDOK is geen controle van objecttype of vliegtoestemming.
 - Onveranderlijke serverprijsopgave met routebewijs, reisbeleid en vervaltijd; geen bedragen uit browserinvoer.
 - Opgeslagen tijdsloten, één actieve boeking per prijsopgave en vergrendeling tegen overlap; Google controleert ook de reisruimte voordat een eigen reservering ontstaat.
-- Alleen inspectiemomenten na de volledige Nederlandse bedenktijd worden voor nieuwe algemene boekingen getoond en geaccepteerd; checkout controleert de termijn opnieuw vóór een betaling ontstaat.
+- Inspectiemomenten binnen de volledige Nederlandse bedenktijd kunnen alleen met afzonderlijke expliciete toestemming worden afgerekend; checkout berekent de termijn opnieuw vóór een betaling ontstaat. Zonder die toestemming is alleen een later moment toegestaan.
 - Duurzame request-ID en herstelblokkade voorkomen dat een vertraagd verzoek na een “niet aangemaakt”-antwoord toch een betaling begint.
 - Mollie-bedrag, valuta, profiel, modus en metadata worden gecontroleerd. Een terugkeer-URL is nooit betaalbewijs.
 - Betaling wordt vóór agendabevestiging vastgelegd. Bij een agendafout blijft de status “betaald, afstemming nodig”.
@@ -286,22 +301,25 @@ meervoudig bezoek nog beoordeling vereist.
 
 ### GET /api/consumer-booking/availability?quoteId=...
 
-Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare momenten na de volledige Nederlandse bedenktijd teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Dezelfde termijnfilter geldt voor de beschikbaarheid in het gecombineerde `/quote`-antwoord. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de bedenktijd en beschikbaarheid opnieuw controleren en atomair claimen.
+Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare toekomstige momenten vanaf de volgende kalenderdag teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Uitvoering binnen de volledige Nederlandse bedenktijd blijft afhankelijk van expliciete toestemming bij checkout. Dezelfde beschikbaarheidsregels gelden in het gecombineerde `/quote`-antwoord. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de bedenktijd en beschikbaarheid opnieuw controleren en atomair claimen.
 
 ### POST /api/consumer-booking/checkout
 
 Invoer: `{requestId,quoteId,slotId,customer:{name,email,phone,notes},terms:{accepted,version,earlyStartRequested}}`.
 
-Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` altijd
-`false`; `true` is geen ondersteunde boekingskeuze. `terms.version` moet overeenkomen
-met de opgeslagen prijsopgave en de actuele versie `2026-10-11-consumer-thermal`.
+Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` een
+expliciete boolean: `true` uitsluitend na het afzonderlijke korte akkoord, anders
+`false`. Een ontbrekende of anders getypte waarde wordt afgewezen. `terms.version`
+moet overeenkomen met de opgeslagen prijsopgave en de actuele versie
+`2026-10-11-consumer-kort`.
 
 Server leest de opgeslagen prijsopgave, controleert verval, adres en scope,
 valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw,
-controleert de actuele agenda en claimt de capaciteit atomair. Het startmoment
-moet na de volledige toepasselijke bedenktijd liggen, opnieuw berekend op het
-moment van checkout. Een te vroeg moment wordt afgewezen vóór de betalingspoging
-wordt aangemaakt. Historische opdrachten worden via `/recover` met hun bestaande
+controleert de actuele agenda en claimt de capaciteit atomair. Voor een startmoment
+binnen de volledige toepasselijke bedenktijd is
+`terms.earlyStartRequested === true` vereist; de einddatum wordt opnieuw berekend
+op het moment van checkout. Een te vroeg moment zonder die toestemming wordt
+afgewezen vóór de betalingspoging wordt aangemaakt. Historische opdrachten worden via `/recover` met hun bestaande
 voorwaarden en toestemming hersteld; er ontstaat daardoor geen nieuwe opdracht
 onder andere voorwaarden.
 

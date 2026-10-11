@@ -664,11 +664,13 @@ test('Product changes cannot alter or replace a locked pending payment', async (
   assert.ok(ui.requests.every(request => request.path.endsWith('/recover')));
 });
 
-test('address details reset while the removed early-start consent is never rendered or preaccepted', async () => {
+test('address details reset and early-start consent is never preaccepted or required for a later date', async () => {
   const initial = await bookingPage({ configuration: connectedConfiguration });
   assert.equal(initial.get('address-result').hidden, true);
-  assert.equal(initial.document.getElementById('early-start-consent'), null);
-  assert.equal(initial.document.getElementById('earlyStartRequested'), null);
+  assert.equal(initial.get('early-start-consent').hidden, true);
+  assert.equal(initial.get('earlyStartRequested').checked, false);
+  assert.equal(initial.get('earlyStartRequested').required, false);
+  assert.match(initial.get('early-start-consent').textContent, /Ik verzoek om uitvoering binnen de bedenktijd\. Na volledige uitvoering, inclusief rapport, vervalt mijn herroepingsrecht\./);
   assert.doesNotMatch(page, /Boeking herroepen|Ik verzoek RoofSignal om tijdens de bedenktijd te beginnen/);
   assert.equal(initial.get('termsAccepted').checked, false);
   assert.equal(initial.get('termsAccepted').required, true);
@@ -677,6 +679,8 @@ test('address details reset while the removed early-start consent is never rende
   assert.equal(ui.get('address-result').hidden, false);
   assert.equal(ui.get('street').value, 'Teststraat');
   await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  assert.equal(ui.get('earlyStartRequested').required, false);
   assert.equal(ui.get('termsAccepted').checked, false);
   assert.equal(ui.get('checkout-button').disabled, true);
   ui.get('termsAccepted').checked = true;
@@ -686,6 +690,72 @@ test('address details reset while the removed early-start consent is never rende
   assert.equal(ui.get('address-result').hidden, true);
   assert.equal(ui.get('street').value, '');
   assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+});
+
+test('an early inspection needs its own explicit consent before payment or a pending record can be created', async () => {
+  const early = calendarSlot('early', new Date(Date.now() + 2 * 86400000).toISOString());
+  const ui = await calendarPage([early], attempt => ({ requestId: attempt.requestId, state: 'pending' }));
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, false);
+  assert.equal(ui.get('earlyStartRequested').required, true);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('termsAccepted').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, true);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.equal(ui.stored.size, 0);
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('earlyStartRequested').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  await ui.get('booking-form').dispatch('submit');
+  const sent = ui.requests.filter(request => request.path.endsWith('/checkout'));
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].body.terms.earlyStartRequested, true);
+  assert.equal(ui.get('earlyStartRequested').disabled, true);
+  assert.equal(ui.stored.size, 1);
+});
+
+test('changing an early time, day, address or product clears the separate consent', async () => {
+  const start = Date.now() + 2 * 86400000;
+  const early = calendarSlot('early', new Date(start).toISOString());
+  const other = calendarSlot('other', new Date(start + 3600000).toISOString());
+  const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
+  const ui = await calendarPage([early, other, later]);
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change');
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('earlyStartRequested').dispatch('change');
+  await choices[1].dispatch('change');
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('earlyStartRequested').dispatch('change');
+  const laterDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(later.start));
+  while (!calendarButton(ui, laterDay)) await ui.get('calendar-next').dispatch('click');
+  await calendarButton(ui, laterDay).dispatch('click');
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  assert.equal(ui.get('earlyStartRequested').required, false);
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('postcode').dispatch('input');
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  ui.get('earlyStartRequested').checked = true;
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+});
+
+test('a later inspection submits no early-start request even if a stale checkbox was set', async () => {
+  const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
+  const ui = await calendarPage([later], attempt => ({ requestId: attempt.requestId, state: 'pending' }));
+  await ui.get('slots').querySelector('input').dispatch('change');
+  ui.get('termsAccepted').checked = true;
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const sent = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(sent.body.terms.earlyStartRequested, false);
 });
 
 test('Calendar displays only verified dates, retains the recommended day and clears a previous time when changing day',async()=>{

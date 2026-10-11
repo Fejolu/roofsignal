@@ -5,11 +5,12 @@ import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {TERMS_TEXT as THERMAL_TERMS_TEXT} from '../_shared/terms-20261011thermografie.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
-import {daysAfterWithdrawal,assertAfterWithdrawal,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
+import {assertEarlyStartConsent,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
 import {CONSUMER_TERMS as LEGACY_CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
 import {CONSUMER_TERMS as PREVIOUS_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011.mjs';
 import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011betalen.mjs';
-import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011thermografie.mjs';
+import {CONSUMER_TERMS as PREVIOUS_THERMAL_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011thermografie.mjs';
+import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011kort.mjs';
 import {consumerProduct} from '../_shared/consumer-products.mjs';
 import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-google.mjs';
 import {planAvailability} from '../_shared/consumer-availability.mjs';
@@ -18,7 +19,7 @@ import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
-const TERMS='2026-10-11-consumer-thermal';
+const TERMS='2026-10-11-consumer-kort';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
 const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
@@ -103,10 +104,9 @@ async function availability(id:string,mode:string) {
 }
 async function currentPlan(destination:string,mode:string) {
  const context=await bridge('context',{destination},mode);
- // New online bookings start only after the full Dutch withdrawal deadline.
- // Filter before route planning to avoid calculating trips for ineligible days.
- const days=daysAfterWithdrawal(context.days);
- return await planAvailability({context:{...context,days},destination,route:(from:string,to:string)=>bridge('route',{from,destination:to},mode)});
+ // The calendar context starts tomorrow. Early dates remain available, but
+ // checkout must record explicit consent before any reservation or payment.
+ return await planAvailability({context,destination,route:(from:string,to:string)=>bridge('route',{from,destination:to},mode)});
 }
 async function claim(id:string,payload:any=null,mode='test') {
  if(!UUID.test(id))throw Error('INVALID_REQUEST');
@@ -134,10 +134,10 @@ async function receipt(a:any,q:any,job:any) {
  if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
- const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,'2026-10-11-consumer-pay':PAYMENT_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
+ const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,'2026-10-11-consumer-pay':PAYMENT_CONSUMER_TERMS,'2026-10-11-consumer-thermal':PREVIOUS_THERMAL_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
  const consumerTerms=termsVersions[q.terms_version];
  if(!consumerTerms)throw Error('TERMS_VERSION_UNAVAILABLE');
- const generalTerms=q.terms_version===TERMS?THERMAL_TERMS_TEXT:TERMS_TEXT;
+ const generalTerms=['2026-10-11-consumer-thermal',TERMS].includes(q.terms_version)?THERMAL_TERMS_TEXT:TERMS_TEXT;
  const attachmentContent=btoa(String.fromCharCode(...new TextEncoder().encode(generalTerms+'\n\n'+consumerTerms)));
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],
   subject:`${test?'[TEST] ':''}${customer?'Bevestiging van uw inspectie':'Nieuwe boeking'} ${a.reference}`,
@@ -203,8 +203,7 @@ async function checkout(body:any,mode:string){
  if(mode==='test'&&customer.email!=='ferry@roofsignal.nl')throw Error('TEST_EMAIL_REQUIRED');
  const q=await one('consumer_quotes','id',body.quoteId),s=await one('consumer_slots','id',body.slotId);
  assertMode(q,mode);if(!s||s.quote_id!==q.id||q.terms_version!==body.terms.version||q.terms_version!==TERMS)throw Error('INVALID_REQUEST');
- assertAfterWithdrawal(s.start_at);
- if(body.terms.earlyStartRequested!==false)throw Error('INVALID_REQUEST');
+ assertEarlyStartConsent(s.start_at,body.terms.earlyStartRequested);
  const payload={quoteId:q.id,slotId:s.id,customer,terms:body.terms};
  const result=await claim(body.requestId,{...payload,fingerprint:await sha(JSON.stringify(payload))},mode);
  return await view(result.claimed?await progress(result.attempt):result.attempt);

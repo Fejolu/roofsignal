@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {stripTypeScriptTypes} from 'node:module';
 import {createHash} from 'node:crypto';
 import {googleExecutionError,googleTokenProvider} from '../supabase/functions/_shared/consumer-google.mjs';
 import {planAvailability} from '../supabase/functions/_shared/consumer-availability.mjs';
-import {daysAfterWithdrawal,earlyStartRequired} from '../supabase/functions/_shared/consumer-dates.mjs';
+import {earlyStartRequired} from '../supabase/functions/_shared/consumer-dates.mjs';
 
 const core=fs.readFileSync(new URL('../supabase/functions/_shared/consumer-scheduling.mjs',import.meta.url),'utf8').replaceAll('export ','');
 const adapter=fs.readFileSync(new URL('../tools/google-booking-bridge.js',import.meta.url),'utf8');
@@ -109,23 +110,30 @@ test('Road cache is directional; calendar remains fresh and mutation route check
  assert.deepEqual(app.locks,['acquire','release']);
 });
 
-test('Consumer availability skips the withdrawal period before road planning and preserves actual conflicts',async()=>{
+test('Consumer availability includes next-day dates while preserving road buffers and actual conflicts',async()=>{
  const events=[event('09:00','10:00','Deventer'),
   {start:'2026-10-27T00:00:00+01:00',end:'2026-10-28T00:00:00+01:00',location:null},
   {start:'2026-10-28T09:00:00+01:00',end:'2026-10-28T10:00:00+01:00',location:'Arnhem'}];
  const app=setup(events),context=JSON.parse(JSON.stringify(app.context.executeRoofSignal({action:'context',mode:'test'})));
- const expected=setup(events).context.executeRoofSignal({action:'plan',mode:'test',destination}).slots
-  .filter(slot=>!earlyStartRequired(slot.start,Clock.now()));
+ const expected=setup(events).context.executeRoofSignal({action:'plan',mode:'test',destination}).slots;
  const calls=[];
- const result=await planAvailability({context:{...context,days:daysAfterWithdrawal(context.days,Clock.now())},destination,now:Clock.now(),route:async(from,to)=>{
-  calls.push([from,to]);return app.context.executeRoofSignal({action:'route',mode:'test',from,destination:to});
- }});
+ const backend=fs.readFileSync(new URL('../supabase/functions/consumer-booking/index.ts',import.meta.url),'utf8');
+ const source=backend.slice(backend.indexOf('async function currentPlan('),backend.indexOf('async function claim('));
+ const runner={planAvailability:options=>planAvailability({...options,now:Clock.now()}),bridge:async(action,data,mode)=>{
+  assert.equal(mode,'test');
+  if(action==='context')return context;
+  assert.equal(action,'route');calls.push([data.from,data.destination]);
+  return app.context.executeRoofSignal({action,mode,...data});
+ }};
+ vm.runInNewContext(stripTypeScriptTypes(source),runner);
+ const result=await runner.currentPlan(destination,'test');
  assert.ok(result.slots.length>0);
  assert.deepEqual(result.slots,JSON.parse(JSON.stringify(expected)));
- assert.ok(result.slots.every(slot=>!earlyStartRequired(slot.start,Clock.now())));
+ assert.ok(result.slots.some(slot=>slot.start.startsWith('2026-10-12')),'Next-day inspection moments remain available');
+ assert.ok(result.slots.some(slot=>earlyStartRequired(slot.start,Clock.now())),'Early slots are shown; checkout separately requires consent');
  assert.ok(!result.slots.some(slot=>slot.start.startsWith('2026-10-27')),'Existing busy days remain unavailable');
- assert.ok(calls.some(pair=>pair.includes('Arnhem')),'Travel buffers still use the eligible day’s actual events');
- assert.ok(!calls.some(pair=>pair.includes('Deventer')),'Excluded days need no route requests');
+ assert.ok(calls.some(pair=>pair.includes('Arnhem')),'Travel buffers still use the actual events after the withdrawal deadline');
+ assert.ok(calls.some(pair=>pair.includes('Deventer')),'Early dates also use actual travel buffers');
 });
 
 test('A new calendar conflict after browsing is rejected under the checkout lock',()=>{
