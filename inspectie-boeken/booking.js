@@ -173,7 +173,7 @@ function renderSelectedDay() {
   el('slots').replaceChildren();
   el('calendar-times').hidden = !selectedDay;
   el('calendar-date').textContent = selectedDay ? dayLabel(selectedDay) : '';
-  message('slot-status', selectedDay ? 'Alle tijden zijn Nederlandse tijden. Uw moment wordt bij het afrekenen opnieuw gecontroleerd.' : 'Deze maand zijn er geen beschikbare momenten. Kies een andere maand.');
+  message('slot-status', selectedDay ? '' : 'Deze maand zijn er geen beschikbare momenten. Kies een andere maand.');
   for (const slot of availableSlots.filter(slot => slotDay(slot) === selectedDay).sort((a, b) => Date.parse(a.start) - Date.parse(b.start))) {
     const label = document.createElement('label'); label.className = 'slot-choice';
     const input = document.createElement('input');
