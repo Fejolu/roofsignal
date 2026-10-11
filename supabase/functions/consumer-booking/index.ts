@@ -68,20 +68,27 @@ function quoteView(q:any) {return {serviceable:true,quoteId:q.id,currency:'EUR',
 async function createQuote(body:any,mode:string) {
  if(typeof body.thermal!=='boolean')throw Error('INVALID_REQUEST');
  const address=await addressLookup(body.address),destination=`${address.street} ${address.houseNumber}, ${address.postcode} ${address.city}, Nederland`;
- const route=await bridge('route',{destination},mode);const travel=calculateTravel(route.distanceMeters,POLICY,1);
+ // One Google execution reads the calendar in a batch and supplies the road
+ // route. Return the validated quote and its slots together to avoid another
+ // browser round trip, token refresh and Apps Script cold start.
+ const plan=await bridge('plan',{destination},mode),route=plan.route;
+ const travel=calculateTravel(route.distanceMeters,POLICY,1);
  if(travel.status!=='ready')throw Error('OUTSIDE_ONLINE_AREA');
  const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
   travel_cents:travel.travelCents,travel_description:travel.travelDescription,total_cents:36179+(body.thermal?30250:0)+travel.travelCents,
-  terms_version:TERMS,policy_version:POLICY.version,expires_at:new Date(Date.now()+20*60000).toISOString()}).select('*').single());return quoteView(q);
+  terms_version:TERMS,policy_version:POLICY.version,expires_at:new Date(Date.now()+20*60000).toISOString()}).select('*').single());
+ return {...quoteView(q),availability:await saveAvailability(q,plan)};
+}
+async function saveAvailability(q:any,result:any) {
+ const slots=result.slots.map((s:any)=>({quote_id:q.id,start_at:s.start,end_at:s.end,recommended:s.recommended===true,checked_at:now()}));
+ if(!slots.length)return {quoteId:q.id,slots:[],sourceCheckedAt:result.sourceCheckedAt};
+ const saved=await checked(db.from('consumer_slots').upsert(slots,{onConflict:'quote_id,start_at'}).select('*'));
+ return {quoteId:q.id,slots:saved.map((s:any)=>({id:s.id,start:s.start_at,end:s.end_at,recommended:s.recommended})),sourceCheckedAt:result.sourceCheckedAt};
 }
 async function availability(id:string,mode:string) {
  if(!UUID.test(id))throw Error('INVALID_REQUEST');const q=await one('consumer_quotes','id',id);
  assertMode(q,mode);if(Date.parse(q.expires_at)<=Date.now())throw Error('QUOTE_EXPIRED');
- const result=await bridge('availability',{destination:q.destination},mode);
- const slots=result.slots.map((s:any)=>({quote_id:q.id,start_at:s.start,end_at:s.end,recommended:s.recommended===true,checked_at:now()}));
- if(!slots.length)return {quoteId:id,slots:[]};
- const saved=await checked(db.from('consumer_slots').upsert(slots,{onConflict:'quote_id,start_at'}).select('*'));
- return {quoteId:id,slots:saved.map((s:any)=>({id:s.id,start:s.start_at,end:s.end_at,recommended:s.recommended})),sourceCheckedAt:result.sourceCheckedAt};
+ return await saveAvailability(q,await bridge('availability',{destination:q.destination},mode));
 }
 async function claim(id:string,payload:any=null,mode='test') {
  if(!UUID.test(id))throw Error('INVALID_REQUEST');
