@@ -13,6 +13,7 @@ function setup() {
   }]));
   const get = id => elements.get(id);
   get('vve-object-scope').value = 'single';
+  get('vve-inspection-type').value = 'building_envelope';
   const window = { location: { search: '', hash: '#vve' }, addEventListener() {},
     RoofSignalBackend: { isConfigured: true }, RoofSignalFormSecurity: {} };
   vm.runInNewContext(script, {
@@ -22,7 +23,8 @@ function setup() {
     get,
     count(value) { get('vve-address-count').value = value; get('vve-address-count').listeners.input(); },
     scope(value) { get('vve-object-scope').value = value; get('vve-object-scope').listeners.change(); },
-    thermal(value) { get('vve-thermal').checked = value; get('vve-thermal').listeners.change(); }
+    thermal(value) { get('vve-thermal').checked = value; get('vve-thermal').listeners.change(); },
+    inspection(value) { get('vve-inspection-type').value = value; get('vve-inspection-type').listeners.change(); }
   };
 }
 const normalized = value => value.replace(/\s/g, '');
@@ -82,4 +84,60 @@ test('submit refreshes the indication after autofill without change events', () 
   assert(submitted.includes('Basisinspectie:€1.250,00excl.btw/€1.512,50incl.btw'));
   assert(submitted.includes('Thermografie:€750,00excl.btw/€907,50incl.btw'));
   assert(submitted.includes('Totaal:€2.000,00excl.btw/€2.420,00incl.btw'));
+});
+
+test('Standalone VvE thermography uses only its own tier and sends an unambiguous scope', () => {
+  const ui = setup();
+  ui.inspection('thermal');
+  assert.equal(ui.get('vve-thermal-option').hidden, true);
+  assert.equal(ui.get('vve-tiers-title').textContent, 'Thermografie per object');
+  assert.equal(ui.get('vve-thermal-interest').value, 'yes');
+  assert.match(ui.get('vve-scope').value, /thermografische inspectie, inclusief rapport/);
+  for (const [count, net, gross, key] of [
+    ['1', '400,00', '484,00', 'small'], ['5', '400,00', '484,00', 'small'],
+    ['6', '550,00', '665,50', 'medium'], ['10', '550,00', '665,50', 'medium'],
+    ['11', '750,00', '907,50', 'large'], ['20', '750,00', '907,50', 'large']
+  ]) {
+    ui.count(count);
+    assert.equal(normalized(ui.get('vve-estimate').textContent), `€${net}excl.btw`);
+    assert.equal(normalized(ui.get('vve-estimate-vat').textContent), `€${gross}incl.btw·excl.reiskosten`);
+    assert.equal(normalized(ui.get(`vve-tier-${key}-price`).textContent), `€${net}`);
+    assert.equal(normalized(ui.get(`vve-tier-${key}-vat`).textContent), `€${gross}incl.btw`);
+    assert.match(ui.get('vve-price-detail').value, /Basisinspectie: niet gekozen/);
+    assert.equal(ui.get('vve-estimate-label').textContent, 'Uw thermografische inspectie');
+  }
+  ui.inspection('building_envelope');
+  assert.equal(ui.get('vve-thermal-option').hidden, false);
+  assert.equal(ui.get('vve-thermal-interest').value, 'no');
+  assert.equal(normalized(ui.get('vve-estimate').textContent), '€1.250,00excl.btw');
+  assert.equal(normalized(ui.get('vve-tier-small-price').textContent), '€750,00');
+  ui.thermal(true);
+  ui.inspection('thermal');
+  assert.equal(normalized(ui.get('vve-estimate').textContent), '€750,00excl.btw', 'The hidden supplement must never double-charge thermal-only');
+  ui.inspection('building_envelope');
+  assert.equal(normalized(ui.get('vve-estimate').textContent), '€2.000,00excl.btw');
+});
+
+test('Standalone VvE thermal custom objects remain an inquiry without a numeric price', () => {
+  const ui = setup();
+  ui.inspection('thermal'); ui.count('5');
+  ui.scope('multiple');
+  assert.equal(ui.get('vve-estimate').textContent, 'Voorstel op maat');
+  assert.doesNotMatch(ui.get('vve-price-detail').value, /€/);
+  assert.match(ui.get('vve-price-detail').value, /gewenst, prijs op maat/);
+  ui.scope('single'); ui.count('21');
+  assert.equal(ui.get('vve-estimate').textContent, 'Voorstel op maat');
+  ui.count('');
+  assert.equal(ui.get('vve-price-detail').value, '');
+});
+
+test('VvE autofill at submit refreshes standalone type, effective thermal flag and its price', () => {
+  const ui = setup();
+  ui.count('12');
+  ui.get('vve-inspection-type').value = 'thermal';
+  ui.get('vve-form').listeners.submit();
+  assert.equal(ui.get('vve-thermal-interest').value, 'yes');
+  assert.match(ui.get('vve-scope').value, /thermografische inspectie/);
+  assert.match(ui.get('vve-price-detail').value, /Basisinspectie: niet gekozen/);
+  assert.equal(normalized(ui.get('vve-estimate').textContent), '€750,00excl.btw');
 });

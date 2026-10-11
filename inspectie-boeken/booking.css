@@ -20,7 +20,7 @@
 .consumer-booking-page .booking-main button:disabled { cursor: not-allowed; }
 .consumer-booking-page .booking-main button, .consumer-booking-page .booking-main input, .consumer-booking-page .booking-main textarea { border-radius: 7px; }
 .consumer-booking-page .booking-main input, .consumer-booking-page .booking-main textarea { min-width: 0; }
-.consumer-booking-page .booking-main input[type="checkbox"] { accent-color: var(--booking-blue); }
+.consumer-booking-page .booking-main input[type="checkbox"], .consumer-booking-page .booking-main input[type="radio"] { accent-color: var(--booking-blue); }
 .consumer-booking-page .booking-main :focus-visible { outline: 3px solid var(--booking-orange); outline-offset: 4px; }
 .consumer-booking-page .booking-main ::selection { background: #f6c5ae; color: var(--booking-ink); }
 .consumer-booking-page .booking-main [hidden] { display: none !important; }
@@ -128,6 +128,7 @@
 .consumer-booking-page .booking-main .included-product__price { flex-shrink: 0; margin-left: auto; font-size: 13px; font-weight: 700; text-align: right; }
 .consumer-booking-page .booking-main .included-product__price small, .consumer-booking-page .booking-main .option-card__price small { display: block; margin-top: 3px; color: var(--booking-muted); font-size: 12px; font-weight: 400; }
 .consumer-booking-page .booking-main .option-card { display: flex; align-items: flex-start; gap: 12px; padding: 17px 15px; border: 1px solid #cbd7d9; border-radius: 9px; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.consumer-booking-page .booking-main .inspection-choices { display: grid; gap: 12px; margin-bottom: 12px; }
 .consumer-booking-page .booking-main .option-card:hover { border-color: var(--booking-blue); }
 .consumer-booking-page .booking-main .option-card:has(input:checked) { border-color: var(--booking-blue); background: var(--booking-soft-blue); }
 .consumer-booking-page .booking-main .option-card input, .consumer-booking-page .booking-main .checkbox-row input { width: 17px; height: 17px; margin: 2px 0 0; flex: 0 0 17px; cursor: pointer; }

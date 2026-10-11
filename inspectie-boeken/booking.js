@@ -1,4 +1,4 @@
-import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs';
+import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261011-standalone-thermal';
 
 // Missing or invalid configuration fails closed. All calendar and payment
 // credentials remain on the server.
@@ -33,12 +33,21 @@ function message(id, text) {
   if (target) { target.textContent = text; target.hidden = !text; }
 }
 
+const chosenInspection = () => el('inspection-thermal').checked ? 'thermal' : 'building_envelope';
+const chosenThermal = () => chosenInspection() === 'thermal' || el('thermal').checked;
+
 function updateSummary() {
-  const thermal = el('thermal').checked;
-  el('summary-base').textContent = money(BASE_CENTS);
-  el('summary-thermal').textContent = thermal ? money(THERMAL_CENTS) : 'Niet toegevoegd';
+  const inspectionType = quote?.inspectionType || chosenInspection();
+  const thermal = quote ? quote.thermalCents > 0 : chosenThermal();
+  const thermalOnly = inspectionType === 'thermal';
+  el('thermal-option').hidden = thermalOnly;
+  el('visual-scope').hidden = thermalOnly;
+  el('thermal-scope').hidden = !thermal;
+  el('summary-base-row').hidden = thermalOnly && !((recovery || returnOrder) && !quote);
+  el('summary-base').textContent = money(quote ? quote.baseCents : thermalOnly ? 0 : BASE_CENTS);
+  el('summary-thermal').textContent = thermal ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
-  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : money(subtotal(thermal));
+  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : money(subtotal(thermal, inspectionType));
   el('address-result').hidden = !quote;
   el('summary-date').textContent = selectedSlot ? slotLabel(selectedSlot) : 'Nog te kiezen';
   if ((recovery || returnOrder) && !quote) {
@@ -230,14 +239,15 @@ el('check-address').addEventListener('click', async () => {
     if (!window.RoofSignalFormSecurity) throw new Error('Formulierbeveiliging wordt nog geladen. Probeer het over een ogenblik opnieuw.');
     window.RoofSignalFormSecurity.ensureReady(form);
     const turnstileToken = window.RoofSignalFormSecurity.getPayload(form).turnstile_token;
-    const thermal = el('thermal').checked;
+    const inspectionType = chosenInspection();
+    const thermal = chosenThermal();
     clearQuote(); const requestRevision = revision;
     loading = true; el('check-address').disabled = true; updateSummary();
     message('address-status', 'Adres en beschikbare momenten controleren…');
-    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, turnstileToken, campaign: window.RoofSignalAnalytics?.campaign || null }) });
+    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, inspectionType, turnstileToken, campaign: window.RoofSignalAnalytics?.campaign || null }) });
     if (requestRevision !== revision) return;
-    quote = validateQuote(received, thermal, Date.now(), address);
-    window.RoofSignalAnalytics?.track('Inspectie prijs gecontroleerd', { thermography: thermal });
+    quote = validateQuote(received, thermal, Date.now(), address, inspectionType);
+    window.RoofSignalAnalytics?.track('Inspectie prijs gecontroleerd', { thermography: thermal, inspectionType });
     el('street').value = quote.address.street;
     el('city').value = quote.address.city;
     message('address-status', '');
@@ -359,7 +369,7 @@ form.addEventListener('submit', async event => {
   if (!quote || !selectedSlot) return message('booking-error', 'Controleer eerst uw adres en kies een beschikbaar moment.');
   if (!checkoutAttempt) {
     try {
-      validateQuote(quote, el('thermal').checked, Date.now(), { postcode: el('postcode').value, houseNumber: el('houseNumber').value });
+      validateQuote(quote, chosenThermal(), Date.now(), { postcode: el('postcode').value, houseNumber: el('houseNumber').value }, chosenInspection());
       validateSelectedSlot(selectedSlot);
     }
     catch (error) { clearQuote(); return message('booking-error', error.message); }
@@ -388,8 +398,8 @@ form.addEventListener('submit', async event => {
   } finally { loading = false; updateSummary(); }
 });
 
-for (const id of ['postcode', 'houseNumber', 'thermal']) {
-  el(id).addEventListener(id === 'thermal' ? 'change' : 'input', clearQuote);
+for (const id of ['postcode', 'houseNumber', 'thermal', 'inspection-envelope', 'inspection-thermal']) {
+  el(id).addEventListener(['postcode', 'houseNumber'].includes(id) ? 'input' : 'change', clearQuote);
 }
 el('termsAccepted').addEventListener('change', updateSummary);
 

@@ -1,5 +1,38 @@
 # RoofSignal — algemene consumentenboeking
 
+## Zelfstandige thermische inspectie — besluit 11 oktober 2026
+
+Ferry heeft bevestigd dat **thermische inspectie zelfstandig te boeken is**, zowel
+voor particulieren als VvE’s. De klant kiest dak- en gevelinspectie, thermische
+inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
+
+- Particulier: zelfstandige thermografie €250 excl. / **€302,50 incl. btw**.
+  De combinatie met de basisinspectie blijft €549 excl. / €664,29 incl. btw.
+- VvE: maximaal 5 adressen €400 excl. / €484 incl.; 6–10 adressen €550 excl. /
+  €665,50 incl.; 11–20 adressen €750 excl. / €907,50 incl. btw.
+  Bij zelfstandige thermografie telt geen basisinspectie mee. Bij een combinatie
+  blijft dezelfde thermografiestaffel een toeslag op de basisprijs.
+- De bestaande reiskostenregeling geldt voor beide producten en de combinatie.
+  Eén algemene online woningboeking omvat één bezoek van maximaal 45 minuten.
+  Twee vooraf afgesproken bezoeken vragen een offerte met twee reiskostentoeslagen;
+  verplaatsen wegens ongeschikt weer kost niets extra.
+- Particulieren kiezen een moment na de volledige bedenktijd en betalen via Mollie.
+  Het digitale rapport volgt binnen twee werkdagen na de inspectie.
+- VvE’s melden hun object vrijblijvend aan met de staffelprijs in beeld. Deze route
+  reserveert geen agenda en maakt geen betaling. Vanaf 21 adressen, meerdere gebouwen
+  of afwijkende scope blijft een maatwerkofferte nodig.
+- Thermische afwijkingen worden beoordeeld met de opnameomstandigheden en zijn
+  aanwijzingen, geen automatisch bewijs van een gebrek of oorzaak.
+
+Nieuwe prijsopgaven gebruiken voorwaardenversie `2026-10-11-consumer-thermal` en
+`legal/consumentenboeking-2026-10-11-thermografie.txt`. Bestaande prijsopgaven en
+opdrachten houden hun opgeslagen product, prijs en voorwaardenversie. De
+Parken-pilot behoudt haar afzonderlijke aanbod en reisafspraken.
+
+De actuele dienstteksten staan in de Pages CMS-bronnen voor Diensten, Aanpak &
+offerte, de homepage en Dakinspectie VvE. De lokale kopie van het medewerkershandboek
+is bijgewerkt; deze wijziging publiceert geen Odoo-artikel of Obsidian-vaultbestand.
+
 ## Planning na de bedenktijd — besluit 11 oktober 2026
 
 De gebruiker heeft bevestigd dat de algemene online consumentenboeking uitsluitend
@@ -45,8 +78,9 @@ tonen van de grotere basisstaffels in deze aanvraagroute toe.
 
 Ferry heeft op 11 oktober ook de thermografiestaffel goedgekeurd (RS-2026-10-11):
 maximaal 5 adressen + €400 excl. / €484 incl. btw; 6–10 adressen + €550 excl. /
-€665,50 incl.; 11–20 adressen + €750 excl. / €907,50 incl. De checkbox toont de
-passende toeslag en telt deze bij selectie direct op bij de basisprijs. De totalen
+€665,50 incl.; 11–20 adressen + €750 excl. / €907,50 incl. Bij een gecombineerde
+inspectie telt het formulier de passende thermografietoeslag bij de basisprijs. Bij
+zelfstandige thermografie geldt alleen de thermografiestaffel. De gecombineerde totalen
 zijn respectievelijk €1.150 / €1.391,50, €1.550 / €1.875,50 en €2.000 / €2.420
 (excl. / incl. btw), vóór eventuele reiskosten. Maatwerk blijft maatwerk, ook met
 thermografie. De woningafspraak van 45 minuten en de particuliere toeslag worden
@@ -79,9 +113,11 @@ Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websi
 ## Door de gebruiker bevestigde uitvoering
 
 - Eén grondgebonden woning/hoofdgebouw; uitsluitend drone-inspectie. Afwijkende objecten en bijgebouwen via offerte.
-- Basis €361,79 inclusief btw; thermografie + €302,50; samen €664,29 vóór reizen.
+- Dak- en gevelinspectie €361,79 inclusief btw; zelfstandige thermografie €302,50;
+  combinatie €664,29 vóór reizen.
 - Digitaal inspectierapport **binnen twee werkdagen na de inspectie**.
-- Online **één gecombineerd bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie, onder geschikte meet- en vliegomstandigheden.
+- Online **één bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie,
+  voor de gekozen inspectie of combinatie, onder geschikte meet- en vliegomstandigheden.
 - Twee vooraf afgesproken bezoeken: offerte met **twee reiskostentoeslagen**. Verplaatsen door ongeschikt weer: geen extra kosten.
 - Reizen: **enkele autorit over de weg vanaf 7316 BH 4**. <=25 km €0; >25–75 km €42,35; >75–150 km €90,75; >150 km offerte. Grenzen op ongeronde meters.
 - Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, uitsluitend na de volledige Nederlandse bedenktijd voor nieuwe algemene online consumentenboekingen.
@@ -197,11 +233,18 @@ Invoer:
 ```ts
 {
   address: { postcode: string; houseNumber: string };
+  inspectionType: "building_envelope" | "thermal";
   thermal: boolean;
 }
 ```
 
-De client verstuurt alleen postcode en huisnummer voor de adrescontrole. Straat en plaats zijn readonly velden die uitsluitend worden gevuld uit het serverantwoord. De server hanteert Nederland als land voor deze propositie.
+`building_envelope` met `thermal: false` is de dak- en gevelinspectie; met `true`
+is het de combinatie. `thermal` is de zelfstandige thermische inspectie en vereist
+`thermal: true`. De server bepaalt de productprijs; de browser levert geen bedragen.
+
+De client verstuurt alleen postcode en huisnummer als adresgegevens voor de
+adrescontrole. Straat en plaats zijn readonly velden die uitsluitend worden gevuld
+uit het serverantwoord. De server hanteert Nederland als land voor deze propositie.
 
 Server valideert adres, productgeschiktheid, vlieg-/locatiebeperkingen en of directe boeking mogelijk is. Adrescontrole betekent op zichzelf geen toestemming om te vliegen. Afwijkende of onvoldoende controleerbare objecten niet afrekenen; doorleiden naar contact. Server berekent alle bedragen in integer eurocenten, inclusief btw. Geen totaalbedrag van de client accepteren.
 
@@ -212,7 +255,8 @@ Vereist succesantwoord; bedragen zijn typen of vaste productwaarden, geen voorbe
   serviceable: true;
   quoteId: string;               // ondoorzichtig; minimaal 16 tekens
   currency: "EUR";
-  baseCents: 36179;
+  inspectionType: "building_envelope" | "thermal";
+  baseCents: 0 | 36179;          // nul bij zelfstandige thermografie
   thermalCents: 0 | 30250;
   travelCents: number;           // niet-negatieve integer; beoordeelde reisprijs
   totalCents: number;            // baseCents + thermalCents + travelCents
@@ -231,7 +275,14 @@ Vereist succesantwoord; bedragen zijn typen of vaste productwaarden, geen voorbe
 
 Het gevonden adres moet bij de aangevraagde postcode en het huisnummer horen. De adapter controleert die koppeling en normaliseert hoofdletters en spaties. `travelDescription` wordt via `textContent` weergegeven; de browser berekent geen afstand of tarief.
 
-Sla de prijsopgave duurzaam en onveranderlijk op, inclusief gehanteerde reisbeleidsversie en goedkeuring. Alle overeengekomen bezoeken en reiskosten moeten in deze prijs zijn opgenomen. Onbeoordeelde of onbekende reiskosten mogen niet stilzwijgend nul worden. Gebruik passende geldigheidsduur, toegangscontrole op de prijsopgave, inputlimieten en misbruikbeperking. Geen `serviceable: true` retourneren als het reisbeleid of een meervoudig bezoek nog beoordeling vereist.
+Sla de prijsopgave duurzaam en onveranderlijk op, inclusief inspectietype,
+gehanteerde reisbeleidsversie en goedkeuring. Oude prijsopgaven krijgen als
+inspectietype `building_envelope`; hun vastgelegde prijs wordt niet opnieuw berekend.
+Alle overeengekomen bezoeken en reiskosten moeten in deze prijs zijn opgenomen.
+Onbeoordeelde of onbekende reiskosten mogen niet stilzwijgend nul worden. Gebruik
+passende geldigheidsduur, toegangscontrole op de prijsopgave, inputlimieten en
+misbruikbeperking. Geen `serviceable: true` retourneren als het reisbeleid of een
+meervoudig bezoek nog beoordeling vereist.
 
 ### GET /api/consumer-booking/availability?quoteId=...
 
@@ -243,7 +294,7 @@ Invoer: `{requestId,quoteId,slotId,customer:{name,email,phone,notes},terms:{acce
 
 Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` altijd
 `false`; `true` is geen ondersteunde boekingskeuze. `terms.version` moet overeenkomen
-met de opgeslagen prijsopgave en de actuele versie `2026-10-11-consumer-pay`.
+met de opgeslagen prijsopgave en de actuele versie `2026-10-11-consumer-thermal`.
 
 Server leest de opgeslagen prijsopgave, controleert verval, adres en scope,
 valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw,
@@ -406,4 +457,10 @@ Voor de consumentenboeking zijn uitsluitend expliciete proefbetalingen, gemarkee
 - https://docs.mollie.com/reference/api-idempotency — API-idempotentie vervangt geen eigen duurzame idempotentie.
 - https://docs.mollie.com/reference/testing — gescheiden testbetalingen.
 
-De betaalknop heet **Betalen**. Nieuwe prijsopgaven gebruiken `2026-10-11-consumer-pay` en `legal/consumentenboeking-2026-10-11-betalen.txt`; daarin is uitsluitend de knopnaam bijgewerkt. De twee eerder geaccepteerde voorwaardenversies blijven onveranderd beschikbaar voor bestaande opdrachten. De Mollie-link komt uitsluitend uit de geverifieerde actuele betaalstatus; een terugkeerpagina kan diezelfde link op basis van het geheime statustoken tonen, ook zonder lokale herstelopslag.
+De betaalknop heet **Betalen**. De voorgaande voorwaardenversie
+`2026-10-11-consumer-pay` en `legal/consumentenboeking-2026-10-11-betalen.txt`
+wijzigde uitsluitend de knopnaam. Alle eerder geaccepteerde voorwaardenversies
+blijven onveranderd beschikbaar voor bestaande opdrachten; de huidige versie voor
+de zelfstandige productkeuze staat bovenaan. De Mollie-link komt uitsluitend uit
+de geverifieerde actuele betaalstatus; een terugkeerpagina kan diezelfde link op
+basis van het geheime statustoken tonen, ook zonder lokale herstelopslag.

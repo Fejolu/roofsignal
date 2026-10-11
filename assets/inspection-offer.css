@@ -1,4 +1,4 @@
-/* One inspection product with an optional thermal extension. */
+/* Visual and thermal inspections, booked separately or together. */
 .rates-main-product {
   border-top: 4px solid var(--rs-orange);
 }
@@ -62,6 +62,15 @@
 .rates-thermal-addon p { margin: 0; }
 .rates-thermal-addon ul { margin: 0 0 18px; padding-left: 20px; }
 .rates-thermal-addon li + li { margin-top: 8px; }
+.rates-thermal-booking {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.rates-thermal-booking > div > p + p { margin-top: 12px; }
 .rates-credentials {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);

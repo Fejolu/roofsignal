@@ -17,7 +17,7 @@ export function paymentBody(attempt, quote, publicBase) {
   if (!UUID.test(attempt.id) || quote.id !== attempt.quote_id || !['test','live'].includes(attempt.mode)) throw Error('INVALID_ATTEMPT');
   return {
     amount:{currency:'EUR',value:euro(quote.total_cents)},
-    description:`RoofSignal Inspectie ${attempt.reference}`,
+    description:`RoofSignal ${quote.inspection_type === 'thermal' ? 'Thermische inspectie' : 'Inspectie'} ${attempt.reference}`,
     profileId:PROFILE_ID, testmode:attempt.mode==='test', method:'ideal', locale:'nl_NL',
     redirectUrl:`https://www.roofsignal.nl/inspectie-boeken/?booking=${attempt.status_token}`,
     webhookUrl:`${publicBase}/webhook?mode=${attempt.mode}`,
