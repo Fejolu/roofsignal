@@ -1,10 +1,17 @@
 # RoofSignal — algemene consumentenboeking
 
-## Werkelijke status — 10 oktober 2026
+## Productie-inrichting — 11 oktober 2026
 
-Het VvE-Warmtefondsartikel staat live sinds commit `0ea2eda` en is vanuit de kennisbank bereikbaar. De consumentenboeking staat **niet live**. Op deze branch is de frontend voor livegebruik klaargezet (`connected`, indexeerbaar, zonder conceptteksten, met links in het dienstenmenu en de particuliere prijskaarten). Deze wijziging is nog niet naar `main` gepubliceerd; de servervlag voor publieke boekingen staat uit. De besloten proefketen werkt met echte agenda-, route-, e-mail- en Mollie-testkoppelingen. Dat is geen voltooide publieke boekingsflow.
+Het VvE-Warmtefondsartikel staat live sinds commit `0ea2eda`. De consumentenpagina is voor publicatie ingericht: werkelijke agenda- en routeberekening, Mollie, e-mailbevestiging, `connected`-frontend en indexeerbare navigatie. De gebruiker heeft publieke activatie en de hieronder beschreven beperkte toegangen expliciet goedgekeurd. Controleer de uiteindelijke publieke werking aan de hand van de deploymentcontroles en het opleverbericht; de configuratie alleen is geen bewijs van een geslaagde boeking.
 
 Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websitepublicatie via bestaande Cloudflare Pages-koppeling aan `main`; Supabase uitsluitend via `Supabase productie-release` en `tools/supabase_release.py`.
+
+### Definitieve koppelingen
+
+- Google OAuth staat op **Production**. De eigenaar heeft opnieuw toestemming gegeven; het vernieuwde refresh-token staat alleen in Supabase. Apps Script-versie **3** gebruikt dezelfde private API-implementatie met toegang **Alleen ikzelf** en controleert het eigenaarsaccount. Zowel live- als test-healthcheck slaagt met HTTP 200, Europe/Amsterdam en 45 minuten inspectieduur.
+- De afzonderlijke Mollie-livesleutel is aangemaakt voor uitsluitend profiel `pfl_Bef5DYX9w5`, alleen live en alleen `payments.read`/`payments.write`. De sleutel staat uitsluitend als `MOLLIE_CONSUMER_LIVE_API_KEY` in Supabase. Een echte alleen-lezen API-controle gaf HTTP 200 en bevestigde modus en profiel. De bestaande Odoo-sleutels zijn niet gewijzigd.
+- `CONSUMER_AUTOMATION_SECRET` is na expliciet akkoord in Supabase en GitHub-omgeving `production` opgeslagen. De sleutel geeft alleen toegang tot `/process`. De controleworkflow wordt op `main` iedere vijf minuten ingepland; GitHub kan geplande runs vertragen. De betaalwebhook blijft de primaire bevestigingsroute.
+- Testmails staan uit. Alle vijf eigen testreserveringen zijn vrijgegeven; betaalhistorie blijft behouden. Er zijn geen echte betalingen uitgevoerd.
 
 ## Door de gebruiker bevestigde uitvoering
 
@@ -23,16 +30,16 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 ## Koppelingen en beveiliging
 
 - De afzonderlijke Mollie **test**-toegang is aangemaakt met alleen `payments.read` en `payments.write`, uitsluitend RoofSignal-profiel `pfl_Bef5DYX9w5`.
-- `MOLLIE_TEST_API_KEY` is in de bestaande Supabase-secrets opgeslagen. Echte Mollie-simulatorproeven voor betaald, mislukt, geannuleerd en verlopen zijn afgerond. Odoo-toegang is niet gewijzigd. Een afzonderlijke livesleutel met dezelfde twee beperkte rechten is voorbereid; aanmaak/opslag wacht op expliciet akkoord.
+- `MOLLIE_TEST_API_KEY` is in de bestaande Supabase-secrets opgeslagen. Echte Mollie-simulatorproeven voor betaald, mislukt, geannuleerd en verlopen zijn afgerond. Odoo-toegang is niet gewijzigd. De afzonderlijke livesleutel is op 11 oktober na expliciet akkoord aangemaakt en gecontroleerd; zie hierboven.
 - Google Apps Script-project `RoofSignal boekingsagenda - test` is aangemaakt. De eigenaar heeft Calendar-toegang verleend; de initialisatie met Calendar en Maps is geslaagd.
 - **De gebruiker heeft openbaar bereikbare Apps Script-webapps geweigerd.** Er is geen openbare implementatie gemaakt. De nieuwe bron gebruikt een privé API executable met Google OAuth, alleen toegankelijk voor de eigenaar. Geen publieke `doPost`-route en geen terugval op een gedeelde sleutel.
 - Google Cloud-project `RoofSignal boekingskoppeling` (`velvety-mason-511210-s4`, nummer `494508271756`) is met expliciet akkoord aangemaakt; Apps Script API is actief. De OAuth-client is aangemaakt, de clientgegevens zijn in Supabase opgeslagen en uitsluitend `ferry.joosten@gmail.com` staat als testgebruiker ingesteld. Een API-implementatie is aangemaakt met toegang **Alleen ikzelf**; de implementatie-ID is in Supabase opgeslagen. De gebruiker heeft de waarschuwing beoordeeld en de toestemming afgerond. Het eigenaarsaccount is gecontroleerd; het refresh-token staat uitsluitend in Supabase. Een werkelijke privé API-healthcheck gaf HTTP 200 en bevestigde de juiste agenda, tijdzone en inspectieduur. De eerdere ongebruikte scriptproperty is geen actieve serverkoppeling.
 - De server verwacht `CONSUMER_GOOGLE_CLIENT_ID`, `CONSUMER_GOOGLE_CLIENT_SECRET`, `CONSUMER_GOOGLE_REFRESH_TOKEN` en `CONSUMER_GOOGLE_DEPLOYMENT_ID`, uitsluitend als Supabase-secrets.
-- De Google OAuth-app staat nog op **Testing**. Google laat een refresh-token met Calendar-rechten dan na zeven dagen verlopen. Vóór livegang moet deze tijdelijke teststatus worden opgelost en opnieuw worden geautoriseerd; de API-implementatie en de controle op het eigenaarsaccount moeten besloten blijven. Een geslaagde test is dus nog geen blijvend werkende productiekoppeling.
+- De tijdelijke Google-teststatus is op 11 oktober vervangen door **Production**, met hernieuwde toestemming van de eigenaar. De API-implementatie en eigenaarcontrole blijven besloten.
 - De besloten testserver en migraties zijn via de gecontroleerde release gepubliceerd. `CONSUMER_TEST_ENABLED=true` staat aan. De bron ondersteunt inmiddels gescheiden test- en livetoegang; publieke creatie blijft geblokkeerd totdat `CONSUMER_LIVE_ENABLED=true` expliciet is ingesteld. Alle testroutes vereisen de Supabase-secretkey of runtime service-role bearer. De webhook verifieert ieder betaalbericht bij Mollie met de sleutel voor de juiste modus. Geen browser ontvangt deze sleutels; testklant is uitsluitend `ferry@roofsignal.nl`.
 - `CONSUMER_TEST_EMAIL_ENABLED=true` stuurde bij de geslaagde basisproef de klant- en interne bevestiging uitsluitend naar `ferry@roofsignal.nl`; beide zijn werkelijk in de inbox bekeken. Na de thermische browserproef is deze vlag weer op **false** gezet. Schakel hem alleen tijdens een volgende expliciete proef tijdelijk in.
 - Publieke prijsopgaven vereisen een eenmalige Turnstile-verificatie voor RoofSignal en actie `consumer_quote`. Globale, IP- en prijsopgavegrenzen beperken misbruik. Onvoorspelbare identifiers geven uitsluitend toegang tot de bijbehorende boeking; kalenderinhoud wordt niet teruggegeven. Publieke verzoeken kunnen geen testmodus kiezen.
-- De automatische controle is voorbereid als `process-consumer-bookings.yml`. Een afzonderlijke `CONSUMER_AUTOMATION_SECRET` krijgt alleen toegang tot `/process`; broncode en logs bevatten geen geheime waarde of klantgegevens. Opslag in GitHub `production` en Supabase is door automatische goedkeuringscontrole geweigerd en wacht op specifiek gebruikersakkoord. De planning is dus nog niet actief. Handmatige uitzonderingen laten de workflow falen met aantallen zodat de bestaande GitHub-melding aandacht vraagt.
+- De automatische controle gebruikt `process-consumer-bookings.yml` en de afzonderlijke `CONSUMER_AUTOMATION_SECRET`. Broncode en logs bevatten geen geheime waarde of klantgegevens. Handmatige uitzonderingen laten de workflow falen met aantallen zodat de bestaande GitHub-melding aandacht vraagt. Opslag is op 11 oktober na expliciet gebruikersakkoord uitgevoerd.
 
 ## Wat de code afdekt
 
@@ -47,13 +54,11 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - Klant-/interne berichten worden transactioneel klaargezet bij bevestiging. Herhaalde verwerking gebruikt dezelfde Brevo-idempotentiesleutel; onzekere berichten buiten 12 minuten gaan naar beoordeling.
 - Alle nieuwe tabellen hebben RLS en expliciete rechten uitsluitend voor `service_role`. De browser kan geen boekingen rechtstreeks lezen of schrijven.
 
-## Nog nodig vóór publieke activatie
+## Publicatiecontrole
 
-1. Apps Script-versie 2 werkt met echte beschikbaarheid. De bron voor gescheiden test/live-markeringen moet nog als volgende versie van dezelfde besloten API-implementatie worden gepubliceerd. Google OAuth van Testing naar Production en herautorisatie wacht op expliciet akkoord; de eigenaarcontrole en API-toegang blijven besloten.
-2. De gekoppelde mobiele interactiecontrole en publieke terugkeer uit Mollie afronden. De desktopbrowser heeft zelf een thermische proefboeking aangemaakt en betaald. De vier betaalstatussen, gelijktijdige aanvragen, herhaalde webhooks, betalingsherstel en e-mailbezorging zijn op de echte testkoppelingen geslaagd. De terugkeer landt publiek nog op de oude `/werkgebied`-redirect; dezelfde geobserveerde terugkeerinformatie toont lokaal de geverifieerde bevestiging. Testhistorie blijft bewaard; vrijgegeven testreserveringen blokkeren geen nieuwe capaciteit.
-3. De voorbereide consumentenaanvulling `legal/consumentenboeking-2026-10-10.txt` en privacytekst meenemen bij publieke activatie. De aanvulling legt rapporttermijn, vooruitbetaling, reisregeling, uitvoeringsvoorbehoud en herroeping vast; de bestaande pilotvoorwaarden blijven afzonderlijk. De testbevestiging bevat beide voorwaardenbestanden en de berekende rapport- en herroepingsdatum.
-4. De publieke Turnstile-keten werkelijk testen. De serverbeveiliging en herstelcontrole zijn via release `56cc580` gepubliceerd; anonieme beheertoegang en publieke creatie blijven geblokkeerd. Handmatige geauthenticeerde herstelcontrole slaagt. De afzonderlijke herstelsleutel vereist nog akkoord; de workflow wordt pas op `main` automatisch ingepland.
-5. De voorbereide beperkte Mollie-livesleutel na akkoord aanmaken en opslaan. De betaalinstellingen zijn bekeken: automatische wekelijkse uitbetaling en minimum €5; saldo €0,61 verklaart het wachten op uitbetaling. Er is geen echte betaling of uitbetaling door deze werkzaamheden uitgevoerd. Pas na alle controles de livevlag en frontend activeren, publiceren en de echte publieke route en assets controleren.
+Publiceer de pagina pas met werkende productiekoppelingen. Zet de livevlag aan, laat de vereiste repositorycontroles slagen en publiceer via `main`. Controleer vervolgens de echte `/inspectie-boeken/`-route, modules, voorwaarden, mobiele bediening, Turnstile, adresprijs en beschikbaarheid. Start de herstelworkflow eenmaal handmatig en controleer de uitkomst.
+
+De hieronder vastgelegde volledige betaalproeven gebruiken Mollies testmodus. Een live sleutelcontrole of geslaagde websitepublicatie is geen uitgevoerde echte klantbetaling. Maak voor verificatie geen echte klantopdracht of afschrijving.
 
 ## Validatie tot nu toe
 
@@ -79,9 +84,9 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - [Mollie-idempotentie](https://docs.mollie.com/reference/api-idempotency)
 - [Mollie-betaling aanmaken](https://docs.mollie.com/reference/create-payment)
 
-## Routecontract (privétest geïmplementeerd; publieke activatie nog nodig)
+## Routecontract
 
-De configuratie in `inspectie-boeken/booking-config.js` staat op deze branch klaar voor livegebruik. Publiceer deze pas na het afronden van de bovenstaande blokkades:
+De configuratie in `inspectie-boeken/booking-config.js` gebruikt de bestaande consumentenbackend:
 
 ```js
 window.ROOFSIGNAL_BOOKING = Object.freeze({
@@ -92,7 +97,7 @@ window.ROOFSIGNAL_BOOKING = Object.freeze({
 
 Deze instelling activeert alleen browserverzoeken. Zij creëert géén integratie en mag niet als voltooiingsstap worden gebruikt zonder echte backend. De onderstaande routepaden blijven het contract; bij de Supabase-basis wordt bijvoorbeeld `/quote` aangevraagd onder `/functions/v1/consumer-booking/quote`. Exact `/api/consumer-booking` is alleen bruikbaar als een eigen same-origin serverrouter wordt toegevoegd. Andere hosts, protocolrelatieve URLs, extra configuratievelden en onjuiste modi worden afgewezen.
 
-De adapter verstuurt op dit moment geen `Authorization`- of `apikey`-header. De functie is met passende toegangscontroles publiek aanroepbaar, maar livecreatie staat uit. Publieke activatie vereist inrichting met passende CORS, inputcontrole, misbruikbeperking en beperkte quote-/hersteltokens, of via een eigen gateway lopen. Een publieke authheader mag alleen worden toegevoegd wanneer de daadwerkelijke serverconfiguratie dat vereist. CORS op zichzelf is geen toegangscontrole. De adapter weigert redirects en gebruikt geen cross-origin cookies.
+De adapter verstuurt op dit moment geen `Authorization`- of `apikey`-header. De functie is met passende toegangscontroles publiek aanroepbaar, met livecreatie achter de expliciete servervlag. De functie controleert CORS, invoer, misbruikgrenzen en beperkte quote-/hersteltokens. Een publieke authheader mag alleen worden toegevoegd wanneer de daadwerkelijke serverconfiguratie dat vereist. CORS op zichzelf is geen toegangscontrole. De adapter weigert redirects en gebruikt geen cross-origin cookies.
 
 De conceptmelding en concepttitel zijn op deze branch verwijderd, HTML en `_headers` zijn voor indexering aangepast, de canonieke URL staat vast en de boekingsroute is aan de sitemap en bestaande navigatie toegevoegd. Controleer deze na de uiteindelijke publicatie op de echte URL.
 
