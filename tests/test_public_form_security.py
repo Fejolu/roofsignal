@@ -1,8 +1,15 @@
 import json
+import subprocess
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_form_security_display_and_token_guards():
+    result = subprocess.run(['node', '--test', 'tests/form-security.test.mjs'],
+                            cwd=ROOT, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_all_public_forms_load_security_layer():

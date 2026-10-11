@@ -15,7 +15,7 @@
     form.prepend(trap);
   }
 
-  for (const form of protectedForms) {
+  for (const [index, form] of protectedForms.entries()) {
     addHoneypot(form);
     form.dataset.securityReady = configured ? "pending" : "missing";
     if (!configured) continue;
@@ -25,6 +25,21 @@
     widget.dataset.theme = "light";
     widget.dataset.size = "flexible";
     widget.dataset.appearance = "interaction-only";
+    if (form.hasAttribute("data-consumer-booking")) {
+      widget.dataset.size = window.matchMedia("(max-width: 380px)").matches ? "compact" : "normal";
+      widget.dataset.language = "nl";
+      // A completed check should not leave a success banner in the address step.
+      // Keep the challenge available again on interaction, expiry, errors or reset.
+      const passed = `roofSignalCheckPassed${index}`;
+      const show = `roofSignalCheckShow${index}`;
+      window[passed] = () => { widget.hidden = true; };
+      window[show] = () => { widget.hidden = false; };
+      widget.dataset.callback = passed;
+      widget.dataset.beforeInteractiveCallback = show;
+      widget.dataset.expiredCallback = show;
+      widget.dataset.errorCallback = show;
+      widget.dataset.timeoutCallback = show;
+    }
     widget.dataset.action = form.hasAttribute("data-consumer-booking") ? "consumer_quote" : form.hasAttribute("data-withdrawal-form") ? "withdrawal" : form.dataset.leadForm || "parken_booking";
     const button = form.querySelector(form.hasAttribute("data-consumer-booking") ? '#check-address' : "button[type='submit']");
     button?.before(widget);
@@ -54,7 +69,10 @@
     },
     reset(form) {
       const widget = form.querySelector(".cf-turnstile");
-      if (widget && window.turnstile) window.turnstile.reset(widget);
+      if (widget && window.turnstile) {
+        widget.hidden = false;
+        window.turnstile.reset(widget);
+      }
     },
   };
 })();
