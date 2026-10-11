@@ -15,14 +15,19 @@ basisprijzen exclusief thermografie en reizen; werkzaamheden, planning en
 totaalprijs worden vóór een opdracht afgestemd. De nieuwste opdracht staat het
 tonen van de grotere basisstaffels in deze aanvraagroute toe.
 
-VvE-thermografietarieven zijn in beide bronnen nog advies. Het formulier registreert
-daarom alleen interesse, met prijs en uitvoering in overleg. De woningafspraak van
-45 minuten en de particuliere thermografietoeslag worden niet op VvE’s toegepast.
+Ferry heeft op 11 oktober ook de thermografiestaffel goedgekeurd (RS-2026-10-11):
+maximaal 5 adressen + €400 excl. / €484 incl. btw; 6–10 adressen + €550 excl. /
+€665,50 incl.; 11–20 adressen + €750 excl. / €907,50 incl. De checkbox toont de
+passende toeslag en telt deze bij selectie direct op bij de basisprijs. De totalen
+zijn respectievelijk €1.150 / €1.391,50, €1.550 / €1.875,50 en €2.000 / €2.420
+(excl. / incl. btw), vóór eventuele reiskosten. Maatwerk blijft maatwerk, ook met
+thermografie. De woningafspraak van 45 minuten en de particuliere toeslag worden
+niet op VvE’s toegepast. De aanvraag blijft vrijblijvend.
 
 Het formulier gebruikt de bestaande beveiligde `submit-public-lead`-route als
 `price`-aanvraag, segment VvE / VvE-beheerder. Naam organisatie, contactgegevens,
-inspectieadres/plaats, aantal adressen, objectomvang, basisprijsindicatie met
-prijsversie en thermografiewens komen in `lead_requests` en de bestaande
+inspectieadres/plaats, aantal adressen, objectomvang, basisprijs, gekozen
+thermografietoeslag en totaal met prijsversies komen in `lead_requests` en de bestaande
 bevestigings-/notificatiemail. Dit voegt geen nieuwe Odoo- of ERPNext-koppeling toe.
 De herkomst is `/inspectie-boeken/`; `#vve` opent de VvE-keuze rechtstreeks.
 

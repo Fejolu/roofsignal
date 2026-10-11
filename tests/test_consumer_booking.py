@@ -11,7 +11,7 @@ BOOKING = ROOT / 'inspectie-boeken'
 
 def test_consumer_booking_behavior():
     result = subprocess.run(
-        ['node', '--test', 'tests/consumer-booking.test.mjs', 'tests/consumer-acquisition.test.mjs',
+        ['node', '--test', 'tests/vve-inquiry.test.mjs', 'tests/consumer-booking.test.mjs', 'tests/consumer-acquisition.test.mjs',
          'tests/consumer-booking-ui.test.mjs', 'tests/consumer-travel-pricing.test.mjs',
          'tests/consumer-scheduling.test.mjs', 'tests/consumer-payment.test.mjs', 'tests/consumer-admin.test.mjs', 'tests/consumer-dates.test.mjs', 'tests/consumer-google-adapter.test.mjs', 'tests/consumer-access.test.mjs'],
         cwd=ROOT, capture_output=True, text=True, timeout=60,

@@ -30,8 +30,8 @@
     if (form.dataset.leadContext === "vve-object") {
       appendDetail(messageLines, "Plaats object", readField(data, "object_city"));
       appendDetail(messageLines, "Omvang aanvraag", { single: "Eén gebouw / inspectieobject", multiple: "Meerdere gebouwen", unknown: "Nog af te stemmen" }[readField(data, "object_scope")]);
-      appendDetail(messageLines, "Basisprijsindicatie (geen definitieve offerte)", readField(data, "indicative_price"));
-      appendDetail(messageLines, "Thermografie gewenst", data.get("thermal_interest") === "yes" ? "Ja, prijs en uitvoering vooraf afstemmen" : "Nee");
+      appendDetail(messageLines, "Prijsindicatie (geen definitieve offerte)", readField(data, "indicative_price"));
+      appendDetail(messageLines, "Thermografie gewenst", data.get("thermal_interest") === "yes" ? "Ja" : "Nee");
     }
     appendDetail(messageLines, "Demo-data", data.get("demo_data") ? "Ja" : "");
 
