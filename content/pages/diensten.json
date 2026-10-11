@@ -1,0 +1,81 @@
+{
+  "seo": {
+    "title": "Gebouwschilrapportage en onderhoudsadvies | RoofSignal diensten",
+    "description": "Onafhankelijke visuele inspecties van daken en gevels, uitsluitend met drones. Heldere gebouwschilrapportage met bevindingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": "Property Intelligence in de praktijk",
+    "item_02": "Gebouwinformatie voor betere onderhoudsbesluiten.",
+    "item_03": "RoofSignal voert onafhankelijke visuele inspecties van daken en gevels uitsluitend met drones uit. We vertalen de beelden naar een helder rapport met bevindingen, onderhoudsprioriteiten en bruikbare vervolgstappen."
+  },
+  "section_02": {
+    "item_01": "Dak en dakranden",
+    "item_02": "Dakpannen, nokvorsten, loodwerk, dakkapellen, dakdoorvoeren en zichtbare lekkage-indicaties.",
+    "item_03": "Gevel en constructieve details",
+    "item_04": "Scheuren, voegwerk, metselwerk, lateien, rollagen, vochtsporen en loszittende delen.",
+    "item_05": "Schoorstenen & goten",
+    "item_06": "Voegwerk, lood, dekplaten, verstoppingen, corrosie, verzakking en hemelwaterafvoer.",
+    "item_07": "Zonnepanelen",
+    "item_08": "Beoordeling van zichtbare vervuiling, schade, bekabeling, montage en risico's voor onderhoudsplanning."
+  },
+  "section_03": {
+    "item_01": "Inspectie met drones",
+    "item_02": "Uitsluitend drones. Heldere rapportage.",
+    "item_03": "We leggen de afgesproken dak- en geveldelen uitsluitend met drones vast. Vooraf beoordelen we of de dronevlucht op uw locatie veilig, toegestaan en technisch uitvoerbaar is. De beelden vormen de basis voor een onafhankelijk rapport met bevindingen en onderhoudsprioriteiten."
+  },
+  "section_04": {
+    "item_01": "Wat u ontvangt",
+    "item_02": "Bewijs per bouwdeel",
+    "item_03": "Gestructureerde beelden en toelichting per relevant bouwdeel of defect.",
+    "item_04": "Onderhoudsprioriteiten",
+    "item_05": "Defecten, ernst, risico, indicatieve kosten en aanbevolen vervolgstap in een compact rapport.",
+    "item_06": "Onderhoudsgeschiedenis",
+    "item_07": "Elke beoordeling vormt de basis voor toekomstige vergelijking, onderhoudsplanning en conditieanalyse.",
+    "item_08": "Hoe vertaalt RoofSignal een bevinding naar een bruikbare prioriteit? Lees: <a class=\"rs-text-link\" href=\"/kennisbank-van-bevinding-naar-prioriteit\">Van bevinding naar onderhoudsprioriteit</a>"
+  },
+  "section_05": {
+    "item_01": "Gerichte zoekvragen",
+    "item_02": "Begin bij de concrete vraag. Bouw verder aan uw vastgoedinzicht.",
+    "item_03": "Landelijk werkgebied",
+    "item_04": "Onafhankelijke gebouwinformatie en uniforme rapportage voor objecten door heel Nederland.",
+    "item_05": {
+      "label": "Bekijk werkgebied",
+      "href": "/werkgebied"
+    },
+    "item_06": "Dakinspectie VvE",
+    "item_07": "Onderbouw dakonderhoud met bewijs, prioriteit en input voor bestuur of ALV.",
+    "item_08": {
+      "label": "Bekijk pagina",
+      "href": "dakinspectie-vve"
+    },
+    "item_09": "Drone dakinspectie",
+    "item_10": "Bekijk hoe we uitsluitend met drones inspecteren en welke grenzen daarbij horen.",
+    "item_11": {
+      "label": "Bekijk pagina",
+      "href": "drone-dakinspectie"
+    },
+    "item_12": "MJOP-input VvE",
+    "item_13": "Maak onderhoudsplanning concreter met actuele bevindingen per bouwdeel.",
+    "item_14": {
+      "label": "Bekijk pagina",
+      "href": "mjop-input-vve"
+    }
+  },
+  "section_06": {
+    "item_01": "Ook voor bouw- en renovatieprojecten",
+    "item_02": "Bouwvoortgang met drones.",
+    "item_03": "Leg uw bouwproject op vaste momenten vast. Vergelijk bouwfasen vanuit herkenbare gezichtspunten en deel overzichtsbeelden en zichtbare aandachtspunten met uw projectteam. Periodieke opnamen, rapportage en een eventuele 3D-uitwerking stemmen we af op uw project.",
+    "item_04": "<a class=\"rs-text-link\" href=\"/bouwvoortgang\">Bekijk bouwvoortgang met drones →</a>"
+  },
+  "section_07": {
+    "item_01": "Eerst een voorbeeldrapport bekijken of direct een offerte aanvragen?",
+    "item_02": {
+      "label": "Bekijk een voorbeeldrapport",
+      "href": "/voorbeeldrapport-uitgebreid"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

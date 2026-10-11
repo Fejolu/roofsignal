@@ -1,0 +1,66 @@
+{
+  "seo": {
+    "title": "Is een drone-inspectie betrouwbaar? | RoofSignal",
+    "description": "Lees waar de betrouwbaarheid van een drone-inspectie vandaan komt, wat de methode zichtbaar maakt en welke beperkingen een visuele inspectie heeft."
+  },
+  "section_01": {
+    "item_01": "Kennisbank · Inspectiemethode",
+    "item_02": "Is een drone-inspectie betrouwbaar?",
+    "item_03": "Een drone maakt een inspectie niet vanzelf betrouwbaar. De kwaliteit ontstaat door wat er vóór, tijdens en na de vlucht met de beelden gebeurt."
+  },
+  "section_02": {
+    "item_01": "Voor een visuele beoordeling van dak en gevel biedt een drone sterke mogelijkheden: moeilijk bereikbare delen komen dichtbij in beeld, details worden reproduceerbaar vastgelegd en meerdere kijkhoeken kunnen worden vergeleken.",
+    "item_02": "Wat levert een drone-opname op?",
+    "item_03": "Vanaf de grond zijn nokvorsten, aansluitingen, goten en hoger gelegen geveldetails vaak maar beperkt zichtbaar. Een drone kan gericht overzichts- en detailbeelden maken zonder het dak te betreden. Daardoor ontstaat een controleerbare beeldset die ook later opnieuw kan worden bekeken.",
+    "item_04": "Overzicht van dakvlakken en onderlinge aansluitingen.",
+    "item_05": "Detailbeelden van onder meer loodwerk, nokken, goten en doorvoeren.",
+    "item_06": "Verschillende kijkhoeken op hetzelfde bouwdeel.",
+    "item_07": "Beeldbewijs dat in een rapport aan een bevinding kan worden gekoppeld.",
+    "item_08": "Waar komt betrouwbaarheid vandaan?",
+    "item_09": "1. Een vaste opnamevolgorde",
+    "item_10": "Een inspectieprotocol verkleint de kans dat relevante bouwdelen willekeurig of helemaal niet worden vastgelegd. De operator werkt per object systematisch langs de afgesproken scope.",
+    "item_11": "2. Bruikbare beeldkwaliteit",
+    "item_12": "Een veraf genomen overzichtsfoto is onvoldoende voor een klein detail. Daarom zijn zowel contextbeelden als gerichte detailopnamen nodig. Beweging, tegenlicht, afstand en kijkhoek beïnvloeden wat werkelijk beoordeelbaar is.",
+    "item_13": "3. Deskundige interpretatie",
+    "item_14": "Een foto toont een zichtbaar signaal, maar bepaalt niet zelfstandig de oorzaak, urgentie of juiste vervolgstap. De beoordeling moet het waargenomen beeld koppelen aan bouwdeel, risico en context — en onzekerheid expliciet laten staan.",
+    "item_15": "4. Transparante rapportage",
+    "item_16": "Een goed rapport maakt onderscheid tussen wat zichtbaar is, wat daaruit redelijkerwijs kan worden afgeleid en wat aanvullend onderzoek vraagt. Zo blijft de conclusie controleerbaar.",
+    "item_17": "Wat kan een drone-inspectie niet?",
+    "item_18": "Een drone-inspectie is een visuele, niet-destructieve beoordeling van de buitenzijde. De camera kijkt niet door dakbedekking, isolatie, hout of metselwerk heen. Verborgen gebreken, interne vochtbronnen en constructieve oorzaken kunnen daarom buiten beeld blijven.",
+    "item_19": "Ook kunnen begroeiing, aangrenzende bebouwing, weersomstandigheden, luchtruimregels of onvoldoende veilige vliegruimte delen van de opname beperken. RoofSignal beoordeelt vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport; we schakelen niet over op een andere inspectiemethode.",
+    "item_20": "Wanneer is aanvullend onderzoek logisch?",
+    "item_21": "Fysieke toegang, vochtmeting, destructief onderzoek of specialistische beoordeling kan nodig zijn wanneer beelden een verhoogd risico aangeven, wanneer de oorzaak niet zichtbaar is of wanneer zekerheid over de constructie vereist is. De drone-inspectie helpt dan vooral om gericht te bepalen waar vervolgonderzoek waarde toevoegt. RoofSignal inspecteert uitsluitend met drones en adviseert u zo nodig om voor dat vervolgonderzoek een geschikte specialist in te schakelen.",
+    "item_22": "<a href=\"drone-dakinspectie\">Bekijk de werkwijze voor drone-dakinspectie</a> of <a href=\"contact\">bespreek uw object met RoofSignal</a>.",
+    "item_23": {
+      "label": "Wat levert het op?",
+      "href": "#wat-levert"
+    },
+    "item_24": {
+      "label": "Waar komt betrouwbaarheid vandaan?",
+      "href": "#betrouwbaarheid"
+    },
+    "item_25": {
+      "label": "Wat kan het niet?",
+      "href": "#grenzen"
+    },
+    "item_26": {
+      "label": "Wanneer aanvullend onderzoek?",
+      "href": "#wanneer-aanvullend"
+    },
+    "item_27": {
+      "label": "← Terug naar de kennisbank",
+      "href": "kennisbank"
+    }
+  },
+  "section_03": {
+    "item_01": "Eerst bewijs zien, daarna beslissen?",
+    "item_02": {
+      "label": "Bekijk een voorbeeldrapport",
+      "href": "/voorbeeldrapport-uitgebreid"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

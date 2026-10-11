@@ -15,3 +15,6 @@ results/leads/
 # Logs/temp
 *.log
 *.tmp
+
+# Cloudflare Pages build output
+dist/

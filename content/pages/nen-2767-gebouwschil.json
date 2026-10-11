@@ -1,0 +1,53 @@
+{
+  "seo": {
+    "title": "Indicatieve conditiebeoordeling van dak en gevel | RoofSignal",
+    "description": "RoofSignal gebruikt NEN 2767-principes voor een indicatieve beoordeling van zichtbare gebreken. Lees de scope, beperkingen en toepassing als onderhoudsinput."
+  },
+  "section_01": {
+    "item_01": "Conditie en onderhoud",
+    "item_02": "Indicatieve conditiebeoordeling van dak en gevel.",
+    "item_03": "RoofSignal gebruikt principes uit NEN 2767 om zichtbare gebreken gestructureerd te beschrijven. De rapportage is een indicatieve beoordeling binnen de afgesproken inspectiescope."
+  },
+  "section_02": {
+    "item_01": "Van zichtbaar gebrek naar onderbouwde prioriteit.",
+    "item_02": "Een foto krijgt betekenis door te benoemen welk bouwdeel is beoordeeld, wat zichtbaar is en welk risico of vervolg daarbij hoort. Waar dit onderdeel is van de opdracht beschrijven we ernst, omvang en intensiteit en geven we een indicatie van de conditie.",
+    "item_03": "De schaal loopt van 1 (uitstekend) tot 6 (zeer slecht). De score beschrijft de zichtbare toestand; de onderhoudsprioriteit bepaalt wanneer actie of nadere controle nodig is. Die twee begrippen zijn niet uitwisselbaar."
+  },
+  "section_03": {
+    "item_01": "Welke zekerheid geeft deze beoordeling?",
+    "item_02": "De uitkomst hangt af van de beschikbare dronebeelden, zichtbaarheid en afgesproken inspectiescope. Een indicatieve beoordeling is geen toezegging van een volledige meting volgens alle eisen van NEN 2767 en geen claim van normcertificering.",
+    "item_03": "Vraagt uw opdracht om een formele conditiemeting volgens een specifieke norm of contracteis? Benoem dat vooraf. We stemmen af of de gevraagde dekking en beoordeling binnen onze visuele drone-inspectie passen. Onderzoek waarvoor een andere inspectiemethode nodig is, valt buiten onze dienstverlening.",
+    "item_04": "RoofSignal inspecteert uitsluitend met drones. De beoordeling is visueel en niet-destructief: we kijken niet door dakbedekking of constructies heen. Een foto alleen bewijst niet of een aansluiting waterdicht is of waar vocht vandaan komt. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport. Waar nodig adviseren we vervolgonderzoek door een geschikte specialist."
+  },
+  "section_04": {
+    "item_01": "Toepassen in uw onderhoudsoverleg.",
+    "item_02": "Per bouwdeel",
+    "item_03": "Koppel conditie, foto en beperking aan het juiste dak- of gevelonderdeel.",
+    "item_04": "Vervolg bepalen",
+    "item_05": "Vertaal het punt naar onderhoud, nader onderzoek of monitoring, met een onderbouwde termijn.",
+    "item_06": "Actualiseren",
+    "item_07": "Vergelijk latere opnamen met eerdere bevindingen en vastgelegd herstel. Controleer of scope en beoordelingsbasis vergelijkbaar zijn."
+  },
+  "section_05": {
+    "item_01": "Bekijk de toepassing in een echt rapport.",
+    "item_02": "Het VvE-rapport uit Zutphen bevat een indicatief conditiebeeld en een aparte onderhoudsplanning. Lees de methodiek en beperkingen bij de interpretatie van de scores.",
+    "item_03": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_04": "<a href=\"/mjop-input-vve\">Meer over inspectie als input voor het MJOP</a>."
+  },
+  "section_06": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Begin met één gebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}

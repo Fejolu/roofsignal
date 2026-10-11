@@ -1,0 +1,51 @@
+{
+  "seo": {
+    "title": "Werkgebied Nederland | Landelijke Property Intelligence | RoofSignal",
+    "description": "RoofSignal inspecteert daken en gevels in heel Nederland uitsluitend met drones. Onafhankelijke rapportage met bevindingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": "Landelijke dekking",
+    "item_02": "Property Intelligence voor vastgoed in heel Nederland.",
+    "item_03": "RoofSignal is gevestigd in Apeldoorn en voert landelijk onafhankelijke visuele inspecties van daken en gevels uit, uitsluitend met drones. Van één VvE-complex tot een verspreide vastgoedportefeuille: u ontvangt heldere rapportage met bevindingen en onderhoudsprioriteiten."
+  },
+  "section_02": {
+    "item_01": "Eén landelijke standaard",
+    "item_02": "Overal dezelfde beslisinformatie.",
+    "item_03": "Landelijke inzet",
+    "item_04": "We inspecteren met drones door heel Nederland en beoordelen vooraf per locatie of de vlucht veilig, toegestaan en technisch uitvoerbaar is.",
+    "item_05": "Vergelijkbare rapportage",
+    "item_06": "Dezelfde werkwijze, prioriteiten en rapportagestructuur maken objecten en bouwdelen onderling vergelijkbaar.",
+    "item_07": "Efficiënte regioplanning",
+    "item_08": "Opdrachten in dezelfde omgeving combineren we waar mogelijk. Dat beperkt reistijd, kosten en onnodige belasting."
+  },
+  "section_03": {
+    "item_01": "Van object naar portefeuille",
+    "item_02": "Uw locatie bepaalt de route, niet de standaard.",
+    "item_03": "We verzamelen inspectiebeelden uitsluitend met drones en stemmen de planning af op de locatie en uw onderhoudsvraag. Ook een eventuele thermische opname gebeurt met een drone. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport; we schakelen niet over op een andere inspectiemethode."
+  },
+  "section_04": {
+    "item_01": "Landelijk beschikbaar",
+    "item_02": "Informatie die aansluit op uw vastgoedvraag.",
+    "item_03": "Gebouwschil",
+    "item_04": "Zichtbare signalen aan dak, gevel, goten en aansluitingen vertaald naar duidelijke prioriteiten.",
+    "item_05": "VvE & MJOP-input",
+    "item_06": "Actuele conditie-informatie per bouwdeel als onderbouwde input voor besluitvorming en meerjarenonderhoud.",
+    "item_07": "Vastgoedportefeuilles",
+    "item_08": "Objecten uniform beoordelen, vergelijken en prioriteren vanuit één overzichtelijke informatiebasis.",
+    "item_09": "Gerichte vraagstukken",
+    "item_10": "Een afgebakende beoordeling bij twijfel, schade, aankoop, onderhoud of een specifieke informatiebehoefte."
+  },
+  "section_05": {
+    "item_01": "Boek uw woninginspectie online.",
+    "item_02": "Controleer uw adres, voeg eventueel thermografie toe en kies een beschikbaar moment. U ziet het volledige bedrag voordat u afrekent.",
+    "item_03": {
+      "label": "Boek uw woninginspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_04": {
+      "label": "Offerte voor een ander object",
+      "href": "/contact"
+    },
+    "item_05": "Voor VvE’s, bedrijfspanden en meerdere objecten maken we een offerte op maat."
+  }
+}

@@ -1,0 +1,26 @@
+name: Website en CMS controleren
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  cms:
+    name: CMS-inhoud en websitebouw
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Installeer de bouw- en testomgeving
+        run: python -m pip install -r tools/cms-requirements.txt pytest
+      - name: Controleer inhoud, concepten en veilige weergave
+        run: python -m pytest tests/test_cms.py tests/test_seo.py -q -p no:cacheprovider
+      - name: Bouw de publiceerbare website
+        run: python tools/build_site.py

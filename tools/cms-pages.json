@@ -1,0 +1,130 @@
+{
+  "index": {
+    "template": "index.html",
+    "label": "Homepage"
+  },
+  "diensten": {
+    "template": "diensten.html",
+    "label": "Diensten"
+  },
+  "bouwvoortgang": {
+    "template": "bouwvoortgang.html",
+    "label": "Bouwvoortgang"
+  },
+  "toepassingen": {
+    "template": "toepassingen.html",
+    "label": "Toepassingen"
+  },
+  "voor-wie": {
+    "template": "voor-wie.html",
+    "label": "Voor wie"
+  },
+  "dakinspectie-vve": {
+    "template": "dakinspectie-vve.html",
+    "label": "Dakinspectie vve"
+  },
+  "vve-beheerders": {
+    "template": "vve-beheerders.html",
+    "label": "Vve beheerders"
+  },
+  "vastgoedbeheerders": {
+    "template": "vastgoedbeheerders.html",
+    "label": "Vastgoedbeheerders"
+  },
+  "bedrijfspanden": {
+    "template": "bedrijfspanden.html",
+    "label": "Bedrijfspanden"
+  },
+  "mjop-input-vve": {
+    "template": "mjop-input-vve.html",
+    "label": "Mjop input vve"
+  },
+  "werkgebied": {
+    "template": "werkgebied.html",
+    "label": "Werkgebied"
+  },
+  "dakinspectie-apeldoorn": {
+    "template": "dakinspectie-apeldoorn.html",
+    "label": "Dakinspectie apeldoorn"
+  },
+  "drone-dakinspectie": {
+    "template": "drone-dakinspectie.html",
+    "label": "Drone dakinspectie"
+  },
+  "nen-2767-gebouwschil": {
+    "template": "nen-2767-gebouwschil.html",
+    "label": "Nen 2767 gebouwschil"
+  },
+  "gebouwdata-vastgoedonderhoud": {
+    "template": "gebouwdata-vastgoedonderhoud.html",
+    "label": "Gebouwdata vastgoedonderhoud"
+  },
+  "werkwijze": {
+    "template": "werkwijze.html",
+    "label": "Werkwijze"
+  },
+  "tarieven": {
+    "template": "tarieven.html",
+    "label": "Aanpak & offerte"
+  },
+  "over-ons": {
+    "template": "over-ons.html",
+    "label": "Over RoofSignal"
+  },
+  "contact": {
+    "template": "contact.html",
+    "label": "Contact"
+  },
+  "cases": {
+    "template": "cases.html",
+    "label": "Cases"
+  },
+  "projecten": {
+    "template": "projecten.html",
+    "label": "Projecten"
+  },
+  "voorbeeldrapport-uitgebreid": {
+    "template": "voorbeeldrapport-uitgebreid.html",
+    "label": "Voorbeeldrapporten"
+  },
+  "kennisbank": {
+    "template": "kennisbank.html",
+    "label": "Kennisbank"
+  },
+  "kennisbank-dakinspectie-herfst": {
+    "template": "kennisbank-dakinspectie-herfst.html",
+    "label": "Dakinspectie herfst"
+  },
+  "kennisbank-dakinspectie-kosten": {
+    "template": "kennisbank-dakinspectie-kosten.html",
+    "label": "Dakinspectie kosten"
+  },
+  "kennisbank-dakinspectie-woningaankoop": {
+    "template": "kennisbank-dakinspectie-woningaankoop.html",
+    "label": "Dakinspectie woningaankoop"
+  },
+  "kennisbank-dakonderhoud-vve": {
+    "template": "kennisbank-dakonderhoud-vve.html",
+    "label": "Dakonderhoud vve"
+  },
+  "kennisbank-drone-inspectie-betrouwbaar": {
+    "template": "kennisbank-drone-inspectie-betrouwbaar.html",
+    "label": "Drone inspectie betrouwbaar"
+  },
+  "kennisbank-mjop-bijwerken": {
+    "template": "kennisbank-mjop-bijwerken.html",
+    "label": "Mjop bijwerken"
+  },
+  "kennisbank-van-bevinding-naar-prioriteit": {
+    "template": "kennisbank-van-bevinding-naar-prioriteit.html",
+    "label": "Van bevinding naar prioriteit"
+  },
+  "kennisbank-vve-dakonderhoud-warmtefonds": {
+    "template": "kennisbank-vve-dakonderhoud-warmtefonds.html",
+    "label": "Vve dakonderhoud warmtefonds"
+  },
+  "kennisbank-wat-ziet-een-dakinspectie": {
+    "template": "kennisbank-wat-ziet-een-dakinspectie.html",
+    "label": "Wat ziet een dakinspectie"
+  }
+}

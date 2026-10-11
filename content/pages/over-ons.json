@@ -1,0 +1,53 @@
+{
+  "seo": {
+    "title": "Over ons | RoofSignal",
+    "description": "RoofSignal voert onafhankelijke visuele dak- en gevelinspecties uitsluitend met drones uit. Heldere rapportage en onderhoudsprioriteiten, zonder herstelverkoop."
+  },
+  "section_01": {
+    "item_01": "Onze overtuiging",
+    "item_02": "Betere onderhoudsbeslissingen beginnen met betere vastgoeddata.",
+    "item_03": "Veel onderhoud wordt pas zichtbaar wanneer schade al duur wordt. RoofSignal maakt conditie, risico en opvolging eerder inzichtelijk."
+  },
+  "section_02": {
+    "item_01": "Onafhankelijk kijken. Helder rapporteren. Beter beslissen.",
+    "item_02": "RoofSignal is door Ferdinand Joosten opgezet vanuit de overtuiging dat onderhoudsbesluiten beter worden wanneer bewijs, risico en context onafhankelijk worden vastgelegd. De techniek is ondersteunend; het besluit staat centraal.",
+    "item_03": "Daarom voert RoofSignal onafhankelijke visuele inspecties van daken en gevels uitsluitend met drones uit. We vertalen zichtbare bevindingen naar heldere rapportage met onderhoudsprioriteiten en vervolgstappen.",
+    "item_04": "De kern blijft bewust simpel: RoofSignal beoordeelt en rapporteert, maar verkoopt geen herstelwerk. Zo blijft het advies vrij van aannemersbelang.",
+    "item_05": {
+      "src": "/assets/founder-ferdinand.webp",
+      "alt": "Ferdinand Joosten, oprichter van RoofSignal"
+    },
+    "item_06": "Ferdinand Joosten",
+    "item_07": "Ferdinand is bedrijfskundig opgeleid en voltooide de master Facility and Real Estate Management. Hij is werkzaam op het gebied van facilitair en vastgoed bij Defensie en bouwt RoofSignal voor beheerders en eigenaren die technische signalen willen vertalen naar heldere onderhoudsbesluiten.",
+    "item_08": "Bedrijfskundig opgeleid",
+    "item_09": "Master Facility & Real Estate Management",
+    "item_10": "Dronebewijs A1/A2/A3",
+    "item_11": "Exploitantennummer"
+  },
+  "section_03": {
+    "item_01": "Werkwijze",
+    "item_02": "Premium advies zonder verkoopdruk.",
+    "item_03": "Objectief vastleggen",
+    "item_04": "Bevindingen worden gekoppeld aan bouwdeel, urgentie, risico en vervolgstap.",
+    "item_05": "Besluitbaar maken",
+    "item_06": "Rapportage is geschreven voor beheer, bestuur, eigenaar en portefeuilleoverleg.",
+    "item_07": "Onafhankelijk blijven",
+    "item_08": "RoofSignal verdient niet aan reparatie, restauratie of aannemerkeuze."
+  },
+  "section_04": {
+    "item_01": "Wilt u zien hoe RoofSignal te werk gaat?",
+    "item_02": {
+      "label": "Bekijk de cases",
+      "href": "cases"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  },
+  "section_05": {
+    "item_01": "Beoordeel ons werk zelf.",
+    "item_02": "Ferdinand Joosten is uw aanspreekpunt voor RoofSignal vanuit Apeldoorn. Onze manier van werken kunt u toetsen aan daadwerkelijk opgeleverde inspecties: een woning in Deventer en een VvE in Zutphen.",
+    "item_03": "<a href=\"/cases\">Lees de praktijkgevallen</a> of <a href=\"/voorbeeldrapport-uitgebreid\">download beide geanonimiseerde rapporten</a>."
+  }
+}

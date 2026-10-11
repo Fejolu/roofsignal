@@ -1,0 +1,52 @@
+{
+  "seo": {
+    "title": "Werkwijze NEN 2767-aligned gebouwschilrapportage | RoofSignal",
+    "description": "Zo werkt RoofSignal: onafhankelijke visuele dak- en gevelinspectie, uitsluitend met drones. Van dronebeelden naar bevindingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": "Van signaal naar vastgoedbesluit",
+    "item_02": "Zo ontstaat Property Intelligence.",
+    "item_03": "RoofSignal maakt waarnemingen vergelijkbaar en zet ze om in NEN 2767-aligned onderhoudsinformatie per object en bouwdeel."
+  },
+  "section_02": {
+    "item_01": "Vraag bepalen",
+    "item_02": "De onderhoudsvraag, het objecttype, de risico’s, scope en gewenste rapportdiepte worden vooraf scherp gemaakt.",
+    "item_03": "Voorbereiden",
+    "item_04": "We beoordelen vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is. Daarbij kijken we naar locatie, weer, obstakels en de afgesproken bouwdelen.",
+    "item_05": "Bouwdelen beoordelen",
+    "item_06": "We inspecteren dak en gevel uitsluitend met drones en leggen de beelden vast per bouwdeel. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport.",
+    "item_07": "Conditie structureren",
+    "item_08": "Defecten worden beoordeeld op ernst, omvang en intensiteit, met conditie-indicatie, prioriteit en onderhoudsadvies.",
+    "item_09": "Opvolgen",
+    "item_10": "U ontvangt een compact rapport dat later kan uitgroeien tot een historisch onderhoudsdossier of MJOP-input."
+  },
+  "section_03": {
+    "item_01": "NEN 2767-aligned",
+    "item_02": "Conditiedenken vanaf de eerste opname.",
+    "item_03": "RoofSignal gebruikt de kernlogica van NEN 2767 om zichtbare gebreken uniform vast te leggen: per bouwdeel, met ernst, omvang, intensiteit, conditie-indicatie en onderhoudsprioriteit. Zo ontstaat niet alleen een rapport voor vandaag, maar ook vergelijkbare vastgoeddata voor herbeoordeling, portefeuilleprioritering en onderhoudsplanning."
+  },
+  "section_04": {
+    "item_01": "Property Intelligence",
+    "item_02": "Elke beoordeling versterkt het digitale onderhoudsdossier.",
+    "item_03": "Door signalen per object, bouwdeel, datum, bewijs en prioriteit vast te leggen, ontstaat vastgoeddata die opnieuw bruikbaar is voor vergelijking, MJOP-input, historie en portefeuilleoverzicht.",
+    "item_04": {
+      "label": "Lees over gebouwdata",
+      "href": "gebouwdata-vastgoedonderhoud"
+    }
+  },
+  "section_05": {
+    "item_01": "Niet alleen foto’s",
+    "item_02": "Een losse map met beelden is geen onderhoudsinzicht. RoofSignal levert gestructureerde informatie waarmee eigenaren, beheerders en aannemers kunnen beslissen wat nu aandacht nodig heeft en wat later gevolgd moet worden."
+  },
+  "section_06": {
+    "item_01": "Wilt u weten hoe dit bij uw object uitpakt?",
+    "item_02": {
+      "label": "Bekijk een voorbeeldrapport",
+      "href": "/voorbeeldrapport-uitgebreid"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

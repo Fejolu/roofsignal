@@ -1,0 +1,33 @@
+{
+  "seo": {
+    "title": "Wanneer moet een MJOP worden bijgewerkt? | RoofSignal",
+    "description": "Wanneer is bestaande MJOP-informatie niet meer actueel? Herken signalen en gebruik actuele gebouwschilinspectie als onderbouwde MJOP-input."
+  },
+  "section_01": {
+    "item_01": "VvE & onderhoudsplanning",
+    "item_02": "Wanneer moet een MJOP worden <span>bijgewerkt?</span>",
+    "item_03": "Een onderhoudsplan is een beslismiddel, geen statisch archiefstuk. Zodra aannames niet meer aansluiten op de zichtbare toestand, is actuele onderbouwing nodig."
+  },
+  "section_02": {
+    "item_01": "MJOP · 7 min.",
+    "item_02": "Niet de leeftijd van het document, maar de kwaliteit van de aannames telt.",
+    "item_03": "Een bestaand MJOP kan nog jaren doorlopen terwijl dak, gevel of installaties anders verouderen dan eerder verwacht. Schade, uitgevoerd onderhoud, gewijzigde prijzen of nieuwe risico’s kunnen de volgorde en reservering beïnvloeden.",
+    "item_04": "Vijf signalen voor actualisatie",
+    "item_05": "Wat een gebouwschilinspectie toevoegt",
+    "item_06": "RoofSignal koppelt zichtbare waarnemingen aan bouwdeel, beeldbewijs, concrete opvolgtermijn, beperking en aanbevolen vervolg. Dat levert actuele MJOP-input of een MJOP-indicatie; geen volledig gecertificeerd MJOP.",
+    "item_07": "Praktische vervolgstap",
+    "item_08": "Begin bij de complexen waar risico, twijfel of budgetdruk het grootst is. Daarmee voorkomt u dat de hele portefeuille opnieuw wordt onderzocht terwijl slechts enkele objecten actuele onderbouwing nodig hebben.",
+    "item_09": "Gaat uw VvE ook verduurzamen? Lees <a href=\"/kennisbank-vve-dakonderhoud-warmtefonds\">hoe dakonderhoud sinds september 2026 onder voorwaarden kan worden meegenomen in de VvE Energiebespaarlening</a>, en welke rol actuele inspectiegegevens daarbij kunnen spelen."
+  },
+  "section_03": {
+    "item_01": "Actuele input voor uw onderhoudsoverleg?",
+    "item_02": {
+      "label": "Bekijk MJOP-input",
+      "href": "mjop-input-vve"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

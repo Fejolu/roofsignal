@@ -1,0 +1,81 @@
+{
+  "seo": {
+    "title": "Dakinspectie voor VvE’s: rapport en onderhoudsprioriteiten | RoofSignal",
+    "description": "Onafhankelijke visuele dakinspectie voor uw VvE, uitsluitend met drones. Foto’s, bevindingen en onderhoudsprioriteiten. Bekijk het VvE-rapport uit Zutphen."
+  },
+  "section_01": {
+    "item_01": "Voor VvE-besturen en beheerders",
+    "item_02": "Dakinspectie voor uw VvE.",
+    "item_03": "Maak onderhoud aan het gezamenlijke dak bespreekbaar met foto’s, zichtbare gebreken en een volgorde voor de vervolgstappen."
+  },
+  "section_02": {
+    "item_01": "Wanneer helpt een inspectie?",
+    "item_02": "Bij twijfel over dakonderhoud, terugkerende lekkages of uiteenlopende hersteloffertes is een actuele opname een bruikbaar vertrekpunt. Ook vóór een bestuursvergadering of het bijwerken van een MJOP kan een inspectie helpen de onderhoudsvraag af te bakenen.",
+    "item_03": "We beoordelen de afgesproken dakvlakken, randen, goten, aansluitingen en doorvoeren. Gevels, schoorstenen en dakkapellen nemen we mee wanneer ze bij uw opdracht horen. De eigendomsgrenzen van de VvE worden vooraf besproken."
+  },
+  "section_03": {
+    "item_01": "Wat het bestuur ontvangt.",
+    "item_02": "Foto’s per bevinding",
+    "item_03": "Een herkenbaar bouwdeel, een beschrijving van wat zichtbaar is en het bijbehorende beeldbewijs.",
+    "item_04": "Prioriteit en vervolgstap",
+    "item_05": "Welke punten aandacht vragen, welke controle nodig is en binnen welke termijn opvolging wordt geadviseerd.",
+    "item_06": "Onderhoudsoverleg",
+    "item_07": "Bij Plus of een afgesproken uitbreiding: indicatieve kostencontext en termijnen om hersteloffertes en reserveringen te bespreken."
+  },
+  "section_04": {
+    "item_01": "Van eerste aanvraag tot rapport.",
+    "item_02": "1. Vraag en voorstel",
+    "item_03": "U deelt het adres, uw onderhoudsvraag en eerdere rapporten. We beoordelen vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is en spreken bouwdelen, prijs en opleverdatum af.",
+    "item_04": "2. Inspectie met drones",
+    "item_05": "We inspecteren dak en gevel uitsluitend met drones. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport; we schakelen niet over op een andere inspectiemethode.",
+    "item_06": "3. Rapport en opvolging",
+    "item_07": "U ontvangt foto’s met bevindingen, risico’s en vervolgstappen. Bij een uitgebreid rapport voegen we onderhoudstermijnen en indicatieve herstelkosten toe volgens de afgesproken scope.",
+    "item_08": "<strong>Voorbereiding:</strong> deel het adres, het aantal appartementen, eerdere lekkagemeldingen, relevante dakwerkzaamheden en een bestaand MJOP als dat beschikbaar is. Regel een contactpersoon en toegang tot de afgesproken buitenruimte voor het opstijgen en landen van de drone.",
+    "item_09": "<strong>Doorlooptijd:</strong> opnamedatum en opleverdatum leggen we in het voorstel vast. We stemmen af op uw vergadering en op veilige, geschikte opnameomstandigheden."
+  },
+  "section_05": {
+    "item_01": "Een echte VvE-daknulmeting als voorbeeld.",
+    "item_02": "In Zutphen leidde een opname bij vijf appartementen tot 12 bevindingen, waaronder los materiaal bij een dakdoorvoer en waterophoping. Het rapport koppelt elk punt aan een risico en vervolgstap.",
+    "item_03": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_04": "<a href=\"/cases#zutphen\">Lees de VvE-case uit Zutphen</a>."
+  },
+  "section_06": {
+    "item_01": "VvE-dakinspectie op aanvraag.",
+    "item_02": "U ontvangt een offerte op aanvraag, afgestemd op uw object en de werkzaamheden die u wilt laten uitvoeren. Reiskosten komen daar apart bij en staan als aparte post in de offerte.",
+    "item_03": "Uw object",
+    "item_04": "Het type gebouw, de omvang, de bouwdelen en de bereikbaarheid bepalen de benodigde inzet.",
+    "item_05": "Uw vraag",
+    "item_06": "We stemmen de inspectie en rapportage af op wat u wilt laten onderzoeken en welke informatie u nodig heeft.",
+    "item_07": "Reiskosten apart",
+    "item_08": "De reiskosten worden per locatie bepaald en afzonderlijk in uw offerte vermeld. U kent het totaal voordat u akkoord geeft.",
+    "item_09": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    }
+  },
+  "section_07": {
+    "item_01": "Grenzen en vervolgonderzoek.",
+    "item_02": "RoofSignal inspecteert uitsluitend met drones. De beoordeling is visueel en niet-destructief: we kijken niet door dakbedekking of constructies heen. Een foto alleen bewijst niet of een aansluiting waterdicht is of waar vocht vandaan komt. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport. Waar nodig adviseren we vervolgonderzoek door een geschikte specialist.",
+    "item_03": "Zoekt u doorlopende samenwerking als beheerder? Bekijk <a href=\"/vve-beheerders\">onze aanpak voor VvE-beheerders</a>. Voor onderhoudsplanning is er <a href=\"/mjop-input-vve\">MJOP-input op basis van de inspectie</a>."
+  },
+  "section_08": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Begin met één gebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  },
+  "section_09": {
+    "item_01": "Dakonderhoud voorbereiden op de herfst.",
+    "item_02": "Welke onderhoudspunten staan nog open en hoe loopt het regenwater weg? <a href=\"/kennisbank-dakinspectie-herfst\">Lees de vijf vragen voor een najaarscontrole</a>, met voorbeelden uit onze inspectierapporten."
+  }
+}

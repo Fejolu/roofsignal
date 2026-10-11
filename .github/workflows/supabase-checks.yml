@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: "24"
       - name: Installeer testomgeving
-        run: python -m pip install pytest
+        run: python -m pip install pytest -r tools/cms-requirements.txt
       - name: Controleer manifest en broncode
         run: python -c 'from tools.supabase_release import load_manifest, static_preflight; static_preflight(load_manifest())'
       - name: Voer alle tests uit

@@ -1,0 +1,115 @@
+{
+  "seo": {
+    "title": "Kennisbank dakinspectie en vastgoedonderhoud | RoofSignal",
+    "description": "Praktische uitleg over drone-inspecties, dakonderhoud en het beoordelen van zichtbare gebreken aan dak en gevel."
+  },
+  "section_01": {
+    "item_01": "RoofSignal Kennisbank",
+    "item_02": "Beter kijken.<br/>Beter begrijpen.<br/><span>Beter onderhouden.</span>",
+    "item_03": "Praktische uitleg, vakinhoudelijke verdieping en nieuws over inspecties, gebouwdata en onderbouwde onderhoudsbesluiten."
+  },
+  "section_02": {
+    "item_01": "Nieuw · VvE & verduurzaming · 10 oktober 2026",
+    "item_02": "VvE kan dakonderhoud meefinancieren bij verduurzaming: wat verandert er?",
+    "item_03": "Het Warmtefonds biedt sinds september ruimte om onderhoud te combineren met energiebesparende maatregelen. Lees de voorwaarden en hoe actuele dakbeelden helpen bij uw onderhoudsvoorstel.",
+    "item_04": {
+      "label": "Lees het artikel →",
+      "href": "/kennisbank-vve-dakonderhoud-warmtefonds"
+    }
+  },
+  "section_03": {
+    "item_01": "Dakonderhoud · 17 september 2026",
+    "item_02": "Dakinspectie vóór de herfst: welke signalen verdienen aandacht?",
+    "item_03": "Vijf vragen voor uw najaarscontrole, met voorbeelden uit echte inspectierapporten. Over goten, afvoer en het opvolgen van bekende onderhoudspunten.",
+    "item_04": {
+      "label": "Lees het artikel →",
+      "href": "/kennisbank-dakinspectie-herfst"
+    }
+  },
+  "section_04": {
+    "item_01": "Is een drone-inspectie betrouwbaar?",
+    "item_02": "De betrouwbaarheid zit niet in de drone op zichzelf, maar in de combinatie van systematische beeldregistratie, voldoende beeldkwaliteit, een vast inspectieprotocol en deskundige beoordeling.",
+    "item_03": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-drone-inspectie-betrouwbaar"
+    }
+  },
+  "section_05": {
+    "item_01": "Kennisartikelen",
+    "item_02": "Van waarneming naar een beter besluit.",
+    "item_03": "Heldere antwoorden op vragen die eigenaren, beheerders en besturen vóór en na een inspectie stellen.",
+    "item_04": "Wat ziet een dakinspectie van buitenaf?",
+    "item_05": "Een overzicht van de bouwdelen, details en zichtbare signalen die systematisch in beeld kunnen worden gebracht.",
+    "item_06": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-wat-ziet-een-dakinspectie"
+    },
+    "item_07": "Van bevinding naar onderhoudsprioriteit",
+    "item_08": "Waarom een foto nog geen advies is en hoe zichtbaarheid, risico en urgentie samen een bruikbare prioriteit vormen.",
+    "item_09": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-van-bevinding-naar-prioriteit"
+    },
+    "item_10": "Van inspectierapport naar digitaal onderhoudsdossier",
+    "item_11": "Waarom betrouwbare gebouwdata de basis vormt voor onderhoudsgeschiedenis en portefeuille-inzicht.",
+    "item_12": {
+      "label": "Lees de publicatie →",
+      "href": "gebouwdata-vastgoedonderhoud"
+    },
+    "item_13": "Dakinspectie bij de aankoop van een woning",
+    "item_14": "Wat een bouwtechnische keuring dekt, wat een inspectie van buitenaf aanvult en hoe je het inzet bij de onderhandeling.",
+    "item_15": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-dakinspectie-woningaankoop"
+    },
+    "item_16": "Wat bepaalt de investering in gebouwinzicht?",
+    "item_17": "Hoe object, scope en rapportdiepte het voorstel bepalen en onafhankelijk bewijs zich terugverdient in onderhoudsbesluiten.",
+    "item_18": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-dakinspectie-kosten"
+    },
+    "item_19": "Dakonderhoud voor de VvE",
+    "item_20": "Zo onderbouw je met onafhankelijk bewijs een dakvoorstel richting de ALV — zonder gevoelsdiscussie.",
+    "item_21": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-dakonderhoud-vve"
+    }
+  },
+  "section_06": {
+    "item_01": "VvE · Onderhoudsplanning",
+    "item_02": "Wanneer moet een MJOP worden bijgewerkt?",
+    "item_03": "Herken wanneer bestaande aannames niet meer aansluiten op de zichtbare toestand van dak, gevel en gebouwschil.",
+    "item_04": {
+      "label": "Lees het artikel →",
+      "href": "kennisbank-mjop-bijwerken"
+    }
+  },
+  "section_07": {
+    "item_01": "Meer publicaties",
+    "item_02": "Verdieping per onderhoudsvraag.",
+    "item_03": "Reeds gepubliceerde RoofSignal-pagina’s, op één plek ontsloten voor verdere verdieping.",
+    "item_04": {
+      "label": "↗ Inspectiemethode Drone-dakinspectie: gericht beeld waar toegang lastig is Bekijken →",
+      "href": "drone-dakinspectie"
+    },
+    "item_05": {
+      "label": "≡ Conditiemeting NEN 2767-denken voor dak, gevel en gebouwschil Bekijken →",
+      "href": "nen-2767-gebouwschil"
+    },
+    "item_06": {
+      "label": "✓ Meerjarenonderhoud Actuele inspectiedata als onderbouwing voor MJOP-input Bekijken →",
+      "href": "mjop-input-vve"
+    },
+    "item_07": {
+      "label": "⌂ VvE & bestuur Onderhoud bespreekbaar maken met onafhankelijk bewijs Bekijken →",
+      "href": "dakinspectie-vve"
+    }
+  },
+  "section_08": {
+    "item_01": "Een concrete vraag over uw dak of gebouwschil?",
+    "item_02": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

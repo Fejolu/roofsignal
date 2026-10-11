@@ -1,0 +1,58 @@
+{
+  "seo": {
+    "title": "Dakinspectie als input voor het MJOP van uw VvE | RoofSignal",
+    "description": "Werk uw MJOP bij met actuele dakbevindingen, foto’s, prioriteiten en indicatieve herstelkosten. Bekijk hoe een VvE-inspectie concrete onderhoudsinput oplevert."
+  },
+  "section_01": {
+    "item_01": "VvE en onderhoudsplanning",
+    "item_02": "Actuele dakbevindingen als input voor uw MJOP.",
+    "item_03": "Verbind de zichtbare staat van dak en gevel aan onderhoudsvragen, opvolgtermijnen en reserveringen voor het meerjarenonderhoudsplan."
+  },
+  "section_02": {
+    "item_01": "Begin bij wat er veranderd is.",
+    "item_02": "Een bestaand MJOP beschrijft verwachte onderhoudsmomenten. Een actuele visuele inspectie kan aanleiding geven om een post eerder te onderzoeken, te combineren met ander werk of juist te blijven volgen. Daarbij horen de inspectiedatum, dekking en beperkingen van de opname.",
+    "item_03": "Lever het bestaande MJOP, recente werkzaamheden en bekende meldingen aan. We spreken af welke bouwdelen beoordeeld worden en welke informatie uw beheerder of MJOP-adviseur nodig heeft."
+  },
+  "section_03": {
+    "item_01": "Een bevinding doorvertalen naar een onderhoudsactie.",
+    "item_02": "Waarneming",
+    "item_03": "In de VvE-inspectie in Zutphen was los materiaal zichtbaar bij een grote dakdoorvoer. De foto en beschrijving leggen het uitgangspunt vast.",
+    "item_04": "Prioriteit",
+    "item_05": "Het rapport adviseert dit punt direct / zo spoedig mogelijk te laten controleren en veilig op te volgen. Een urgente maatregel hoort niet stilzwijgend op een latere MJOP-datum te blijven staan.",
+    "item_06": "Reservering en controle",
+    "item_07": "Het rapport bevat een indicatieve herstelraming voor dit punt, met prijspeil en beperkingen. Laat de uitvoerder de maatregel en prijs bevestigen en leg na uitvoering vast wat is gedaan."
+  },
+  "section_04": {
+    "item_01": "Welke input ontvangt u?",
+    "item_02": "Per afgesproken bouwdeel: zichtbare bevindingen, foto’s, prioriteiten, aanbevolen maatregelen en onderhoudstermijnen. Waar overeengekomen voegen we een indicatieve conditiebeoordeling en herstelbegroting op hoofdlijnen toe. Samen met het bestaande plan vormt dit input voor een actualisatie.",
+    "item_03": "We leveren geen volledig MJOP met alle bouwkundige en installatietechnische onderdelen als dat niet afzonderlijk is overeengekomen. Een herstelraming vervangt geen uitvoeringsbegroting. De MJOP-adviseur verwerkt de actuele informatie in het volledige plan en controleert aannames, hoeveelheden en indexering."
+  },
+  "section_05": {
+    "item_01": "Bekijk het VvE-rapport.",
+    "item_02": "Het inspectierapport uit Zutphen bevat een managementsamenvatting, bevindingen per bouwdeel, reserveringen en een onderhoudsplanning.",
+    "item_03": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_04": "<a href=\"/cases#zutphen\">Lees de context van deze inspectie</a> of <a href=\"/kennisbank-mjop-bijwerken\">wanneer u een MJOP bijwerkt</a>."
+  },
+  "section_06": {
+    "item_01": "Scope, kosten en opleverdatum.",
+    "item_02": "De offerte sluit aan op het gebouw en de diepte die nodig is voor uw onderhoudsoverleg. Deel uw vergaderdatum, zodat we de planning kunnen afstemmen. <a href=\"/tarieven\">Bekijk de rapportniveaus en prijsopbouw</a>.",
+    "item_03": "RoofSignal inspecteert uitsluitend met drones. De beoordeling is visueel en niet-destructief: we kijken niet door dakbedekking of constructies heen. Een foto alleen bewijst niet of een aansluiting waterdicht is of waar vocht vandaan komt. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport. Waar nodig adviseren we vervolgonderzoek door een geschikte specialist.",
+    "item_04": "Lees ook de afbakening van onze <a href=\"/nen-2767-gebouwschil\">indicatieve conditiebeoordeling</a>."
+  },
+  "section_07": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Maak uw onderhoudsvraag en planning concreet.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}
