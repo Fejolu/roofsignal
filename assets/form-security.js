@@ -42,7 +42,9 @@
     }
     widget.dataset.action = form.hasAttribute("data-consumer-booking") ? "consumer_quote" : form.hasAttribute("data-withdrawal-form") ? "withdrawal" : form.dataset.leadForm || "parken_booking";
     const button = form.querySelector(form.hasAttribute("data-consumer-booking") ? '#check-address' : "button[type='submit']");
-    button?.before(widget);
+    const slot = form.querySelector('[data-security-slot]');
+    if (slot) slot.append(widget);
+    else button?.before(widget);
     form.dataset.securityReady = "ready";
   }
 

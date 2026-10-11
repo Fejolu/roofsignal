@@ -5,17 +5,30 @@ import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../assets/form-security.js', import.meta.url), 'utf8');
 
-function setup({ narrow = false, configured = true } = {}) {
+function setup({ narrow = false, configured = true, leadSecuritySlot = false } = {}) {
   const forms = ['consumer', 'lead'].map(type => ({
     type, dataset: { leadForm: type === 'lead' ? 'price' : undefined }, token: '',
+    buttonMounts: 0,
     hasAttribute(name) { return name === 'data-consumer-booking' && type === 'consumer'; },
     prepend() {},
     querySelector(selector) {
-      if (selector === '.cf-turnstile') return this.widget;
+      if (selector === '.cf-turnstile') return this.widget || null;
       if (selector.includes('company_website')) return null;
-      return { before: widget => { this.widget = widget; } };
+      if (selector === '[data-security-slot]') return this.securitySlot || null;
+      if (selector === '#check-address' || selector === "button[type='submit']") {
+        return { before: widget => { this.widget = widget; this.buttonMounts++; } };
+      }
+      return null;
     }
   }));
+  if (leadSecuritySlot) {
+    const lead = forms[1];
+    lead.dataset.leadContext = 'vve-object';
+    lead.securitySlot = {
+      parentElement: lead, children: [],
+      append(widget) { this.children.push(widget); widget.parentElement = this; lead.widget = widget; }
+    };
+  }
   const window = {
     ROOFSIGNAL_SUPABASE: { turnstileSiteKey: configured ? 'test-key' : '' },
     matchMedia: () => ({ matches: narrow }),
@@ -62,4 +75,27 @@ test('narrow screens get the compact check and missing configuration still block
   assert.equal(setup({ narrow: true }).consumer.widget.dataset.size, 'compact');
   const { security, consumer } = setup({ configured: false });
   assert.throws(() => security.ensureReady(consumer), /niet geconfigureerd/);
+});
+
+test('VvE verification mounts inside its requested form slot and still requires a valid token', () => {
+  const { consumer, lead, security } = setup({ leadSecuritySlot: true });
+  assert.equal(consumer.buttonMounts, 1, 'Forms without a slot retain their existing widget placement');
+  assert.equal(lead.buttonMounts, 0, 'The widget must not alter the VvE summary button layout');
+  assert.deepEqual(lead.securitySlot.children, [lead.widget]);
+  assert.equal(lead.widget.parentElement, lead.securitySlot);
+  assert.equal(lead.securitySlot.parentElement, lead, 'The token stays associated with the protected form');
+  assert.equal(lead.widget.dataset.action, 'price');
+  assert.equal(lead.dataset.securityReady, 'ready');
+  assert.throws(() => security.ensureReady(lead), /Bevestig eerst/);
+  lead.token = 'vve-test-token';
+  assert.equal(security.ensureReady(lead), true);
+  assert.equal(security.getPayload(lead).turnstile_token, 'vve-test-token');
+  security.reset(lead);
+  assert.equal(lead.widget.hidden, false);
+  assert.throws(() => security.ensureReady(lead), /Bevestig eerst/);
+
+  const missing = setup({ leadSecuritySlot: true, configured: false });
+  assert.equal(missing.lead.securitySlot.children.length, 0);
+  assert.equal(missing.lead.dataset.securityReady, 'missing');
+  assert.throws(() => missing.security.ensureReady(missing.lead), /niet geconfigureerd/);
 });

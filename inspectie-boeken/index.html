@@ -12,17 +12,17 @@
     <link rel="icon" href="/assets/roofsignal-bimi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/public.css?v=20260924-navigation">
     <link rel="stylesheet" href="/assets/site-public.css?v=20261011-layout-review">
-    <link rel="stylesheet" href="./booking.css?v=20261011-standalone-thermal">
+    <link rel="stylesheet" href="./booking.css?v=20261011-shared-layout">
     <script src="./booking-config.js" defer></script>
     <script src="/assets/supabase-config.js" defer></script>
     <script src="/assets/supabase-app.js?v=23" defer></script>
-    <script src="/assets/form-security.js?v=20261011-quiet-check" defer></script>
+    <script src="/assets/form-security.js?v=20261011-shared-layout" defer></script>
     <script src="/assets/lead-capture.js?v=20261011-vve-kvk" defer></script>
-    <script src="./vve-inquiry.js?v=20261011-standalone-thermal" defer></script>
+    <script src="./vve-inquiry.js?v=20261011-shared-layout" defer></script>
     <script src="./vve-kvk.js?v=20261011-kvk" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
-    <script src="./booking.js?v=20261011-standalone-thermal" type="module"></script>
+    <script src="./booking.js?v=20261011-shared-layout" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
     <a class="rs-skip" href="#main-content">Naar de inhoud</a>
@@ -60,7 +60,7 @@
 
         <div class="booking-layout">
           <form id="booking-form" class="booking-form" method="post" data-consumer-booking novalidate>
-            <fieldset class="form-step">
+            <fieldset class="form-step" data-booking-step="service">
               <legend><span class="step-number" aria-hidden="true">1</span><span>Kies uw inspectie</span></legend>
               <div class="inspection-choices" role="radiogroup" aria-label="Soort inspectie">
                 <label class="option-card" for="inspection-envelope">
@@ -74,11 +74,18 @@
                   <span class="option-card__price">€302,50 <small>incl. btw</small></span>
                 </label>
               </div>
+              <div class="product-addon">
               <label class="option-card" id="thermal-option" for="thermal">
                 <input disabled id="thermal" name="thermal" type="checkbox" value="true">
                 <span class="option-card__body"><strong>Thermografische inspectie toevoegen</strong><span>Warmtebeelden van dak en gevel.</span></span>
                 <span class="option-card__price">+ €302,50 <small>incl. btw</small></span>
               </label>
+              <div class="option-card included-option" id="thermal-included" hidden>
+                <span class="included-option__check" aria-hidden="true">✓</span>
+                <span class="option-card__body"><strong>Zelfstandige thermografische inspectie</strong><span>Warmtebeelden en een digitaal rapport.</span></span>
+                <span class="option-card__price">Inbegrepen <small>bij uw keuze</small></span>
+              </div>
+              </div>
               <p class="field-help product-scope">Voor één grondgebonden woning (hoofdgebouw).</p>
               <details class="booking-details">
                 <summary>Wat is inbegrepen?</summary>
@@ -91,7 +98,7 @@
               </details>
             </fieldset>
 
-            <fieldset class="form-step">
+            <fieldset class="form-step" data-booking-step="object">
               <legend><span class="step-number" aria-hidden="true">2</span><span>Uw adres</span></legend>
               <div class="field-row field-row--address">
                 <div class="field">
@@ -117,7 +124,7 @@
               <p class="inline-status" id="address-status" role="status" aria-live="polite" hidden></p>
             </fieldset>
 
-            <fieldset class="form-step">
+            <fieldset class="form-step" data-booking-step="planning">
               <legend><span class="step-number" aria-hidden="true">3</span><span>Kies datum en tijd</span></legend>
               <div id="booking-calendar" class="booking-calendar" hidden>
                 <div class="calendar-header">
@@ -145,7 +152,7 @@
               <p class="inline-status" id="slot-status" role="status" aria-live="polite" hidden></p>
             </fieldset>
 
-            <fieldset class="form-step">
+            <fieldset class="form-step" data-booking-step="contact">
               <legend><span class="step-number" aria-hidden="true">4</span><span>Uw gegevens</span></legend>
               <div class="field">
                 <label for="name">Naam</label>
@@ -182,15 +189,16 @@
 
           <aside class="booking-summary" aria-labelledby="summary-title">
             <div class="summary-card">
-              <h2 id="summary-title">Uw boeking</h2>
+              <h2 id="summary-title">Uw inspectie</h2>
               <dl class="price-breakdown">
-                <div id="summary-base-row"><dt>Dak- en gevelinspectie</dt><dd id="summary-base">€361,79</dd></div>
-                <div><dt>Thermografie</dt><dd id="summary-thermal">€0,00</dd></div>
+                <div id="summary-base-row"><dt id="summary-base-label">Dak- en gevelinspectie</dt><dd id="summary-base">€361,79</dd></div>
+                <div><dt id="summary-thermal-label">Thermografie</dt><dd id="summary-thermal">€0,00</dd></div>
                 <div><dt>Reiskosten</dt><dd class="price-breakdown__pending" id="summary-travel">Na adrescontrole</dd></div>
               </dl>
               <div class="summary-total">
-                <span>Totaal incl. btw</span>
+                <span>Totaal</span>
                 <strong id="summary-total">€361,79</strong>
+                <p class="summary-tax">incl. btw</p>
               </div>
               <div class="summary-date"><span class="summary-date__label">Inspectiemoment</span><strong id="summary-date">Nog geen moment gekozen</strong></div>
               <button class="button button--primary checkout-button" id="checkout-button" type="submit" form="booking-form" disabled>Betalen</button>
@@ -201,62 +209,114 @@
         </div>
         </div>
         <div id="vve-panel" data-audience="vve" hidden>
-          <div class="section-intro booking-section__intro">
-            <h2>Uw VvE-inspectie</h2>
-            <p>U ontvangt een voorstel met de werkzaamheden, planning en totaalprijs.</p>
-          </div>
-          <div class="booking-layout vve-layout">
-            <form id="vve-form" class="booking-form" method="post" data-lead-form="price" data-lead-context="vve-object">
+            <form id="vve-form" class="booking-layout" method="post" data-lead-form="price" data-lead-context="vve-object">
+              <div class="booking-form">
               <input type="hidden" name="segment" value="VvE / VvE-beheerder">
               <input type="hidden" name="scope" id="vve-scope" value="VvE-objectaanmelding — dak en gevel, inclusief inspectierapport">
               <input type="hidden" name="thermal_interest" id="vve-thermal-interest" value="no">
               <input type="hidden" name="indicative_price" id="vve-price-detail">
-              <fieldset class="form-step" disabled id="vve-fields">
-                <legend>Uw object</legend>
-                <div class="field"><label for="vve-inspection-type">Kies uw inspectie</label><select id="vve-inspection-type" name="inspection_type"><option value="building_envelope">Dak- en gevelinspectie</option><option value="thermal">Thermografische inspectie</option></select></div>
+              <fieldset class="booking-fields" disabled id="vve-fields">
+              <fieldset class="form-step" data-booking-step="service">
+                <legend><span class="step-number" aria-hidden="true">1</span><span>Kies uw inspectie</span></legend>
+                <div class="inspection-choices" id="vve-inspection-type" role="radiogroup" aria-label="Soort inspectie">
+                  <label class="option-card" for="vve-inspection-envelope">
+                    <input id="vve-inspection-envelope" name="inspection_type" type="radio" value="building_envelope" checked required>
+                    <span class="option-card__body"><strong>Dak- en gevelinspectie</strong><span>Foto’s, bevindingen en onderhoudsadvies.</span></span>
+                    <span class="option-card__price"><span id="vve-envelope-price">Vanaf €750</span><small>excl. btw</small></span>
+                  </label>
+                  <label class="option-card" for="vve-inspection-thermal">
+                    <input id="vve-inspection-thermal" name="inspection_type" type="radio" value="thermal" required>
+                    <span class="option-card__body"><strong>Thermografische inspectie</strong><span>Warmtebeelden en een digitaal rapport.</span></span>
+                    <span class="option-card__price"><span id="vve-standalone-price">Vanaf €400</span><small>excl. btw</small></span>
+                  </label>
+                </div>
+                <div class="product-addon">
+                  <label class="option-card" id="vve-thermal-option" for="vve-thermal">
+                    <input id="vve-thermal" type="checkbox" value="yes">
+                    <span class="option-card__body"><strong>Thermografische inspectie toevoegen</strong><span>Warmtebeelden van dak en gevel.</span></span>
+                    <span class="option-card__price"><span id="vve-thermal-price">Vanaf €400</span><small>excl. btw</small></span>
+                  </label>
+                  <div class="option-card included-option" id="vve-thermal-included" hidden>
+                    <span class="included-option__check" aria-hidden="true">✓</span>
+                    <span class="option-card__body"><strong>Zelfstandige thermografische inspectie</strong><span>Warmtebeelden en een digitaal rapport.</span></span>
+                    <span class="option-card__price">Inbegrepen <small>bij uw keuze</small></span>
+                  </div>
+                </div>
+                <p class="field-help product-scope">Voor één VvE-object. Prijs op basis van het aantal adressen.</p>
+                <details class="booking-details">
+                  <summary>Wat is inbegrepen?</summary>
+                  <div>
+                    <p id="vve-product-title">RoofSignal Inspectie</p>
+                    <p>U ontvangt een digitaal rapport met beelden, bevindingen en onderhoudsadvies. De werkzaamheden, planning en totaalprijs leggen we vooraf vast in uw voorstel.</p>
+                    <h3 id="vve-tiers-title">Basisprijs per object</h3>
+                    <dl class="vve-tiers">
+                      <div data-vve-tier="small"><dt>Maximaal 5 adressen</dt><dd><span id="vve-tier-small-price">€750</span> <small id="vve-tier-small-vat">€907,50 incl. btw</small></dd></div>
+                      <div data-vve-tier="medium"><dt>6–10 adressen</dt><dd><span id="vve-tier-medium-price">€1.000</span> <small id="vve-tier-medium-vat">€1.210 incl. btw</small></dd></div>
+                      <div data-vve-tier="large"><dt>11–20 adressen</dt><dd><span id="vve-tier-large-price">€1.250</span> <small id="vve-tier-large-vat">€1.512,50 incl. btw</small></dd></div>
+                      <div data-vve-tier="custom"><dt>Vanaf 21 adressen of meerdere gebouwen</dt><dd>Maatwerk</dd></div>
+                    </dl>
+                    <p class="field-help" id="vve-tiers-note">Excl. btw, reiskosten en thermografie.</p>
+                  </div>
+                </details>
+              </fieldset>
+              <fieldset class="form-step" data-booking-step="object">
+                <legend><span class="step-number" aria-hidden="true">2</span><span>Uw object</span></legend>
+                <div class="field-row">
+                  <div class="field"><label for="vve-address-count">Aantal adressen binnen het object</label><input id="vve-address-count" name="home_count" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="Bijvoorbeeld 8" required></div>
+                  <div class="field"><label for="vve-object-scope">Omvang van uw aanvraag</label><select id="vve-object-scope" name="object_scope"><option value="single">Eén gebouw / inspectieobject</option><option value="multiple">Meerdere gebouwen</option><option value="unknown">Nog af te stemmen</option></select></div>
+                </div>
+                <div class="field"><label for="vve-address">Straat en huisnummer(s) van het object</label><input id="vve-address" name="buildings" maxlength="200" placeholder="Bijvoorbeeld Parklaan 2–20" required></div>
+                <div class="field-row">
+                  <div class="field"><label for="vve-postcode">Postcode</label><input id="vve-postcode" name="postcode" maxlength="7" pattern="[1-9][0-9]{3}\s?[A-Za-z]{2}" placeholder="1234 AB" required></div>
+                  <div class="field"><label for="vve-city">Plaats</label><input id="vve-city" name="object_city" maxlength="100" required></div>
+                </div>
+              </fieldset>
+              <fieldset class="form-step" data-booking-step="planning">
+                <legend><span class="step-number" aria-hidden="true">3</span><span>Uw inspectiemoment</span></legend>
+                <div class="calendar-empty">
+                  <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false"><rect x="7" y="9" width="26" height="25" rx="4"></rect><path d="M13 6v7M27 6v7M7 18h26M14 24h3M23 24h3M14 29h3"></path></svg>
+                  <span>Na uw aanmelding stemmen we een inspectiemoment met u af.</span>
+                </div>
+              </fieldset>
+              <fieldset class="form-step" data-booking-step="contact">
+                <legend><span class="step-number" aria-hidden="true">4</span><span>Uw gegevens</span></legend>
                 <div class="field">
                   <label for="vve-kvk">KVK-nummer van de VvE <span class="optional-label">optioneel</span></label>
                   <div class="kvk-input-row"><input id="vve-kvk" name="kvk_number" inputmode="numeric" maxlength="20" autocomplete="off" aria-describedby="vve-kvk-status"><button id="vve-kvk-check" class="button button--secondary" type="button" hidden disabled>Vul naam in</button></div>
                   <p id="vve-kvk-status" class="field-help" role="status" aria-live="polite" hidden></p>
                 </div>
                 <div class="field"><label for="vve-organization">Naam VvE of beheerder</label><input id="vve-organization" name="organization" autocomplete="organization" maxlength="200" required></div>
-                <div class="field"><label for="vve-address">Straat en huisnummer(s) van het object</label><input id="vve-address" name="buildings" maxlength="200" placeholder="Bijvoorbeeld Parklaan 2–20" required></div>
-                <div class="field-row">
-                  <div class="field"><label for="vve-postcode">Postcode</label><input id="vve-postcode" name="postcode" maxlength="7" pattern="[1-9][0-9]{3}\s?[A-Za-z]{2}" placeholder="1234 AB" required></div>
-                  <div class="field"><label for="vve-city">Plaats</label><input id="vve-city" name="object_city" maxlength="100" required></div>
-                </div>
-                <div class="field-row">
-                  <div class="field"><label for="vve-address-count">Aantal adressen binnen het object</label><input id="vve-address-count" name="home_count" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="Bijvoorbeeld 8" required></div>
-                  <div class="field"><label for="vve-object-scope">Omvang van uw aanvraag</label><select id="vve-object-scope" name="object_scope"><option value="single">Eén gebouw / inspectieobject</option><option value="multiple">Meerdere gebouwen</option><option value="unknown">Nog af te stemmen</option></select></div>
-                </div>
-                <label class="checkbox-row vve-thermal" id="vve-thermal-option" for="vve-thermal"><input id="vve-thermal" type="checkbox" value="yes"><span>Thermografische inspectie toevoegen<br><span class="optional-label" id="vve-thermal-price">Vul het aantal adressen in voor de toeslag</span></span></label>
-                <div class="vve-estimate" role="status" aria-live="polite" aria-atomic="true"><span id="vve-estimate-label">Uw basisprijs</span><strong id="vve-estimate">Vul het aantal adressen in</strong><span id="vve-estimate-vat"></span></div>
-                <div class="field"><label for="vve-message">Uw vraag of bijzonderheden <span class="optional-label">optioneel</span></label><textarea id="vve-message" name="message" rows="3" maxlength="2000" placeholder="Bijvoorbeeld aandacht voor het dak, achterstallig onderhoud of uw MJOP."></textarea></div>
-                <h3 class="vve-contact-title">Uw contactgegevens</h3>
                 <div class="field"><label for="vve-name">Naam contactpersoon</label><input id="vve-name" name="name" autocomplete="name" maxlength="160" required></div>
                 <div class="field-row">
                   <div class="field"><label for="vve-email">E-mailadres</label><input id="vve-email" name="email" type="email" autocomplete="email" maxlength="254" required></div>
                   <div class="field"><label for="vve-phone">Telefoonnummer <span class="optional-label">optioneel</span></label><input id="vve-phone" name="phone" type="tel" autocomplete="tel" maxlength="30"></div>
                 </div>
-                <button class="button button--primary" type="submit" id="vve-submit">Meld mijn object aan</button>
-                <p class="form-note" data-lead-status role="status" aria-live="polite"><a href="/privacy">Privacyverklaring</a></p>
+                <div class="field"><label for="vve-message">Wat moeten we weten? <span class="optional-label">optioneel</span></label><textarea id="vve-message" name="message" rows="2" maxlength="2000" placeholder="Bijvoorbeeld een specifieke schade of aandachtspunt."></textarea></div>
+                <div data-security-slot></div>
+                <p class="field-help"><a href="/privacy">Privacyverklaring</a></p>
               </fieldset>
-              <noscript><p>Voor aanmelden is JavaScript nodig. Mail uw objectgegevens naar <a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a>.</p></noscript>
-            </form>
-            <aside class="booking-summary" aria-label="VvE-basisprijzen">
-              <div class="summary-card vve-price-card">
-                <p class="eyebrow" id="vve-product-title">RoofSignal Inspectie</p>
-                <h3 id="vve-tiers-title">Basisprijs per object</h3>
-                <dl class="vve-tiers">
-                  <div data-vve-tier="small"><dt>Maximaal 5 adressen</dt><dd><span id="vve-tier-small-price">€750</span> <small id="vve-tier-small-vat">€907,50 incl. btw</small></dd></div>
-                  <div data-vve-tier="medium"><dt>6–10 adressen</dt><dd><span id="vve-tier-medium-price">€1.000</span> <small id="vve-tier-medium-vat">€1.210 incl. btw</small></dd></div>
-                  <div data-vve-tier="large"><dt>11–20 adressen</dt><dd><span id="vve-tier-large-price">€1.250</span> <small id="vve-tier-large-vat">€1.512,50 incl. btw</small></dd></div>
-                  <div data-vve-tier="custom"><dt>Vanaf 21 adressen of meerdere gebouwen</dt><dd>Maatwerk</dd></div>
+              </fieldset>
+              </div>
+            <aside class="booking-summary" aria-labelledby="vve-summary-title">
+              <div class="summary-card">
+                <h2 id="vve-summary-title">Uw inspectie</h2>
+                <dl class="price-breakdown">
+                  <div><dt id="vve-summary-base-label">Dak- en gevelinspectie</dt><dd id="vve-summary-base">Nog te bepalen</dd></div>
+                  <div><dt id="vve-summary-thermal-label">Thermografie</dt><dd id="vve-summary-thermal">Niet toegevoegd</dd></div>
+                  <div><dt>Reiskosten</dt><dd class="price-breakdown__pending" id="vve-summary-travel">Bij uw voorstel</dd></div>
                 </dl>
-                <p class="field-help" id="vve-tiers-note">Excl. btw, reiskosten en thermografie.</p>
+                <div class="summary-total" role="status" aria-live="polite" aria-atomic="true">
+                  <span id="vve-estimate-label">Uw basisprijs</span>
+                  <strong id="vve-estimate">Nog te bepalen</strong>
+                  <p class="summary-tax" id="vve-estimate-vat">excl. btw</p>
+                </div>
+                <div class="summary-date"><span class="summary-date__label">Inspectiemoment</span><strong>Na afstemming</strong></div>
+                <button class="button button--primary checkout-button" type="submit" id="vve-submit" disabled>Meld mijn object aan</button>
+                <p class="form-note" data-lead-status role="status" aria-live="polite"></p>
+                <noscript><p class="no-script">Voor aanmelden is JavaScript nodig. Mail uw objectgegevens naar <a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a>.</p></noscript>
               </div>
             </aside>
-          </div>
+            </form>
         </div>
       </section>
 

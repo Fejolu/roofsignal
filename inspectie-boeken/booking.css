@@ -312,6 +312,39 @@
 .consumer-booking-page .booking-main .kvk-input-row input { flex: 1; min-width: 0; }
 .consumer-booking-page .booking-main .kvk-input-row .button { flex-shrink: 0; }
 .consumer-booking-page .booking-main .kvk-input-row [hidden] { display: none; }
+
+/* Every audience and product uses the same booking components and stable slots. */
+.consumer-booking-page .booking-main .booking-fields { display: grid; gap: 14px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.consumer-booking-page .booking-main .hero__intro { min-height: 29px; }
+.consumer-booking-page .booking-main .option-card { display: grid; grid-template-columns: 17px minmax(0, 1fr) 125px; align-items: center; min-height: 88px; }
+.consumer-booking-page .booking-main .option-card__price { width: 125px; margin-left: 0; }
+.consumer-booking-page .booking-main .option-card__body strong { min-height: 18px; }
+.consumer-booking-page .booking-main .option-card__body > span { min-height: 21px; }
+.consumer-booking-page .booking-main .included-option { cursor: default; background: #f3f7f4; border-color: #d6e1dd; }
+.consumer-booking-page .booking-main .included-option__check { width: 17px; color: #42725c; text-align: center; }
+.consumer-booking-page .booking-main .product-scope { min-height: 22px; }
+.consumer-booking-page .booking-main .price-breakdown > div { min-height: 40px; margin: 0; align-items: center; }
+.consumer-booking-page .booking-main .price-breakdown dt { max-width: 150px; }
+.consumer-booking-page .booking-main .price-breakdown dd { max-width: 130px; }
+.consumer-booking-page .booking-main .summary-total > span { min-height: 20px; margin-bottom: 7px; }
+.consumer-booking-page .booking-main .summary-total > strong { min-height: 34px; }
+.consumer-booking-page .booking-main .summary-total .summary-tax { min-height: 22px; margin: 0; }
+.consumer-booking-page .booking-main .summary-date { min-height: 90px; }
+.consumer-booking-page .booking-main .form-note:empty { display: none; }
+@media (max-width: 640px) {
+  .consumer-booking-page .booking-main .hero__intro { min-height: 51px; }
+  .consumer-booking-page .booking-main .option-card { grid-template-columns: 17px minmax(0, 1fr) 98px; min-height: 138px; gap: 9px; padding-inline: 12px; }
+  .consumer-booking-page .booking-main .option-card__price { width: 98px; font-size: 12px; }
+  .consumer-booking-page .booking-main .option-card__body strong { min-height: 36px; }
+  .consumer-booking-page .booking-main .option-card__body > span { min-height: 41px; }
+  .consumer-booking-page .booking-main .product-scope { min-height: 44px; }
+}
 @media (max-width: 640px) {
   .consumer-booking-page .booking-main .kvk-input-row { flex-direction: column; }
+}
+@media (max-width: 360px) {
+  .consumer-booking-page .booking-main .option-card { grid-template-columns: 17px minmax(0, 1fr) 74px; min-height: 170px; }
+  .consumer-booking-page .booking-main .option-card__price { width: 74px; }
+  .consumer-booking-page .booking-main .option-card__body strong { min-height: 54px; }
+  .consumer-booking-page .booking-main .option-card__body > span { min-height: 62px; }
 }

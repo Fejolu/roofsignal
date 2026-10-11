@@ -41,11 +41,14 @@ function updateSummary() {
   const thermal = quote ? quote.thermalCents > 0 : chosenThermal();
   const thermalOnly = inspectionType === 'thermal';
   el('thermal-option').hidden = thermalOnly;
+  el('thermal-included').hidden = !thermalOnly;
   el('visual-scope').hidden = thermalOnly;
   el('thermal-scope').hidden = !thermal;
-  el('summary-base-row').hidden = thermalOnly && !((recovery || returnOrder) && !quote);
-  el('summary-base').textContent = money(quote ? quote.baseCents : thermalOnly ? 0 : BASE_CENTS);
-  el('summary-thermal').textContent = thermal ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
+  el('summary-base-row').hidden = false;
+  el('summary-base-label').textContent = thermalOnly ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
+  el('summary-base').textContent = money(thermalOnly ? quote?.thermalCents ?? THERMAL_CENTS : quote?.baseCents ?? BASE_CENTS);
+  el('summary-thermal-label').textContent = thermalOnly ? 'Aanvulling' : 'Thermografie';
+  el('summary-thermal').textContent = thermalOnly ? 'Inbegrepen' : thermal ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
   el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : money(subtotal(thermal, inspectionType));
   el('address-result').hidden = !quote;
