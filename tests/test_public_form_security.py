@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_all_public_forms_load_security_layer():
-    pages = [ROOT / "index.html", ROOT / "contact.html", ROOT / "portal-login.html", ROOT / "de-parken" / "index.html"]
+    pages = [ROOT / "index.html", ROOT / "contact.html", ROOT / "portal-login.html", ROOT / "de-parken" / "index.html", ROOT / "inspectie-boeken" / "index.html"]
     for page in pages:
         source = page.read_text(encoding="utf-8")
         if "<form" in source:
