@@ -1,4 +1,4 @@
-import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs';
+import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs';
 
 // Missing or invalid configuration fails closed. All calendar and payment
 // credentials remain on the server.
@@ -47,10 +47,6 @@ function updateSummary() {
   el('checkout-button').disabled = !ready;
   el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : recovery ? 'Bestaande betaalopdracht controleren' : quote ? `Boek en betaal ${money(quote.totalCents)}` : 'Boek en betaal';
   el('check-address').disabled = configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
-  const consentRequired = selectedSlot && needsEarlyStart(selectedSlot.start);
-  el('earlyStartRequested').required = Boolean(consentRequired);
-  el('early-start-consent').hidden = !consentRequired;
-  if (!consentRequired && !recovery) el('earlyStartRequested').checked = false;
   updateCalendarControls();
 }
 
@@ -71,7 +67,6 @@ function clearQuote() {
   el('street').value = '';
   el('city').value = '';
   el('termsAccepted').checked = false;
-  el('earlyStartRequested').checked = false;
   el('slots').replaceChildren();
   message('address-status', '');
   message('slot-status', connected ? '' : 'In deze conceptpagina zijn nog geen echte agendamomenten aangesloten.');
@@ -348,11 +343,11 @@ form.addEventListener('submit', async event => {
     }
     catch (error) { clearQuote(); return message('booking-error', error.message); }
     if (!form.reportValidity()) return;
-    if (!el('termsAccepted').checked || (needsEarlyStart(selectedSlot.start) && !el('earlyStartRequested').checked)) return message('booking-error', 'Controleer uw akkoord met de voorwaarden en, indien nodig, eerdere uitvoering.');
+    if (!el('termsAccepted').checked) return message('booking-error', 'Controleer uw akkoord met de voorwaarden.');
     checkoutAttempt = {
       requestId: crypto.randomUUID(), quoteId: quote.quoteId, slotId: selectedSlot.id,
       customer: { name: el('name').value.trim(), email: el('email').value.trim(), phone: el('phone').value.trim(), notes: el('notes').value.trim() },
-      terms: { accepted: true, version: quote.termsVersion, earlyStartRequested: el('earlyStartRequested').checked }
+      terms: { accepted: true, version: quote.termsVersion, earlyStartRequested: false }
     };
     // Persist only opaque IDs and the approved EUR amount BEFORE any request.
     // Reloads recover by requestId; an uncertain request is never recreated.
@@ -376,7 +371,6 @@ for (const id of ['postcode', 'houseNumber', 'thermal']) {
   el(id).addEventListener(id === 'thermal' ? 'change' : 'input', clearQuote);
 }
 el('termsAccepted').addEventListener('change', updateSummary);
-el('earlyStartRequested').addEventListener('change', updateSummary);
 
 async function showReturnStatus() {
   const token = new URLSearchParams(window.location.search).get('booking');

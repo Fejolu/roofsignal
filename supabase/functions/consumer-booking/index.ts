@@ -4,8 +4,9 @@ import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,cu
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
-import {earlyStartRequired,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
-import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
+import {daysAfterWithdrawal,assertAfterWithdrawal,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
+import {CONSUMER_TERMS as LEGACY_CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
+import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011.mjs';
 import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-google.mjs';
 import {planAvailability} from '../_shared/consumer-availability.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
@@ -13,7 +14,7 @@ import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
-const TERMS='2026-10-10-consumer';
+const TERMS='2026-10-11-consumer';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
 const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
@@ -95,7 +96,10 @@ async function availability(id:string,mode:string) {
 }
 async function currentPlan(destination:string,mode:string) {
  const context=await bridge('context',{destination},mode);
- return await planAvailability({context,destination,route:(from:string,to:string)=>bridge('route',{from,destination:to},mode)});
+ // New online bookings start only after the full Dutch withdrawal deadline.
+ // Filter before route planning to avoid calculating trips for ineligible days.
+ const days=daysAfterWithdrawal(context.days);
+ return await planAvailability({context:{...context,days},destination,route:(from:string,to:string)=>bridge('route',{from,destination:to},mode)});
 }
 async function claim(id:string,payload:any=null,mode='test') {
  if(!UUID.test(id))throw Error('INVALID_REQUEST');
@@ -115,15 +119,15 @@ async function receipt(a:any,q:any,job:any) {
   'Digitaal inspectierapport met beelden, bevindingen, beperkingen, onderhoudsprioriteiten en vervolgstappen, binnen twee werkdagen na de inspectie.',
   `Bij uitvoering op het geboekte moment is de uiterste rapportdatum: ${reportDueDay(a.slot_start)}.`,
   `Uw bedenktijd loopt tot en met ${withdrawalLastDay(a.terms_accepted_at)}. Herroepen kan via https://www.roofsignal.nl/herroepen of info@roofsignal.nl.`,
-  a.terms.earlyStartRequested?'Uw vastgelegde keuze: beginnen tijdens de bedenktijd; bij herroeping een evenredig bedrag voor het geleverde deel. Na volledige uitvoering, inclusief het rapport, vervalt het herroepingsrecht.':'Geen verzoek om uitvoering binnen de bedenktijd.',
-  `Akkoord vastgelegd: ${a.terms_accepted_at}`,`Voorwaarden: ${TERMS}`,'','Met vriendelijke groet,','RoofSignal'];
+  a.terms.earlyStartRequested?'Uw vastgelegde keuze: beginnen tijdens de bedenktijd; bij herroeping een evenredig bedrag voor het geleverde deel. Na volledige uitvoering, inclusief het rapport, vervalt het herroepingsrecht.':'Uw inspectie vindt plaats na de bedenktijd.',
+  `Akkoord vastgelegd: ${a.terms_accepted_at}`,`Voorwaarden: ${q.terms_version}`,'','Met vriendelijke groet,','RoofSignal'];
  if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],
   subject:`${test?'[TEST] ':''}${customer?'Bevestiging van uw inspectie':'Nieuwe boeking'} ${a.reference}`,
   textContent:text,headers:{'X-Mailin-Track':'0',idempotencyKey:job.id},tags:['consumer-booking-'+a.mode],
-  attachment:[{name:'RoofSignal-voorwaarden.txt',content:btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+CONSUMER_TERMS)))}]};
+  attachment:[{name:'RoofSignal-voorwaarden.txt',content:btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+(q.terms_version==='2026-10-10-consumer'?LEGACY_CONSUMER_TERMS:CONSUMER_TERMS)))))}]};
 }
 async function deliver(a:any,q:any) {
  // Tests send only to the user's RoofSignal inbox, never the submitted address.
@@ -184,7 +188,8 @@ async function checkout(body:any,mode:string){
  if(mode==='test'&&customer.email!=='ferry@roofsignal.nl')throw Error('TEST_EMAIL_REQUIRED');
  const q=await one('consumer_quotes','id',body.quoteId),s=await one('consumer_slots','id',body.slotId);
  assertMode(q,mode);if(!s||s.quote_id!==q.id||q.terms_version!==body.terms.version||q.terms_version!==TERMS)throw Error('INVALID_REQUEST');
- if(earlyStartRequired(s.start_at)&&body.terms.earlyStartRequested!==true)throw Error('EARLY_START_REQUIRED');
+ assertAfterWithdrawal(s.start_at);
+ if(body.terms.earlyStartRequested!==false)throw Error('INVALID_REQUEST');
  const payload={quoteId:q.id,slotId:s.id,customer,terms:body.terms};
  const result=await claim(body.requestId,{...payload,fingerprint:await sha(JSON.stringify(payload))},mode);
  return await view(result.claimed?await progress(result.attempt):result.attempt);

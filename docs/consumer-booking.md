@@ -1,5 +1,33 @@
 # RoofSignal — algemene consumentenboeking
 
+## Planning na de bedenktijd — besluit 11 oktober 2026
+
+De gebruiker heeft bevestigd dat de algemene online consumentenboeking uitsluitend
+inspecties **na de volledige bedenktijd** aanbiedt. De eerdere mogelijkheid om vanaf
+de volgende kalenderdag te boeken vervalt voor deze route. De inline link
+“Boeking herroepen” en de extra checkbox voor uitvoering binnen de bedenktijd zijn
+uit de boekingspagina verwijderd. De klant geeft nog steeds zelf akkoord op de
+getoonde totaalprijs en de algemene en aanvullende boekingsvoorwaarden; er wordt
+geen toestemming voor vroege uitvoering afgeleid of automatisch aangevinkt.
+
+De browser verstuurt voor de bestaande API-vorm altijd
+`terms.earlyStartRequested: false`. De backend geeft bij zowel de gecombineerde
+prijsopgave als de afzonderlijke beschikbaarheidsroute alleen momenten terug
+waarvan de Nederlandse kalenderdatum ná `withdrawalLastDay` ligt. Deze termijn
+begint op de dag na de overeenkomst en houdt rekening met verlenging door weekends,
+algemeen erkende feestdagen en daarmee gelijkgestelde dagen. Het laatste moment
+van de bedenktijd blijft uitgesloten. Bij checkout wordt de einddatum opnieuw
+berekend; een inmiddels te vroeg moment wordt vóór het aanmaken van een betaling
+afgewezen, ook bij een gewijzigd of verouderd browserverzoek. Een aangeleverde
+`earlyStartRequested: true` wordt voor nieuwe algemene boekingen niet aanvaard.
+
+Nieuwe prijsopgaven en opdrachten gebruiken versie `2026-10-11-consumer` en
+`legal/consumentenboeking-2026-10-11.txt`. De oude gepubliceerde voorwaarden blijven
+beschikbaar. Bestaande opdrachten houden hun vastgelegde toestemming en
+voorwaardenversie; herstel en bevestiging gebruiken hun destijds overeengekomen
+voorwaarden. De Parken-pilot en de vrijblijvende VvE-aanmelding hebben een eigen
+route en behouden hun afzonderlijke afspraken.
+
 ## VvE-objectaanmelding — besluit 11 oktober 2026
 
 De gebruiker kiest expliciet **object aanmelden met staffelprijs**, met op dezelfde
@@ -56,7 +84,7 @@ Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websi
 - Online **één gecombineerd bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie, onder geschikte meet- en vliegomstandigheden.
 - Twee vooraf afgesproken bezoeken: offerte met **twee reiskostentoeslagen**. Verplaatsen door ongeschikt weer: geen extra kosten.
 - Reizen: **enkele autorit over de weg vanaf 7316 BH 4**. <=25 km €0; >25–75 km €42,35; >75–150 km €90,75; >150 km offerte. Grenzen op ongeronde meters.
-- Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, vanaf de volgende kalenderdag.
+- Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, uitsluitend na de volledige Nederlandse bedenktijd voor nieuwe algemene online consumentenboekingen.
 - Planning houdt rekening met autoroutes tussen afspraken. Nabije afspraken worden aanbevolen zonder andere afspraken te verplaatsen.
 - Implementatiekeuze: 15 minuten marge bovenop berekende reistijd; ook heen-/terugreis binnen de werktijden. Ontbrekende locaties van aangrenzende bezette afspraken blokkeren automatische inpassing.
 
@@ -81,6 +109,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - PDOK-adrescontrole met exacte postcode/huisnummermatch; Google-autoroute bepaalt de serverprijs. PDOK is geen controle van objecttype of vliegtoestemming.
 - Onveranderlijke serverprijsopgave met routebewijs, reisbeleid en vervaltijd; geen bedragen uit browserinvoer.
 - Opgeslagen tijdsloten, één actieve boeking per prijsopgave en vergrendeling tegen overlap; Google controleert ook de reisruimte voordat een eigen reservering ontstaat.
+- Alleen inspectiemomenten na de volledige Nederlandse bedenktijd worden voor nieuwe algemene boekingen getoond en geaccepteerd; checkout controleert de termijn opnieuw vóór een betaling ontstaat.
 - Duurzame request-ID en herstelblokkade voorkomen dat een vertraagd verzoek na een “niet aangemaakt”-antwoord toch een betaling begint.
 - Mollie-bedrag, valuta, profiel, modus en metadata worden gecontroleerd. Een terugkeer-URL is nooit betaalbewijs.
 - Betaling wordt vóór agendabevestiging vastgelegd. Bij een agendafout blijft de status “betaald, afstemming nodig”.
@@ -206,13 +235,24 @@ Sla de prijsopgave duurzaam en onveranderlijk op, inclusief gehanteerde reisbele
 
 ### GET /api/consumer-booking/availability?quoteId=...
 
-Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare momenten teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de beschikbaarheid opnieuw controleren en atomair claimen.
+Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare momenten na de volledige Nederlandse bedenktijd teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Dezelfde termijnfilter geldt voor de beschikbaarheid in het gecombineerde `/quote`-antwoord. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de bedenktijd en beschikbaarheid opnieuw controleren en atomair claimen.
 
 ### POST /api/consumer-booking/checkout
 
 Invoer: `{requestId,quoteId,slotId,customer:{name,email,phone,notes},terms:{accepted,version,earlyStartRequested}}`.
 
-Server leest de opgeslagen prijsopgave, controleert verval, adres en scope, valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw, controleert de actuele agenda en claimt de capaciteit atomair. Controleer het verzoek om vervroegde uitvoering server-side tegen de daadwerkelijke datum van overeenkomst en toepasselijke bedenktijd. De front-endcontrole is slechts hulp bij invoer.
+Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` altijd
+`false`; `true` is geen ondersteunde boekingskeuze. `terms.version` moet overeenkomen
+met de opgeslagen prijsopgave en de actuele versie `2026-10-11-consumer`.
+
+Server leest de opgeslagen prijsopgave, controleert verval, adres en scope,
+valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw,
+controleert de actuele agenda en claimt de capaciteit atomair. Het startmoment
+moet na de volledige toepasselijke bedenktijd liggen, opnieuw berekend op het
+moment van checkout. Een te vroeg moment wordt afgewezen vóór de betalingspoging
+wordt aangemaakt. Historische opdrachten worden via `/recover` met hun bestaande
+voorwaarden en toestemming hersteld; er ontstaat daardoor geen nieuwe opdracht
+onder andere voorwaarden.
 
 Leg vóór het betaalverzoek één duurzame betalingspoging vast. Eigen idempotentie is vereist per requestId én per actieve prijsopgave/reservering; ook verversen mag geen tweede betaling creëren. Een database-exclusiviteitsregel moet overlappende claims uitsluiten. Alleen een vrij/bezet-aanroep gevolgd door los een agenda-item toevoegen sluit races niet uit. Definieer tevens hoe gelijktijdige handmatige wijzigingen in de agenda worden voorkomen of afgehandeld.
 
