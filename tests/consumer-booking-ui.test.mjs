@@ -485,7 +485,7 @@ test('An invalid integration destination keeps inputs disabled and sends no requ
 
 async function submitNewOrder(checkoutResponse) {
   const quote = {
-    quoteId: recoveryRecord.quoteId, serviceable: true, currency: 'EUR',
+    quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
     baseCents: 36179, thermalCents: 0, travelCents: 0, totalCents: 36179,
     travelDescription: 'Lokale test; geen werkelijke route.', termsVersion: 'test',
     expiresAt: new Date(Date.now() + 600000).toISOString(),
@@ -536,7 +536,7 @@ test('An initial paid result is shown without recreating or reopening payment', 
 });
 
 async function calendarPage(slots, checkoutResponse = null, inline = false) {
-  const quote={quoteId:recoveryRecord.quoteId,serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
+  const quote={quoteId:recoveryRecord.quoteId,inspectionType:'building_envelope',serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
     travelDescription:'Simulated test route',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),
     address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}};
   const ui=await bookingPage({configuration:connectedConfiguration,respond(request){
@@ -567,6 +567,91 @@ test('Combined address result opens the real calendar without a second network r
  assert.equal(wrong.get('booking-calendar').hidden,true);
  assert.equal(wrong.get('checkout-button').disabled,true);
  assert.equal(wrong.requests.length,1,'Invalid inline data is rejected, not silently replaced');
+});
+
+const chooseProduct = async (ui, inspectionType) => {
+  ui.get('inspection-envelope').checked = inspectionType === 'building_envelope';
+  ui.get('inspection-thermal').checked = inspectionType === 'thermal';
+  await ui.get(inspectionType === 'thermal' ? 'inspection-thermal' : 'inspection-envelope').dispatch('change');
+};
+
+test('Standalone thermography sends its product, includes only the thermal price and clears choices when switching', async () => {
+  const slot = calendarSlot('product-time', new Date(Date.now() + 30 * 86400000).toISOString());
+  const ui = await bookingPage({ configuration: connectedConfiguration, respond(request) {
+    assert.ok(request.path.endsWith('/quote'));
+    const { inspectionType, thermal } = request.body;
+    const baseCents = inspectionType === 'thermal' ? 0 : 36179;
+    const thermalCents = thermal ? 30250 : 0;
+    return { quoteId: recoveryRecord.quoteId, inspectionType, serviceable: true, currency: 'EUR', baseCents, thermalCents,
+      travelCents: 4235, totalCents: baseCents + thermalCents + 4235, travelDescription: 'Simulated route',
+      termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
+      address: { postcode: '1234AB', houseNumber: '12', street: 'Teststraat', city: 'Testplaats', country: 'NL' },
+      availability: { quoteId: recoveryRecord.quoteId, slots: [slot] } };
+  }});
+  ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('thermal-option').hidden, true);
+  assert.equal(ui.get('summary-base-row').hidden, true);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(30250));
+  assert.equal(ui.get('visual-scope').hidden, true);
+  assert.equal(ui.get('thermal-scope').hidden, false);
+  await ui.get('check-address').dispatch('click');
+  assert.equal(ui.requests[0].body.inspectionType, 'thermal');
+  assert.equal(ui.requests[0].body.thermal, true, 'Standalone heat inspection must not depend on the hidden optional checkbox');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(34485));
+  await ui.get('slots').querySelector('input').dispatch('change');
+  ui.get('termsAccepted').checked = true;
+  await ui.get('termsAccepted').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  await chooseProduct(ui, 'building_envelope');
+  assert.equal(ui.get('booking-calendar').hidden, true);
+  assert.equal(ui.get('slots').querySelectorAll('input').length, 0);
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.get('summary-date').textContent, 'Nog te kiezen');
+  assert.equal(ui.get('summary-base-row').hidden, false);
+  assert.equal(ui.get('thermal-option').hidden, false);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  assert.equal(ui.get('checkout-button').disabled, true);
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  await ui.get('check-address').dispatch('click');
+  assert.equal(ui.requests[1].body.inspectionType, 'building_envelope');
+  assert.equal(ui.requests[1].body.thermal, true);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(70664));
+});
+
+test('A stale envelope quote never unlocks checkout for a newly selected thermal inspection', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, respond() {
+    return { quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
+      baseCents: 36179, thermalCents: 30250, travelCents: 0, totalCents: 66429, travelDescription: 'Simulated route',
+      termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
+      address: { postcode: '1234AB', houseNumber: '12', street: 'Teststraat', city: 'Testplaats', country: 'NL' } };
+  }});
+  await chooseProduct(ui, 'thermal');
+  ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+  await ui.get('check-address').dispatch('click');
+  assert.match(ui.get('address-status').textContent, /wijkt af van uw gekozen inspectie/);
+  assert.equal(ui.get('booking-calendar').hidden, true);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.length, 1);
+});
+
+test('Product changes cannot alter or replace a locked pending payment', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return { requestId: recoveryRecord.requestId, state: 'pending' };
+    }
+  });
+  assert.equal(ui.get('inspection-envelope').disabled, true);
+  assert.equal(ui.get('inspection-thermal').disabled, true);
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(recoveryRecord.totalCents));
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.requests.length, 2);
+  assert.ok(ui.requests.every(request => request.path.endsWith('/recover')));
 });
 
 test('address details reset while the removed early-start consent is never rendered or preaccepted', async () => {

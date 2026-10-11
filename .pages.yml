@@ -700,6 +700,47 @@ content:
           type: string
           required: true
           description: Een pad zoals /contact of een volledig https://-adres.
+    - name: section_08
+      label: Thermische inspectie
+      type: object
+      fields:
+      - name: item_01
+        label: Onderwerp
+        type: text
+      - name: item_02
+        label: Kop
+        type: string
+        required: true
+      - name: item_03
+        label: Omschrijving en rapportage
+        type: text
+      - name: item_04
+        label: Zelfstandig of gecombineerd
+        type: text
+      - name: item_05
+        label: Knop voor particulieren
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_06
+        label: Knop voor VvE’s
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
   - name: bouwvoortgang
     label: Bouwvoortgang
     type: file
@@ -3575,7 +3616,7 @@ content:
         type: string
         required: true
       - name: item_18
-        label: Tekst · Breid RoofSignal Inspectie uit met warmtebeelden vanuit een drone…
+        label: Tekst · Zelfstandige of gecombineerde thermische inspectie
         type: text
       - name: item_19
         label: Tekst · Thermische drone-opnamen van de afgesproken delen van de gebouwsc…
@@ -3584,11 +3625,35 @@ content:
         label: Tekst · Beoordeling in samenhang met gewone foto’s en de opnameomstandigh…
         type: text
       - name: item_21
-        label: Tekst · Bevindingen, beperkingen en advies in hetzelfde inspectierapport
+        label: Tekst · Thermische rapportage
         type: text
       - name: item_22
-        label: Tekst · We bespreken vooraf of thermografie met de drone zinvol, veilig, …
+        label: Tekst · Beoordeling en opnameomstandigheden
         type: text
+      - name: item_23
+        label: Knop voor particulieren
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_24
+        label: Knop voor VvE’s
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
     - name: section_03
       label: 3. Van uw vraag naar een helder rapport.
       type: object

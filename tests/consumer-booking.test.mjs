@@ -4,7 +4,7 @@ import { subtotal, money, normalizePostcode, normalizeHouseNumber, validateQuote
 
 const now = Date.parse('2026-10-10T08:00:00Z');
 const address = { postcode: '1234AB', houseNumber: '12 A', street: 'Voorbeeldstraat', city: 'Voorbeeldplaats', country: 'NL' };
-const quote = (thermal = false) => ({ quoteId: 'test_quote_0123456789', serviceable: true, currency: 'EUR', baseCents: 36179, thermalCents: thermal ? 30250 : 0, travelCents: 0, totalCents: subtotal(thermal), travelDescription: 'Testtoelichting van de server; geen werkelijk reistarief.', address, expiresAt: '2026-10-10T09:00:00Z', termsVersion: '2026-09-24' });
+const quote = (thermal = false) => ({ quoteId: 'test_quote_0123456789', inspectionType: 'building_envelope', serviceable: true, currency: 'EUR', baseCents: 36179, thermalCents: thermal ? 30250 : 0, travelCents: 0, totalCents: subtotal(thermal), travelDescription: 'Testtoelichting van de server; geen werkelijk reistarief.', address, expiresAt: '2026-10-10T09:00:00Z', termsVersion: '2026-09-24' });
 const requestId = '2e4fdd95-6013-4a5a-8c8d-867d4e8bea23';
 const attempt = { requestId, quoteId: quote().quoteId, slotId: 's1' };
 const expected = createRecoveryRecord(attempt, quote());
@@ -12,7 +12,21 @@ const checkout = { requestId, quoteId: expected.quoteId, slotId: expected.slotId
 
 test('Exact consumer totals are calculated in cents', () => {
   assert.equal(subtotal(false), 36179); assert.equal(subtotal(true), 66429);
+  assert.equal(subtotal(false, 'thermal'), 30250); assert.equal(subtotal(true, 'thermal'), 30250);
+  assert.throws(() => subtotal(true, 'unknown'));
   assert.match(money(66429), /664,29/); assert.throws(() => money(361.79));
+});
+
+test('Standalone thermography has no visual base and cannot reuse another product quote', () => {
+  const thermal = { ...quote(true), inspectionType: 'thermal', baseCents: 0, totalCents: 30250 };
+  assert.equal(validateQuote(thermal, true, now, address, 'thermal').totalCents, 30250);
+  const travel = { ...thermal, travelCents: 4235, totalCents: 34485 };
+  assert.equal(validateQuote(travel, true, now, address, 'thermal').totalCents, 34485);
+  assert.throws(() => validateQuote(quote(true), true, now, address, 'thermal'));
+  assert.throws(() => validateQuote(thermal, true, now, address, 'building_envelope'));
+  assert.throws(() => validateQuote({ ...thermal, baseCents: 36179, totalCents: 66429 }, true, now, address, 'thermal'));
+  assert.throws(() => validateQuote({ ...thermal, thermalCents: 0, totalCents: 0 }, true, now, address, 'thermal'));
+  assert.throws(() => validateQuote({ ...quote(), inspectionType: undefined }, false, now, address));
 });
 
 test('Missing configuration stays in preview; connected mode needs a trusted explicit API route', () => {

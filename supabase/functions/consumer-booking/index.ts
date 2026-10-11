@@ -3,11 +3,14 @@ import {calculateTravel} from '../_shared/consumer-travel-pricing.mjs';
 import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment,publicPaymentStatus} from '../_shared/consumer-payment.mjs';
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
+import {TERMS_TEXT as THERMAL_TERMS_TEXT} from '../_shared/terms-20261011thermografie.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
 import {daysAfterWithdrawal,assertAfterWithdrawal,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
 import {CONSUMER_TERMS as LEGACY_CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
 import {CONSUMER_TERMS as PREVIOUS_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011.mjs';
-import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011betalen.mjs';
+import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011betalen.mjs';
+import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011thermografie.mjs';
+import {consumerProduct} from '../_shared/consumer-products.mjs';
 import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-google.mjs';
 import {planAvailability} from '../_shared/consumer-availability.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
@@ -15,7 +18,7 @@ import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
-const TERMS='2026-10-11-consumer-pay';
+const TERMS='2026-10-11-consumer-thermal';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
 const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
@@ -72,15 +75,18 @@ async function addressLookup(input:any) {
  if(!found.straatnaam||!found.woonplaatsnaam)throw Error('ADDRESS_UNAVAILABLE');
  return {postcode,houseNumber:found.huis_nlt,street:found.straatnaam,city:found.woonplaatsnaam,country:'NL'};
 }
-function quoteView(q:any) {return {serviceable:true,quoteId:q.id,currency:'EUR',baseCents:36179,thermalCents:q.thermal?30250:0,travelCents:q.travel_cents,totalCents:q.total_cents,travelDescription:q.travel_description,expiresAt:q.expires_at,termsVersion:q.terms_version,address:q.address};}
+function quoteView(q:any) {
+ const product=consumerProduct(q.inspection_type,q.thermal);
+ return {serviceable:true,quoteId:q.id,currency:'EUR',inspectionType:product.inspectionType,baseCents:product.baseCents,thermalCents:product.thermalCents,travelCents:q.travel_cents,totalCents:q.total_cents,travelDescription:q.travel_description,expiresAt:q.expires_at,termsVersion:q.terms_version,address:q.address};
+}
 async function createQuote(body:any,mode:string) {
- if(typeof body.thermal!=='boolean')throw Error('INVALID_REQUEST');
+ const product=consumerProduct(body.inspectionType,body.thermal);
  const address=await addressLookup(body.address),destination=`${address.street} ${address.houseNumber}, ${address.postcode} ${address.city}, Nederland`;
  const plan=await currentPlan(destination,mode),route=plan.route;
  const travel=calculateTravel(route.distanceMeters,POLICY,1);
  if(travel.status!=='ready')throw Error('OUTSIDE_ONLINE_AREA');
- const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
-  travel_cents:travel.travelCents,travel_description:travel.travelDescription,total_cents:36179+(body.thermal?30250:0)+travel.travelCents,
+ const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,inspection_type:product.inspectionType,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
+  travel_cents:travel.travelCents,travel_description:travel.travelDescription,total_cents:product.subtotalCents+travel.travelCents,
   terms_version:TERMS,policy_version:POLICY.version,expires_at:new Date(Date.now()+20*60000).toISOString()}).select('*').single());
  return {...quoteView(q),availability:await saveAvailability(q,plan)};
 }
@@ -114,10 +120,13 @@ async function receipt(a:any,q:any,job:any) {
  const date=new Intl.DateTimeFormat('nl-NL',{dateStyle:'full',timeStyle:'short',timeZone:'Europe/Amsterdam'}).format(new Date(a.slot_start));
  const amount=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(q.total_cents/100);
  const test=a.mode==='test';
+ const product=consumerProduct(q.inspection_type,q.thermal);
  const lines=[test?'INTERNE TEST — geen echte opdracht of betalingsverplichting.':'Uw betaling is ontvangen en uw inspectie is ingepland.',`Referentie: ${a.reference}`,`Inspectiemoment: ${date} (45 minuten)`,`Adres: ${q.destination}`,
-  `Thermografie: ${q.thermal?'ja, één gecombineerd bezoek':'nee'}`,`Totaal inclusief btw: ${amount}`,q.travel_description,test?'Betaling in Mollie-testmodus gecontroleerd; afspraak geregistreerd.':'Betaling via Mollie gecontroleerd.',
+  `Gekozen inspectie: ${product.label}`,`Thermografie: ${product.thermalDescription}`,`Totaal inclusief btw: ${amount}`,q.travel_description,test?'Betaling in Mollie-testmodus gecontroleerd; afspraak geregistreerd.':'Betaling via Mollie gecontroleerd.',
   'Uitvoering onder weer-, meet- en vliegvoorbehoud. Bij ongeschikt weer verplaatsen we kosteloos. Een vooraf gewenst afzonderlijk bezoek vereist een offerte met reiskosten per bezoek.',
-  'Digitaal inspectierapport met beelden, bevindingen, beperkingen, onderhoudsprioriteiten en vervolgstappen, binnen twee werkdagen na de inspectie.',
+  q.inspection_type==='thermal'
+   ? 'Digitaal thermisch inspectierapport met warmtebeelden, bevindingen, meetomstandigheden, beperkingen en vervolgstappen, binnen twee werkdagen na de inspectie. Dit is geen volledige visuele gebouwschilinspectie. Temperatuurverschillen zijn aanwijzingen voor nader onderzoek, geen automatisch bewijs van een lek of isolatiegebrek.'
+   : 'Digitaal inspectierapport met beelden, bevindingen, beperkingen, onderhoudsprioriteiten en vervolgstappen, binnen twee werkdagen na de inspectie.',
   `Bij uitvoering op het geboekte moment is de uiterste rapportdatum: ${reportDueDay(a.slot_start)}.`,
   `Uw bedenktijd loopt tot en met ${withdrawalLastDay(a.terms_accepted_at)}. Herroepen kan via https://www.roofsignal.nl/herroepen of info@roofsignal.nl.`,
   a.terms.earlyStartRequested?'Uw vastgelegde keuze: beginnen tijdens de bedenktijd; bij herroeping een evenredig bedrag voor het geleverde deel. Na volledige uitvoering, inclusief het rapport, vervalt het herroepingsrecht.':'Uw inspectie vindt plaats na de bedenktijd.',
@@ -125,10 +134,11 @@ async function receipt(a:any,q:any,job:any) {
  if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
- const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
+ const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,'2026-10-11-consumer-pay':PAYMENT_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
  const consumerTerms=termsVersions[q.terms_version];
  if(!consumerTerms)throw Error('TERMS_VERSION_UNAVAILABLE');
- const attachmentContent=btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+consumerTerms)));
+ const generalTerms=q.terms_version===TERMS?THERMAL_TERMS_TEXT:TERMS_TEXT;
+ const attachmentContent=btoa(String.fromCharCode(...new TextEncoder().encode(generalTerms+'\n\n'+consumerTerms)));
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],
   subject:`${test?'[TEST] ':''}${customer?'Bevestiging van uw inspectie':'Nieuwe boeking'} ${a.reference}`,
   textContent:text,headers:{'X-Mailin-Track':'0',idempotencyKey:job.id},tags:['consumer-booking-'+a.mode],

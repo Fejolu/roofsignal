@@ -44,7 +44,7 @@
   },
   "section_06": {
     "item_01": "VvE-dakinspectie op aanvraag.",
-    "item_02": "U ontvangt een offerte op aanvraag, afgestemd op uw object en de werkzaamheden die u wilt laten uitvoeren. Reiskosten komen daar apart bij en staan als aparte post in de offerte.",
+    "item_02": "Kies een dak- en gevelinspectie, een zelfstandige thermische inspectie of een combinatie. Meld uw object aan met de staffelprijs in beeld; we stemmen werkzaamheden, planning en totaalprijs vooraf af.",
     "item_03": "Uw object",
     "item_04": "Het type gebouw, de omvang, de bouwdelen en de bereikbaarheid bepalen de benodigde inzet.",
     "item_05": "Uw vraag",
@@ -52,8 +52,8 @@
     "item_07": "Reiskosten apart",
     "item_08": "De reiskosten worden per locatie bepaald en afzonderlijk in uw offerte vermeld. U kent het totaal voordat u akkoord geeft.",
     "item_09": {
-      "label": "Vraag een inspectie aan",
-      "href": "/contact"
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
     }
   },
   "section_07": {
@@ -66,8 +66,8 @@
     "item_02": "Begin met één gebouw.",
     "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
     "item_04": {
-      "label": "Vraag een inspectie aan",
-      "href": "/contact"
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
     },
     "item_05": {
       "label": "Bekijk de inspectierapporten",

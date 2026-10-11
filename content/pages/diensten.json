@@ -1,7 +1,7 @@
 {
   "seo": {
     "title": "Gebouwschilrapportage en onderhoudsadvies | RoofSignal diensten",
-    "description": "Onafhankelijke visuele inspecties van daken en gevels, uitsluitend met drones. Heldere gebouwschilrapportage met bevindingen en onderhoudsprioriteiten."
+    "description": "Onafhankelijke dak- en gevelinspecties en thermische inspecties met drones. Thermografie zelfstandig boeken of combineren, met heldere rapportage en vervolgstappen."
   },
   "section_01": {
     "item_01": "Property Intelligence in de praktijk",
@@ -76,6 +76,20 @@
     "item_03": {
       "label": "Vraag een inspectie aan",
       "href": "contact"
+    }
+  },
+  "section_08": {
+    "item_01": "Thermische inspectie",
+    "item_02": "Inzicht in warmteverlies en isolatieafwijkingen.",
+    "item_03": "Met warmtebeelden vanuit een drone onderzoeken we uw gebouw op thermische afwijkingen. U ontvangt een rapport met bevindingen en aanbevolen vervolgstappen. Afwijkingen zijn aanwijzingen; we beoordelen ze samen met de opnameomstandigheden.",
+    "item_04": "Voor uw woning of VvE, zelfstandig te boeken of te combineren met een dak- en gevelinspectie.",
+    "item_05": {
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_06": {
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
     }
   }
 }
