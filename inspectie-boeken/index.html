@@ -22,7 +22,7 @@
     <script src="./vve-kvk.js?v=20261011-kvk" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
-    <script src="./booking.js?v=20261011-shared-layout" type="module"></script>
+    <script src="./booking.js?v=20261011-korte-bedenktijd" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
     <a class="rs-skip" href="#main-content">Naar de inhoud</a>
@@ -179,10 +179,17 @@
               <h3 id="consent-title">Controleer uw opdracht</h3>
               <label class="checkbox-row" for="termsAccepted">
                 <input disabled id="termsAccepted" name="termsAccepted" type="checkbox" value="true" required>
-                <span>Ik boek deze inspectie tegen het getoonde totaalbedrag en ga akkoord met de <a href="/legal/voorwaarden-2026-10-11-thermografie.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-11-thermografie.txt" target="_blank" rel="noopener noreferrer">boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
+                <span>Ik boek deze inspectie tegen het getoonde totaalbedrag en ga akkoord met de <a href="/legal/voorwaarden-2026-10-11-thermografie.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-11-kort.txt" target="_blank" rel="noopener noreferrer">boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
               </label>
               <div class="withdrawal-note">
                 <p>Bij ongeschikt weer verplaatsen we kosteloos. U heeft minimaal 14 dagen bedenktijd.</p>
+              </div>
+              <div id="early-start-consent" hidden>
+                <label class="checkbox-row" for="earlyStartRequested">
+                  <input disabled id="earlyStartRequested" name="earlyStartRequested" type="checkbox" value="true">
+                  <span>Ik verzoek om uitvoering binnen de bedenktijd. Na volledige uitvoering, inclusief rapport, vervalt mijn herroepingsrecht.</span>
+                </label>
+                <p class="field-help withdrawal-note">Bij herroeping betaalt u alleen voor het al uitgevoerde deel.</p>
               </div>
             </section>
           </form>
