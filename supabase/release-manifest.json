@@ -15,6 +15,7 @@
     "send-quote-email",
     "staff-calendar",
     "submit-public-lead",
+    "vve-kvk",
     "submit-parken-booking"
   ],
   "required_secrets": [

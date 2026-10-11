@@ -28,6 +28,7 @@
     appendDetail(messageLines, "Telefoon", readField(data, "phone", "Telefoon"));
     appendDetail(messageLines, "Objecten/adressen", readField(data, "buildings", "Gebouwen", "objecten"));
     if (form.dataset.leadContext === "vve-object") {
+      appendDetail(messageLines, "KVK-nummer VvE (opgegeven)", readField(data, "kvk_number").replace(/\s/g, "").slice(0, 20));
       appendDetail(messageLines, "Plaats object", readField(data, "object_city"));
       appendDetail(messageLines, "Omvang aanvraag", { single: "Eén gebouw / inspectieobject", multiple: "Meerdere gebouwen", unknown: "Nog af te stemmen" }[readField(data, "object_scope")]);
       appendDetail(messageLines, "Prijsindicatie (geen definitieve offerte)", readField(data, "indicative_price"));

@@ -12,13 +12,14 @@
     <link rel="icon" href="/assets/roofsignal-bimi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/public.css?v=20260924-navigation">
     <link rel="stylesheet" href="/assets/site-public.css?v=20261011-booking-cta">
-    <link rel="stylesheet" href="./booking.css?v=20261011-simple">
+    <link rel="stylesheet" href="./booking.css?v=20261011-kvk">
     <script src="./booking-config.js" defer></script>
     <script src="/assets/supabase-config.js" defer></script>
     <script src="/assets/supabase-app.js?v=23" defer></script>
     <script src="/assets/form-security.js?v=20261011-quiet-check" defer></script>
-    <script src="/assets/lead-capture.js?v=20261011-vve-thermal" defer></script>
+    <script src="/assets/lead-capture.js?v=20261011-vve-kvk" defer></script>
     <script src="./vve-inquiry.js?v=20261011-simple" defer></script>
+    <script src="./vve-kvk.js?v=20261011-kvk" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
     <script src="./booking.js?v=20261011-simple" type="module"></script>
@@ -209,6 +210,11 @@
               <input type="hidden" name="indicative_price" id="vve-price-detail">
               <fieldset class="form-step" disabled id="vve-fields">
                 <legend>Uw object</legend>
+                <div class="field">
+                  <label for="vve-kvk">KVK-nummer van de VvE <span class="optional-label">optioneel</span></label>
+                  <div class="kvk-input-row"><input id="vve-kvk" name="kvk_number" inputmode="numeric" maxlength="20" autocomplete="off" aria-describedby="vve-kvk-status"><button id="vve-kvk-check" class="button button--secondary" type="button" hidden disabled>Vul naam in</button></div>
+                  <p id="vve-kvk-status" class="field-help" role="status" aria-live="polite" hidden></p>
+                </div>
                 <div class="field"><label for="vve-organization">Naam VvE of beheerder</label><input id="vve-organization" name="organization" autocomplete="organization" maxlength="200" required></div>
                 <div class="field"><label for="vve-address">Straat en huisnummer(s) van het object</label><input id="vve-address" name="buildings" maxlength="200" placeholder="Bijvoorbeeld Parklaan 2–20" required></div>
                 <div class="field-row">
