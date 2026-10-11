@@ -6,8 +6,10 @@ Ferry heeft bevestigd dat **thermische inspectie zelfstandig te boeken is**, zow
 voor particulieren als VvE’s. De klant kiest dak- en gevelinspectie, thermische
 inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
 
-- Particulier: zelfstandige thermografie €250 excl. / **€302,50 incl. btw**.
-  De combinatie met de basisinspectie blijft €549 excl. / €664,29 incl. btw.
+- Particulier: dak- en gevelinspectie óf zelfstandige thermografie **€299 excl. /
+  €361,79 incl. btw**. Een tweede inspectie tijdens hetzelfde bezoek kost €250 excl. /
+  €302,50 incl. btw, ongeacht welke inspectie eerst gekozen is.
+  De combinatie blijft €549 excl. / €664,29 incl. btw.
 - VvE: maximaal 5 adressen €400 excl. / €484 incl.; 6–10 adressen €550 excl. /
   €665,50 incl.; 11–20 adressen €750 excl. / €907,50 incl. btw.
   Bij zelfstandige thermografie telt geen basisinspectie mee. Bij een combinatie
@@ -26,8 +28,10 @@ inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
 - Thermische afwijkingen worden beoordeeld met de opnameomstandigheden en zijn
   aanwijzingen, geen automatisch bewijs van een gebrek of oorzaak.
 
-Nieuwe prijsopgaven gebruiken voorwaardenversie `2026-10-11-consumer-kort` en
-`legal/consumentenboeking-2026-10-11-kort.txt`. Bestaande prijsopgaven en
+Nieuwe prijsopgaven gebruiken voorwaardenversie `2026-10-11-consumer-los` en
+`legal/consumentenboeking-2026-10-11-los.txt` en prijsversie
+`2026-10-11-equal-standalone`. De aanvullende migratie bewaart oudere records en
+invoer van de vorige server onder `2026-10-11-thermal-legacy`. Bestaande prijsopgaven en
 opdrachten houden hun opgeslagen product, prijs en voorwaardenversie. De
 Parken-pilot behoudt haar afzonderlijke aanbod en reisafspraken.
 
@@ -64,8 +68,9 @@ Een te vroeg moment zonder toestemming wordt vóór het maken van een betaling
 geweigerd. Zowel de keuze als het moment van aanvaarding worden bewaard; de
 bevestiging vermeldt de vastgelegde keuze en bevat de overeengekomen voorwaarden.
 
-Nieuwe prijsopgaven en opdrachten gebruiken versie `2026-10-11-consumer-kort` en
-`legal/consumentenboeking-2026-10-11-kort.txt`. De eerdere versies, inclusief de
+Nieuwe prijsopgaven en opdrachten gebruiken versie `2026-10-11-consumer-los` en
+`legal/consumentenboeking-2026-10-11-los.txt`, met dezelfde korte toestemming als
+de eerdere versie `2026-10-11-consumer-kort`. De eerdere versies, inclusief de
 versies die uitsluitend planning na de bedenktijd toelieten, blijven ongewijzigd
 beschikbaar. Bestaande opdrachten houden hun eigen voorwaarden en vastgelegde
 keuze; herstel en bevestiging maken daarvoor geen nieuwe opdracht onder gewijzigde
@@ -128,8 +133,8 @@ Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websi
 ## Door de gebruiker bevestigde uitvoering
 
 - Eén grondgebonden woning/hoofdgebouw; uitsluitend drone-inspectie. Afwijkende objecten en bijgebouwen via offerte.
-- Dak- en gevelinspectie €361,79 inclusief btw; zelfstandige thermografie €302,50;
-  combinatie €664,29 vóór reizen.
+- Dak- en gevelinspectie óf zelfstandige thermografie €361,79 inclusief btw;
+  tweede inspectie in hetzelfde bezoek €302,50; combinatie €664,29 vóór reizen.
 - Digitaal inspectierapport **binnen twee werkdagen na de inspectie**.
 - Online **één bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie,
   voor de gekozen inspectie of combinatie, onder geschikte meet- en vliegomstandigheden.
@@ -249,6 +254,7 @@ Invoer:
 {
   address: { postcode: string; houseNumber: string };
   inspectionType: "building_envelope" | "thermal";
+  pricingVersion: "2026-10-11-equal-standalone";
   thermal: boolean;
 }
 ```
@@ -256,6 +262,9 @@ Invoer:
 `building_envelope` met `thermal: false` is de dak- en gevelinspectie; met `true`
 is het de combinatie. `thermal` is de zelfstandige thermische inspectie en vereist
 `thermal: true`. De server bepaalt de productprijs; de browser levert geen bedragen.
+Een combinatie wordt in beide keuzerichtingen als `building_envelope` met
+`thermal: true` verstuurd. De getoonde hoofdinspectie en toevoeging mogen wisselen;
+het gecombineerde product en totaal blijven gelijk.
 
 De client verstuurt alleen postcode en huisnummer als adresgegevens voor de
 adrescontrole. Straat en plaats zijn readonly velden die uitsluitend worden gevuld
@@ -272,7 +281,7 @@ Vereist succesantwoord; bedragen zijn typen of vaste productwaarden, geen voorbe
   currency: "EUR";
   inspectionType: "building_envelope" | "thermal";
   baseCents: 0 | 36179;          // nul bij zelfstandige thermografie
-  thermalCents: 0 | 30250;
+  thermalCents: 0 | 30250 | 36179; // 36179 bij zelfstandige thermografie
   travelCents: number;           // niet-negatieve integer; beoordeelde reisprijs
   totalCents: number;            // baseCents + thermalCents + travelCents
   travelDescription: string;    // niet-lege servertekst, geen HTML
@@ -311,7 +320,7 @@ Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` een
 expliciete boolean: `true` uitsluitend na het afzonderlijke korte akkoord, anders
 `false`. Een ontbrekende of anders getypte waarde wordt afgewezen. `terms.version`
 moet overeenkomen met de opgeslagen prijsopgave en de actuele versie
-`2026-10-11-consumer-kort`.
+`2026-10-11-consumer-los`.
 
 Server leest de opgeslagen prijsopgave, controleert verval, adres en scope,
 valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw,

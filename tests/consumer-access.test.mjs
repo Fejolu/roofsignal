@@ -6,12 +6,13 @@ import {stripTypeScriptTypes} from 'node:module';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../supabase/functions/_shared/consumer-access.mjs';
 import {assertEarlyStartConsent,withdrawalLastDay,reportDueDay} from '../supabase/functions/_shared/consumer-dates.mjs';
 import {UUID,customerInput} from '../supabase/functions/_shared/consumer-payment.mjs';
-import {consumerProduct} from '../supabase/functions/_shared/consumer-products.mjs';
+import {consumerProduct,CONSUMER_PRICING_VERSION,LEGACY_CONSUMER_PRICING_VERSION} from '../supabase/functions/_shared/consumer-products.mjs';
 import {CONSUMER_TERMS as LEGACY_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261010.mjs';
 import {CONSUMER_TERMS as PREVIOUS_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011.mjs';
 import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011betalen.mjs';
 import {CONSUMER_TERMS as PREVIOUS_THERMAL_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011thermografie.mjs';
-import {CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011kort.mjs';
+import {CONSUMER_TERMS as SHORT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011kort.mjs';
+import {CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011los.mjs';
 import {TERMS_TEXT} from '../supabase/functions/_shared/terms-20260924.mjs';
 import {TERMS_TEXT as THERMAL_TERMS_TEXT} from '../supabase/functions/_shared/terms-20261011thermografie.mjs';
 
@@ -20,10 +21,10 @@ const TERMS=backend.match(/const TERMS='([^']+)'/)[1];
 const agreement=Date.parse('2026-10-11T12:00:00Z');
 const quoteId='b15c27e0-4d30-4fc6-bc54-4bba2499c895',slotId='fe741dc0-6013-45a0-9774-0db3a782b267',requestId='16664b2d-fbcd-44e8-9935-d8c6b084801f';
 const customer={name:'Test Customer',email:'ferry@roofsignal.nl',phone:'0612345678'};
-function checkoutHarness(start,version=TERMS) {
- const claims=[],q={id:quoteId,mode:'test',terms_version:version},s={id:slotId,quote_id:quoteId,start_at:start};
+function checkoutHarness(start,version=TERMS,pricingVersion=CONSUMER_PRICING_VERSION) {
+ const claims=[],q={id:quoteId,mode:'test',terms_version:version,pricing_version:pricingVersion},s={id:slotId,quote_id:quoteId,start_at:start};
  const source=backend.slice(backend.indexOf('async function checkout('),backend.indexOf('async function limit('));
- const context={UUID,TERMS,customerInput,assertMode,
+ const context={UUID,TERMS,CONSUMER_PRICING_VERSION,customerInput,assertMode,
   assertEarlyStartConsent:(date,requested)=>assertEarlyStartConsent(date,requested,agreement),
   one:async table=>table==='consumer_quotes'?q:s,
   sha:async payload=>payload,
@@ -62,7 +63,7 @@ test('Actual checkout rejects missing or forged early consent before claim or pa
  assert.equal((await app.checkout(true)).state,'pending');
  assert.equal(app.claims.length,1);
  assert.equal(app.claims[0].payload.terms.earlyStartRequested,true,'The exact explicit choice is persisted in the atomic claim');
- assert.equal(app.claims[0].payload.terms.version,'2026-10-11-consumer-kort');
+ assert.equal(app.claims[0].payload.terms.version,'2026-10-11-consumer-los');
 });
 
 test('Actual checkout permits later dates without early consent but still validates the terms version',async()=>{
@@ -73,12 +74,15 @@ test('Actual checkout permits later dates without early consent but still valida
  const previous=checkoutHarness('2026-10-27T08:00:00Z','2026-10-11-consumer-thermal');
  await assert.rejects(previous.checkout(false),/INVALID_REQUEST/);
  assert.equal(previous.claims.length,0,'A new agreement cannot silently reuse the previous no-early-start terms');
+ const previousPrice=checkoutHarness('2026-10-27T08:00:00Z',TERMS,LEGACY_CONSUMER_PRICING_VERSION);
+ await assert.rejects(previousPrice.checkout(false),/INVALID_REQUEST/);
+ assert.equal(previousPrice.claims.length,0,'A new agreement cannot combine latest terms with a historical tariff');
 });
 
 test('Receipt recovery retains the exact accepted consumer and general terms for existing bookings',async()=>{
  const source=backend.slice(backend.indexOf('async function receipt('),backend.indexOf('async function deliver('));
- const context={TERMS,TERMS_TEXT,THERMAL_TERMS_TEXT,LEGACY_CONSUMER_TERMS,PREVIOUS_CONSUMER_TERMS,PAYMENT_CONSUMER_TERMS,PREVIOUS_THERMAL_CONSUMER_TERMS,CONSUMER_TERMS,
-  withdrawalLastDay,reportDueDay,consumerProduct,TextEncoder,
+ const context={TERMS,TERMS_TEXT,THERMAL_TERMS_TEXT,LEGACY_CONSUMER_TERMS,PREVIOUS_CONSUMER_TERMS,PAYMENT_CONSUMER_TERMS,PREVIOUS_THERMAL_CONSUMER_TERMS,SHORT_CONSUMER_TERMS,CONSUMER_TERMS,
+  withdrawalLastDay,reportDueDay,consumerProduct,LEGACY_CONSUMER_PRICING_VERSION,TextEncoder,
   btoa:value=>Buffer.from(value,'binary').toString('base64'),env:()=> 'ferry@roofsignal.nl'};
  vm.runInNewContext(stripTypeScriptTypes(source),context);
  for(const [version,text,general] of [
@@ -86,11 +90,15 @@ test('Receipt recovery retains the exact accepted consumer and general terms for
   ['2026-10-11-consumer',PREVIOUS_CONSUMER_TERMS,TERMS_TEXT],
   ['2026-10-11-consumer-pay',PAYMENT_CONSUMER_TERMS,TERMS_TEXT],
   ['2026-10-11-consumer-thermal',PREVIOUS_THERMAL_CONSUMER_TERMS,THERMAL_TERMS_TEXT],
+  ['2026-10-11-consumer-kort',SHORT_CONSUMER_TERMS,THERMAL_TERMS_TEXT],
   [TERMS,CONSUMER_TERMS,THERMAL_TERMS_TEXT]
  ]) {
-  const receipt=await context.receipt({mode:'test',reference:'RS-TEST',slot_start:'2026-10-12T08:00:00Z',terms_accepted_at:new Date(agreement).toISOString(),terms:{earlyStartRequested:version===TERMS}},
-   {destination:'Test object',total_cents:30250,inspection_type:'thermal',thermal:true,travel_description:'Test route',terms_version:version},{recipient_kind:'customer',id:'test-outbox'});
+  const early=['2026-10-11-consumer-kort',TERMS].includes(version);
+  const total=version===TERMS?36179:30250;
+  const receipt=await context.receipt({mode:'test',reference:'RS-TEST',slot_start:'2026-10-12T08:00:00Z',terms_accepted_at:new Date(agreement).toISOString(),terms:{earlyStartRequested:early}},
+   {destination:'Test object',total_cents:total,inspection_type:'thermal',thermal:true,pricing_version:version===TERMS?CONSUMER_PRICING_VERSION:LEGACY_CONSUMER_PRICING_VERSION,travel_description:'Test route',terms_version:version},{recipient_kind:'customer',id:'test-outbox'});
   assert.equal(Buffer.from(receipt.attachment[0].content,'base64').toString('utf8'),general+'\n\n'+text,version);
-  assert.match(receipt.textContent,version===TERMS?/Uw vastgelegde keuze: beginnen tijdens de bedenktijd/:/Uw inspectie vindt plaats na de bedenktijd/);
+  assert.match(receipt.textContent,early?/Uw vastgelegde keuze: beginnen tijdens de bedenktijd/:/Uw inspectie vindt plaats na de bedenktijd/);
+  assert.match(receipt.textContent,new RegExp(total===36179?'361,79':'302,50'),version);
  }
 });

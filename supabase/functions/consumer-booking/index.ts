@@ -10,8 +10,9 @@ import {CONSUMER_TERMS as LEGACY_CONSUMER_TERMS} from '../_shared/consumer-terms
 import {CONSUMER_TERMS as PREVIOUS_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011.mjs';
 import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011betalen.mjs';
 import {CONSUMER_TERMS as PREVIOUS_THERMAL_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011thermografie.mjs';
-import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011kort.mjs';
-import {consumerProduct} from '../_shared/consumer-products.mjs';
+import {CONSUMER_TERMS as SHORT_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011kort.mjs';
+import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011los.mjs';
+import {consumerProduct,CONSUMER_PRICING_VERSION,LEGACY_CONSUMER_PRICING_VERSION} from '../_shared/consumer-products.mjs';
 import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-google.mjs';
 import {planAvailability} from '../_shared/consumer-availability.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
@@ -19,7 +20,7 @@ import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
-const TERMS='2026-10-11-consumer-kort';
+const TERMS='2026-10-11-consumer-los';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
 const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
@@ -77,8 +78,8 @@ async function addressLookup(input:any) {
  return {postcode,houseNumber:found.huis_nlt,street:found.straatnaam,city:found.woonplaatsnaam,country:'NL'};
 }
 function quoteView(q:any) {
- const product=consumerProduct(q.inspection_type,q.thermal);
- return {serviceable:true,quoteId:q.id,currency:'EUR',inspectionType:product.inspectionType,baseCents:product.baseCents,thermalCents:product.thermalCents,travelCents:q.travel_cents,totalCents:q.total_cents,travelDescription:q.travel_description,expiresAt:q.expires_at,termsVersion:q.terms_version,address:q.address};
+ const product=consumerProduct(q.inspection_type,q.thermal,q.pricing_version||LEGACY_CONSUMER_PRICING_VERSION);
+ return {serviceable:true,quoteId:q.id,currency:'EUR',inspectionType:product.inspectionType,pricingVersion:product.pricingVersion,baseCents:product.baseCents,thermalCents:product.thermalCents,travelCents:q.travel_cents,totalCents:q.total_cents,travelDescription:q.travel_description,expiresAt:q.expires_at,termsVersion:q.terms_version,address:q.address};
 }
 async function createQuote(body:any,mode:string) {
  const product=consumerProduct(body.inspectionType,body.thermal);
@@ -86,7 +87,7 @@ async function createQuote(body:any,mode:string) {
  const plan=await currentPlan(destination,mode),route=plan.route;
  const travel=calculateTravel(route.distanceMeters,POLICY,1);
  if(travel.status!=='ready')throw Error('OUTSIDE_ONLINE_AREA');
- const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,inspection_type:product.inspectionType,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
+ const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,inspection_type:product.inspectionType,pricing_version:product.pricingVersion,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
   travel_cents:travel.travelCents,travel_description:travel.travelDescription,total_cents:product.subtotalCents+travel.travelCents,
   terms_version:TERMS,policy_version:POLICY.version,expires_at:new Date(Date.now()+20*60000).toISOString()}).select('*').single());
  return {...quoteView(q),availability:await saveAvailability(q,plan)};
@@ -120,7 +121,7 @@ async function receipt(a:any,q:any,job:any) {
  const date=new Intl.DateTimeFormat('nl-NL',{dateStyle:'full',timeStyle:'short',timeZone:'Europe/Amsterdam'}).format(new Date(a.slot_start));
  const amount=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(q.total_cents/100);
  const test=a.mode==='test';
- const product=consumerProduct(q.inspection_type,q.thermal);
+ const product=consumerProduct(q.inspection_type,q.thermal,q.pricing_version||LEGACY_CONSUMER_PRICING_VERSION);
  const lines=[test?'INTERNE TEST — geen echte opdracht of betalingsverplichting.':'Uw betaling is ontvangen en uw inspectie is ingepland.',`Referentie: ${a.reference}`,`Inspectiemoment: ${date} (45 minuten)`,`Adres: ${q.destination}`,
   `Gekozen inspectie: ${product.label}`,`Thermografie: ${product.thermalDescription}`,`Totaal inclusief btw: ${amount}`,q.travel_description,test?'Betaling in Mollie-testmodus gecontroleerd; afspraak geregistreerd.':'Betaling via Mollie gecontroleerd.',
   'Uitvoering onder weer-, meet- en vliegvoorbehoud. Bij ongeschikt weer verplaatsen we kosteloos. Een vooraf gewenst afzonderlijk bezoek vereist een offerte met reiskosten per bezoek.',
@@ -134,10 +135,10 @@ async function receipt(a:any,q:any,job:any) {
  if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
- const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,'2026-10-11-consumer-pay':PAYMENT_CONSUMER_TERMS,'2026-10-11-consumer-thermal':PREVIOUS_THERMAL_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
+ const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,'2026-10-11-consumer-pay':PAYMENT_CONSUMER_TERMS,'2026-10-11-consumer-thermal':PREVIOUS_THERMAL_CONSUMER_TERMS,'2026-10-11-consumer-kort':SHORT_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
  const consumerTerms=termsVersions[q.terms_version];
  if(!consumerTerms)throw Error('TERMS_VERSION_UNAVAILABLE');
- const generalTerms=['2026-10-11-consumer-thermal',TERMS].includes(q.terms_version)?THERMAL_TERMS_TEXT:TERMS_TEXT;
+ const generalTerms=['2026-10-11-consumer-thermal','2026-10-11-consumer-kort',TERMS].includes(q.terms_version)?THERMAL_TERMS_TEXT:TERMS_TEXT;
  const attachmentContent=btoa(String.fromCharCode(...new TextEncoder().encode(generalTerms+'\n\n'+consumerTerms)));
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],
   subject:`${test?'[TEST] ':''}${customer?'Bevestiging van uw inspectie':'Nieuwe boeking'} ${a.reference}`,
@@ -202,7 +203,7 @@ async function checkout(body:any,mode:string){
  const customer=customerInput(body);
  if(mode==='test'&&customer.email!=='ferry@roofsignal.nl')throw Error('TEST_EMAIL_REQUIRED');
  const q=await one('consumer_quotes','id',body.quoteId),s=await one('consumer_slots','id',body.slotId);
- assertMode(q,mode);if(!s||s.quote_id!==q.id||q.terms_version!==body.terms.version||q.terms_version!==TERMS)throw Error('INVALID_REQUEST');
+ assertMode(q,mode);if(!s||s.quote_id!==q.id||q.terms_version!==body.terms.version||q.terms_version!==TERMS||q.pricing_version!==CONSUMER_PRICING_VERSION)throw Error('INVALID_REQUEST');
  assertEarlyStartConsent(s.start_at,body.terms.earlyStartRequested);
  const payload={quoteId:q.id,slotId:s.id,customer,terms:body.terms};
  const result=await claim(body.requestId,{...payload,fingerprint:await sha(JSON.stringify(payload))},mode);

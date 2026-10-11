@@ -1,4 +1,4 @@
-import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261011-standalone-thermal';
+import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261011-losse-inspecties';
 
 // Missing or invalid configuration fails closed. All calendar and payment
 // credentials remain on the server.
@@ -33,8 +33,9 @@ function message(id, text) {
   if (target) { target.textContent = text; target.hidden = !text; }
 }
 
-const chosenInspection = () => el('inspection-thermal').checked ? 'thermal' : 'building_envelope';
-const chosenThermal = () => chosenInspection() === 'thermal' || el('thermal').checked;
+// A combined visit has the same server product whichever inspection is chosen first.
+const chosenInspection = () => el('inspection-thermal').checked && !el('thermal').checked ? 'thermal' : 'building_envelope';
+const chosenThermal = () => el('inspection-thermal').checked || el('thermal').checked;
 
 function updateEarlyStartConsent() {
   const needed = Boolean(selectedSlot && needsEarlyStart(selectedSlot.start));
@@ -48,15 +49,17 @@ function updateSummary() {
   const inspectionType = quote?.inspectionType || chosenInspection();
   const thermal = quote ? quote.thermalCents > 0 : chosenThermal();
   const thermalOnly = inspectionType === 'thermal';
-  el('thermal-option').hidden = thermalOnly;
-  el('thermal-included').hidden = !thermalOnly;
+  const thermalPrimary = el('inspection-thermal').checked;
+  const combined = !thermalOnly && thermal;
+  el('addon-title').textContent = thermalPrimary ? 'Dak- en gevelinspectie toevoegen' : 'Thermografische inspectie toevoegen';
+  el('addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : 'Warmtebeelden van dak en gevel.';
   el('visual-scope').hidden = thermalOnly;
   el('thermal-scope').hidden = !thermal;
   el('summary-base-row').hidden = false;
-  el('summary-base-label').textContent = thermalOnly ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
-  el('summary-base').textContent = money(thermalOnly ? quote?.thermalCents ?? THERMAL_CENTS : quote?.baseCents ?? BASE_CENTS);
-  el('summary-thermal-label').textContent = thermalOnly ? 'Aanvulling' : 'Thermografie';
-  el('summary-thermal').textContent = thermalOnly ? 'Inbegrepen' : thermal ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
+  el('summary-base-label').textContent = thermalPrimary ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
+  el('summary-base').textContent = money(thermalOnly ? quote?.thermalCents ?? BASE_CENTS : quote?.baseCents ?? BASE_CENTS);
+  el('summary-thermal-label').textContent = thermalPrimary ? 'Dak- en gevelinspectie' : 'Thermografie';
+  el('summary-thermal').textContent = combined ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
   el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : money(subtotal(thermal, inspectionType));
   el('address-result').hidden = !quote;
@@ -415,7 +418,10 @@ form.addEventListener('submit', async event => {
 });
 
 for (const id of ['postcode', 'houseNumber', 'thermal', 'inspection-envelope', 'inspection-thermal']) {
-  el(id).addEventListener(['postcode', 'houseNumber'].includes(id) ? 'input' : 'change', clearQuote);
+  el(id).addEventListener(['postcode', 'houseNumber'].includes(id) ? 'input' : 'change', () => {
+    if (!recovery && !recoveryBlocked && ['inspection-envelope', 'inspection-thermal'].includes(id)) el('thermal').checked = false;
+    clearQuote();
+  });
 }
 el('termsAccepted').addEventListener('change', updateSummary);
 el('earlyStartRequested').addEventListener('change', updateSummary);

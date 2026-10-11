@@ -581,7 +581,7 @@ test('Standalone thermography sends its product, includes only the thermal price
     assert.ok(request.path.endsWith('/quote'));
     const { inspectionType, thermal } = request.body;
     const baseCents = inspectionType === 'thermal' ? 0 : 36179;
-    const thermalCents = thermal ? 30250 : 0;
+    const thermalCents = inspectionType === 'thermal' ? 36179 : thermal ? 30250 : 0;
     return { quoteId: recoveryRecord.quoteId, inspectionType, serviceable: true, currency: 'EUR', baseCents, thermalCents,
       travelCents: 4235, totalCents: baseCents + thermalCents + 4235, travelDescription: 'Simulated route',
       termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
@@ -590,20 +590,20 @@ test('Standalone thermography sends its product, includes only the thermal price
   }});
   ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
   await chooseProduct(ui, 'thermal');
-  assert.equal(ui.get('thermal-option').hidden, true);
-  assert.equal(ui.get('thermal-included').hidden, false);
+  assert.equal(ui.get('thermal-option').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Dak- en gevelinspectie toevoegen');
   assert.equal(ui.get('summary-base-row').hidden, false);
   assert.equal(ui.get('summary-base-label').textContent, 'Thermografische inspectie');
-  assert.equal(ui.get('summary-base').textContent, bookingCore.money(30250));
-  assert.equal(ui.get('summary-thermal-label').textContent, 'Aanvulling');
-  assert.equal(ui.get('summary-thermal').textContent, 'Inbegrepen');
-  assert.equal(ui.get('summary-total').textContent, bookingCore.money(30250));
+  assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
+  assert.equal(ui.get('summary-thermal-label').textContent, 'Dak- en gevelinspectie');
+  assert.equal(ui.get('summary-thermal').textContent, 'Niet toegevoegd');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
   assert.equal(ui.get('visual-scope').hidden, true);
   assert.equal(ui.get('thermal-scope').hidden, false);
   await ui.get('check-address').dispatch('click');
   assert.equal(ui.requests[0].body.inspectionType, 'thermal');
   assert.equal(ui.requests[0].body.thermal, true, 'Standalone heat inspection must not depend on the hidden optional checkbox');
-  assert.equal(ui.get('summary-total').textContent, bookingCore.money(34485));
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(40414));
   await ui.get('slots').querySelector('input').dispatch('change');
   ui.get('termsAccepted').checked = true;
   await ui.get('termsAccepted').dispatch('change');
@@ -615,7 +615,7 @@ test('Standalone thermography sends its product, includes only the thermal price
   assert.equal(ui.get('summary-date').textContent, 'Nog te kiezen');
   assert.equal(ui.get('summary-base-row').hidden, false);
   assert.equal(ui.get('thermal-option').hidden, false);
-  assert.equal(ui.get('thermal-included').hidden, true);
+  assert.equal(ui.get('addon-title').textContent, 'Thermografische inspectie toevoegen');
   assert.equal(ui.get('summary-base-label').textContent, 'Dak- en gevelinspectie');
   assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
   assert.equal(ui.get('summary-thermal-label').textContent, 'Thermografie');
@@ -643,6 +643,58 @@ test('A stale envelope quote never unlocks checkout for a newly selected thermal
   assert.match(ui.get('address-status').textContent, /wijkt af van uw gekozen inspectie/);
   assert.equal(ui.get('booking-calendar').hidden, true);
   assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.length, 1);
+});
+
+test('Thermal-first and envelope-first combinations quote and pay the same amount', async () => {
+  for (const first of ['thermal', 'building_envelope']) {
+    const slot = calendarSlot('combined-time', new Date(Date.now() + 30 * 86400000).toISOString());
+    const ui = await bookingPage({ configuration: connectedConfiguration, respond(request) {
+      if (request.path.endsWith('/checkout')) return { ...request.body, reference: 'TEST-COMBINATION', state: 'checkout_ready', status: 'open', currency: 'EUR', totalCents: 66429, checkoutUrl: mollieCheckout };
+      assert.ok(request.path.endsWith('/quote'));
+      assert.equal(request.body.inspectionType, 'building_envelope');
+      assert.equal(request.body.thermal, true);
+      return { quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
+        baseCents: 36179, thermalCents: 30250, travelCents: 0, totalCents: 66429, travelDescription: 'Simulated route',
+        termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
+        address: { postcode: '1234AB', houseNumber: '12', street: 'Teststraat', city: 'Testplaats', country: 'NL' },
+        availability: { quoteId: recoveryRecord.quoteId, slots: [slot] } };
+    }});
+    await chooseProduct(ui, first);
+    assert.equal(ui.get('thermal').checked, false, 'A second product must never be added automatically');
+    assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+    ui.get('thermal').checked = true;
+    await ui.get('thermal').dispatch('change');
+    assert.equal(ui.get('summary-total').textContent, bookingCore.money(66429));
+    assert.equal(ui.get('summary-base-label').textContent, first === 'thermal' ? 'Thermografische inspectie' : 'Dak- en gevelinspectie');
+    assert.equal(ui.get('summary-thermal-label').textContent, first === 'thermal' ? 'Dak- en gevelinspectie' : 'Thermografie');
+    assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
+    assert.equal(ui.get('summary-thermal').textContent, bookingCore.money(30250));
+    ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+    await ui.get('check-address').dispatch('click');
+    assert.equal(ui.get('visual-scope').hidden, false);
+    assert.equal(ui.get('thermal-scope').hidden, false);
+    await ui.get('slots').querySelector('input').dispatch('change');
+    ui.get('termsAccepted').checked = true;
+    await ui.get('termsAccepted').dispatch('change');
+    await ui.get('booking-form').dispatch('submit');
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+    assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).totalCents, 66429);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+    assert.equal(ui.get('thermal').disabled, true);
+  }
+});
+
+test('A thermal payment created before the price change recovers its agreed EUR302.50', async () => {
+  const oldThermal = { ...recoveryRecord, totalCents: 30250 };
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: oldThermal, respond(request) {
+    assert.ok(request.path.endsWith('/recover'));
+    assert.deepEqual(request.body, { requestId: oldThermal.requestId });
+    return readyPayment({ totalCents: oldThermal.totalCents });
+  }});
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(30250));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), oldThermal);
   assert.equal(ui.requests.length, 1);
 });
 
@@ -718,7 +770,7 @@ test('an early inspection needs its own explicit consent before payment or a pen
 });
 
 test('changing an early time, day, address or product clears the separate consent', async () => {
-  const start = Date.now() + 2 * 86400000;
+  const start = Date.parse(new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10) + 'T08:00:00Z');
   const early = calendarSlot('early', new Date(start).toISOString());
   const other = calendarSlot('other', new Date(start + 3600000).toISOString());
   const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());

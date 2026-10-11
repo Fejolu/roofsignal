@@ -12,16 +12,17 @@ const checkout = { requestId, quoteId: expected.quoteId, slotId: expected.slotId
 
 test('Exact consumer totals are calculated in cents', () => {
   assert.equal(subtotal(false), 36179); assert.equal(subtotal(true), 66429);
-  assert.equal(subtotal(false, 'thermal'), 30250); assert.equal(subtotal(true, 'thermal'), 30250);
+  assert.equal(subtotal(false, 'thermal'), 36179); assert.equal(subtotal(true, 'thermal'), 36179);
   assert.throws(() => subtotal(true, 'unknown'));
   assert.match(money(66429), /664,29/); assert.throws(() => money(361.79));
 });
 
 test('Standalone thermography has no visual base and cannot reuse another product quote', () => {
-  const thermal = { ...quote(true), inspectionType: 'thermal', baseCents: 0, totalCents: 30250 };
-  assert.equal(validateQuote(thermal, true, now, address, 'thermal').totalCents, 30250);
-  const travel = { ...thermal, travelCents: 4235, totalCents: 34485 };
-  assert.equal(validateQuote(travel, true, now, address, 'thermal').totalCents, 34485);
+  const thermal = { ...quote(true), inspectionType: 'thermal', baseCents: 0, thermalCents: 36179, totalCents: 36179 };
+  assert.equal(validateQuote(thermal, true, now, address, 'thermal').totalCents, 36179);
+  const travel = { ...thermal, travelCents: 4235, totalCents: 40414 };
+  assert.equal(validateQuote(travel, true, now, address, 'thermal').totalCents, 40414);
+  assert.throws(() => validateQuote({ ...thermal, thermalCents: 30250, totalCents: 30250 }, true, now, address, 'thermal'), 'An old standalone quote must be refreshed before a new payment');
   assert.throws(() => validateQuote(quote(true), true, now, address, 'thermal'));
   assert.throws(() => validateQuote(thermal, true, now, address, 'building_envelope'));
   assert.throws(() => validateQuote({ ...thermal, baseCents: 36179, totalCents: 66429 }, true, now, address, 'thermal'));
