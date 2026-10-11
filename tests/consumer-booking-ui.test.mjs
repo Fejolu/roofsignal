@@ -339,6 +339,32 @@ const calendarButton = (ui, day) => ui.get('calendar-days').querySelectorAll('bu
 const calendarSlot = (id, start, recommended = false) => ({id, start, end:new Date(Date.parse(start)+2700000).toISOString(), recommended});
 const futureYear = new Date().getUTCFullYear() + 1;
 
+test('address details and early-start consent appear only when relevant and reset when the choice changes', async () => {
+  const initial = await bookingPage({ configuration: connectedConfiguration });
+  assert.equal(initial.get('address-result').hidden, true);
+  assert.equal(initial.get('early-start-consent').hidden, true);
+  const soon = calendarSlot('soon', new Date(Date.now() + 3 * 86400000).toISOString());
+  const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
+  const ui = await calendarPage([soon, later]);
+  assert.equal(ui.get('address-result').hidden, false);
+  assert.equal(ui.get('street').value, 'Teststraat');
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, false);
+  assert.equal(ui.get('earlyStartRequested').required, true);
+  ui.get('earlyStartRequested').checked = true;
+  const laterDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam' }).format(new Date(later.start));
+  if (!calendarButton(ui, laterDay)) await ui.get('calendar-next').dispatch('click');
+  await calendarButton(ui, laterDay).dispatch('click');
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  assert.equal(ui.get('earlyStartRequested').required, false);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  await ui.get('postcode').dispatch('input');
+  assert.equal(ui.get('address-result').hidden, true);
+  assert.equal(ui.get('street').value, '');
+});
+
 test('Calendar displays only verified dates, retains the recommended day and clears a previous time when changing day',async()=>{
   const first = `${futureYear}-10-14`, second = `${futureYear}-10-15`;
   const ui=await calendarPage([calendarSlot('day-0',first+'T09:00:00Z'),calendarSlot('day-1',second+'T09:00:00Z',true)]);
