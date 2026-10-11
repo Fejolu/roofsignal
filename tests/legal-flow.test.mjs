@@ -100,11 +100,11 @@ test('failed storage or bot verification cannot produce a false receipt', async 
   assert.equal(bot.saved, undefined);
 });
 
-function analyticsContext(path = '/', navigator = {}) {
+function analyticsContext(path = '/', navigator = {}, search = '') {
   const loaded = [];
-  const window = { location: { pathname: path }, ROOFSIGNAL_ANALYTICS: { enabled: true, websiteId: 'test', scriptUrl: 'https://analytics.invalid', publicPaths: ['/', '/de-parken'] } };
+  const window = { location: { pathname: path, search }, ROOFSIGNAL_ANALYTICS: { enabled: true, websiteId: 'test', scriptUrl: 'https://analytics.invalid', publicPaths: ['/', '/de-parken', '/inspectie-boeken'] } };
   const document = { createElement: () => ({ dataset: {}, addEventListener() {} }), head: { appendChild: el => loaded.push(el) }, addEventListener() {} };
-  vm.runInNewContext(fs.readFileSync(new URL('../assets/analytics.js', import.meta.url), 'utf8'), { window, document, navigator });
+  vm.runInNewContext(fs.readFileSync(new URL('../assets/analytics.js', import.meta.url), 'utf8'), { window, document, navigator, URLSearchParams });
   return { window, loaded };
 }
 
@@ -122,4 +122,22 @@ test('private routes, unknown routes, DNT and GPC never load the analytics provi
   for (const path of ['/offerte-akkoord', '/portal-klant.html', '/herroepen', '/customer/secret']) assert.equal(analyticsContext(path).loaded.length, 0);
   assert.equal(analyticsContext('/', { doNotTrack: '1' }).loaded.length, 0);
   assert.equal(analyticsContext('/', { globalPrivacyControl: true }).loaded.length, 0);
+});
+
+
+test('campaign attribution accepts only fixed labels and never forwards payment tokens', () => {
+  for (const query of ['?rs_campaign=secret@example.com', '?rs_campaign=gclid_secret', '?booking=private_token']) {
+    const {window} = analyticsContext('/inspectie-boeken/', {}, query);
+    assert.equal(window.RoofSignalAnalytics.campaign, null);
+  }
+  const {window} = analyticsContext('/inspectie-boeken/', {}, '?rs_campaign=search_consument_apeldoorn&booking=private_token&gclid=private_click');
+  const clean = window.roofSignalBeforeAnalytics('event', {name:'Inspectie betaling gestart', data:{campaign:'forged', step:'betaling', email:'secret', token:'secret'}});
+  assert.equal(JSON.stringify(clean.data), JSON.stringify({campaign:'search_consument_apeldoorn',step:'betaling'}));
+  assert.equal(JSON.stringify(clean).includes('private'), false);
+  assert.equal(window.roofSignalBeforeAnalytics('event', {name:'Inspectie betaald'}), false);
+  for (const navigator of [{doNotTrack:'1'},{globalPrivacyControl:true}]) {
+    const ctx=analyticsContext('/inspectie-boeken/', navigator, '?rs_campaign=search_consument_apeldoorn');
+    assert.equal(ctx.loaded.length,0);
+    assert.equal(ctx.window.RoofSignalAnalytics.campaign,null);
+  }
 });
