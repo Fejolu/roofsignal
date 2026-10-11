@@ -591,7 +591,12 @@ test('Standalone thermography sends its product, includes only the thermal price
   ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
   await chooseProduct(ui, 'thermal');
   assert.equal(ui.get('thermal-option').hidden, true);
-  assert.equal(ui.get('summary-base-row').hidden, true);
+  assert.equal(ui.get('thermal-included').hidden, false);
+  assert.equal(ui.get('summary-base-row').hidden, false);
+  assert.equal(ui.get('summary-base-label').textContent, 'Thermografische inspectie');
+  assert.equal(ui.get('summary-base').textContent, bookingCore.money(30250));
+  assert.equal(ui.get('summary-thermal-label').textContent, 'Aanvulling');
+  assert.equal(ui.get('summary-thermal').textContent, 'Inbegrepen');
   assert.equal(ui.get('summary-total').textContent, bookingCore.money(30250));
   assert.equal(ui.get('visual-scope').hidden, true);
   assert.equal(ui.get('thermal-scope').hidden, false);
@@ -610,6 +615,11 @@ test('Standalone thermography sends its product, includes only the thermal price
   assert.equal(ui.get('summary-date').textContent, 'Nog te kiezen');
   assert.equal(ui.get('summary-base-row').hidden, false);
   assert.equal(ui.get('thermal-option').hidden, false);
+  assert.equal(ui.get('thermal-included').hidden, true);
+  assert.equal(ui.get('summary-base-label').textContent, 'Dak- en gevelinspectie');
+  assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
+  assert.equal(ui.get('summary-thermal-label').textContent, 'Thermografie');
+  assert.equal(ui.get('summary-thermal').textContent, 'Niet toegevoegd');
   assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
   assert.equal(ui.get('checkout-button').disabled, true);
   ui.get('thermal').checked = true;

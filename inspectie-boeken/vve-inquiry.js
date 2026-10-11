@@ -5,6 +5,7 @@
   const choices = document.querySelectorAll('[data-audience-choice]');
   const panels = document.querySelectorAll('[data-audience]');
   const money = value => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(value);
+  const chosenInspection = () => byId('vve-inspection-thermal').checked ? 'thermal' : 'building_envelope';
   // Approved base (RS-2026-09-17) and thermal (RS-2026-10-11) tiers per object.
   // These are enquiry
   // indications only: no calendar reservation, order or payment is created.
@@ -26,9 +27,10 @@
     const tier = valid && scope === 'single' ? tiers.find(item => count <= item.maximum) : null;
     const custom = scope !== 'single' || (valid && count > 20);
     const key = tier?.key || (custom ? 'custom' : '');
-    const thermalOnly = byId('vve-inspection-type').value === 'thermal';
+    const thermalOnly = chosenInspection() === 'thermal';
     const thermal = thermalOnly || byId('vve-thermal').checked;
     byId('vve-thermal-option').hidden = thermalOnly;
+    byId('vve-thermal-included').hidden = !thermalOnly;
     byId('vve-thermal-interest').value = thermal ? 'yes' : 'no';
     byId('vve-scope').value = thermalOnly
       ? 'VvE-objectaanmelding — thermografische inspectie, inclusief rapport'
@@ -45,12 +47,18 @@
     }
     const net = tier ? (thermalOnly ? 0 : tier.net) + (thermal ? tier.thermalNet : 0) : 0;
     const gross = tier ? (thermalOnly ? 0 : tier.gross) + (thermal ? tier.thermalGross : 0) : 0;
+    byId('vve-envelope-price').textContent = tier ? money(tier.net) : custom ? 'Op maat' : `Vanaf ${money(tiers[0].net)}`;
+    byId('vve-standalone-price').textContent = tier ? money(tier.thermalNet) : custom ? 'Op maat' : `Vanaf ${money(tiers[0].thermalNet)}`;
     byId('vve-thermal-price').textContent = tier
-      ? `+ ${money(tier.thermalNet)} excl. btw (${money(tier.thermalGross)} incl. btw)`
-      : custom ? 'Prijs op maat' : 'Vul het aantal adressen in voor de toeslag';
+      ? `+ ${money(tier.thermalNet)}`
+      : custom ? 'Op maat' : `Vanaf ${money(tiers[0].thermalNet)}`;
+    byId('vve-summary-base-label').textContent = thermalOnly ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
+    byId('vve-summary-base').textContent = tier ? money(thermalOnly ? tier.thermalNet : tier.net) : custom ? 'Op maat' : 'Na objectgegevens';
+    byId('vve-summary-thermal-label').textContent = thermalOnly ? 'Aanvulling' : 'Thermografie';
+    byId('vve-summary-thermal').textContent = thermalOnly ? 'Inbegrepen' : thermal ? tier ? money(tier.thermalNet) : custom ? 'Op maat' : 'Na objectgegevens' : 'Niet toegevoegd';
     byId('vve-estimate-label').textContent = thermalOnly ? 'Uw thermografische inspectie' : thermal ? 'Uw prijs met thermografie' : 'Uw basisprijs';
-    byId('vve-estimate').textContent = tier ? `${money(net)} excl. btw` : custom ? 'Voorstel op maat' : 'Vul het aantal adressen in';
-    byId('vve-estimate-vat').textContent = tier ? `${money(gross)} incl. btw · excl. reiskosten` : '';
+    byId('vve-estimate').textContent = tier ? `${money(net)} excl. btw` : custom ? 'Voorstel op maat' : 'Nog te bepalen';
+    byId('vve-estimate-vat').textContent = tier ? `${money(gross)} incl. btw` : '';
     byId('vve-price-detail').value = tier
       ? `Basisinspectie: ${thermalOnly ? 'niet gekozen' : `${money(tier.net)} excl. btw / ${money(tier.gross)} incl. btw`}. Thermografie: ${thermal ? `${money(tier.thermalNet)} excl. btw / ${money(tier.thermalGross)} incl. btw` : 'niet gekozen'}. Totaal: ${money(net)} excl. btw / ${money(gross)} incl. btw. Exclusief reiskosten. Basisstaffel RS-2026-09-17; thermografiestaffel RS-2026-10-11; definitieve scope en totaalprijs vooraf afstemmen.`
       : custom ? `Maatwerk: omvang en prijs vooraf afstemmen. Thermografie: ${thermal ? 'gewenst, prijs op maat' : 'niet gekozen'}.` : '';
@@ -63,12 +71,16 @@
   byId('vve-address-count').addEventListener('input', updatePrice);
   byId('vve-object-scope').addEventListener('change', updatePrice);
   byId('vve-thermal').addEventListener('change', updatePrice);
-  byId('vve-inspection-type').addEventListener('change', updatePrice);
+  byId('vve-inspection-envelope').addEventListener('change', updatePrice);
+  byId('vve-inspection-thermal').addEventListener('change', updatePrice);
   // Refresh the transmitted indication even after browser autofill. The
   // capture listener runs before the shared lead form's submit handler.
   form.addEventListener('submit', updatePrice, true);
   form.addEventListener('reset', () => queueMicrotask(updatePrice));
-  if (window.RoofSignalBackend?.isConfigured && window.RoofSignalFormSecurity) byId('vve-fields').disabled = false;
+  if (window.RoofSignalBackend?.isConfigured && window.RoofSignalFormSecurity) {
+    byId('vve-fields').disabled = false;
+    byId('vve-submit').disabled = false;
+  }
   else byId('vve-form').querySelector('[data-lead-status]').textContent = 'Aanmelden is tijdelijk niet beschikbaar. Neem contact op via info@roofsignal.nl.';
   // A Mollie return always opens the existing consumer payment feedback.
   const audienceFromUrl = () => !new URLSearchParams(window.location.search).has('booking') && window.location.hash === '#vve' ? 'vve' : 'home';

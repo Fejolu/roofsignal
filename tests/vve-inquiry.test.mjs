@@ -6,16 +6,18 @@ import vm from 'node:vm';
 const html = fs.readFileSync(new URL('../inspectie-boeken/index.html', import.meta.url), 'utf8');
 const script = fs.readFileSync(new URL('../inspectie-boeken/vve-inquiry.js', import.meta.url), 'utf8');
 
-function setup() {
+function setup({ configured = true, security = true } = {}) {
   const elements = new Map([...html.matchAll(/id="([^"]+)"/g)].map(([, id]) => [id, {
     value: '', checked: false, textContent: '', listeners: {},
-    addEventListener(event, handler) { this.listeners[event] = handler; }
+    disabled: /\bdisabled\b/.test(html.match(new RegExp(`<[^>]+\\bid="${id}"[^>]*>`))?.[0] || ''),
+    addEventListener(event, handler) { this.listeners[event] = handler; },
+    querySelector() { return this.status ||= { textContent: '' }; }
   }]));
   const get = id => elements.get(id);
   get('vve-object-scope').value = 'single';
-  get('vve-inspection-type').value = 'building_envelope';
+  get('vve-inspection-envelope').checked = true;
   const window = { location: { search: '', hash: '#vve' }, addEventListener() {},
-    RoofSignalBackend: { isConfigured: true }, RoofSignalFormSecurity: {} };
+    RoofSignalBackend: { isConfigured: configured }, RoofSignalFormSecurity: security ? {} : null };
   vm.runInNewContext(script, {
     document: { getElementById: get, querySelectorAll: () => [] }, window, URLSearchParams, Intl, queueMicrotask
   });
@@ -24,7 +26,11 @@ function setup() {
     count(value) { get('vve-address-count').value = value; get('vve-address-count').listeners.input(); },
     scope(value) { get('vve-object-scope').value = value; get('vve-object-scope').listeners.change(); },
     thermal(value) { get('vve-thermal').checked = value; get('vve-thermal').listeners.change(); },
-    inspection(value) { get('vve-inspection-type').value = value; get('vve-inspection-type').listeners.change(); }
+    inspection(value) {
+      get('vve-inspection-envelope').checked = value === 'building_envelope';
+      get('vve-inspection-thermal').checked = value === 'thermal';
+      get(value === 'thermal' ? 'vve-inspection-thermal' : 'vve-inspection-envelope').listeners.change();
+    }
   };
 }
 const normalized = value => value.replace(/\s/g, '');
@@ -41,9 +47,11 @@ test('approved thermal supplements and VAT totals at every VvE tier boundary', (
   ]) {
     ui.count(count);
     ui.thermal(true);
-    assert.equal(normalized(ui.get('vve-thermal-price').textContent), `+€${supplement}excl.btw(€${supplementVat}incl.btw)`);
+    assert.equal(normalized(ui.get('vve-thermal-price').textContent), `+€${supplement}`);
     assert.equal(normalized(ui.get('vve-estimate').textContent), `€${total}excl.btw`);
-    assert.equal(normalized(ui.get('vve-estimate-vat').textContent), `€${totalVat}incl.btw·excl.reiskosten`);
+    assert.equal(normalized(ui.get('vve-estimate-vat').textContent), `€${totalVat}incl.btw`);
+    assert.equal(normalized(ui.get('vve-summary-base').textContent), `€${base}`);
+    assert.equal(normalized(ui.get('vve-summary-thermal').textContent), `€${supplement}`);
     assert.match(ui.get('vve-price-detail').value, /thermografiestaffel RS-2026-10-11/);
     ui.thermal(false);
     assert.equal(normalized(ui.get('vve-estimate').textContent), `€${base}excl.btw`);
@@ -57,11 +65,11 @@ test('invalid counts and custom objects never retain a previous numeric quote', 
   ui.count('8'); ui.thermal(true);
   for (const count of ['', '0', '-1', '1.5', '10001']) {
     ui.count(count);
-    assert.equal(ui.get('vve-estimate').textContent, 'Vul het aantal adressen in');
+    assert.equal(ui.get('vve-estimate').textContent, 'Nog te bepalen');
     assert.equal(ui.get('vve-price-detail').value, '');
   }
   ui.count('21');
-  assert.equal(ui.get('vve-thermal-price').textContent, 'Prijs op maat');
+  assert.equal(ui.get('vve-thermal-price').textContent, 'Op maat');
   assert.match(ui.get('vve-price-detail').value, /gewenst, prijs op maat/);
   ui.count('8');
   for (const scope of ['multiple', 'unknown']) {
@@ -90,6 +98,10 @@ test('Standalone VvE thermography uses only its own tier and sends an unambiguou
   const ui = setup();
   ui.inspection('thermal');
   assert.equal(ui.get('vve-thermal-option').hidden, true);
+  assert.equal(ui.get('vve-thermal-included').hidden, false);
+  assert.equal(ui.get('vve-summary-base-label').textContent, 'Thermografische inspectie');
+  assert.equal(ui.get('vve-summary-thermal-label').textContent, 'Aanvulling');
+  assert.equal(ui.get('vve-summary-thermal').textContent, 'Inbegrepen');
   assert.equal(ui.get('vve-tiers-title').textContent, 'Thermografie per object');
   assert.equal(ui.get('vve-thermal-interest').value, 'yes');
   assert.match(ui.get('vve-scope').value, /thermografische inspectie, inclusief rapport/);
@@ -100,7 +112,8 @@ test('Standalone VvE thermography uses only its own tier and sends an unambiguou
   ]) {
     ui.count(count);
     assert.equal(normalized(ui.get('vve-estimate').textContent), `€${net}excl.btw`);
-    assert.equal(normalized(ui.get('vve-estimate-vat').textContent), `€${gross}incl.btw·excl.reiskosten`);
+    assert.equal(normalized(ui.get('vve-estimate-vat').textContent), `€${gross}incl.btw`);
+    assert.equal(normalized(ui.get('vve-summary-base').textContent), `€${net}`);
     assert.equal(normalized(ui.get(`vve-tier-${key}-price`).textContent), `€${net}`);
     assert.equal(normalized(ui.get(`vve-tier-${key}-vat`).textContent), `€${gross}incl.btw`);
     assert.match(ui.get('vve-price-detail').value, /Basisinspectie: niet gekozen/);
@@ -108,6 +121,10 @@ test('Standalone VvE thermography uses only its own tier and sends an unambiguou
   }
   ui.inspection('building_envelope');
   assert.equal(ui.get('vve-thermal-option').hidden, false);
+  assert.equal(ui.get('vve-thermal-included').hidden, true);
+  assert.equal(ui.get('vve-summary-base-label').textContent, 'Dak- en gevelinspectie');
+  assert.equal(ui.get('vve-summary-thermal-label').textContent, 'Thermografie');
+  assert.equal(ui.get('vve-summary-thermal').textContent, 'Niet toegevoegd');
   assert.equal(ui.get('vve-thermal-interest').value, 'no');
   assert.equal(normalized(ui.get('vve-estimate').textContent), '€1.250,00excl.btw');
   assert.equal(normalized(ui.get('vve-tier-small-price').textContent), '€750,00');
@@ -134,10 +151,23 @@ test('Standalone VvE thermal custom objects remain an inquiry without a numeric 
 test('VvE autofill at submit refreshes standalone type, effective thermal flag and its price', () => {
   const ui = setup();
   ui.count('12');
-  ui.get('vve-inspection-type').value = 'thermal';
+  ui.get('vve-inspection-envelope').checked = false;
+  ui.get('vve-inspection-thermal').checked = true;
   ui.get('vve-form').listeners.submit();
   assert.equal(ui.get('vve-thermal-interest').value, 'yes');
   assert.match(ui.get('vve-scope').value, /thermografische inspectie/);
   assert.match(ui.get('vve-price-detail').value, /Basisinspectie: niet gekozen/);
   assert.equal(normalized(ui.get('vve-estimate').textContent), '€750,00excl.btw');
+});
+
+test('The VvE action remains disabled until its backend and form verification are available', () => {
+  const active = setup();
+  assert.equal(active.get('vve-fields').disabled, false);
+  assert.equal(active.get('vve-submit').disabled, false);
+  for (const options of [{ configured: false }, { security: false }]) {
+    const unavailable = setup(options);
+    assert.equal(unavailable.get('vve-fields').disabled, true);
+    assert.equal(unavailable.get('vve-submit').disabled, true);
+    assert.match(unavailable.get('vve-form').status.textContent, /tijdelijk niet beschikbaar/);
+  }
 });
