@@ -1,0 +1,33 @@
+name: Consumentenboekingen controleren en bevestigen
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: roofsignal-consumer-bookings
+  cancel-in-progress: false
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - name: Herstel betalingen en verstuur ontbrekende bevestigingen
+        env:
+          AUTOMATION_SECRET: ${{ secrets.CONSUMER_AUTOMATION_SECRET }}
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request,urllib.error,sys
+          secret=os.environ.get('AUTOMATION_SECRET','')
+          if not secret: sys.exit('CONSUMER_AUTOMATION_SECRET ontbreekt.')
+          request=urllib.request.Request('https://kakpticlxlaxtebhsuoh.supabase.co/functions/v1/consumer-booking/process',
+              data=b'{}',headers={'Content-Type':'application/json','x-automation-secret':secret},method='POST')
+          try:
+              with urllib.request.urlopen(request,timeout=230) as response: result=json.load(response)
+          except Exception:
+              sys.exit('Boekingscontrole niet afgerond; controleer de koppeling en wachtrij.')
+          print(json.dumps(result))
+          if not result.get('ok'): sys.exit('Een consumentenboeking of bevestiging vraagt handmatige aandacht.')
+          PY

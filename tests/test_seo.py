@@ -40,7 +40,7 @@ def test_sitemap_contains_unique_public_urls_only():
     assert len(locations) == len(set(locations))
     assert all(url.startswith("https://www.roofsignal.nl/") for url in locations)
     assert not any(re.search(r"/portal-|/404(?:$|/)", url) for url in locations)
-    assert not any("/inspectie-" in url for url in locations)
+    assert not any("/inspectie-" in url and url != "https://www.roofsignal.nl/inspectie-boeken/" for url in locations)
 
 
 def test_local_seo_pages_stay_consolidated_on_work_area():

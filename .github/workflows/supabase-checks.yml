@@ -7,6 +7,9 @@ on:
       - "supabase/**"
       - "tools/supabase_release.py"
       - "tests/**"
+      - "inspectie-boeken/**"
+      - "_redirects"
+      - "_headers"
   push:
     branches:
       - main
@@ -15,6 +18,9 @@ on:
       - "supabase/**"
       - "tools/supabase_release.py"
       - "tests/**"
+      - "inspectie-boeken/**"
+      - "_redirects"
+      - "_headers"
 
 permissions:
   contents: read

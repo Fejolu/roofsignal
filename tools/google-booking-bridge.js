@@ -1,0 +1,128 @@
+/* Google Apps Script adapter. Deploy only after reviewing and authorizing the
+ * account's Calendar access. The generated bundle includes consumer-scheduling.
+ * All operations require Google OAuth; no customer browser calls.
+ * Execute as the account owner. Never log request bodies or OAuth credentials.
+ */
+const RS_CALENDAR = 'ferry.joosten@gmail.com';
+const RS_ORIGIN = 'Burg. Tutein Noltheniuslaan 4, 7316 BH Apeldoorn, Nederland';
+const RS_MODES = ['test','live']; // Caller is always the OAuth-authorized owner.
+
+// Deploy as an API executable with access restricted to the owner. Never as a
+// public web app. The caller must use OAuth from the same Google Cloud project.
+function initializeRoofSignalBridge() {
+  CalendarApp.getCalendarById(RS_CALENDAR).getName();
+  Maps.newDirectionFinder().setOrigin(RS_ORIGIN).setDestination('Markt 1, Apeldoorn, Nederland').setMode(Maps.DirectionFinder.Mode.DRIVING).getDirections();
+  return {ok:true,modes:RS_MODES};
+}
+function executeRoofSignal(data) {
+  if(Session.getEffectiveUser().getEmail()!==RS_CALENDAR)throw Error('UNAUTHORIZED');
+  if(!data||JSON.stringify(data).length>12000||!RS_MODES.includes(data.mode))throw Error('INVALID_REQUEST');
+  if(data.action==='health')return {ok:true,mode:data.mode,calendar:RS_CALENDAR,timeZone:BOOKING_TIME_ZONE,inspectionMinutes:INSPECTION_MINUTES};
+  if(!['route','availability','hold','confirm','release'].includes(data.action))throw Error('UNKNOWN_ACTION');
+  const lock=LockService.getScriptLock();
+  if(!lock.tryLock(20000))throw Error('CALENDAR_BUSY');
+  try {return {ok:true,...rsDispatch(data)};}finally{lock.releaseLock();}
+}
+
+function rsLocation(value) {
+  if(typeof value!=='string'||value.length>1000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value))throw Error('INVALID_LOCATION');
+  const location=value.trim().replace(/\s*[\r\n]+\s*/g,', ').replace(/[\t ]+/g,' ');
+  if(!location||location.length>250)throw Error('INVALID_LOCATION');
+  return location;
+}
+function rsRoute(from,to,cache) {
+  from=rsLocation(from);to=rsLocation(to);
+  const key=from+'\n'+to;
+  if(cache[key]===null)throw Error('ROUTE_UNAVAILABLE');
+  if(cache[key])return cache[key];
+  if(from===to)return {distanceMeters:0,durationSeconds:0};
+  const response=Maps.newDirectionFinder().setOrigin(from).setDestination(to)
+    .setRegion('nl').setLanguage('nl').setMode(Maps.DirectionFinder.Mode.DRIVING).setAlternatives(false).getDirections();
+  if(response&&['ZERO_RESULTS','NOT_FOUND','INVALID_REQUEST'].includes(response.status)) {
+    cache[key]=null;throw Error('ROUTE_UNAVAILABLE');
+  }
+  const leg=response&&response.status==='OK'&&response.routes[0]&&response.routes[0].legs[0];
+  if(!leg||!Number.isSafeInteger(leg.distance.value)||leg.distance.value<0||!Number.isFinite(leg.duration.value)||leg.duration.value<0)throw Error('ROUTE_SERVICE_UNAVAILABLE');
+  const route={distanceMeters:leg.distance.value,durationSeconds:leg.duration.value,provider:'Google Maps via Apps Script',calculatedAt:new Date().toISOString()};
+  cache[key]=route;return route;
+}
+function rsLocalTime(day,minute) {
+  const offset=Utilities.formatDate(new Date(day+'T12:00:00Z'),BOOKING_TIME_ZONE,'Z');
+  const hour=String(Math.floor(minute/60)).padStart(2,'0'),min=String(minute%60).padStart(2,'0');
+  return new Date(day+'T'+hour+':'+min+':00'+offset.slice(0,3)+':'+offset.slice(3));
+}
+function rsCalendar() {
+  const calendar=CalendarApp.getCalendarById(RS_CALENDAR);
+  if(!calendar)throw Error('CALENDAR_UNAVAILABLE');return calendar;
+}
+function rsEvents(calendar,day,excludeMarker) {
+  return calendar.getEvents(rsLocalTime(day,0),rsLocalTime(day,1440-1)).filter(e=>{
+    return (!excludeMarker||e.getDescription()!==excludeMarker)&&e.getTransparency()!==CalendarApp.EventTransparency.TRANSPARENT;
+  }).map(e=>({start:e.getStartTime().toISOString(),end:e.getEndTime().toISOString(),location:e.getLocation()||null}));
+}
+function rsDaySlots(calendar,day,destination,cache,excludeMarker,existingHold=false) {
+  if(day<localDay(Date.now())||(!existingHold&&day===localDay(Date.now())))return [];
+  const weekday=new Date(day+'T12:00:00Z').getUTCDay();
+  if(weekday===0||weekday===6)return [];
+  const events=rsEvents(calendar,day,excludeMarker),slots=[];
+  const dayStart=rsLocalTime(day,540),dayEnd=rsLocalTime(day,960);
+  // An unusable appointment location blocks the adjacent gap, not every other
+  // day. Service/quota failures still abort availability: they are not no-route.
+  const routeSeconds=(from,to)=>{
+    try{return rsRoute(from,to,cache).durationSeconds;}
+    catch(error){if(['INVALID_LOCATION','ROUTE_UNAVAILABLE'].includes(error.message))return NaN;throw error;}
+  };
+  for(let minute=540;minute+INSPECTION_MINUTES<=960;minute+=15) {
+    const start=rsLocalTime(day,minute);
+    if(!canFitInspection({start:start.getTime(),dayStart:dayStart.getTime(),dayEnd:dayEnd.getTime(),events,routeSeconds,origin:RS_ORIGIN,destination,existingHold}))continue;
+    const recommended=events.some(event=>event.location&&routeSeconds(event.location,destination)<=900);
+    slots.push({start:start.toISOString(),end:new Date(start.getTime()+INSPECTION_MINUTES*60000).toISOString(),recommended});
+  }
+  return slots;
+}
+function rsMarker(data) {
+  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(data.requestId||''))throw Error('INVALID_REQUEST_ID');
+  return 'RoofSignal consumer reservation '+data.mode+' '+data.requestId;
+}
+function rsFind(calendar,start,marker) {
+  return calendar.getEvents(new Date(start.getTime()-86400000),new Date(start.getTime()+2*86400000),{search:marker})
+    .filter(event=>event.getDescription()===marker);
+}
+function rsDispatch(data) {
+  const cache={};
+  if(data.action==='route')return rsRoute(RS_ORIGIN,rsLocation(data.destination),cache);
+  const calendar=rsCalendar();
+  if(data.action==='availability') {
+    const destination=rsLocation(data.destination),slots=[];
+    const today=localDay(Date.now());
+    for(let offset=1;offset<=21;offset++) {
+      const day=new Date(Date.parse(today+'T12:00:00Z')+offset*86400000).toISOString().slice(0,10);
+      slots.push(...rsDaySlots(calendar,day,destination,cache));
+    }
+    return {slots:prioritizeSlots(slots),sourceCheckedAt:new Date().toISOString()};
+  }
+  const marker=rsMarker(data),start=new Date(data.start);
+  if(!Number.isFinite(start.getTime()))throw Error('INVALID_TIME');
+  const existing=rsFind(calendar,start,marker);
+  if(existing.length>1)throw Error('CALENDAR_REVIEW_REQUIRED');
+  if(data.action==='release') {
+    for(const event of existing)event.deleteEvent();
+    return {released:true};
+  }
+  const destination=rsLocation(data.destination);
+  if(data.action==='confirm'&&!/^RS-[A-Z0-9-]{6,40}$/.test(data.reference||''))throw Error('INVALID_REFERENCE');
+  const match=rsDaySlots(calendar,localDay(start),destination,cache,marker,existing.length>0).find(slot=>slot.start===start.toISOString());
+  if(!match)throw Error('SLOT_UNAVAILABLE');
+  if(existing.length) {
+    const event=existing[0];
+    if(event.getStartTime().getTime()!==start.getTime()||event.getEndTime().toISOString()!==match.end||event.getLocation()!==destination)throw Error('CALENDAR_REVIEW_REQUIRED');
+    if(data.action==='confirm')event.setTitle((data.mode==='test'?'[TEST] ':'')+'RoofSignal Inspectie · '+data.reference);
+    return {eventId:event.getId(),start:match.start,end:match.end,confirmed:data.action==='confirm'};
+  }
+  if(data.action==='confirm')throw Error('CALENDAR_HOLD_MISSING');
+  // The unique marker is part of the initial insert. If the response or process
+  // is lost afterwards, a retry finds this exact event under the script lock.
+  const event=calendar.createEvent((data.mode==='test'?'[TEST] ':'')+'RoofSignal · betaling in behandeling',start,new Date(match.end),{location:destination,description:marker,sendInvites:false});
+  event.setVisibility(CalendarApp.Visibility.PRIVATE);
+  return {eventId:event.getId(),start:match.start,end:match.end,confirmed:false};
+}

@@ -1,3 +1,8 @@
+/inspectie-boeken/*
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+
 /downloads/*
   Cache-Control: public, max-age=0, must-revalidate
   Content-Type: application/pdf

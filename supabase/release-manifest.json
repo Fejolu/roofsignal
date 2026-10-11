@@ -1,6 +1,7 @@
 {
   "project_ref": "kakpticlxlaxtebhsuoh",
   "functions": [
+    "consumer-booking",
     "create-portal-customer",
     "process-scheduled-invoices",
     "process-parken-integrations",

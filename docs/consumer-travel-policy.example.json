@@ -1,0 +1,10 @@
+{
+  "origin": { "postcode": "7316BH", "houseNumber": "4", "country": "NL" },
+  "sourceReference": "https://roofsignal.odoo.com/odoo/knowledge/71",
+  "version": "bevestigd-2026-10-10",
+  "distanceBasis": "one_way_road",
+  "distanceBasisApproved": true,
+  "multipleVisits": "per_agreed_visit",
+  "weatherReschedulingExtraFee": false,
+  "routeProvider": "not_connected"
+}
