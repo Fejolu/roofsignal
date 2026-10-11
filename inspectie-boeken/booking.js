@@ -37,7 +37,7 @@ function updateSummary() {
   el('summary-thermal').textContent = thermal ? money(THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
   el('summary-total').textContent = quote ? money(quote.totalCents) : recovery ? money(recovery.totalCents) : `${money(subtotal(thermal))} + reiskosten`;
-  message('summary-total-hint', quote || recovery ? 'Dit is het volledige bedrag voor uw gekozen inspectie en bezoek.' : 'Het definitieve totaal verschijnt na de adrescontrole.');
+  el('address-result').hidden = !quote;
   el('summary-date').textContent = selectedSlot ? slotLabel(selectedSlot) : 'Nog te kiezen';
   if (recovery && !quote) {
     for (const id of ['summary-base', 'summary-thermal', 'summary-travel']) el(id).textContent = 'In uw bestaande opdracht';
@@ -45,11 +45,12 @@ function updateSummary() {
   }
   const ready = connected && !recoveryBlocked && !loading && (recovery || (quote && selectedSlot && el('termsAccepted').checked));
   el('checkout-button').disabled = !ready;
-  el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : recovery ? 'Bestaande betaalopdracht controleren' : quote ? `Boek en betaal ${money(quote.totalCents)}` : 'Boek en betaal via Mollie';
+  el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : recovery ? 'Bestaande betaalopdracht controleren' : quote ? `Boek en betaal ${money(quote.totalCents)}` : 'Boek en betaal';
   el('check-address').disabled = configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
   const consentRequired = selectedSlot && needsEarlyStart(selectedSlot.start);
   el('earlyStartRequested').required = Boolean(consentRequired);
-  message('early-start-hint', consentRequired ? 'Dit moment valt binnen de bedenktijd. Kies een later moment of geef hieronder uitdrukkelijk toestemming voor eerdere uitvoering.' : '');
+  el('early-start-consent').hidden = !consentRequired;
+  if (!consentRequired && !recovery) el('earlyStartRequested').checked = false;
   updateCalendarControls();
 }
 
@@ -73,7 +74,7 @@ function clearQuote() {
   el('earlyStartRequested').checked = false;
   el('slots').replaceChildren();
   message('address-status', '');
-  message('slot-status', connected ? 'Controleer eerst uw adres en reiskosten.' : 'In deze conceptpagina zijn nog geen echte agendamomenten aangesloten.');
+  message('slot-status', connected ? '' : 'In deze conceptpagina zijn nog geen echte agendamomenten aangesloten.');
   updateSummary();
 }
 
@@ -229,7 +230,7 @@ el('check-address').addEventListener('click', async () => {
     window.RoofSignalAnalytics?.track('Inspectie prijs gecontroleerd', { thermography: thermal });
     el('street').value = quote.address.street;
     el('city').value = quote.address.city;
-    message('address-status', `Prijs voor dit adres gecontroleerd. Reiskosten: ${money(quote.travelCents)}. Totaal: ${money(quote.totalCents)} inclusief btw.`);
+    message('address-status', '');
     quoteExpiryTimer = setTimeout(() => {
       if (!recovery) { clearQuote(); message('address-status', 'Uw prijsopgave is verlopen. Controleer uw adres opnieuw voor actuele prijzen en tijden.'); }
     }, Math.min(Date.parse(quote.expiresAt) - Date.now(), 2147483647));

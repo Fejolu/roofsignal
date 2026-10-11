@@ -293,3 +293,17 @@
 }
 
 .consumer-booking-page .booking-main .field select { min-width: 0; min-height: 46px; border-radius: 7px; }
+
+/* Keep the booking task above the fold; supporting detail stays optional. */
+.consumer-booking-page .booking-main .booking-hero { display: block; padding-block: 36px 24px; }
+.consumer-booking-page .booking-main .booking-hero h1 { font-size: clamp(32px, 4vw, 46px); letter-spacing: -1px; margin-bottom: 12px; }
+.consumer-booking-page .booking-main .hero__intro { margin-bottom: 20px; }
+.consumer-booking-page .booking-main .audience-choice { margin-bottom: 0; }
+.consumer-booking-page .booking-main .booking-section { padding-block: 0 48px; }
+.consumer-booking-page .booking-main .summary-card h2 { margin-bottom: 24px; }
+.consumer-booking-page .booking-main .booking-summary { display: block; }
+.consumer-booking-page .booking-main .product-scope { margin: 14px 0 8px; }
+.consumer-booking-page .booking-main .booking-details { font-size: 12px; color: var(--booking-muted); }
+.consumer-booking-page .booking-main .booking-details summary { width: fit-content; cursor: pointer; color: var(--booking-blue); text-decoration: underline; text-underline-offset: 3px; }
+.consumer-booking-page .booking-main .booking-details > div { padding-top: 12px; }
+.consumer-booking-page .booking-main .booking-details p:last-child { margin-bottom: 0; }

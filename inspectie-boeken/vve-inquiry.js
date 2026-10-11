@@ -17,7 +17,6 @@
   function showAudience(audience) {
     for (const button of choices) button.setAttribute('aria-pressed', String(button.dataset.audienceChoice === audience));
     for (const panel of panels) panel.hidden = panel.dataset.audience !== audience;
-    byId('audience-action').textContent = audience === 'vve' ? 'Meld uw object aan ↓' : 'Stel uw inspectie samen ↓';
   }
 
   function updatePrice() {

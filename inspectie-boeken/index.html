@@ -12,16 +12,16 @@
     <link rel="icon" href="/assets/roofsignal-bimi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/public.css?v=20260924-navigation">
     <link rel="stylesheet" href="/assets/site-public.css?v=20261011-booking-cta">
-    <link rel="stylesheet" href="./booking.css?v=20261011-vve-thermal">
+    <link rel="stylesheet" href="./booking.css?v=20261011-simple">
     <script src="./booking-config.js" defer></script>
     <script src="/assets/supabase-config.js" defer></script>
     <script src="/assets/supabase-app.js?v=23" defer></script>
     <script src="/assets/form-security.js?v=20261011-quiet-check" defer></script>
     <script src="/assets/lead-capture.js?v=20261011-vve-thermal" defer></script>
-    <script src="./vve-inquiry.js?v=20261011-thermal" defer></script>
+    <script src="./vve-inquiry.js?v=20261011-simple" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
-    <script src="./booking.js?v=20261011-summary-clean" type="module"></script>
+    <script src="./booking.js?v=20261011-simple" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
     <a class="rs-skip" href="#main-content">Naar de inhoud</a>
@@ -38,77 +38,18 @@
 
     <main id="main-content" class="booking-main">
       <section class="booking-hero container" aria-labelledby="hero-title">
-        <div class="hero__copy">
-          <p class="eyebrow"><span aria-hidden="true"></span>RoofSignal Inspectie · woning &amp; VvE</p>
-          <h1 id="hero-title">Weet hoe uw dak en gevel ervoor staan.</h1>
-          <p class="hero__intro">Een onafhankelijke inspectie met een drone. U krijgt scherpe beelden, duidelijke bevindingen en praktische onderhoudsprioriteiten in één digitaal rapport.</p>
-          <div class="audience-choice" role="group" aria-label="Voor wie is de inspectie?">
-            <button type="button" id="audience-home" data-audience-choice="home" aria-pressed="true" aria-controls="consumer-panel" disabled><strong>Woning</strong><span>Direct boeken</span></button>
-            <button type="button" id="audience-vve" data-audience-choice="vve" aria-pressed="false" aria-controls="vve-panel" disabled><strong>VvE</strong><span>Object aanmelden</span></button>
-          </div>
-          <div class="hero__actions">
-            <a class="button button--primary" id="audience-action" href="#boeking">Stel uw inspectie samen <span aria-hidden="true">↓</span></a>
-            <a class="text-link" href="/voorbeeldrapport-uitgebreid">Bekijk de voorbeeldrapporten <span aria-hidden="true">↗</span></a>
-          </div>
-          <ul class="hero__proof" aria-label="Kenmerken van de inspectie">
-            <li>Uitsluitend met drones</li>
-            <li>Inclusief digitaal rapport</li>
-            <li>Onafhankelijk van herstelwerk</li>
-          </ul>
-        </div>
-        <aside class="hero-price" data-audience="home" aria-label="Prijs en omvang van de woninginspectie">
-          <p class="hero-price__label">Uw woning in beeld</p>
-          <p class="hero-price__amount">€361,79</p>
-          <p class="hero-price__tax">incl. btw · excl. reiskosten</p>
-          <div class="hero-price__rule"></div>
-          <p class="hero-price__scope">Dak, gevel, goten en schoorsteen van één grondgebonden woning.</p>
-          <p class="hero-price__detail">Voor het hoofdgebouw. We controleren vooraf of de drone-inspectie op uw adres mogelijk is.</p>
-          <div class="hero-price__option"><span>Optioneel: thermografie</span><strong>+ €302,50 <small>incl. btw</small></strong></div>
-        </aside>
-        <aside class="hero-price" data-audience="vve" aria-label="Basisprijs voor een VvE-inspectie" hidden>
-          <p class="hero-price__label">Uw VvE in beeld</p>
-          <p class="hero-price__amount">Vanaf €750</p>
-          <p class="hero-price__tax">excl. btw · €907,50 incl. btw</p>
-          <div class="hero-price__rule"></div>
-          <p class="hero-price__scope">Dak en gevel van één inspectieobject, inclusief digitaal rapport.</p>
-          <p class="hero-price__detail">De basisprijs volgt uit het aantal adressen. Meld uw object aan; we stemmen de uitvoering en totaalprijs met u af.</p>
-        </aside>
-      </section>
-
-      <section class="value-section" id="werkwijze" aria-labelledby="value-title">
-        <div class="container">
-          <div class="section-intro">
-            <p class="eyebrow">Van beelden naar inzicht</p>
-            <h2 id="value-title">Een helder vertrekpunt voor uw onderhoud.</h2>
-          </div>
-          <div class="value-grid">
-            <article class="value-item">
-              <span class="value-item__number" aria-hidden="true">01</span>
-              <h3>De zichtbare staat</h3>
-              <p>Dronebeelden van dakvlakken, gevels, goten en schoorsteen. We leggen overzicht en relevante details vast.</p>
-            </article>
-            <article class="value-item">
-              <span class="value-item__number" aria-hidden="true">02</span>
-              <h3>Bevindingen met bewijs</h3>
-              <p>Een digitaal rapport met herkenbare foto’s, toelichting, risico’s en de beperkingen van de opname.</p>
-            </article>
-            <article class="value-item">
-              <span class="value-item__number" aria-hidden="true">03</span>
-              <h3>Weten wat aandacht vraagt</h3>
-              <p>Onderhoudsprioriteiten en aanbevolen vervolgstappen. U kiest zelf met wie u eventueel herstel bespreekt.</p>
-            </article>
-          </div>
-          <p class="scope-note">Deze inspectie beoordeelt wat op de dronebeelden zichtbaar is. Het is geen volledige bouwkundige keuring. Niet-zichtbare delen en benodigd vervolgonderzoek benoemen we in het rapport.</p>
+        <h1 id="hero-title">Inspectie boeken</h1>
+        <p class="hero__intro" data-audience="home">Kies uw inspectie, prik een datum en reken af.</p>
+        <p class="hero__intro" data-audience="vve" hidden>Bekijk uw prijs en meld uw VvE-object vrijblijvend aan.</p>
+        <div class="audience-choice" role="group" aria-label="Voor wie is de inspectie?">
+          <button type="button" id="audience-home" data-audience-choice="home" aria-pressed="true" aria-controls="consumer-panel" disabled><strong>Woning</strong><span>Direct boeken</span></button>
+          <button type="button" id="audience-vve" data-audience-choice="vve" aria-pressed="false" aria-controls="vve-panel" disabled><strong>VvE</strong><span>Object aanmelden</span></button>
         </div>
       </section>
 
       <section class="booking-section container" id="boeking" aria-label="Inspectie boeken of object aanmelden">
         <div id="consumer-panel" data-audience="home">
-        <div class="section-intro booking-section__intro">
-          <p class="eyebrow">Uw inspectie samenstellen</p>
-          <h2 id="booking-title">Begin bij uw woning.</h2>
-          <p>Vul uw postcode en huisnummer in. We berekenen de reiskosten vanaf onze vestiging in Apeldoorn en tonen de beschikbare inspectiemomenten. Het volledige bedrag staat vóór de boeking vast.</p>
-        </div>
+        <h2 id="booking-title" class="sr-only">Uw woninginspectie</h2>
 
         <div id="booking-feedback" class="booking-feedback">
           <div id="booking-error" class="error-message" role="alert" tabindex="-1" hidden></div>
@@ -118,21 +59,44 @@
 
         <div class="booking-layout">
           <form id="booking-form" class="booking-form" method="post" data-consumer-booking novalidate>
-            <fieldset class="form-step" aria-describedby="address-description">
-              <legend><span class="step-number" aria-hidden="true">1</span><span>Uw adres</span></legend>
-              <p class="step-description" id="address-description">Dit aanbod geldt voor het hoofdgebouw van één grondgebonden woning. Heeft u een appartement, bijgebouw of ander object? <a href="/contact">Vraag een voorstel aan.</a></p>
+            <fieldset class="form-step">
+              <legend><span class="step-number" aria-hidden="true">1</span><span>Kies uw inspectie</span></legend>
+              <div class="included-product">
+                <span class="included-product__check" aria-hidden="true">✓</span>
+                <div><h3>Dak- en gevelinspectie</h3><p>Met drone · digitaal rapport binnen 2 werkdagen</p></div>
+                <span class="included-product__price">€361,79 <small>incl. btw</small></span>
+              </div>
+              <label class="option-card" for="thermal">
+                <input disabled id="thermal" name="thermal" type="checkbox" value="true">
+                <span class="option-card__body"><strong>Thermografische inspectie toevoegen</strong><span>Warmtebeelden van dak en gevel.</span></span>
+                <span class="option-card__price">+ €302,50 <small>incl. btw</small></span>
+              </label>
+              <p class="field-help product-scope">Voor één grondgebonden woning (hoofdgebouw).</p>
+              <details class="booking-details">
+                <summary>Wat is inbegrepen?</summary>
+                <div>
+                  <p>We inspecteren de zichtbare buitenzijde van dak, gevel, goten en schoorsteen met een drone. U ontvangt foto’s, bevindingen en onderhoudsadvies in een digitaal rapport. Bijgebouwen zijn uitgesloten; dit is geen volledige bouwkundige keuring.</p>
+                  <p>Thermografie toont temperatuurverschillen die op warmteverlies of andere afwijkingen kunnen wijzen. Een warmtebeeld is geen bewijs van een lek of isolatiegebrek. De opname vraagt geschikte meetomstandigheden.</p>
+                  <p>U boekt één bezoek van maximaal 45 minuten, inclusief de voorinspectie op locatie. <a href="/voorbeeldrapport-uitgebreid">Bekijk een voorbeeldrapport</a>.</p>
+                  <p>Appartement of ander object? <a href="/contact">Neem contact op</a>.</p>
+                </div>
+              </details>
+            </fieldset>
+
+            <fieldset class="form-step">
+              <legend><span class="step-number" aria-hidden="true">2</span><span>Uw adres</span></legend>
               <div class="field-row field-row--address">
                 <div class="field">
-                  <label for="postcode">Postcode <span class="required-label">verplicht</span></label>
+                  <label for="postcode">Postcode</label>
                   <input disabled id="postcode" name="postcode" type="text" autocomplete="postal-code" inputmode="text" maxlength="7" pattern="[1-9][0-9]{3}\s?[A-Za-z]{2}" placeholder="1234 AB" required aria-describedby="address-status">
                 </div>
                 <div class="field">
                   <label for="houseNumber">Huisnummer <span class="optional-label">+ toevoeging</span></label>
                   <input disabled id="houseNumber" name="houseNumber" type="text" inputmode="text" maxlength="20" placeholder="12 A" required aria-describedby="address-status">
                 </div>
-                <button class="button button--secondary address-button" id="check-address" type="button" disabled>Bereken reiskosten</button>
+                <button class="button button--secondary address-button" id="check-address" type="button" disabled>Toon beschikbare momenten</button>
               </div>
-              <div class="field-row">
+              <div class="field-row" id="address-result" hidden>
                 <div class="field">
                   <label for="street">Straat</label>
                   <input disabled id="street" name="street" type="text" autocomplete="address-line1" placeholder="Na adrescontrole" readonly>
@@ -142,29 +106,11 @@
                   <input disabled id="city" name="city" type="text" autocomplete="address-level2" placeholder="Na adrescontrole" readonly>
                 </div>
               </div>
-              <p class="inline-status" id="address-status" role="status" aria-live="polite">Vul uw postcode en huisnummer in voor de adrescontrole.</p>
-              <p class="field-help">Uw reiskosten worden berekend op basis van uw adres en staan vóór betaling in het totaal.</p>
+              <p class="inline-status" id="address-status" role="status" aria-live="polite" hidden></p>
             </fieldset>
 
-            <fieldset class="form-step" aria-describedby="options-description">
-              <legend><span class="step-number" aria-hidden="true">2</span><span>Uw inspectie</span></legend>
-              <p class="step-description" id="options-description">De visuele drone-inspectie en het digitale rapport zijn inbegrepen. U kunt thermografie toevoegen.</p>
-              <div class="included-product">
-                <span class="included-product__check" aria-hidden="true">✓</span>
-                <div><h3>RoofSignal Inspectie</h3><p>Dak, gevel, goten en schoorsteen · digitaal rapport</p></div>
-                <span class="included-product__price">€361,79 <small>incl. btw</small></span>
-              </div>
-              <label class="option-card" for="thermal">
-                <input disabled id="thermal" name="thermal" type="checkbox" value="true" aria-describedby="thermal-details">
-                <span class="option-card__body"><strong>Thermografische inspectie toevoegen</strong><span>Warmtebeelden van dak en gevel, eveneens met een drone.</span></span>
-                <span class="option-card__price">+ €302,50 <small>incl. btw</small></span>
-              </label>
-              <p class="field-help" id="thermal-details">U boekt één gecombineerde afspraak van maximaal 45 minuten, inclusief de voorinspectie op locatie. Thermografie vraagt geschikte meetomstandigheden; bij ongeschikt weer verplaatsen we kosteloos. Wilt u vooraf twee afzonderlijke bezoeken afspreken? Neem dan contact op voor een offerte met reiskosten per bezoek. Temperatuurverschillen zijn aanwijzingen voor nader onderzoek, geen automatisch bewijs van een lek of isolatiegebrek.</p>
-            </fieldset>
-
-            <fieldset class="form-step" aria-describedby="date-description">
-              <legend><span class="step-number" aria-hidden="true">3</span><span>Uw inspectiemoment</span></legend>
-              <p class="step-description" id="date-description">Kies na de adrescontrole een beschikbaar moment. Na betaling ontvangt u de afspraakbevestiging. Bij ongeschikte vlieg- of meetomstandigheden verplaatsen we de afspraak kosteloos.</p>
+            <fieldset class="form-step">
+              <legend><span class="step-number" aria-hidden="true">3</span><span>Kies datum en tijd</span></legend>
               <div id="booking-calendar" class="booking-calendar" hidden>
                 <div class="calendar-header">
                   <span>Kies een beschikbare dag</span>
@@ -186,58 +132,55 @@
               </div>
               <div id="calendar-empty" class="calendar-empty">
                 <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false"><rect x="7" y="9" width="26" height="25" rx="4"></rect><path d="M13 6v7M27 6v7M7 18h26M14 24h3M23 24h3M14 29h3"></path></svg>
-                <strong>Beschikbare momenten verschijnen hier</strong>
-                <span>Controleer eerst uw adres en reiskosten.</span>
+                <span>Vul eerst uw adres in om beschikbare momenten te zien.</span>
               </div>
-              <p class="inline-status" id="slot-status" role="status" aria-live="polite">Beschikbare momenten worden na de adrescontrole geladen.</p>
+              <p class="inline-status" id="slot-status" role="status" aria-live="polite" hidden></p>
             </fieldset>
 
-            <fieldset class="form-step" aria-describedby="contact-description">
-              <legend><span class="step-number" aria-hidden="true">4</span><span>Uw contactgegevens</span></legend>
-              <p class="step-description" id="contact-description">Voor afstemming over uw inspectie en het toesturen van uw bevestiging en rapport.</p>
+            <fieldset class="form-step">
+              <legend><span class="step-number" aria-hidden="true">4</span><span>Uw gegevens</span></legend>
               <div class="field">
-                <label for="name">Naam <span class="required-label">verplicht</span></label>
+                <label for="name">Naam</label>
                 <input disabled id="name" name="name" type="text" autocomplete="name" maxlength="120" required>
               </div>
               <div class="field-row">
                 <div class="field">
-                  <label for="email">E-mailadres <span class="required-label">verplicht</span></label>
+                  <label for="email">E-mailadres</label>
                   <input disabled id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
                 </div>
                 <div class="field">
-                  <label for="phone">Telefoonnummer <span class="required-label">verplicht</span></label>
+                  <label for="phone">Telefoonnummer</label>
                   <input disabled id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" required>
                 </div>
               </div>
               <div class="field">
                 <label for="notes">Wat moeten we weten? <span class="optional-label">optioneel</span></label>
-                <textarea disabled id="notes" name="notes" rows="4" maxlength="2000" placeholder="Bijvoorbeeld een onderhoudsvraag, bekende schade of bijzonderheden rondom de woning."></textarea>
+                <textarea disabled id="notes" name="notes" rows="2" maxlength="2000" placeholder="Bijvoorbeeld een specifieke schade of aandachtspunt."></textarea>
               </div>
-              <p class="field-help">We gebruiken uw gegevens voor uw aanvraag en de uitvoering ervan. Lees onze <a href="/privacy">privacyverklaring</a>.</p>
+              <p class="field-help"><a href="/privacy">Privacyverklaring</a></p>
             </fieldset>
 
             <section class="consent-card" aria-labelledby="consent-title">
               <h3 id="consent-title">Controleer uw opdracht</h3>
               <label class="checkbox-row" for="termsAccepted">
                 <input disabled id="termsAccepted" name="termsAccepted" type="checkbox" value="true" required>
-                <span>Ik geef opdracht voor de gekozen inspectie tegen het volledige bedrag in het overzicht. Ik ga akkoord met de beschreven scope, het weersvoorbehoud, de <a href="/legal/voorwaarden-2026-09-24.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-10.txt" target="_blank" rel="noopener noreferrer">aanvullende boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
+                <span>Ik boek deze inspectie tegen het getoonde totaalbedrag en ga akkoord met de <a href="/legal/voorwaarden-2026-09-24.txt" target="_blank" rel="noopener noreferrer">algemene voorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a> en de <a href="/legal/consumentenboeking-2026-10-10.txt" target="_blank" rel="noopener noreferrer">boekingsvoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.</span>
               </label>
               <div class="withdrawal-note">
-                <p>U ontvangt het digitale rapport binnen twee werkdagen na de inspectie. U heeft als consument 14 dagen bedenktijd; bij een einddatum in het weekend of op een feestdag kan die termijn langer zijn. Zonder uw onderstaande verzoek beginnen we pas na die termijn. U kunt uw overeenkomst <a href="/herroepen">online herroepen</a> of contact opnemen.</p>
+                <p>Bij ongeschikt weer verplaatsen we kosteloos. U heeft minimaal 14 dagen bedenktijd. <a href="/herroepen">Boeking herroepen</a>.</p>
               </div>
+              <div id="early-start-consent" hidden>
               <label class="checkbox-row" for="earlyStartRequested">
                 <input disabled id="earlyStartRequested" name="earlyStartRequested" type="checkbox" value="true">
                 <span>Ik verzoek RoofSignal om tijdens de bedenktijd te beginnen. Bij herroeping betaal ik een evenredig bedrag voor het al uitgevoerde deel. Ik erken dat mijn herroepingsrecht vervalt zodra de dienst, inclusief het rapport, volledig is uitgevoerd.</span>
               </label>
-              <p class="field-help" id="early-start-hint" hidden></p>
+              </div>
             </section>
           </form>
 
           <aside class="booking-summary" aria-labelledby="summary-title">
             <div class="summary-card">
-              <p class="eyebrow">Uw overzicht</p>
-              <h2 id="summary-title">RoofSignal Inspectie</h2>
-              <p class="summary-subtitle">Eén woning. Eén helder rapport.</p>
+              <h2 id="summary-title">Uw boeking</h2>
               <dl class="price-breakdown">
                 <div><dt>Inspectie &amp; rapport</dt><dd id="summary-base">€361,79</dd></div>
                 <div><dt>Thermografie</dt><dd id="summary-thermal">€0,00</dd></div>
@@ -246,21 +189,18 @@
               <div class="summary-total">
                 <span>Totaal incl. btw</span>
                 <strong id="summary-total">€361,79 + reiskosten</strong>
-                <p id="summary-total-hint">Het definitieve totaal verschijnt na de adrescontrole.</p>
               </div>
               <div class="summary-date"><span class="summary-date__label">Inspectiemoment</span><strong id="summary-date">Nog geen moment gekozen</strong></div>
               <button class="button button--primary checkout-button" id="checkout-button" type="submit" form="booking-form" disabled>Boek met betalingsverplichting <span aria-hidden="true">→</span></button>
               <noscript><p class="no-script">Voor adrescontrole, beschikbaarheid en boeken is JavaScript nodig. Neem voor een inspectie contact op met RoofSignal.</p></noscript>
             </div>
-            <div class="summary-contact"><strong>Liever even overleggen?</strong><p>Voor een afwijkend object of een specifieke onderzoeksvraag denken we graag mee.</p><a href="mailto:info@roofsignal.nl">info@roofsignal.nl <span aria-hidden="true">↗</span></a></div>
           </aside>
         </div>
         </div>
         <div id="vve-panel" data-audience="vve" hidden>
           <div class="section-intro booking-section__intro">
-            <p class="eyebrow">Voor VvE’s en beheerders</p>
-            <h2>Meld uw VvE-object aan.</h2>
-            <p>Bekijk de basisprijs voor uw object. We stemmen werkzaamheden, planning en totaalprijs vooraf met u af. Aanmelden is vrijblijvend.</p>
+            <h2>Uw VvE-inspectie</h2>
+            <p>U ontvangt een voorstel met de werkzaamheden, planning en totaalprijs.</p>
           </div>
           <div class="booking-layout vve-layout">
             <form id="vve-form" class="booking-form" method="post" data-lead-form="price" data-lead-context="vve-object">
@@ -276,10 +216,9 @@
                   <div class="field"><label for="vve-city">Plaats</label><input id="vve-city" name="object_city" maxlength="100" required></div>
                 </div>
                 <div class="field-row">
-                  <div class="field"><label for="vve-address-count">Aantal adressen binnen het object</label><input id="vve-address-count" name="home_count" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="Bijvoorbeeld 8" required aria-describedby="vve-count-help"></div>
+                  <div class="field"><label for="vve-address-count">Aantal adressen binnen het object</label><input id="vve-address-count" name="home_count" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="Bijvoorbeeld 8" required></div>
                   <div class="field"><label for="vve-object-scope">Omvang van uw aanvraag</label><select id="vve-object-scope" name="object_scope"><option value="single">Eén gebouw / inspectieobject</option><option value="multiple">Meerdere gebouwen</option><option value="unknown">Nog af te stemmen</option></select></div>
                 </div>
-                <p class="field-help" id="vve-count-help">Tel de adressen binnen het te inspecteren object, niet de hele beheerportefeuille.</p>
                 <label class="checkbox-row vve-thermal" for="vve-thermal"><input id="vve-thermal" name="thermal_interest" type="checkbox" value="yes"><span>Thermografische inspectie toevoegen<br><span class="optional-label" id="vve-thermal-price">Vul het aantal adressen in voor de toeslag</span></span></label>
                 <div class="vve-estimate" role="status" aria-live="polite" aria-atomic="true"><span id="vve-estimate-label">Uw basisprijs</span><strong id="vve-estimate">Vul het aantal adressen in</strong><span id="vve-estimate-vat"></span></div>
                 <div class="field"><label for="vve-message">Uw vraag of bijzonderheden <span class="optional-label">optioneel</span></label><textarea id="vve-message" name="message" rows="3" maxlength="2000" placeholder="Bijvoorbeeld aandacht voor het dak, achterstallig onderhoud of uw MJOP."></textarea></div>
@@ -290,7 +229,7 @@
                   <div class="field"><label for="vve-phone">Telefoonnummer <span class="optional-label">optioneel</span></label><input id="vve-phone" name="phone" type="tel" autocomplete="tel" maxlength="30"></div>
                 </div>
                 <button class="button button--primary" type="submit" id="vve-submit">Meld mijn object aan</button>
-                <p class="form-note" data-lead-status role="status" aria-live="polite">We gebruiken uw gegevens voor deze aanvraag. Lees onze <a href="/privacy">privacyverklaring</a>.</p>
+                <p class="form-note" data-lead-status role="status" aria-live="polite"><a href="/privacy">Privacyverklaring</a></p>
               </fieldset>
               <noscript><p>Voor aanmelden is JavaScript nodig. Mail uw objectgegevens naar <a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a>.</p></noscript>
             </form>
@@ -304,22 +243,13 @@
                   <div data-vve-tier="large"><dt>11–20 adressen</dt><dd>€1.250 <small>€1.512,50 incl. btw</small></dd></div>
                   <div data-vve-tier="custom"><dt>Vanaf 21 adressen of meerdere gebouwen</dt><dd>Maatwerk</dd></div>
                 </dl>
-                <p class="field-help">Basisprijzen excl. btw, reiskosten en thermografie. Bij meerdere gebouwen of afwijkende werkzaamheden maken we een voorstel op maat.</p>
+                <p class="field-help">Excl. btw, reiskosten en thermografie.</p>
               </div>
             </aside>
           </div>
         </div>
       </section>
 
-      <section class="faq-section container" id="vragen" aria-labelledby="faq-title">
-        <div class="section-intro"><p class="eyebrow">Goed om te weten</p><h2 id="faq-title">Vragen over uw inspectie.</h2></div>
-        <div class="faq-list">
-          <details><summary>Wat gebeurt er bij slecht weer?<span aria-hidden="true">+</span></summary><div class="faq-answer"><p>Een drone-inspectie vraagt geschikte vlieg- en weersomstandigheden. Als vliegen niet veilig of verantwoord is, verplaatsen we de afspraak kosteloos. We stemmen het nieuwe moment met u af.</p></div></details>
-          <details><summary>Wat ontvang ik en wanneer?<span aria-hidden="true">+</span></summary><div class="faq-answer"><p>Bij een direct geboekte woninginspectie ontvangt u binnen twee werkdagen na de inspectie een digitaal inspectierapport met overzichts- en detailbeelden, bevindingen, beperkingen, onderhoudsprioriteiten en aanbevolen vervolgstappen. Eventuele thermische bevindingen komen in hetzelfde rapport. Werkdagen zijn maandag tot en met vrijdag, met uitzondering van Nederlandse algemeen erkende feestdagen. Voor een VvE-object leggen we de oplevertermijn vast in het voorstel.</p></div></details>
-          <details><summary>Moet ik thuis zijn tijdens de inspectie?<span aria-hidden="true">+</span></summary><div class="faq-answer"><p>We bespreken vooraf welke toegang tot de buitenruimte nodig is en of uw aanwezigheid daarvoor nodig is. De opname vindt van buitenaf plaats, uitsluitend met een drone. We betreden het dak niet.</p></div></details>
-          <details><summary>Wat voegt thermografie toe?<span aria-hidden="true">+</span></summary><div class="faq-answer"><p>Een warmtebeeldcamera op de drone laat temperatuurverschillen aan oppervlakken zien. Die kunnen helpen bepalen waar nader onderzoek naar warmteverlies of een mogelijke afwijking zinvol is. Een afwijkend warmtebeeld bewijst niet automatisch vocht, een lek of een isolatiegebrek.</p><p>Voor uw woning boekt u online één gecombineerde afspraak van maximaal 45 minuten. We beoordelen vooraf of de meet- en vliegomstandigheden geschikt zijn. Bij ongeschikt weer verplaatsen we kosteloos. Twee vooraf afgesproken bezoeken lopen via een offerte, met een reiskostentoeslag per bezoek.</p></div></details>
-        </div>
-      </section>
     </main>
 
 <footer class="footer"><div class="footer-brand"><a class="logo" href="/" aria-label="RoofSignal Property Intelligence"><span class="mark" aria-hidden="true"><img src="/assets/roofsignal-bimi.svg" alt=""></span><span class="logo-lockup"><span class="logo-wordmark"><span class="logo-roof">ROOF</span><span class="logo-signal">SIGNAL</span></span><span class="logo-tagline" aria-hidden="true"><span>P</span><span>R</span><span>O</span><span>P</span><span>E</span><span>R</span><span>T</span><span>Y</span><span class="logo-tagline-space"></span><span>I</span><span>N</span><span>T</span><span>E</span><span>L</span><span>L</span><span>I</span><span>G</span><span>E</span><span>N</span><span>C</span><span>E</span></span></span></a><p>Grip op onderhoudsbeslissingen met objectieve rapportage en vastgoeddata.</p></div><div class="footer-cols"><div><h2 class="footer-heading">Voor wie</h2><a href="/vve-beheerders">VvE beheerders</a><a href="/vastgoedbeheerders">Vastgoedbeheerders</a><a href="/bedrijfspanden">Bedrijfspanden</a><a href="/werkgebied">Werkgebied</a></div><div><h2 class="footer-heading">Service</h2><a href="/voorbeeldrapport-uitgebreid">Inspectierapporten downloaden</a><a href="/over-ons">Over ons</a><a href="/cases">Cases</a><a href="/projecten">Projecten</a><a href="/privacy">Privacyverklaring</a><a href="/cookies">Cookiebeleid</a><a href="/voorwaarden">Algemene voorwaarden</a><a href="/herroepen">Overeenkomst herroepen</a></div><div><h2 class="footer-heading">Contact</h2><a href="mailto:info@roofsignal.nl">info@roofsignal.nl</a><a href="tel:+31852128019">085 21 28 019</a><span>Apeldoorn, Nederland</span><span class="footer-company-spacer" aria-hidden="true"></span><a href="/kennisbank">Kennisbank</a><a class="footer-portal-link" href="https://roofsignal.odoo.com/my">RoofSignal Login</a></div></div></footer>
