@@ -278,7 +278,8 @@ async function submitNewOrder(checkoutResponse) {
     expiresAt: new Date(Date.now() + 600000).toISOString(),
     address: {postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}
   };
-  const slot = {id:'s1', start:new Date(Date.now()+86400000).toISOString(), end:new Date(Date.now()+89100000).toISOString()};
+  const slotStart = Date.now() + 30 * 86400000;
+  const slot = {id:'s1', start:new Date(slotStart).toISOString(), end:new Date(slotStart+2700000).toISOString()};
   const ui = await bookingPage({configuration:connectedConfiguration, respond(request) {
     if (request.path.endsWith('/quote')) return quote;
     if (request.path.endsWith('/availability')) return {quoteId:quote.quoteId,slots:[slot]};
@@ -290,7 +291,7 @@ async function submitNewOrder(checkoutResponse) {
   const choice = ui.get('slots').querySelector('input');
   assert.ok(choice); await choice.dispatch('change');
   ui.get('name').value='Test'; ui.get('email').value='test@example.invalid';
-  ui.get('termsAccepted').checked=true; ui.get('earlyStartRequested').checked=true;
+  ui.get('termsAccepted').checked=true;
   await ui.get('booking-form').dispatch('submit'); await settle();
   return ui;
 }
@@ -355,30 +356,28 @@ test('Combined address result opens the real calendar without a second network r
  assert.equal(wrong.requests.length,1,'Invalid inline data is rejected, not silently replaced');
 });
 
-test('address details and early-start consent appear only when relevant and reset when the choice changes', async () => {
+test('address details reset while the removed early-start consent is never rendered or preaccepted', async () => {
   const initial = await bookingPage({ configuration: connectedConfiguration });
   assert.equal(initial.get('address-result').hidden, true);
-  assert.equal(initial.get('early-start-consent').hidden, true);
-  const soon = calendarSlot('soon', new Date(Date.now() + 3 * 86400000).toISOString());
+  assert.equal(initial.document.getElementById('early-start-consent'), null);
+  assert.equal(initial.document.getElementById('earlyStartRequested'), null);
+  assert.doesNotMatch(page, /Boeking herroepen|Ik verzoek RoofSignal om tijdens de bedenktijd te beginnen/);
+  assert.equal(initial.get('termsAccepted').checked, false);
+  assert.equal(initial.get('termsAccepted').required, true);
   const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
-  const ui = await calendarPage([soon, later]);
+  const ui = await calendarPage([later]);
   assert.equal(ui.get('address-result').hidden, false);
   assert.equal(ui.get('street').value, 'Teststraat');
-  assert.equal(ui.get('early-start-consent').hidden, true);
   await ui.get('slots').querySelector('input').dispatch('change');
-  assert.equal(ui.get('early-start-consent').hidden, false);
-  assert.equal(ui.get('earlyStartRequested').required, true);
-  ui.get('earlyStartRequested').checked = true;
-  const laterDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam' }).format(new Date(later.start));
-  if (!calendarButton(ui, laterDay)) await ui.get('calendar-next').dispatch('click');
-  await calendarButton(ui, laterDay).dispatch('click');
-  await ui.get('slots').querySelector('input').dispatch('change');
-  assert.equal(ui.get('early-start-consent').hidden, true);
-  assert.equal(ui.get('earlyStartRequested').required, false);
-  assert.equal(ui.get('earlyStartRequested').checked, false);
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('termsAccepted').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, false);
   await ui.get('postcode').dispatch('input');
   assert.equal(ui.get('address-result').hidden, true);
   assert.equal(ui.get('street').value, '');
+  assert.equal(ui.get('termsAccepted').checked, false);
 });
 
 test('Calendar displays only verified dates, retains the recommended day and clears a previous time when changing day',async()=>{
@@ -466,9 +465,11 @@ test('Checkout submits the time chosen in the calendar and locks all calendar co
   await calendarButton(ui,second).dispatch('click');
   await ui.get('slots').querySelector('input').dispatch('change');
   const selectedLabel=ui.get('summary-date').textContent;
-  ui.get('termsAccepted').checked=true;ui.get('earlyStartRequested').checked=true;
+  ui.get('termsAccepted').checked=true;
   await ui.get('booking-form').dispatch('submit');
-  assert.equal(ui.requests.find(request=>request.path.endsWith('/checkout')).body.slotId,'chosen');
+  const checkout = ui.requests.find(request=>request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.slotId,'chosen');
+  assert.equal(checkout.body.terms.earlyStartRequested,false,'The removed consent must never be silently granted');
   assert.ok(ui.get('booking-calendar').querySelectorAll('button, input').every(control=>control.disabled));
   await firstButton.dispatch('click');
   assert.equal(ui.get('summary-date').textContent,selectedLabel);

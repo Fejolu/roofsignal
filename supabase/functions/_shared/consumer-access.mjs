@@ -19,7 +19,7 @@ export function publicError(code) {
     ADDRESS_NOT_UNIQUE:'Dit adres is niet eenduidig gevonden. Controleer postcode en huisnummer, inclusief toevoeging.',
     OUTSIDE_ONLINE_AREA:'Voor dit adres maken we graag een offerte. Neem contact op met RoofSignal.',
     QUOTE_EXPIRED:'Uw prijsopgave is verlopen. Controleer uw adres opnieuw.',
-    EARLY_START_REQUIRED:'Geef toestemming voor uitvoering binnen de bedenktijd of kies een later moment.',
+    AFTER_WITHDRAWAL_REQUIRED:'Kies een inspectiemoment na de bedenktijd. Controleer uw adres opnieuw voor beschikbare momenten.',
     CHALLENGE_REQUIRED:'Rond de menselijke controle af en probeer het opnieuw.',
     RATE_LIMITED:'Er zijn te veel verzoeken. Wacht enkele minuten en probeer het opnieuw.',
     INVALID_REQUEST:'De aanvraag kon niet worden gecontroleerd. Controleer uw gegevens.'

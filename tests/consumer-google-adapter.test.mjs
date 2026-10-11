@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {createHash} from 'node:crypto';
 import {googleExecutionError,googleTokenProvider} from '../supabase/functions/_shared/consumer-google.mjs';
 import {planAvailability} from '../supabase/functions/_shared/consumer-availability.mjs';
+import {daysAfterWithdrawal,earlyStartRequired} from '../supabase/functions/_shared/consumer-dates.mjs';
 
 const core=fs.readFileSync(new URL('../supabase/functions/_shared/consumer-scheduling.mjs',import.meta.url),'utf8').replaceAll('export ','');
 const adapter=fs.readFileSync(new URL('../tools/google-booking-bridge.js',import.meta.url),'utf8');
@@ -106,6 +107,25 @@ test('Road cache is directional; calendar remains fresh and mutation route check
  const requestId='601f78aa-31f3-4c63-941d-07b31df84902';
  app.context.executeRoofSignal({action:'release',mode:'test',requestId,start:'2026-10-12T08:00:00Z'});
  assert.deepEqual(app.locks,['acquire','release']);
+});
+
+test('Consumer availability skips the withdrawal period before road planning and preserves actual conflicts',async()=>{
+ const events=[event('09:00','10:00','Deventer'),
+  {start:'2026-10-27T00:00:00+01:00',end:'2026-10-28T00:00:00+01:00',location:null},
+  {start:'2026-10-28T09:00:00+01:00',end:'2026-10-28T10:00:00+01:00',location:'Arnhem'}];
+ const app=setup(events),context=JSON.parse(JSON.stringify(app.context.executeRoofSignal({action:'context',mode:'test'})));
+ const expected=setup(events).context.executeRoofSignal({action:'plan',mode:'test',destination}).slots
+  .filter(slot=>!earlyStartRequired(slot.start,Clock.now()));
+ const calls=[];
+ const result=await planAvailability({context:{...context,days:daysAfterWithdrawal(context.days,Clock.now())},destination,now:Clock.now(),route:async(from,to)=>{
+  calls.push([from,to]);return app.context.executeRoofSignal({action:'route',mode:'test',from,destination:to});
+ }});
+ assert.ok(result.slots.length>0);
+ assert.deepEqual(result.slots,JSON.parse(JSON.stringify(expected)));
+ assert.ok(result.slots.every(slot=>!earlyStartRequired(slot.start,Clock.now())));
+ assert.ok(!result.slots.some(slot=>slot.start.startsWith('2026-10-27')),'Existing busy days remain unavailable');
+ assert.ok(calls.some(pair=>pair.includes('Arnhem')),'Travel buffers still use the eligible day’s actual events');
+ assert.ok(!calls.some(pair=>pair.includes('Deventer')),'Excluded days need no route requests');
 });
 
 test('A new calendar conflict after browsing is rejected under the checkout lock',()=>{
