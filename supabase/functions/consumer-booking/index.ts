@@ -94,7 +94,7 @@ async function availability(id:string,mode:string) {
  return await saveAvailability(q,await currentPlan(q.destination,mode));
 }
 async function currentPlan(destination:string,mode:string) {
- const context=await bridge('context',{},mode);
+ const context=await bridge('context',{destination},mode);
  return await planAvailability({context,destination,route:(from:string,to:string)=>bridge('route',{from,destination:to},mode)});
 }
 async function claim(id:string,payload:any=null,mode='test') {

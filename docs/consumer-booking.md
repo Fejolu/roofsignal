@@ -147,7 +147,8 @@ gebruikt de browser nog de afzonderlijke beschikbaarheidsroute.
 De besloten Google-koppeling leest met `context` het hele venster van 21 dagen eenmaal
 uit. De backend bepaalt met dezelfde planningsregels als de vergrendelde checkout
 welke autoroutes nodig zijn en vraagt die met maximaal acht gelijktijdige `route`-aanroepen
-op. Dat voorkomt opeenvolgende Google Maps-wachttijden bij een nieuw adres. Alleen
+op. Reeds bekende routes worden tegelijk met de verse agenda uitgelezen, zodat daarvoor
+geen extra Google-aanroepen nodig zijn. Dat voorkomt opeenvolgende Google Maps-wachttijden bij een nieuw adres. Alleen
 de backend ontvangt de tijdvakken en locaties van afspraken; de browser krijgt uitsluitend
 de prijsopgave en beschikbare inspectiemomenten. De oudere gecombineerde `plan`-actie
 blijft beschikbaar voor terugrollen. Een Google-toegangstoken wordt uitsluitend in het

@@ -27,7 +27,11 @@ export async function planAvailability({context,destination,route,now=Date.now()
       for(const event of events)if(event.location)requestRoute(event.location,destination);
     }
   }
-  const pending=[...pairs.entries()];let cursor=0;
+  for(const cached of context.cachedRoutes||[]) {
+    const id=key(location(cached.from),location(cached.to)),result=cached.route;
+    if(pairs.has(id)&&Number.isSafeInteger(result?.distanceMeters)&&result.distanceMeters>=0&&Number.isFinite(result.durationSeconds)&&result.durationSeconds>=0)routes.set(id,result);
+  }
+  const pending=[...pairs.entries()].filter(([id])=>!routes.has(id));let cursor=0;
   await Promise.all(Array.from({length:Math.min(concurrency,pending.length)},async()=>{
     while(cursor<pending.length) {
       const [id,pair]=pending[cursor++];
