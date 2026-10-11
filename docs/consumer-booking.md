@@ -1,5 +1,35 @@
 # RoofSignal — algemene consumentenboeking
 
+## VvE-objectaanmelding — besluit 11 oktober 2026
+
+De gebruiker kiest expliciet **object aanmelden met staffelprijs**, met op dezelfde
+pagina de keuze Woning / VvE. De woningroute blijft een directe boeking. De VvE-route
+is een vrijblijvende aanvraag; zij reserveert geen agendatijd en maakt geen betaling.
+
+Broncontrole: Obsidian `04.02 - Diensten en prijzen` (bijgewerkt 9 oktober) en de
+lokale publicatiekopie van het Odoo-medewerkershandboek (24 september). Vastgesteld
+per inspectieobject: maximaal 5 adressen €750 excl. / €907,50 incl. btw; 6–10 adressen
+€1.000 excl. / €1.210 incl.; 11–20 adressen €1.250 excl. / €1.512,50 incl. Vanaf 21
+adressen, meerdere gebouwen of nog onduidelijke scope: maatwerk. Dit zijn
+basisprijzen exclusief thermografie en reizen; werkzaamheden, planning en
+totaalprijs worden vóór een opdracht afgestemd. De nieuwste opdracht staat het
+tonen van de grotere basisstaffels in deze aanvraagroute toe.
+
+VvE-thermografietarieven zijn in beide bronnen nog advies. Het formulier registreert
+daarom alleen interesse, met prijs en uitvoering in overleg. De woningafspraak van
+45 minuten en de particuliere thermografietoeslag worden niet op VvE’s toegepast.
+
+Het formulier gebruikt de bestaande beveiligde `submit-public-lead`-route als
+`price`-aanvraag, segment VvE / VvE-beheerder. Naam organisatie, contactgegevens,
+inspectieadres/plaats, aantal adressen, objectomvang, basisprijsindicatie met
+prijsversie en thermografiewens komen in `lead_requests` en de bestaande
+bevestigings-/notificatiemail. Dit voegt geen nieuwe Odoo- of ERPNext-koppeling toe.
+De herkomst is `/inspectie-boeken/`; `#vve` opent de VvE-keuze rechtstreeks.
+
+Controle: lokale browserproeven met afgevangen verzending op 320, 390, 768, 1024
+en 1440 px; alle staffelgrenzen, maatwerk, terugschakelen naar woning, aanvraaginhoud,
+succes- en foutafhandeling. Geen echte lead of mail aangemaakt tijdens deze proeven.
+
 ## Productie-inrichting — 11 oktober 2026
 
 Het VvE-Warmtefondsartikel staat live sinds commit `0ea2eda`. De consumentenpagina is voor publicatie ingericht: werkelijke agenda- en routeberekening, Mollie, e-mailbevestiging, `connected`-frontend en indexeerbare navigatie. De gebruiker heeft publieke activatie en de hieronder beschreven beperkte toegangen expliciet goedgekeurd. Controleer de uiteindelijke publieke werking aan de hand van de deploymentcontroles en het opleverbericht; de configuratie alleen is geen bewijs van een geslaagde boeking.

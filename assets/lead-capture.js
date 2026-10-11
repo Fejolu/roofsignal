@@ -23,10 +23,16 @@
     const data = new FormData(form);
     const messageLines = [];
     appendDetail(messageLines, "Bericht", readField(data, "message", "Bericht"));
-    appendDetail(messageLines, "Aantal woningen", readField(data, "home_count"));
+    appendDetail(messageLines, form.dataset.leadContext === "vve-object" ? "Aantal adressen binnen het object" : "Aantal woningen", readField(data, "home_count"));
     appendDetail(messageLines, "Vergaderdatum", readField(data, "meeting_date"));
     appendDetail(messageLines, "Telefoon", readField(data, "phone", "Telefoon"));
     appendDetail(messageLines, "Objecten/adressen", readField(data, "buildings", "Gebouwen", "objecten"));
+    if (form.dataset.leadContext === "vve-object") {
+      appendDetail(messageLines, "Plaats object", readField(data, "object_city"));
+      appendDetail(messageLines, "Omvang aanvraag", { single: "Eén gebouw / inspectieobject", multiple: "Meerdere gebouwen", unknown: "Nog af te stemmen" }[readField(data, "object_scope")]);
+      appendDetail(messageLines, "Basisprijsindicatie (geen definitieve offerte)", readField(data, "indicative_price"));
+      appendDetail(messageLines, "Thermografie gewenst", data.get("thermal_interest") === "yes" ? "Ja, prijs en uitvoering vooraf afstemmen" : "Nee");
+    }
     appendDetail(messageLines, "Demo-data", data.get("demo_data") ? "Ja" : "");
 
     return {
@@ -94,7 +100,13 @@
     form.setAttribute("aria-busy", String(isBusy));
   }
 
-  function renderSuccess(status, type) {
+  function renderSuccess(status, type, context) {
+    if (context === "vve-object") {
+      status.className = "form-note form-status success";
+      status.setAttribute("role", "status");
+      status.textContent = "Uw object is aangemeld. U ontvangt een bevestiging per e-mail. We nemen contact op over de werkzaamheden, planning en totaalprijs.";
+      return;
+    }
     if (type === "neighborhood") {
       status.className = "form-note form-status success";
       status.textContent = "Bedankt! Uw interesse is opgeslagen. We houden u per e-mail op de hoogte van volgende wijken. Afmelden kan via info@roofsignal.nl.";
@@ -109,7 +121,7 @@
       <span>${copy.next}</span>
       <span><b>Geen bevestigingsmail ontvangen binnen enkele minuten?</b><br>
         Neem contact op via <a href="tel:+31852128019">${contactPhone}</a> of
-        <a href="contact">${contactEmail}</a>.
+        <a href="/contact">${contactEmail}</a>.
       </span>
     `;
   }
@@ -121,7 +133,7 @@
       <strong>Verzenden lukt niet</strong>
       <span>De aanvraag kon niet automatisch worden verwerkt. Neem direct contact op via
         <a href="tel:+31852128019">${contactPhone}</a> of
-        <a href="contact">${contactEmail}</a>.
+        <a href="/contact">${contactEmail}</a>.
       </span>
     `;
   }
@@ -199,7 +211,7 @@
 
         form.reset();
         form.classList.add("is-complete");
-        if (status) renderSuccess(status, type);
+        if (status) renderSuccess(status, type, form.dataset.leadContext);
         completed = true;
         track("Lead success", { form: type, path: window.location.pathname });
         window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
