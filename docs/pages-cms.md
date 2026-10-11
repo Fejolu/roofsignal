@@ -1,6 +1,6 @@
 # RoofSignal beheren met Pages CMS
 
-Beheeromgeving: <https://app.pagescms.org>. Meld aan met het GitHub-account van RoofSignal, kies **Fejolu / roofsignal** en de tak **main**.
+Beheeromgeving: <https://www.roofsignal.nl/beheer>. Meld aan met het GitHub-account van RoofSignal. De snelkoppeling opent **Fejolu / roofsignal**, tak **main**, in Pages CMS.
 
 ## Tekst of foto wijzigen
 
@@ -33,6 +33,7 @@ Elke opgeslagen wijziging blijft in de GitHub-versiegeschiedenis terug te vinden
 ## Technisch beheer
 
 - `.pages.yml` beschrijft de editors; `content/pages/*.json` is de bron voor bestaande pagina-inhoud.
+- Gebruik in `.pages.yml` geen YAML-ankers/aliases. De uitgebreide veldconfiguratie overschrijdt anders de aliaslimiet van de YAML-lezer in Pages CMS.
 - De oorspronkelijke HTML-bestanden bevatten `data-cms`, `data-cms-image` en `data-cms-link` op vaste posities. Ze blijven het sjabloon voor de vormgeving en bevatten fallbacktekst. Wijzig bij een inhoudelijke codewijziging ook het bijbehorende JSON-veld; anders blijft de CMS-inhoud leidend.
 - Nieuwe artikelen staan in `content/articles/*.json`. Alleen `published: true` wordt gebouwd. Een artikelbestand mag niet van webadres veranderen; de bestandsnaam en slug moeten overeenkomen.
 - `tools/build_site.py` bouwt statische HTML, werkt metadata bij, ontsluit nieuwe artikelen en controleert links en afbeeldingen. Opgemaakte tekst wordt geschoond tegen scripts, formulieren en embeds.
