@@ -6,7 +6,8 @@ import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
 import {earlyStartRequired,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
 import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
-import {googleExecutionError} from '../_shared/consumer-google.mjs';
+import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-google.mjs';
+import {planAvailability} from '../_shared/consumer-availability.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
 import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
@@ -24,14 +25,19 @@ const sha=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest(
 const safeError=(e:any)=>/^[A-Z_0-9]+$/.test(e?.message||'')?e.message:'SERVICE_UNAVAILABLE';
 async function checked(query:any){const {data,error}=await query;if(error)throw Error('STORAGE_UNAVAILABLE');return data;}
 async function one(table:string,key:string,value:string){return await checked(db.from(table).select('*').eq(key,value).maybeSingle());}
-async function bridge(action:string,data:any={},mode='test') {
- const deployment=env('CONSUMER_GOOGLE_DEPLOYMENT_ID'),client=env('CONSUMER_GOOGLE_CLIENT_ID'),secret=env('CONSUMER_GOOGLE_CLIENT_SECRET'),refresh=env('CONSUMER_GOOGLE_REFRESH_TOKEN');
- if(!/^[A-Za-z0-9_-]{20,}$/.test(deployment)||!client||!secret||!refresh)throw Error('CALENDAR_NOT_CONFIGURED');
+const googleToken=googleTokenProvider(async()=>{
+ const client=env('CONSUMER_GOOGLE_CLIENT_ID'),secret=env('CONSUMER_GOOGLE_CLIENT_SECRET'),refresh=env('CONSUMER_GOOGLE_REFRESH_TOKEN');
+ if(!client||!secret||!refresh)throw Error('CALENDAR_NOT_CONFIGURED');
  const auth=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
   body:new URLSearchParams({grant_type:'refresh_token',client_id:client,client_secret:secret,refresh_token:refresh}),signal:AbortSignal.timeout(10000)});
- const token=await auth.json();if(!auth.ok||!token.access_token)throw Error('CALENDAR_AUTH_REQUIRED');
+ const token=await auth.json();if(!auth.ok||!token.access_token)throw Error('CALENDAR_AUTH_REQUIRED');return token;
+});
+async function bridge(action:string,data:any={},mode='test') {
+ const deployment=env('CONSUMER_GOOGLE_DEPLOYMENT_ID');
+ if(!/^[A-Za-z0-9_-]{20,}$/.test(deployment))throw Error('CALENDAR_NOT_CONFIGURED');
+ const token=await googleToken([env('CONSUMER_GOOGLE_CLIENT_ID'),env('CONSUMER_GOOGLE_CLIENT_SECRET'),env('CONSUMER_GOOGLE_REFRESH_TOKEN')].join('\n'));
  const response=await fetch('https://script.googleapis.com/v1/scripts/'+deployment+':run',{method:'POST',
-  headers:{'Content-Type':'application/json',Authorization:'Bearer '+token.access_token},
+  headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
   body:JSON.stringify({function:'executeRoofSignal',parameters:[{...data,action,mode}],devMode:false}),signal:AbortSignal.timeout(45000)});
  const operation=await response.json();
  if(!response.ok)throw Error('GOOGLE_API_HTTP_'+response.status+'_'+String(operation.error?.status||'ERROR').replace(/[^A-Z_]/g,''));
@@ -68,10 +74,7 @@ function quoteView(q:any) {return {serviceable:true,quoteId:q.id,currency:'EUR',
 async function createQuote(body:any,mode:string) {
  if(typeof body.thermal!=='boolean')throw Error('INVALID_REQUEST');
  const address=await addressLookup(body.address),destination=`${address.street} ${address.houseNumber}, ${address.postcode} ${address.city}, Nederland`;
- // One Google execution reads the calendar in a batch and supplies the road
- // route. Return the validated quote and its slots together to avoid another
- // browser round trip, token refresh and Apps Script cold start.
- const plan=await bridge('plan',{destination},mode),route=plan.route;
+ const plan=await currentPlan(destination,mode),route=plan.route;
  const travel=calculateTravel(route.distanceMeters,POLICY,1);
  if(travel.status!=='ready')throw Error('OUTSIDE_ONLINE_AREA');
  const q=await checked(db.from('consumer_quotes').insert({mode,address,destination,thermal:body.thermal,distance_meters:route.distanceMeters,route,campaign:acquisitionCampaign(body.campaign),
@@ -88,7 +91,11 @@ async function saveAvailability(q:any,result:any) {
 async function availability(id:string,mode:string) {
  if(!UUID.test(id))throw Error('INVALID_REQUEST');const q=await one('consumer_quotes','id',id);
  assertMode(q,mode);if(Date.parse(q.expires_at)<=Date.now())throw Error('QUOTE_EXPIRED');
- return await saveAvailability(q,await bridge('availability',{destination:q.destination},mode));
+ return await saveAvailability(q,await currentPlan(q.destination,mode));
+}
+async function currentPlan(destination:string,mode:string) {
+ const context=await bridge('context',{},mode);
+ return await planAvailability({context,destination,route:(from:string,to:string)=>bridge('route',{from,destination:to},mode)});
 }
 async function claim(id:string,payload:any=null,mode='test') {
  if(!UUID.test(id))throw Error('INVALID_REQUEST');
