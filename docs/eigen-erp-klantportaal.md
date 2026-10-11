@@ -1,0 +1,205 @@
+# Eigen RoofSignal-ERP en klantportaal
+
+Functionele opzet · 11 oktober 2026 · Eigenaar: Ferry Joosten
+
+## 1. Vastgestelde richting en status
+
+Ferry kiest een eigen RoofSignal-ERP met klant-, object-, opdracht-, inspectie- en
+financiële administratie, inclusief facturatie en boekhouding. Het nieuwe systeem
+wordt geen Odoo- of ERPNext-inrichting. Bestaande koppelingen en dossiers blijven
+tijdens de voorbereiding operationeel; migratie vergt een afzonderlijk uitvoeringsplan.
+
+Het klantportaal wordt vanaf het begin meegenomen. Expliciet gevraagd: inloggen,
+objecten, rapportages, afspraken en periodieke planning, eigen beheer, facturen en
+een fotogrammetrisch 3D-model met klikbare aandachtspunten.
+
+Dit document legt de scope vast. De precieze rechten, schermen en werkstromen hieronder
+zijn ontwerpvoorstellen. De eerste werkende lokale bouwfase staat in
+[apps/erp](../apps/erp/README.md): klanten, objecten, opdrachten, inspectieronden,
+bevindingen, rapportvrijgave en klantverzoeken. De proefomgeving gebruikt uitsluitend
+fictieve dossiers. Productielogin, migratie, financiële administratie, agenda-/betaalkoppelingen
+en 3D-viewer zijn nog niet opgeleverd. Er is geen productietoegang verleend en geen
+abonnement of nieuwe prijs vastgesteld.
+
+## 2. Eén dossier, twee omgevingen
+
+De backoffice en het klantportaal gebruiken dezelfde geautoriseerde brongegevens.
+Medewerkers werken aan voorbereiding, uitvoering en controle. Klanten zien de voor
+hen vrijgegeven documenten en acties. Publiceren is een expliciete stap per rapport,
+bevindingenset en modelversie; interne notities en concepten blijven intern.
+
+Het portaal krijgt RoofSignal-vormgeving en een ingang vanaf roofsignal.nl.
+Pages CMS blijft voor openbare website-inhoud. Klantbestanden en 3D-modellen horen
+in afgeschermde opslag buiten de openbare CMS-mediabibliotheek.
+
+## 3. Voorgestelde klantnavigatie
+
+| Onderdeel | Klant ziet en doet |
+|---|---|
+| Mijn overzicht | Volgende afspraak, nieuwe rapporten, open acties en relevante factuurstatussen. |
+| Mijn objecten | Gebouwen/portefeuille bekijken; een object openen; een nieuw object aanmelden. |
+| Objectdossier | Gebouwgegevens, bouwdelen, inspectietijdlijn, bevindingen, beelden en documenten. |
+| Rapportages | Vrijgegeven rapporten per object en inspectiedatum bekijken en downloaden. |
+| Afspraken | Bevestigde afspraken, geplande vervolgronden en wijzigingsverzoeken. |
+| 3D-inspectie | Model draaien/zoomen, aandachtspunt aanklikken, bronfoto en advies openen; inspectiedatum kiezen. |
+| Facturen | Eigen facturen en creditnota's, bedragen, vervaldata en geverifieerde betaalstatus. |
+| Mijn gegevens | Contactgegevens, voorkeuren en objectinformatie bijhouden binnen afgesproken rechten. |
+
+Op mobiel moet een klant dezelfde bevinding ook via een lijst en foto kunnen openen.
+Een zwaar of ontbrekend 3D-model mag toegang tot het rapport en de bevindingen niet blokkeren.
+
+## 4. Organisaties, objecten en rechten
+
+- Een persoon kan toegang hebben tot meerdere organisaties, bijvoorbeeld als VvE-beheerder.
+- Een organisatie kan meerdere objecten hebben. Een object kan meerdere adressen bevatten.
+- Leg opdrachtgever, eigenaar, beheerder, contactpersoon en factuurontvanger afzonderlijk vast.
+- Toegang wordt toegewezen aan een persoon voor een organisatie of expliciete objectselectie,
+  met een rol, toegestane handelingen en zo nodig een einddatum.
+- Een contactrecord, e-maildomein, KVK-nummer of ingevoerd adres verleent geen dossierinzage.
+- Een beheerderwissel maakt geen nieuw gebouw of nieuwe inspectiehistorie. Rechten worden
+  ingetrokken of toegekend; financiële stukken en correspondentie gaan niet automatisch mee.
+- Portaalgebruikers zien alleen de aan hen vrijgegeven informatie. Uitvoerders kunnen later
+  beperkte toegang krijgen tot geselecteerde acties zonder alle klant- of financiële gegevens.
+
+Voorstel eerste rollen: dossierlezer, klantcontact met beheerrechten, en financiële
+contactpersoon. De laatste kan facturen zien zonder automatisch technische dossiers te openen.
+RoofSignal kent aanvankelijk toegang toe. Zelf andere personen uitnodigen volgt pas met
+expliciete grenzen aan wat de uitnodiger mag delen.
+
+Alle gegevensverzoeken en bestanden krijgen een controle op de server, ook 3D-modelbestanden,
+texturen en foto’s. Alleen knoppen verbergen is onvoldoende. Tijdelijke downloadlinks
+verlopen; nieuwe toegang wordt na intrekken van rechten geweigerd. Reeds gedownloade
+bestanden kunnen niet achteraf worden teruggenomen. Dit volgt de uitgangspunten van
+[OWASP voor autorisatie](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html).
+
+## 5. Eigen beheer door de klant
+
+Direct bewerkbaar: eigen contactgegevens, berichtvoorkeuren, operationele toegangsinformatie
+en aanvullingen zoals tekeningen of foto's. Bewaar wie wat wanneer heeft gewijzigd.
+
+Als verzoek verwerken: nieuw object, correctie van objectidentiteit/adreslijst,
+wijziging van opdrachtgever, afspraak verplaatsen of inspectie-uitbreiding toevoegen.
+RoofSignal controleert de gevolgen voor scope, planning, prijs en toegang voordat deze ingaan.
+
+De klant kan op een bevinding reageren en herstel melden met bewijs. Houd daarbij
+"herstel gemeld door klant" en "herstel beoordeeld door RoofSignal" apart. Bestaande
+inspectieoordelen, uitgegeven rapporten, factuurbedragen en betaalstatussen worden niet
+door klantbewerkingen overschreven.
+
+## 6. Periodieke inspecties en afspraken
+
+Maak onderscheid tussen:
+
+1. Overeenkomst: object(en), diensten, frequentie en afgesproken voorwaarden.
+2. Inspectieronde: gewenste periode, te leveren resultaat en verantwoordelijke.
+3. Bezoek: een concreet tijdvak, uitvoerder, benodigd materieel en afspraakstatus.
+
+Een halfjaarlijkse inspectieronde is eerst "nog te plannen". Toon haar pas als bevestigde
+afspraak nadat beschikbaarheid, benodigde tijd, reizen en middelen zijn gecontroleerd.
+Een wijzigingsverzoek blokkeert niet zelfstandig een tweede tijdvak.
+
+Eén opdracht kan meerdere bezoeken bevatten, bijvoorbeeld een apart thermisch bezoek.
+Verplaatsen verplaatst de bestaande afspraak met behoud van historie. Websiteboeking,
+interne planning en klantportaal moeten dezelfde capaciteitscontrole gebruiken. De bestaande
+Google-agenda is een koppeling voor beschikbaarheid en afspraken, geen tweede onafhankelijke
+boekingsadministratie.
+
+De particuliere boekingsduur van maximaal 45 minuten is niet de standaardduur voor VvE’s.
+Bewaar de overeengekomen rapportdeadline bij de opdracht; voor de bestaande consumentenroute
+is dit twee werkdagen na inspectie. Bewaar ook prijsversie en reisafspraak bij akkoord.
+
+## 7. Fotogrammetrie en klikbare aandachtspunten
+
+### Klantbediening
+
+De klant opent een gebouw, kiest een inspectiedatum en ziet het bijbehorende 3D-model.
+Klikken op een markering opent een paneel met:
+
+- Bevindingnummer en bouwdeel.
+- Inspectiedatum, waarneming en originele bewijsfoto.
+- Risico, geadviseerde actie en opvolgtermijn.
+- Huidige beoordeling en eerdere waarnemingen van dezelfde bevinding.
+- Eventuele thermische bewijsbeelden, indien opgenomen en vrijgegeven.
+
+Gebruik naast kleur ook labels en symbolen. Filteren kan op bouwdeel, onderwerp,
+urgentie en status. Een lijstweergave is altijd beschikbaar naast het model.
+
+### Structuur voor betrouwbare vergelijking
+
+- Object-ID: blijft bestaan over opdrachten en beheerderwisselingen heen.
+- Bouwdeel-ID: bijvoorbeeld dakvlak noord of schoorsteen 1.
+- Bevinding-ID: het te volgen aandachtspunt binnen dat object.
+- Waarneming-ID: de beoordeling van die bevinding op een specifieke inspectiedatum,
+  inclusief bewijs, beoordelaar en status.
+- Modelversie: object, inspectie, opnamedatum, verwerking, dekking en kwaliteit.
+- Markering: koppelt een waarneming aan een positie en eventueel kijkstand in één modelversie.
+
+Bevindingen zijn afzonderlijke dossiergegevens; de 3D-markeringen verwijzen ernaar.
+Een nieuw model overschrijft een oud model niet. Een bevinding kan in een vervolgmodel
+opnieuw worden aangewezen zonder de vorige positie of beoordeling te veranderen.
+
+Los verwerkte modellen kunnen verschillen in positie, schaal en oriëntatie. Markeringen
+worden daarom niet blind op dezelfde XYZ-coördinaten gekopieerd. Leg een eventuele
+uitlijning vast en controleer die voordat markeringen worden overgenomen. Begin met
+datumselectie en naast-elkaar-weergave; geometrische verschilmetingen volgen pas na
+een gecontroleerde methode en kwaliteitsproef.
+
+Geen zichtbare markering in een latere opname betekent niet automatisch dat iets hersteld is.
+Niet-zichtbare of niet-beoordeelde delen blijven als zodanig herkenbaar. Een thermische
+foto bij een locatie is aanvankelijk een afzonderlijk bewijsbeeld, geen automatisch
+geometrisch of radiometrisch correcte laag op het model.
+
+Verwerking van fotogrammetrie en weergave in het portaal zijn aparte onderdelen. De
+keuze van verwerkingssoftware, viewer en opslagleverancier staat nog open. Bewaar
+bruikbare exports en bronverwijzingen om afhankelijkheid van één viewer te beperken.
+
+## 8. Financieel overzicht en oplevering
+
+Het portaal leest facturen, creditnota's en betaalstatus uit de eigen financiële
+administratie. Een betaalprovider levert gecontroleerde betaalgebeurtenissen aan.
+Een terugkeer naar de website of een klantmelding geldt niet als betalingsbewijs.
+
+Leg afzonderlijk vast welke rapporten, modellen, actualisaties en eventuele hosting
+zijn overeengekomen. Toegang kan daarop worden afgestemd, zonder al prijzen of
+abonnementen voor 3D vast te stellen. Een technisch dossierrecht geeft niet automatisch
+toegang tot alle facturen van dezelfde beheerportefeuille.
+
+## 9. Bouwvolgorde
+
+1. **Fundament:** eigen ERP-gegevensmodel, objectidentiteit, organisaties, rechten,
+   publicatiestatussen, inspectiehistorie en koppelingen. Ontwerp de portaaltoegang meteen mee.
+2. **Eerste klantportaal:** inloggen, objectoverzicht, vrijgegeven PDF-rapporten,
+   afspraken, facturen en beperkte gegevenswijzigingen.
+3. **Samenwerking en herhaling:** inspectieovereenkomsten, volgende rondes,
+   wijzigingsverzoeken en herstelmeldingen met beoordeling.
+4. **3D-proef en uitbreiding:** één echt object met twee opnamen, klikbare bevindingen,
+   datumselectie, mobiele alternatieven en daarna gecontroleerde vergelijking.
+
+Oplevercriteria voor de volledige gekozen fase zijn functionele proeven; een
+schets of aanwezige knop geldt niet als een werkende koppeling.
+
+## 10. Acceptatieproeven vóór ingebruikname
+
+- Klant A kan geen object, PDF, factuur, foto of 3D-bestand van klant B ophalen,
+  ook niet via een directe URL of aangepast verzoek.
+- Een beheerder ziet precies de toegewezen VvE’s/objecten en alleen de toegestane financiële stukken.
+- Een concept of ingetrokken publicatie wordt niet via portaal, zoekfunctie of bestandenlijst blootgegeven.
+- Een klantwijziging van contactgegevens wijzigt geen historische offerte of uitgegeven factuur.
+- Een gemeld herstel blijft zichtbaar als klantmelding totdat RoofSignal het heeft beoordeeld.
+- Een periodieke ronde verschijnt als nog te plannen totdat een concreet bezoek is bevestigd.
+- Een verplaatsing of herhaald boekingsverzoek maakt geen dubbele opdracht, afspraak of betaling.
+- Een uitval van een koppeling toont een herstelbare actiemelding; geen misleidend leeg dossier.
+- Dezelfde bevinding is op twee inspectiedata terug te vinden met de juiste eigen foto's en modelposities.
+- Op telefoon en bij een falend model blijven bevindingen en rapporten toegankelijk.
+- Een ingetrokken medewerker- of klanttoegang wordt bij nieuwe verzoeken direct geweigerd.
+
+## Bronnen en beslisbasis
+
+- Ferry, 11 oktober 2026: eigen ERP bevestigd; klantportaal en klikbaar 3D-dossier toegevoegd.
+- [Medewerkershandboek](../../outputs/roofsignal-medewerkershandboek.md): vastgestelde producten,
+  staffels, reisafspraken en versiebeheer.
+- [Consumentenboeking](consumer-booking.md): bestaande boekingsroutes en geaccepteerde afspraken.
+- [3D-dienstenvoorstel](../../outputs/roofsignal-bouwvoortgang-en-3d-vastgoedregistratie.md):
+  gedateerde modellen, bevindingen en kwaliteitsproef.
+- [Eerdere architectuurvisie](platform-architecture-v2.md): achtergrond; oude bedragen en
+  toekomstige verdienmodellen zijn geen nieuw besluit.

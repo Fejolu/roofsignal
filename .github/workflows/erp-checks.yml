@@ -1,0 +1,26 @@
+name: Eigen ERP controleren
+on:
+  pull_request:
+    paths: ['apps/erp/**', '.github/workflows/erp-checks.yml']
+  push:
+    branches: [main]
+    paths: ['apps/erp/**', '.github/workflows/erp-checks.yml']
+permissions:
+  contents: read
+jobs:
+  erp:
+    name: Dossierrechten en werkstromen
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: apps/erp
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/erp/package-lock.json
+      - run: npm ci
+      - run: npm test

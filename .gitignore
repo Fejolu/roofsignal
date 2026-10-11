@@ -18,3 +18,7 @@ results/leads/
 
 # Cloudflare Pages build output
 dist/
+
+# Private ERP development database and dependencies
+node_modules/
+apps/erp/.local/

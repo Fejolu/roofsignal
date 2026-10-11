@@ -63,6 +63,12 @@ def test_render_preserves_form_contracts(built):
     assert (ROOT / "de-parken/index.html").read_bytes() == (built / "de-parken/index.html").read_bytes()
 
 
+def test_private_erp_and_local_database_are_not_in_public_website_build(built):
+    assert not (built / "apps").exists()
+    assert not any(path.name in {".local", "001_foundation.sql", "dev-server.mjs"}
+                   for path in built.rglob("*"))
+
+
 def test_cleared_optional_text_is_removed_but_headings_remain_required():
     source = (ROOT / "index.html").read_text()
     data = json.loads((ROOT / "content/pages/index.json").read_text())

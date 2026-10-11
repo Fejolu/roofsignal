@@ -1,5 +1,18 @@
 # RoofSignal Platform Architecture v2
 
+## Actuele richting — 11 oktober 2026
+
+Ferry heeft gekozen voor een eigen RoofSignal-ERP, inclusief facturatie en boekhouding,
+met een aangesloten klantportaal. Odoo en ERPNext zijn geen basis voor het beoogde
+nieuwe systeem. Het klantportaal wordt vanaf de gegevensstructuur meegenomen.
+
+Zie [Eigen ERP en klantportaal — functionele opzet](eigen-erp-klantportaal.md) voor
+de actuele uitgangspunten, objecttoegang, periodieke planning en klikbare bevindingen
+in 3D-modellen. Een eerste lokale bouwfase met fictieve dossiers staat in
+[apps/erp](../apps/erp/README.md). De productieomgeving en migratie zijn nog niet ingericht.
+Onderstaande langetermijnvisie blijft achtergrondmateriaal. De abonnementsprijzen,
+upsellregels en SaaS-uitbreiding daarin zijn hiermee niet opnieuw vastgesteld.
+
 ## Purpose
 
 RoofSignal must be designed as a Property Intelligence Platform, not as a report portal and not as a website.

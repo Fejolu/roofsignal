@@ -1,0 +1,38 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {createDevServer} from '../src/dev-server.mjs';
+import {openDatabase,command,USERS} from '../src/database.mjs';
+
+test('HTTP session, CSRF checks, private file download and disk persistence',async t=>{
+  const dir=await mkdtemp(path.join(tmpdir(),'roofsignal-erp-'));
+  const dataDir=path.join(dir,'database');const app=await createDevServer({dataDir,port:0});
+  let closed=false;t.after(async()=>{if(!closed)await app.close();await rm(dir,{recursive:true,force:true});});
+  const post=(route,body,cookie,extra={})=>fetch(app.url+route,{method:'POST',headers:{Origin:app.url,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{}),...extra},body:typeof body==='string'||Buffer.isBuffer(body)?body:JSON.stringify(body)});
+  assert.equal((await post('/api/command',{action:'snapshot'})).status,401);
+  assert.equal((await post('/api/dev-session',{account:'staff'},null,{Origin:'https://evil.invalid'})).status,403);
+  assert.equal((await fetch(app.url+'/api/dev-session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);
+  const login=await post('/api/dev-session',{account:'staff'});assert.equal(login.status,200);
+  assert.match(login.headers.get('set-cookie'),/HttpOnly; SameSite=Strict/);const staff=login.headers.get('set-cookie').split(';')[0];
+  const snapshot=await (await post('/api/command',{action:'snapshot'},staff)).json();const report=snapshot.reports.find(r=>r.status==='draft');
+  const pdf=Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF');
+  assert.equal((await post(`/api/reports/${report.id}/file`,Buffer.from('not pdf'),staff,{'Content-Type':'application/pdf','X-Request-ID':randomUUID()})).status,400);
+  const upload=await post(`/api/reports/${report.id}/file`,pdf,staff,{'Content-Type':'application/pdf','X-Request-ID':randomUUID(),'X-File-Name':'Proef.pdf'});assert.equal(upload.status,200);
+  const other=(await post('/api/dev-session',{account:'other'})).headers.get('set-cookie').split(';')[0];
+  const customer=(await post('/api/dev-session',{account:'customer'})).headers.get('set-cookie').split(';')[0];
+  assert.equal((await fetch(`${app.url}/api/reports/${report.id}/file`,{headers:{Cookie:other}})).status,403);
+  assert.equal((await post('/api/command',{action:'report.publish',payload:{id:report.id,request_id:randomUUID()}},staff)).status,200);
+  const download=await fetch(`${app.url}/api/reports/${report.id}/file`,{headers:{Cookie:other}});
+  assert.equal(download.status,200);assert.match(download.headers.get('content-disposition'),/attachment/);assert.deepEqual(Buffer.from(await download.arrayBuffer()),pdf);
+  assert.equal((await fetch(`${app.url}/api/reports/${report.id}/file`,{headers:{Cookie:customer}})).status,403);
+  assert.equal((await fetch(`${app.url}/.local/documents/anything.pdf`,{headers:{Cookie:staff}})).status,404);
+  await post('/api/command',{action:'report.withdraw',payload:{id:report.id,request_id:randomUUID()}},staff);
+  assert.equal((await fetch(`${app.url}/api/reports/${report.id}/file`,{headers:{Cookie:other}})).status,403);
+  await post('/api/logout',{},staff);assert.equal((await post('/api/command',{action:'snapshot'},staff)).status,401);
+  await app.close();closed=true;
+  const reopened=await openDatabase(dataDir);const stored=await command(reopened,USERS.staff,'snapshot');
+  assert.equal(stored.reports.find(r=>r.id===report.id).status,'withdrawn');assert.equal(stored.reports.find(r=>r.id===report.id).has_file,true);await reopened.close();
+});
