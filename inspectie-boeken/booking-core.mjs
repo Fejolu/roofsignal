@@ -1,6 +1,7 @@
 // UI guards only. The connected server must independently enforce every rule.
 import {earlyStartRequired} from './booking-dates.mjs';
 export const BASE_CENTS = 36179;
+// The second inspection during the same visit costs less than a standalone one.
 export const THERMAL_CENTS = 30250;
 export const TIME_ZONE = 'Europe/Amsterdam';
 export const RECOVERY_STORAGE_KEY = 'roofsignal.consumerBooking.pending.v1';
@@ -45,7 +46,7 @@ export function normalizeHouseNumber(value) {
 
 export function subtotal(thermal, inspectionType = 'building_envelope') {
   if (!['building_envelope', 'thermal'].includes(inspectionType)) throw new Error('Kies een geldige inspectie.');
-  return (inspectionType === 'thermal' ? 0 : BASE_CENTS) + (inspectionType === 'thermal' || thermal ? THERMAL_CENTS : 0);
+  return BASE_CENTS + (inspectionType === 'building_envelope' && thermal ? THERMAL_CENTS : 0);
 }
 
 function validInstant(value) {
@@ -56,7 +57,7 @@ export function validateQuote(data, thermal, now = Date.now(), requestedAddress 
   if (!data || data.serviceable !== true) throw new Error('Voor dit adres is eerst afstemming nodig. Neem contact op met RoofSignal.');
   if (typeof data.quoteId !== 'string' || data.quoteId.length < 16) throw new Error('De prijsopgave is onvolledig.');
   const baseCents = inspectionType === 'thermal' ? 0 : BASE_CENTS;
-  const thermalCents = inspectionType === 'thermal' || thermal ? THERMAL_CENTS : 0;
+  const thermalCents = inspectionType === 'thermal' ? BASE_CENTS : thermal ? THERMAL_CENTS : 0;
   if (!['building_envelope', 'thermal'].includes(inspectionType) || data.inspectionType !== inspectionType || data.currency !== 'EUR' || data.baseCents !== baseCents || data.thermalCents !== thermalCents) throw new Error('De prijsopgave wijkt af van uw gekozen inspectie. Controleer uw adres opnieuw.');
   if (!Number.isSafeInteger(data.travelCents) || data.travelCents < 0) throw new Error('De reiskosten zijn nog niet vastgesteld. Er kan nog niet worden afgerekend.');
   if (!Number.isSafeInteger(data.totalCents) || data.totalCents !== subtotal(thermal, inspectionType) + data.travelCents) throw new Error('De totaalprijs kon niet worden gecontroleerd.');

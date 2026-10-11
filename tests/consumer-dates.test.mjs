@@ -7,6 +7,7 @@ import {CONSUMER_TERMS as CURRENT_CONSUMER_TERMS} from '../supabase/functions/_s
 import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011betalen.mjs';
 import {CONSUMER_TERMS as THERMAL_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011thermografie.mjs';
 import {CONSUMER_TERMS as SHORT_CONSENT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011kort.mjs';
+import {CONSUMER_TERMS as STANDALONE_PRICE_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011los.mjs';
 import {TERMS_TEXT as THERMAL_GENERAL_TERMS} from '../supabase/functions/_shared/terms-20261011thermografie.mjs';
 test('Bedenktijd includes its final Dutch day and extends over weekends and equalized holidays',()=>{
  assert.equal(withdrawalLastDay('2026-10-10T08:00:00Z'),'2026-10-26');
@@ -64,4 +65,12 @@ test('Browser date rules and emailed consumer terms match their canonical source
  assert.match(SHORT_CONSENT_CONSUMER_TERMS,/Zonder dit verzoek beginnen wij pas na de bedenktijd/);
  assert.match(SHORT_CONSENT_CONSUMER_TERMS,/evenredig bedrag voor het daadwerkelijk geleverde deel/);
  assert.match(SHORT_CONSENT_CONSUMER_TERMS,/vastgelegde keuze over eerdere uitvoering/);
+ assert.equal(STANDALONE_PRICE_CONSUMER_TERMS,read('../legal/consumentenboeking-2026-10-11-los.txt'));
+ assert.match(STANDALONE_PRICE_CONSUMER_TERMS,/zelfstandige dak- en gevelinspectie of thermische inspectie kost €361,79/);
+ assert.match(STANDALONE_PRICE_CONSUMER_TERMS,/toevoeging €302,50/);
+ assert.match(STANDALONE_PRICE_CONSUMER_TERMS,/combinatie betaalt u €664,29 inclusief btw, ongeacht welke inspectie u eerst kiest/);
+ assert.equal(STANDALONE_PRICE_CONSUMER_TERMS.split('5. Bedenktijd')[1],SHORT_CONSENT_CONSUMER_TERMS.split('5. Bedenktijd')[1],'The standalone price correction preserves the short consent and withdrawal rules');
+ assert.equal(STANDALONE_PRICE_CONSUMER_TERMS,SHORT_CONSENT_CONSUMER_TERMS
+  .replace('Versie 11 oktober 2026 — korte toestemming voor eerdere uitvoering','Versie 11 oktober 2026 — gelijke prijs voor zelfstandige inspecties')
+  .replace('De dak- en gevelinspectie kost €361,79 inclusief btw. Een zelfstandige thermische inspectie kost €302,50 inclusief btw. Voor de combinatie betaalt u €664,29 inclusief btw.','Een zelfstandige dak- en gevelinspectie of thermische inspectie kost €361,79 inclusief btw. Voegt u de andere inspectie toe voor uitvoering tijdens hetzelfde bezoek, dan kost die toevoeging €302,50 inclusief btw. Voor de combinatie betaalt u €664,29 inclusief btw, ongeacht welke inspectie u eerst kiest.'),'Only the standalone price and version heading change; archived agreements remain unchanged');
 });
