@@ -6,6 +6,17 @@
 .rs-public .site-header > .header-booking-cta { display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-height:44px;white-space:nowrap;margin:0; }
 .rs-public .btn.ghost { color:#1b211f; border:1px solid #636b67; background:transparent; }
 .rs-public .hero .btn.ghost,.rs-public .local-hero .btn.ghost,.rs-public .cta .btn.ghost { color:#fff; border-color:#b5beba; }
+.rs-public .rs-booking-cta { display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px;align-items:center;padding:56px max(7vw,calc((100vw - 1180px)/2)); }
+.rs-booking-cta-copy { min-width:0; }
+.rs-booking-cta h2 { font-size:clamp(28px,2.4vw,38px);line-height:1.2;overflow-wrap:normal;word-break:normal; }
+.rs-booking-cta p { max-width:62ch;margin:16px 0 0;line-height:1.6; }
+.rs-booking-cta .rs-booking-cta-note { color:#b5beba;font-size:.95rem; }
+.rs-booking-cta .actions { display:grid;gap:12px;margin:0; }
+.rs-public .rs-booking-cta .btn { width:100%;margin:0;min-height:48px;display:flex;align-items:center;justify-content:center; }
+@media(max-width:800px) {
+ .rs-public .rs-booking-cta { grid-template-columns:1fr;gap:28px;padding:40px 24px; }
+ .rs-booking-cta .actions { width:100%;max-width:360px; }
+}
 .rs-public .hero .orange,.rs-public .local-hero .orange,.rs-public .page-hero .orange { color:#ff9769; }
 .rs-public a:focus-visible,.rs-public button:focus-visible,.rs-public input:focus-visible,.rs-public select:focus-visible,.rs-public textarea:focus-visible,.rs-public summary:focus-visible { outline:3px solid #1370ad;outline-offset:4px; }
 .rs-public .footer .footer-heading { font-size:1rem;line-height:1.4;color:#fff;margin:0 0 8px; }
