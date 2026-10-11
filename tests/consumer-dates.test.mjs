@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {withdrawalLastDay,earlyStartRequired,assertAfterWithdrawal,reportDueDay} from '../supabase/functions/_shared/consumer-dates.mjs';
 import {CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261010.mjs';
 import {CONSUMER_TERMS as CURRENT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011.mjs';
+import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011betalen.mjs';
 test('Bedenktijd includes its final Dutch day and extends over weekends and equalized holidays',()=>{
  assert.equal(withdrawalLastDay('2026-10-10T08:00:00Z'),'2026-10-26');
  assert.equal(earlyStartRequired('2026-10-26T23:00:00+01:00','2026-10-10T08:00:00Z'),true);
@@ -39,6 +40,8 @@ test('Browser date rules and emailed consumer terms match their canonical source
  assert.equal(read('../inspectie-boeken/booking-dates.mjs').split('\n').slice(1).join('\n'),read('../supabase/functions/_shared/consumer-dates.mjs'));
  assert.equal(CONSUMER_TERMS,read('../legal/consumentenboeking-2026-10-10.txt'));
  assert.equal(CURRENT_CONSUMER_TERMS,read('../legal/consumentenboeking-2026-10-11.txt'));
+ assert.equal(PAYMENT_CONSUMER_TERMS,read('../legal/consumentenboeking-2026-10-11-betalen.txt'));
+ assert.equal(PAYMENT_CONSUMER_TERMS,CURRENT_CONSUMER_TERMS.replace("knop 'Boek en betaal'","knop 'Betalen'"),'The button label changes without changing agreed rights');
  assert.match(CURRENT_CONSUMER_TERMS,/alleen een inspectiemoment na het einde van de bedenktijd/);
  assert.match(CONSUMER_TERMS,/tijdens de bedenktijd/,'Previously agreed terms remain available unchanged');
 });

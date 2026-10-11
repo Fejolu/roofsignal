@@ -3,6 +3,12 @@ export const PROFILE_ID = 'pfl_Bef5DYX9w5';
 export const RETRY_WINDOW_MS = 40 * 60 * 1000;
 export const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 export const TERMINAL = new Set(['confirmed','paid_review_required','failed','canceled','expired','not_created']);
+export function publicPaymentStatus(attempt) {
+  if(['confirmed','paid_review_required','failed','canceled','expired'].includes(attempt.status))return attempt.status;
+  // A provider failure/expiry alone is not durable closure. Calendar cleanup
+  // must complete before the customer can start another booking.
+  return ['open','pending','authorized'].includes(attempt.payment_status)?attempt.payment_status:'pending';
+}
 export function euro(cents) {
   if (!Number.isSafeInteger(cents) || cents < 1) throw Error('INVALID_AMOUNT');
   return `${Math.floor(cents/100)}.${String(cents%100).padStart(2,'0')}`;
@@ -54,7 +60,7 @@ export async function reconcilePayment({attempt,quote,payment,calendar,save}) {
   }
   if(payment.status==='paid') {
     // Persist the verified money receipt before touching the calendar.
-    attempt=await save({payment_id:payment.id,payment_status:'paid',status:'paid_review_required'});
+    attempt=await save({payment_id:payment.id,payment_status:'paid',status:'paid_review_required',checkout_url:null});
     try {
       await calendar('confirm',{requestId:attempt.id,start:attempt.slot_start,destination:quote.destination,reference:attempt.reference});
     } catch { return attempt; }
@@ -65,7 +71,10 @@ export async function reconcilePayment({attempt,quote,payment,calendar,save}) {
     // Capacity is only released after the provider proves payment cannot occur
     // AND our exact calendar hold has been removed. A network timeout is pending.
     await calendar('release',{requestId:attempt.id,start:attempt.slot_start});
-    return await save({payment_id:payment.id,payment_status:payment.status,status:payment.status});
+    return await save({payment_id:payment.id,payment_status:payment.status,status:payment.status,checkout_url:null});
   }
-  return await save({payment_id:payment.id,payment_status:payment.status,status:'payment_pending'});
+  // Always derive the resumable checkout from the verified current provider
+  // response. An earlier interrupted/pending creation may not have saved it.
+  return await save({payment_id:payment.id,payment_status:payment.status,status:'payment_pending',
+    checkout_url:payment.status==='open'?checkoutHref(payment):null});
 }

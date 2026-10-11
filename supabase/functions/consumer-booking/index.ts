@@ -1,12 +1,13 @@
 import {createClient} from 'npm:@supabase/supabase-js@2';
 import {calculateTravel} from '../_shared/consumer-travel-pricing.mjs';
-import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment} from '../_shared/consumer-payment.mjs';
+import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment,publicPaymentStatus} from '../_shared/consumer-payment.mjs';
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
 import {daysAfterWithdrawal,assertAfterWithdrawal,withdrawalLastDay,reportDueDay} from '../_shared/consumer-dates.mjs';
 import {CONSUMER_TERMS as LEGACY_CONSUMER_TERMS} from '../_shared/consumer-terms-20261010.mjs';
-import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011.mjs';
+import {CONSUMER_TERMS as PREVIOUS_CONSUMER_TERMS} from '../_shared/consumer-terms-20261011.mjs';
+import {CONSUMER_TERMS} from '../_shared/consumer-terms-20261011betalen.mjs';
 import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-google.mjs';
 import {planAvailability} from '../_shared/consumer-availability.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
@@ -14,7 +15,7 @@ import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
-const TERMS='2026-10-11-consumer';
+const TERMS='2026-10-11-consumer-pay';
 const POLICY={version:'2026-10-10',distanceBasis:'one_way_road',distanceBasisApproved:true,multipleVisits:'per_agreed_visit'};
 const env=(name:string)=>Deno.env.get(name)||'';
 const adminKeys=consumerAdminKeys(env('SUPABASE_SERVICE_ROLE_KEY'),env('SUPABASE_SECRET_KEYS'));
@@ -124,7 +125,9 @@ async function receipt(a:any,q:any,job:any) {
  if(job.recipient_kind==='internal')lines.unshift(`Campagne: ${acquisitionCampaign(q.campaign)||'herkomst onbekend'}`,`Klant: ${a.customer.name}`,`E-mail: ${a.customer.email}`,`Telefoon: ${a.customer.phone}`,`Bijzonderheden: ${a.customer.notes||'Geen'}`);
  const text=lines.join('\n');
  const customer=job.recipient_kind==='customer';
- const consumerTerms=q.terms_version==='2026-10-10-consumer'?LEGACY_CONSUMER_TERMS:CONSUMER_TERMS;
+ const termsVersions:Record<string,string>={'2026-10-10-consumer':LEGACY_CONSUMER_TERMS,'2026-10-11-consumer':PREVIOUS_CONSUMER_TERMS,[TERMS]:CONSUMER_TERMS};
+ const consumerTerms=termsVersions[q.terms_version];
+ if(!consumerTerms)throw Error('TERMS_VERSION_UNAVAILABLE');
  const attachmentContent=btoa(String.fromCharCode(...new TextEncoder().encode(TERMS_TEXT+'\n\n'+consumerTerms)));
  return {sender:{email:env('BREVO_FROM_EMAIL'),name:'RoofSignal'},to:[{email:test||!customer?'ferry@roofsignal.nl':a.customer.email,name:test||!customer?'RoofSignal':a.customer.name}],
   subject:`${test?'[TEST] ':''}${customer?'Bevestiging van uw inspectie':'Nieuwe boeking'} ${a.reference}`,
@@ -271,7 +274,7 @@ Deno.serve(async(req:Request)=>{
    const found=assertMode(await one('consumer_attempts','status_token',token),mode);
    if(!admin)await limit('status:'+found.id,12);
    const job=await claim(found.id,null,mode);const a=job.claimed?await progress(job.attempt):job.attempt;
-   return respond({status:['confirmed','paid_review_required','failed','canceled','expired'].includes(a.status)?a.status:a.payment_status||'pending'});
+   return respond({...await view(a),status:publicPaymentStatus(a)});
   }
   if(req.method!=='POST')return respond({error:'METHOD_NOT_ALLOWED'},405);
   const raw=await req.text();if(raw.length>12000)throw Error('INVALID_REQUEST');const body=JSON.parse(raw);
