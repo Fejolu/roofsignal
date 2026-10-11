@@ -36,7 +36,7 @@ function updateSummary() {
   el('summary-base').textContent = money(BASE_CENTS);
   el('summary-thermal').textContent = thermal ? money(THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
-  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery ? money(recovery.totalCents) : `${money(subtotal(thermal))} + reiskosten`;
+  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery ? money(recovery.totalCents) : money(subtotal(thermal));
   el('address-result').hidden = !quote;
   el('summary-date').textContent = selectedSlot ? slotLabel(selectedSlot) : 'Nog te kiezen';
   if (recovery && !quote) {
