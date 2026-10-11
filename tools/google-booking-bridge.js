@@ -18,10 +18,10 @@ function executeRoofSignal(data) {
   if(Session.getEffectiveUser().getEmail()!==RS_CALENDAR)throw Error('UNAUTHORIZED');
   if(!data||JSON.stringify(data).length>12000||!RS_MODES.includes(data.mode))throw Error('INVALID_REQUEST');
   if(data.action==='health')return {ok:true,mode:data.mode,calendar:RS_CALENDAR,timeZone:BOOKING_TIME_ZONE,inspectionMinutes:INSPECTION_MINUTES};
-  if(!['route','availability','plan','hold','confirm','release'].includes(data.action))throw Error('UNKNOWN_ACTION');
+  if(!['route','context','availability','plan','hold','confirm','release'].includes(data.action))throw Error('UNKNOWN_ACTION');
   // Reading a calendar does not reserve capacity. Only mutations need the
   // global lock; checkout always re-reads the actual day under that lock.
-  if(['route','availability','plan'].includes(data.action))return {ok:true,...rsDispatch(data)};
+  if(['route','context','availability','plan'].includes(data.action))return {ok:true,...rsDispatch(data)};
   const lock=LockService.getScriptLock();
   if(!lock.tryLock(20000))throw Error('CALENDAR_BUSY');
   try {return {ok:true,...rsDispatch(data)};}finally{lock.releaseLock();}
@@ -114,8 +114,22 @@ function rsFind(calendar,start,marker) {
 }
 function rsDispatch(data) {
   const cache={shared:['route','availability','plan'].includes(data.action)};
-  if(data.action==='route')return rsRoute(RS_ORIGIN,rsLocation(data.destination),cache);
+  if(data.action==='route')return rsRoute(data.from===undefined?RS_ORIGIN:rsLocation(data.from),rsLocation(data.destination),cache);
   const calendar=rsCalendar();
+  if(data.action==='context') {
+    // Owner-authenticated server only. Never return this context to a browser:
+    // appointment locations are private and needed only to calculate travel.
+    const today=localDay(Date.now()),dateAt=offset=>new Date(Date.parse(today+'T12:00:00Z')+offset*86400000).toISOString().slice(0,10);
+    const sourceCheckedAt=new Date().toISOString(),days=[];
+    const events=rsReadEvents(calendar,rsLocalTime(dateAt(1),0),rsLocalTime(dateAt(22),0));
+    for(let offset=1;offset<=21;offset++) {
+      const day=dateAt(offset),weekday=new Date(day+'T12:00:00Z').getUTCDay();
+      if(weekday===0||weekday===6)continue;
+      days.push({start:rsLocalTime(day,540).toISOString(),end:rsLocalTime(day,960).toISOString(),
+        lower:rsLocalTime(day,0).toISOString(),upper:rsLocalTime(dateAt(offset+1),0).toISOString()});
+    }
+    return {origin:RS_ORIGIN,days,events,sourceCheckedAt};
+  }
   if(data.action==='availability'||data.action==='plan') {
     const destination=rsLocation(data.destination),slots=[];
     const today=localDay(Date.now());

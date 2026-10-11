@@ -144,13 +144,18 @@ beschikbaarheidscontract. De browser controleert deze gegevens en toont de agend
 zonder een tweede netwerkverzoek. Alleen bij een oudere server zonder dit veld
 gebruikt de browser nog de afzonderlijke beschikbaarheidsroute.
 
-De besloten Google-koppeling verwerkt `plan` (autoroute en agenda) in één uitvoering.
-De kalender wordt voor het hele venster van 21 dagen eenmaal uitgelezen; de tijden
-worden vervolgens lokaal per dag berekend. Routeafstanden en statische autorijtijden
+De besloten Google-koppeling leest met `context` het hele venster van 21 dagen eenmaal
+uit. De backend bepaalt met dezelfde planningsregels als de vergrendelde checkout
+welke autoroutes nodig zijn en vraagt die met maximaal acht gelijktijdige `route`-aanroepen
+op. Dat voorkomt opeenvolgende Google Maps-wachttijden bij een nieuw adres. Alleen
+de backend ontvangt de tijdvakken en locaties van afspraken; de browser krijgt uitsluitend
+de prijsopgave en beschikbare inspectiemomenten. De oudere gecombineerde `plan`-actie
+blijft beschikbaar voor terugrollen. Een Google-toegangstoken wordt uitsluitend in het
+servergeheugen gedeeld en vóór het verstrijken vernieuwd. Routeafstanden en statische autorijtijden
 worden maximaal één uur hergebruikt, met afzonderlijke sleutels per rijrichting.
 Vrij/bezet-gegevens worden niet gecachet. Bij reserveren en bevestigen worden agenda
 en benodigde routes opnieuw gecontroleerd onder de bestaande scriptvergrendeling.
-De uitrolvolgorde is Google-script, consumentenbackend, website; de oudere routes
+De uitrolvolgorde is Google-script (met `context`), consumentenbackend, website; de oudere routes
 blijven ondersteund. Toegangsrechten, reistarieven en inspectieduur blijven gelijk.
 
 Bronnen: [Google: batchbewerkingen](https://developers.google.com/apps-script/guides/support/best-practices),

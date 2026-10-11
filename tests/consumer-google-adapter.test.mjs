@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {createHash} from 'node:crypto';
-import {googleExecutionError} from '../supabase/functions/_shared/consumer-google.mjs';
+import {googleExecutionError,googleTokenProvider} from '../supabase/functions/_shared/consumer-google.mjs';
+import {planAvailability} from '../supabase/functions/_shared/consumer-availability.mjs';
 
 const core=fs.readFileSync(new URL('../supabase/functions/_shared/consumer-scheduling.mjs',import.meta.url),'utf8').replaceAll('export ','');
 const adapter=fs.readFileSync(new URL('../tools/google-booking-bridge.js',import.meta.url),'utf8');
@@ -116,4 +117,62 @@ test('A new calendar conflict after browsing is rejected under the checkout lock
    requestId:'601f78aa-31f3-4c63-941d-07b31df84902',start:selected.start}),/SLOT_UNAVAILABLE/);
  assert.deepEqual(app.locks,['acquire','release']);
  assert.ok(app.reads.length>1,'Actual calendar is read again before reserving');
+});
+
+test('Parallel planning agrees with locked policy across travel, unknown locations and DST',async()=>{
+ const scenarios=[[],[event('09:00','10:00','Deventer'),event('13:00','14:00','Arnhem')],
+  [event('09:00','10:00',null)],
+  [event('09:00','10:00','x'.repeat(251)),event('10:30','11:00','Deventer')],
+  [{start:'2026-10-13T22:00:00+02:00',end:'2026-10-15T00:00:00+02:00',location:null}],
+  [event('09:00','10:00','onvindbaar')]];
+ const lookup=(from,to)=>[from,to].includes('onvindbaar')?{status:'ZERO_RESULTS'}:
+  {status:'OK',routes:[{legs:[{distance:{value:42000},duration:{value:from==='Arnhem'?2700:1500}}]}]};
+ for(const events of scenarios) {
+  const legacy=setup(events,lookup),parallel=setup(events,lookup);
+  const expected=legacy.context.executeRoofSignal({action:'plan',mode:'test',destination});
+  const context=JSON.parse(JSON.stringify(parallel.context.executeRoofSignal({action:'context',mode:'test'})));
+  assert.equal(parallel.calls.length,0,'Context must not perform serial road calls');
+  const actual=await planAvailability({context,destination,now:Clock.now(),route:async(from,to)=>
+   parallel.context.executeRoofSignal({action:'route',mode:'test',from,destination:to})});
+  assert.deepEqual(actual.slots,JSON.parse(JSON.stringify(expected.slots)));
+  for(const field of ['distanceMeters','durationSeconds','provider'])assert.equal(actual.route[field],expected.route[field]);
+  assert.equal(parallel.reads.length,1);
+  assert.deepEqual(parallel.locks,[]);
+  assert.ok(!('events' in actual)&&!('days' in actual),'Private context never reaches public response');
+ }
+});
+
+test('Route workers overlap independent calls, deduplicate directions and bound concurrency',async()=>{
+ const events=['Deventer','Arnhem','Zwolle','Utrecht','Amersfoort'].map((place,i)=>({
+  start:`2026-10-${12+i}T09:00:00+02:00`,end:`2026-10-${12+i}T10:00:00+02:00`,location:place}));
+ const app=setup(events),context=JSON.parse(JSON.stringify(app.context.executeRoofSignal({action:'context',mode:'test'})));
+ let active=0,maximum=0;const calls=[];
+ const result=await planAvailability({context,destination,now:Clock.now(),concurrency:3,route:async(from,to)=>{
+  calls.push(JSON.stringify([from,to]));active++;maximum=Math.max(maximum,active);
+  await new Promise(resolve=>setTimeout(resolve,1));active--;
+  return {distanceMeters:1000,durationSeconds:300};
+ }});
+ assert.equal(maximum,3);
+ assert.equal(calls.length,new Set(calls).size);
+ assert.ok(calls.length>3&&result.slots.length>0);
+});
+
+test('Parallel planning fails closed on provider failure and on an unroutable destination',async()=>{
+ const app=setup(),context=JSON.parse(JSON.stringify(app.context.executeRoofSignal({action:'context',mode:'test'})));
+ for(const code of ['ROUTE_SERVICE_UNAVAILABLE','ROUTE_UNAVAILABLE']) {
+  await assert.rejects(planAvailability({context,destination,now:Clock.now(),route:async()=>{throw Error(code);}}),new RegExp(code));
+ }
+ await assert.rejects(planAvailability({context,destination,now:Clock.now(),route:async()=>({distanceMeters:1000,durationSeconds:NaN})}),/ROUTE_SERVICE_UNAVAILABLE/);
+});
+
+test('Google token refresh is single-flight, expires early, rotates identity and retries errors',async()=>{
+ let calls=0,now=0,fail=false;
+ const token=googleTokenProvider(async()=>{calls++;if(fail)throw Error('CALENDAR_AUTH_REQUIRED');return {access_token:'token-'+calls,expires_in:3600};},()=>now);
+ assert.deepEqual(await Promise.all(Array.from({length:8},()=>token('first'))),Array(8).fill('token-1'));
+ assert.equal(calls,1);
+ now=3539*1000;assert.equal(await token('first'),'token-1');
+ now=3540*1000;assert.equal(await token('first'),'token-2');
+ assert.equal(await token('rotated'),'token-3');
+ fail=true;await assert.rejects(token('broken'),/CALENDAR_AUTH_REQUIRED/);
+ fail=false;assert.equal(await token('broken'),'token-5');
 });
