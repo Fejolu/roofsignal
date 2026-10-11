@@ -35,6 +35,8 @@ class Element {
     this.childNodes = [];
     this.listeners = new Map();
   }
+  setAttribute(name, value) { this.attributes[name] = String(value); }
+  getAttribute(name) { return this.attributes[name] ?? null; }
   get children() { return this.childNodes.filter(node => node instanceof Element); }
   get textContent() {
     return this.childNodes.map(node => node instanceof Element ? node.textContent : node).join('');
@@ -319,30 +321,114 @@ test('An initial paid result is shown without recreating or reopening payment', 
   assert.deepEqual(ui.navigations,[]);
 });
 
-test('Changing the available day clears the old slot and renders only that day',async()=>{
-  const first=new Date(Date.now()+3*86400000);first.setUTCHours(9,0,0,0);
-  const second=new Date(first.getTime()+86400000);
-  const slots=[first,second].map((date,i)=>({id:'day-'+i,start:date.toISOString(),end:new Date(date.getTime()+2700000).toISOString(),recommended:i===1}));
+async function calendarPage(slots, checkoutResponse = null) {
   const quote={quoteId:recoveryRecord.quoteId,serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
     travelDescription:'Simulated test route',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),
     address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}};
   const ui=await bookingPage({configuration:connectedConfiguration,respond(request){
     if(request.path.endsWith('/quote'))return quote;
     if(request.path.endsWith('/availability'))return {quoteId:quote.quoteId,slots};
-    assert.fail('No payment should start during day selection');
+    if(checkoutResponse && request.path.endsWith('/checkout')) return checkoutResponse(request.body);
+    assert.fail('No payment should start during calendar selection');
   }});
   ui.get('postcode').value='1234AB';ui.get('houseNumber').value='12';
   await ui.get('check-address').dispatch('click');
-  const selector=ui.get('slot-day');
-  assert.equal(selector.hidden,false);assert.equal(selector.children.length,2);
-  assert.match(selector.children[0].textContent,/Aanbevolen/);
+  return ui;
+}
+const calendarButton = (ui, day) => ui.get('calendar-days').querySelectorAll('button').find(button => button.value === day);
+const calendarSlot = (id, start, recommended = false) => ({id, start, end:new Date(Date.parse(start)+2700000).toISOString(), recommended});
+const futureYear = new Date().getUTCFullYear() + 1;
+
+test('Calendar displays only verified dates, retains the recommended day and clears a previous time when changing day',async()=>{
+  const first = `${futureYear}-10-14`, second = `${futureYear}-10-15`;
+  const ui=await calendarPage([calendarSlot('day-0',first+'T09:00:00Z'),calendarSlot('day-1',second+'T09:00:00Z',true)]);
+  assert.equal(ui.get('booking-calendar').hidden,false);
+  assert.equal(ui.get('calendar-empty').hidden,true);
+  assert.equal(calendarButton(ui,second).getAttribute('aria-pressed'),'true');
   assert.equal(ui.get('slots').querySelectorAll('input').length,1);
   assert.equal(ui.get('slots').querySelector('input').value,'day-1');
+  assert.match(ui.get('slots').textContent,/11:00–11:45Aanbevolen/);
+  assert.doesNotMatch(ui.get('slots').textContent,/oktober/);
   await ui.get('slots').querySelector('input').dispatch('change');
   assert.notEqual(ui.get('summary-date').textContent,'Nog te kiezen');
-  selector.value=selector.children[1].value;await selector.dispatch('change');
+  const unavailable=calendarButton(ui,`${futureYear}-10-16`);
+  assert.equal(unavailable.disabled,true);
+  await unavailable.dispatch('click'); // Handler also guards stale/programmatic events.
+  assert.notEqual(ui.get('summary-date').textContent,'Nog te kiezen');
+  await calendarButton(ui,first).dispatch('click');
+  assert.equal(calendarButton(ui,first).getAttribute('aria-pressed'),'true');
+  assert.equal(calendarButton(ui,second).getAttribute('aria-pressed'),'false');
   assert.equal(ui.get('summary-date').textContent,'Nog te kiezen');
   assert.equal(ui.get('checkout-button').disabled,true);
   assert.equal(ui.get('slots').querySelector('input').value,'day-0');
   assert.equal(ui.stored.size,0);
+});
+
+test('Month navigation uses a Monday-first grid across years and never invents available days in an empty month',async()=>{
+  const december=`${futureYear}-12-31`, february=`${futureYear+1}-02-01`;
+  const ui=await calendarPage([calendarSlot('dec',december+'T09:00:00Z'),calendarSlot('feb',february+'T09:00:00Z')]);
+  const grid=ui.get('calendar-days');
+  assert.equal(grid.children.findIndex(node=>node.tagName==='button'),(new Date(`${futureYear}-12-01T12:00Z`).getUTCDay()+6)%7);
+  assert.equal(grid.querySelectorAll('button').length,31);
+  assert.equal(ui.get('calendar-previous').disabled,true);
+  assert.equal(ui.get('calendar-next').disabled,false);
+  await ui.get('slots').querySelector('input').dispatch('change');
+  await ui.get('calendar-next').dispatch('click');
+  assert.equal(ui.get('calendar-month').textContent,`januari ${futureYear+1}`);
+  assert.equal(ui.get('summary-date').textContent,'Nog te kiezen');
+  assert.equal(ui.get('calendar-times').hidden,true);
+  assert.match(ui.get('slot-status').textContent,/Deze maand zijn er geen beschikbare momenten/);
+  assert.equal(ui.get('slots').querySelectorAll('input').length,0);
+  assert.ok(grid.querySelectorAll('button').every(button=>button.disabled));
+  await ui.get('calendar-next').dispatch('click');
+  assert.equal(ui.get('calendar-month').textContent,`februari ${futureYear+1}`);
+  assert.equal(ui.get('calendar-next').disabled,true);
+  assert.equal(ui.get('slots').querySelector('input').value,'feb');
+  assert.equal(calendarButton(ui,february).getAttribute('aria-pressed'),'true');
+  await ui.get('calendar-previous').dispatch('click');
+  await ui.get('calendar-previous').dispatch('click');
+  assert.equal(ui.get('slots').querySelector('input').value,'dec');
+  assert.equal(ui.get('summary-date').textContent,'Nog te kiezen');
+});
+
+test('Calendar groups dates in Amsterdam, even when the UTC date is the previous day',async()=>{
+  const ui=await calendarPage([calendarSlot('local-midnight',`${futureYear}-03-31T22:30:00Z`)]);
+  assert.equal(ui.get('calendar-month').textContent,`april ${futureYear}`);
+  assert.equal(calendarButton(ui,`${futureYear}-04-01`).disabled,false);
+  assert.match(ui.get('slots').textContent,/00:30–01:15/);
+  assert.equal(ui.get('calendar-previous').disabled,true);
+});
+
+test('Changing an address removes stale calendar choices; an empty availability result offers no selectable time',async()=>{
+  const ui=await calendarPage([calendarSlot('old',`${futureYear}-11-03T09:00:00Z`)]);
+  const staleInput=ui.get('slots').querySelector('input');
+  await staleInput.dispatch('change');
+  ui.get('houseNumber').value='14';
+  await ui.get('houseNumber').dispatch('input');
+  assert.equal(ui.get('booking-calendar').hidden,true);
+  assert.equal(ui.get('calendar-empty').hidden,false);
+  assert.equal(ui.get('slots').querySelectorAll('input').length,0);
+  await staleInput.dispatch('change');
+  assert.equal(ui.get('summary-date').textContent,'Nog te kiezen');
+  assert.equal(ui.get('checkout-button').disabled,true);
+  const empty=await calendarPage([]);
+  assert.equal(empty.get('booking-calendar').hidden,true);
+  assert.equal(empty.get('slots').querySelectorAll('input').length,0);
+  assert.match(empty.get('slot-status').textContent,/geen online momenten/);
+});
+
+test('Checkout submits the time chosen in the calendar and locks all calendar controls while payment is pending',async()=>{
+  const first=`${futureYear}-11-03`,second=`${futureYear}-11-04`;
+  const ui=await calendarPage([calendarSlot('first',first+'T09:00:00Z'),calendarSlot('chosen',second+'T09:00:00Z')],attempt=>({requestId:attempt.requestId,state:'pending'}));
+  const firstButton=calendarButton(ui,first);
+  await calendarButton(ui,second).dispatch('click');
+  await ui.get('slots').querySelector('input').dispatch('change');
+  const selectedLabel=ui.get('summary-date').textContent;
+  ui.get('termsAccepted').checked=true;ui.get('earlyStartRequested').checked=true;
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.requests.find(request=>request.path.endsWith('/checkout')).body.slotId,'chosen');
+  assert.ok(ui.get('booking-calendar').querySelectorAll('button, input').every(control=>control.disabled));
+  await firstButton.dispatch('click');
+  assert.equal(ui.get('summary-date').textContent,selectedLabel);
+  assert.equal(ui.requests.filter(request=>request.path.endsWith('/checkout')).length,1);
 });

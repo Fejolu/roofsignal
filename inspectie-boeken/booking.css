@@ -118,16 +118,45 @@
 .consumer-booking-page .booking-main .option-card__body > span { font-size: 12px; color: var(--booking-muted); line-height: 1.7; }
 .consumer-booking-page .booking-main .option-card__price { flex-shrink: 0; margin-left: auto; font-size: 13px; font-weight: 700; text-align: right; }
 .consumer-booking-page .booking-main .field-help { margin: 12px 0 0; font-size: 12px; line-height: 1.8; color: var(--booking-muted); }
-.consumer-booking-page .booking-main .slots { min-height: 150px; }
-.consumer-booking-page .booking-main .slot-choice { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 10px; padding: 14px; border: 1px solid #d9dfdc; border-radius: 10px; cursor: pointer; }
-.consumer-booking-page .booking-main .slot-choice:has(input:checked) { border-color: #b83900; background: #fff8f3; }
-.consumer-booking-page .booking-main .slot-choice input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 3px; }
-.consumer-booking-page .booking-main .slot-choice span { font-size: 14px; line-height: 1.5; }
+.consumer-booking-page .booking-main .booking-calendar { overflow: hidden; border: 1px solid var(--booking-line); border-radius: 12px; background: #fff; }
+.consumer-booking-page .booking-main .calendar-header { padding: 18px 20px; color: #fff; background: var(--booking-ink); }
+.consumer-booking-page .booking-main .calendar-header > span { display: block; margin-bottom: 10px; color: #cbd2cf; font-size: 12px; }
+.consumer-booking-page .booking-main .calendar-month-navigation { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.consumer-booking-page .booking-main .calendar-month-navigation strong { font-size: 17px; text-align: center; }
+.consumer-booking-page .booking-main .calendar-month-button { flex: 0 0 44px; height: 44px; padding: 0; border: 1px solid #738079; color: #fff; background: transparent; font-size: 26px; line-height: 1; }
+.consumer-booking-page .booking-main .calendar-month-button:disabled { opacity: .35; }
+.consumer-booking-page .booking-main .calendar-body { padding: 18px 20px; }
+.consumer-booking-page .booking-main .calendar-weekdays, .consumer-booking-page .booking-main .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.consumer-booking-page .booking-main .calendar-weekdays { margin-bottom: 8px; color: var(--booking-muted); font-size: 12px; font-weight: 700; text-align: center; }
+.consumer-booking-page .booking-main .calendar-day { position: relative; min-width: 0; min-height: 44px; padding: 5px 0; border: 1px solid transparent; color: #89938e; background: transparent; font-size: 14px; }
+.consumer-booking-page .booking-main .calendar-day.available { color: var(--booking-ink); border-color: #dce3df; background: #f4f7f5; font-weight: 700; }
+.consumer-booking-page .booking-main .calendar-day.available::after { content: ''; position: absolute; bottom: 5px; left: calc(50% - 2px); width: 4px; height: 4px; border-radius: 50%; background: var(--booking-orange); }
+.consumer-booking-page .booking-main .calendar-day.available:hover:not(:disabled) { border-color: var(--booking-orange); }
+.consumer-booking-page .booking-main .calendar-day[aria-pressed="true"] { color: #fff; border-color: var(--booking-orange); background: var(--booking-orange); }
+.consumer-booking-page .booking-main .calendar-day[aria-pressed="true"]::after { background: #fff; }
+.consumer-booking-page .booking-main .calendar-day.available:disabled { opacity: .5; }
+.consumer-booking-page .booking-main .calendar-times { padding: 18px 20px 20px; border-top: 1px solid var(--booking-line); background: #f7f8f7; }
+.consumer-booking-page .booking-main .calendar-times > strong { display: block; font-size: 14px; }
+.consumer-booking-page .booking-main .calendar-time-prompt { display: block; margin: 3px 0 12px; color: var(--booking-muted); font-size: 12px; }
+.consumer-booking-page .booking-main .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; }
+.consumer-booking-page .booking-main .slot-choice { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 10px; min-height: 48px; border: 1px solid #d9dfdc; border-radius: 8px; background: #fff; cursor: pointer; }
+.consumer-booking-page .booking-main .slot-choice:has(input:checked) { border-color: var(--booking-orange); background: #fff4ee; }
+.consumer-booking-page .booking-main .slot-choice:has(input:focus-visible) { outline: 2px solid var(--booking-orange); outline-offset: 2px; }
+.consumer-booking-page .booking-main .slot-choice input { flex: 0 0 auto; width: 16px; height: 16px; margin: 0; accent-color: var(--booking-orange); }
+.consumer-booking-page .booking-main .slot-choice span { font-size: 13px; line-height: 1.5; white-space: nowrap; }
+.consumer-booking-page .booking-main .slot-choice small { display: block; color: var(--booking-blue); font-size: 11px; }
+@media (max-width: 520px) {
+  .consumer-booking-page .booking-main .calendar-header, .consumer-booking-page .booking-main .calendar-body, .consumer-booking-page .booking-main .calendar-times { padding: 14px 10px; }
+  .consumer-booking-page .booking-main .calendar-weekdays, .consumer-booking-page .booking-main .calendar-days { gap: 3px; }
+  .consumer-booking-page .booking-main .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .consumer-booking-page .booking-main .slot-choice { justify-content: center; gap: 5px; padding: 10px 4px; }
+  .consumer-booking-page .booking-main .slot-choice span { font-size: 12px; }
+}
 .consumer-booking-page .booking-main .calendar-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 174px; padding: 25px 20px; border: 1px dashed #c7d5d8; border-radius: 10px; background: #f8faf8; text-align: center; }
 .consumer-booking-page .booking-main .calendar-empty svg { fill: none; stroke: #879fa9; stroke-width: 1.25; stroke-linecap: round; margin-bottom: 14px; }
 .consumer-booking-page .booking-main .calendar-empty strong { margin-bottom: 7px; font-size: 12px; font-weight: 400; }
 .consumer-booking-page .booking-main .calendar-empty > span { font-size: 12px; color: var(--booking-muted); }
-.consumer-booking-page .booking-main .slots + .inline-status { margin-top: 12px; }
+.consumer-booking-page .booking-main #slot-status { margin-top: 12px; }
 .consumer-booking-page .booking-main .consent-card { padding: 9px 4px 0; }
 .consumer-booking-page .booking-main .consent-card h3 { font-size: 15px; margin: 0 0 17px; }
 .consumer-booking-page .booking-main .checkbox-row { display: flex; align-items: flex-start; gap: 12px; font-size: 12px; line-height: 1.9; cursor: pointer; }

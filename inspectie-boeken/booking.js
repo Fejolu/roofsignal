@@ -14,6 +14,9 @@ const form = el('booking-form');
 let quote = null;
 let selectedSlot = null;
 let availableSlots = [];
+let availableDays = [];
+let selectedDay = null;
+let calendarMonth = null;
 let loading = false;
 let checkoutAttempt = null;
 let recovery = null;
@@ -48,6 +51,7 @@ function updateSummary() {
   const consentRequired = selectedSlot && needsEarlyStart(selectedSlot.start);
   el('earlyStartRequested').required = Boolean(consentRequired);
   message('early-start-hint', consentRequired ? 'Dit moment valt binnen de bedenktijd. Kies een later moment of geef hieronder uitdrukkelijk toestemming voor eerdere uitvoering.' : '');
+  updateCalendarControls();
 }
 
 function clearQuote() {
@@ -57,14 +61,18 @@ function clearQuote() {
   quote = null;
   selectedSlot = null;
   availableSlots = [];
-  el('slot-day-field').hidden = true;
-  el('slot-day').replaceChildren();
+  availableDays = [];
+  selectedDay = null;
+  calendarMonth = null;
+  el('booking-calendar').hidden = true;
+  el('calendar-times').hidden = true;
+  el('calendar-empty').hidden = false;
+  el('calendar-days').replaceChildren();
   el('street').value = '';
   el('city').value = '';
   el('termsAccepted').checked = false;
   el('earlyStartRequested').checked = false;
-  // Preserve the explanatory empty calendar in preview. No sample slots.
-  if (connected) el('slots').replaceChildren();
+  el('slots').replaceChildren();
   message('address-status', '');
   message('slot-status', connected ? 'Controleer eerst uw adres en reiskosten.' : 'In deze conceptpagina zijn nog geen echte agendamomenten aangesloten.');
   updateSummary();
@@ -96,44 +104,105 @@ async function api(path, options = {}) {
 }
 
 const slotDay = slot => new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(slot.start));
+// Calendar dates have no time zone; UTC keeps their grid position stable on
+// devices outside the Netherlands and across daylight-saving changes.
+const calendarDate = day => new Date(`${day}T12:00:00Z`);
+const dayLabel = day => new Intl.DateTimeFormat('nl-NL', {timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(calendarDate(day));
+const slotTime = instant => new Intl.DateTimeFormat('nl-NL', {timeZone:'Europe/Amsterdam',hour:'2-digit',minute:'2-digit'}).format(new Date(instant));
+const calendarLocked = () => !connected || !quote || loading || Boolean(recovery) || recoveryBlocked;
+
+function updateCalendarControls() {
+  const locked = calendarLocked();
+  el('calendar-previous').disabled = locked || !calendarMonth || calendarMonth <= availableDays[0]?.slice(0, 7);
+  el('calendar-next').disabled = locked || !calendarMonth || calendarMonth >= availableDays.at(-1)?.slice(0, 7);
+  for (const button of el('calendar-days').querySelectorAll('button')) {
+    button.disabled = locked || !availableDays.includes(button.value);
+  }
+  for (const input of el('slots').querySelectorAll('input')) input.disabled = locked;
+}
+
+function renderCalendar() {
+  el('calendar-month').textContent = new Intl.DateTimeFormat('nl-NL', {timeZone:'UTC',month:'long',year:'numeric'}).format(calendarDate(`${calendarMonth}-01`));
+  const days = el('calendar-days');
+  days.replaceChildren();
+  const first = calendarDate(`${calendarMonth}-01`);
+  const offset = (first.getUTCDay() + 6) % 7; // Monday first.
+  for (let i = 0; i < offset; i++) days.append(document.createElement('span'));
+  const count = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  for (let number = 1; number <= count; number++) {
+    const day = `${calendarMonth}-${String(number).padStart(2, '0')}`;
+    const available = availableDays.includes(day);
+    const button = document.createElement('button');
+    button.type = 'button'; button.value = day;
+    button.className = `calendar-control calendar-day${available ? ' available' : ''}`;
+    button.textContent = String(number);
+    button.setAttribute('aria-label', `${dayLabel(day)}${available ? '' : ', niet beschikbaar'}`);
+    button.setAttribute('aria-pressed', String(day === selectedDay));
+    button.setAttribute('aria-controls', 'calendar-times');
+    button.addEventListener('click', () => {
+      if (calendarLocked() || !available || day === selectedDay) return;
+      selectedDay = day;
+      for (const other of days.querySelectorAll('button')) other.setAttribute('aria-pressed', String(other.value === day));
+      renderSelectedDay();
+    });
+    days.append(button);
+  }
+  updateCalendarControls();
+}
 
 function renderSlots(slots) {
   availableSlots = slots;
+  availableDays = [...new Set(slots.map(slotDay))].sort();
+  selectedSlot = null;
   el('slots').replaceChildren();
-  el('slot-day-field').hidden = !slots.length;
+  el('booking-calendar').hidden = !slots.length;
+  el('calendar-empty').hidden = true;
   if (!slots.length) {
     message('slot-status', 'Er zijn nu geen online momenten beschikbaar voor deze inspectie. Neem contact op om een afspraak af te stemmen.');
     return;
   }
-  message('slot-status', 'Kies een moment. Alle tijden zijn lokale Nederlandse tijden. De beschikbaarheid wordt bij het afrekenen opnieuw gecontroleerd.');
-  const dates = [...new Set(slots.map(slotDay))];
-  const selector = el('slot-day'); selector.replaceChildren();
-  for (const day of dates) {
-    const option = document.createElement('option'); option.value = day;
-    const daySlots = slots.filter(slot => slotDay(slot) === day);
-    option.textContent = new Intl.DateTimeFormat('nl-NL', {timeZone:'Europe/Amsterdam',weekday:'long',day:'numeric',month:'long'}).format(new Date(daySlots[0].start))
-      + (daySlots.some(slot => slot.recommended === true) ? ' · Aanbevolen' : '');
-    selector.append(option);
-  }
-  selector.value = dates[0];
+  // Retain the server's recommended first day; a time still needs an explicit choice.
+  selectedDay = slotDay(slots[0]);
+  calendarMonth = selectedDay.slice(0, 7);
+  renderCalendar();
   renderSelectedDay();
 }
 
 function renderSelectedDay() {
   selectedSlot = null;
   el('slots').replaceChildren();
-  for (const slot of availableSlots.filter(slot => slotDay(slot) === el('slot-day').value)) {
+  el('calendar-times').hidden = !selectedDay;
+  el('calendar-date').textContent = selectedDay ? dayLabel(selectedDay) : '';
+  message('slot-status', selectedDay ? 'Alle tijden zijn Nederlandse tijden. Uw moment wordt bij het afrekenen opnieuw gecontroleerd.' : 'Deze maand zijn er geen beschikbare momenten. Kies een andere maand.');
+  for (const slot of availableSlots.filter(slot => slotDay(slot) === selectedDay).sort((a, b) => Date.parse(a.start) - Date.parse(b.start))) {
     const label = document.createElement('label'); label.className = 'slot-choice';
     const input = document.createElement('input');
     input.type = 'radio'; input.name = 'slot'; input.value = slot.id; input.required = true;
     const text = document.createElement('span');
-    text.textContent = slotLabel(slot) + (slot.recommended === true ? ' · Aanbevolen: we zijn al in de buurt' : '');
-    input.addEventListener('change', () => { selectedSlot = slot; updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen'); });
+    text.textContent = `${slotTime(slot.start)}–${slotTime(slot.end)}`;
+    if (slot.recommended === true) {
+      const badge = document.createElement('small'); badge.textContent = 'Aanbevolen'; text.append(badge);
+    }
+    input.setAttribute('aria-label', slotLabel(slot) + (slot.recommended === true ? ' · Aanbevolen: we zijn al in de buurt' : ''));
+    input.addEventListener('change', () => {
+      if (calendarLocked() || slotDay(slot) !== selectedDay || !availableSlots.includes(slot)) return;
+      selectedSlot = slot; updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen');
+    });
     label.append(input, text); el('slots').append(label);
   }
   updateSummary();
 }
-el('slot-day').addEventListener('change', renderSelectedDay);
+for (const [id, direction] of [['calendar-previous', -1], ['calendar-next', 1]]) {
+  el(id).addEventListener('click', () => {
+    if (calendarLocked() || el(id).disabled) return;
+    const date = calendarDate(`${calendarMonth}-01`);
+    date.setUTCMonth(date.getUTCMonth() + direction);
+    calendarMonth = date.toISOString().slice(0, 7);
+    selectedDay = availableDays.find(day => day.startsWith(calendarMonth)) || null;
+    renderCalendar();
+    renderSelectedDay();
+  });
+}
 
 el('check-address').addEventListener('click', async () => {
   if (loading || recovery || recoveryBlocked) return;
@@ -181,7 +250,7 @@ el('check-address').addEventListener('click', async () => {
 });
 
 function lockOrder(locked = true) {
-  for (const input of form.querySelectorAll('input, textarea, select, #check-address')) input.disabled = locked;
+  for (const input of form.querySelectorAll('input, textarea, select, #check-address, .calendar-control')) input.disabled = locked;
 }
 
 function persistRecovery(record) {
