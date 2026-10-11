@@ -74,6 +74,16 @@ function rsLocation(value) {
   if(!location||location.length>250)throw Error('INVALID_LOCATION');
   return location;
 }
+function rsRouteKey(from,to) {
+  return 'route-v1-'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,from+'\n'+to));
+}
+function rsCachedRoute(stored) {
+  if(stored)try {
+    const route=JSON.parse(stored),age=Date.now()-Date.parse(route.calculatedAt);
+    if(Number.isSafeInteger(route.distanceMeters)&&route.distanceMeters>=0&&Number.isFinite(route.durationSeconds)&&route.durationSeconds>=0&&age>=0&&age<3600000)return route;
+  }catch(_){} // A missing/evicted/malformed cache entry is a normal miss.
+  return null;
+}
 function rsRoute(from,to,cache) {
   from=rsLocation(from);to=rsLocation(to);
   const key=from+'\n'+to;
@@ -82,13 +92,10 @@ function rsRoute(from,to,cache) {
   if(from===to)return {distanceMeters:0,durationSeconds:0};
   // Reuse static road routes for browsing, never the busy calendar or a
   // checkout decision. The directional key keeps outbound/return trips apart.
-  const sharedKey=cache.shared?'route-v1-'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,key)):null;
+  const sharedKey=cache.shared?rsRouteKey(from,to):null;
   if(sharedKey) {
-    const stored=CacheService.getScriptCache().get(sharedKey);
-    if(stored)try{
-      const route=JSON.parse(stored);
-      if(Number.isSafeInteger(route.distanceMeters)&&route.distanceMeters>=0&&Number.isFinite(route.durationSeconds)&&route.durationSeconds>=0&&Date.now()-Date.parse(route.calculatedAt)<3600000){cache[key]=route;return route;}
-    }catch(_){} // A missing/evicted/malformed cache entry is a normal miss.
+    const route=rsCachedRoute(CacheService.getScriptCache().get(sharedKey));
+    if(route){cache[key]=route;return route;}
   }
   const response=Maps.newDirectionFinder().setOrigin(from).setDestination(to)
     .setRegion('nl').setLanguage('nl').setMode(Maps.DirectionFinder.Mode.DRIVING).setAlternatives(false).getDirections();
@@ -169,7 +176,24 @@ function rsDispatch(data) {
       days.push({start:rsLocalTime(day,540).toISOString(),end:rsLocalTime(day,960).toISOString(),
         lower:rsLocalTime(day,0).toISOString(),upper:rsLocalTime(dateAt(offset+1),0).toISOString()});
     }
-    return {origin:RS_ORIGIN,days,events,sourceCheckedAt};
+    // Include already known directions in the same RPC. Only missing routes
+    // require parallel Maps executions; the calendar itself is always fresh.
+    const cachedRoutes=[];
+    if(data.destination!==undefined) {
+      const destination=rsLocation(data.destination),pairs=new Map();
+      for(const raw of [RS_ORIGIN,...events.map(e=>e.location)]) {
+        let address;try{address=rsLocation(raw);}catch(_){continue;}
+        for(const [from,to] of [[address,destination],[destination,address]]) {
+          if(from!==to)pairs.set(rsRouteKey(from,to),{from,to});
+        }
+      }
+      const stored=pairs.size?CacheService.getScriptCache().getAll([...pairs.keys()]):{};
+      for(const [id,pair] of pairs) {
+        const route=rsCachedRoute(stored[id]);
+        if(route)cachedRoutes.push({...pair,route});
+      }
+    }
+    return {origin:RS_ORIGIN,days,events,sourceCheckedAt,cachedRoutes};
   }
   if(data.action==='availability'||data.action==='plan') {
     const destination=rsLocation(data.destination),slots=[];

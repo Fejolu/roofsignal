@@ -9,7 +9,7 @@ import {planAvailability} from '../supabase/functions/_shared/consumer-availabil
 const core=fs.readFileSync(new URL('../supabase/functions/_shared/consumer-scheduling.mjs',import.meta.url),'utf8').replaceAll('export ','');
 const adapter=fs.readFileSync(new URL('../tools/google-booking-bridge.js',import.meta.url),'utf8');
 const day='2026-10-12',destination='Markt 1, Apeldoorn';
-class Clock extends Date { static now(){return Date.parse('2026-10-11T12:00:00Z');} }
+class Clock extends Date { constructor(...args){super(...(args.length?args:[Clock.now()]));} static now(){return Date.parse('2026-10-11T12:00:00Z');} }
 function setup(events=[],lookup=()=>({status:'OK',routes:[{legs:[{distance:{value:1000},duration:{value:300}}]}]})) {
   const calls=[],reads=[],formats=[],shared=new Map(),locks=[];
   const calendar={getEvents:(start,end)=>{reads.push([start,end]);return events.filter(e=>Date.parse(e.start)<end&&Date.parse(e.end)>start).map(e=>({
@@ -19,7 +19,7 @@ function setup(events=[],lookup=()=>({status:'OK',routes:[{legs:[{distance:{valu
   const context=vm.createContext({Date:Clock,Intl,Utilities:{
     formatDate(date){formats.push(date);return date<new Date('2026-10-25T01:00:00Z')?'+0200':'+0100';},
     DigestAlgorithm:{SHA_256:'sha256'},computeDigest:(algorithm,key)=>createHash(algorithm).update(key).digest(),base64EncodeWebSafe:bytes=>Buffer.from(bytes).toString('base64url')},
-    CacheService:{getScriptCache:()=>({get:key=>shared.get(key)||null,put:(key,value)=>shared.set(key,value)})},
+    CacheService:{getScriptCache:()=>({get:key=>shared.get(key)||null,getAll:keys=>Object.fromEntries(keys.filter(k=>shared.has(k)).map(k=>[k,shared.get(k)])),put:(key,value)=>shared.set(key,value)})},
     Session:{getEffectiveUser:()=>({getEmail:()=> 'ferry.joosten@gmail.com'})},
     LockService:{getScriptLock:()=>({tryLock:()=>{locks.push('acquire');return true;},releaseLock:()=>locks.push('release')})},
     CalendarApp:{EventTransparency:{TRANSPARENT:'transparent'},getCalendarById:()=>calendar},
@@ -175,4 +175,29 @@ test('Google token refresh is single-flight, expires early, rotates identity and
  assert.equal(await token('rotated'),'token-3');
  fail=true;await assert.rejects(token('broken'),/CALENDAR_AUTH_REQUIRED/);
  fail=false;assert.equal(await token('broken'),'token-5');
+});
+
+test('Warm routes arrive with fresh calendar context, with no separate route executions',async()=>{
+ const events=[event('09:00','10:00','Deventer')],app=setup(events);
+ const old=app.context.executeRoofSignal({action:'plan',mode:'test',destination});
+ const readContext=()=>JSON.parse(JSON.stringify(app.context.executeRoofSignal({action:'context',mode:'test',destination})));
+ const context=readContext(),callCount=app.calls.length;
+ assert.ok(context.cachedRoutes.length>0);
+ const result=await planAvailability({context,destination,now:Clock.now(),route:async()=>assert.fail('Warm route must not need another RPC')});
+ assert.deepEqual(result.slots,JSON.parse(JSON.stringify(old.slots)));
+ assert.equal(app.calls.length,callCount);
+ events.push({start:old.slots[0].start,end:old.slots[0].end,location:destination});
+ const fresh=await planAvailability({context:readContext(),destination,now:Clock.now(),route:async()=>assert.fail('Routes remain cached')});
+ assert.ok(!fresh.slots.some(s=>s.start===old.slots[0].start),'Fresh calendar conflicts still take effect');
+ assert.equal(app.reads.length,3);
+});
+
+test('Expired, future-dated and malformed route cache entries require fresh provider reads',()=>{
+ const app=setup();
+ app.context.executeRoofSignal({action:'plan',mode:'test',destination});
+ for(const stored of ['not json',JSON.stringify({distanceMeters:1,durationSeconds:1,calculatedAt:'2026-10-11T10:59:59Z'}),JSON.stringify({distanceMeters:1,durationSeconds:1,calculatedAt:'2026-10-12T12:00:00Z'})]) {
+  for(const key of app.shared.keys())app.shared.set(key,stored);
+  const context=app.context.executeRoofSignal({action:'context',mode:'test',destination});
+  assert.equal(context.cachedRoutes.length,0);
+ }
 });
