@@ -72,10 +72,12 @@ def safe_html(value, root, *, inline=False):
     return result.decode_contents()
 
 
-def get_field(data, path):
+def get_field(data, path, *, default=None):
     value = data
     for part in path.split("."):
         if not isinstance(value, dict) or part not in value:
+            if default is not None:
+                return default
             raise ValueError(f"CMS-veld ontbreekt: {path}")
         value = value[part]
     return value
@@ -100,16 +102,21 @@ def apply_page(source, data, root):
     # When a field still equals the fallback, retain the original fragment and attributes exactly.
     replacements = {}
     for node in soup.select("[data-cms]"):
-        value = text(get_field(data, node["data-cms"]), node["data-cms"])
-        old_text = node.get_text(" ", strip=True)
         kind = node.get("data-cms-kind")
+        # Pages CMS omits cleared optional fields from JSON on save.
+        value = text(get_field(data, node["data-cms"], default="" if kind != "string" else None),
+                     node["data-cms"], required=kind == "string")
+        old_text = node.get_text(" ", strip=True)
         old = node.decode_contents()
         baseline = old if kind == "rich-text" else old_text
         if value != baseline:
             new = safe_html(value, root, inline=True) if kind == "rich-text" else html.escape(value).replace("\n", "<br>")
-            node.clear()
-            for child in list(BeautifulSoup(new, "html.parser").contents):
-                node.append(child)
+            # Saving an untouched WYSIWYG field adds a paragraph wrapper. Keep
+            # existing link classes/tracking when only that serialization changed.
+            if kind != "rich-text" or new != safe_html(old, root, inline=True):
+                node.clear()
+                for child in list(BeautifulSoup(new, "html.parser").contents):
+                    node.append(child)
         replacements[old_text] = node.get_text(" ", strip=True)
     for node in soup.select("[data-cms-image]"):
         value = get_field(data, node["data-cms-image"])
