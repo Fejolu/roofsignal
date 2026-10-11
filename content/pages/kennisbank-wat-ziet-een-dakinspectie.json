@@ -1,0 +1,60 @@
+{
+  "seo": {
+    "title": "Wat ziet een dakinspectie van buitenaf? | RoofSignal",
+    "description": "Welke dakdelen en zichtbare gebreken kunnen bij een dakinspectie van buitenaf worden vastgelegd? RoofSignal legt de scope en grenzen uit."
+  },
+  "section_01": {
+    "item_01": "Kennisbank · Dakinspectie",
+    "item_02": "Wat ziet een dakinspectie van buitenaf?",
+    "item_03": "Een bruikbare inspectie kijkt niet alleen naar dakpannen. Juist aansluitingen, afwatering en randen vertellen veel over zichtbare onderhoudsrisico’s."
+  },
+  "section_02": {
+    "item_01": "De precieze scope hangt af van het object en de opdracht. Bij een visuele drone-inspectie wordt de bereikbare buitenschil systematisch vastgelegd, van overzicht naar detail.",
+    "item_02": "Dakvlakken en bedekking",
+    "item_03": "Bij hellende daken gaat de aandacht onder meer uit naar verschoven, ontbrekende of zichtbaar beschadigde pannen, de aansluiting bij nok en dakrand en opvallende verschillen in ligging of vervuiling. Bij platte daken zijn onder meer zichtbare beschadigingen, plooien, vervuiling en zones met mogelijke waterophoping relevant.",
+    "item_04": "Aansluitingen en doorvoeren",
+    "item_05": "Veel lekkagerisico’s ontstaan niet midden op een dakvlak, maar rond aansluitingen. Denk aan schoorstenen, lood- en zinkwerk, dakramen, dakkapellen, ventilatiekanalen en andere doorvoeren. Beelden kunnen zichtbare openingen, vervorming, loszittende delen of veroudering documenteren.",
+    "item_06": "Goten en hemelwaterafvoer",
+    "item_07": "Goten en afvoeren worden beoordeeld voor zover ze zichtbaar zijn. Bladeren, mos, stilstaand water, verzakking, corrosie of een onlogische afschotlijn kunnen aanleiding zijn voor onderhoud of nader onderzoek. Een beeld zegt niet altijd of een leiding intern vrij is; het legt wel zichtbare signalen vast.",
+    "item_08": "Gevel, randen en schoorsteen",
+    "item_09": "Afhankelijk van de afgesproken scope kunnen voegwerk, scheuren, lateien, boeiboorden, dakranden en schoorsteendetails worden meegenomen. De beoordeling richt zich op zichtbare staat en risico, niet op een constructieve berekening.",
+    "item_10": "Van opname naar rapport",
+    "item_11": "Een reeks foto’s is nog geen inspectierapport. RoofSignal koppelt relevante beelden aan het juiste bouwdeel en beschrijft wat zichtbaar is, welke aandacht dat vraagt en wat een logische vervolgstap kan zijn. Niet-zichtbare of onvoldoende beoordeelbare delen worden als beperking vermeld.",
+    "item_12": "<a href=\"/werkgebied\">Lees meer over de landelijke inzet van RoofSignal</a> of <a href=\"contact\">bespreek de passende scope</a>.",
+    "item_13": {
+      "label": "Dakvlakken",
+      "href": "#dakvlakken"
+    },
+    "item_14": {
+      "label": "Aansluitingen",
+      "href": "#details"
+    },
+    "item_15": {
+      "label": "Afwatering",
+      "href": "#afwatering"
+    },
+    "item_16": {
+      "label": "Gevel en randen",
+      "href": "#gevel"
+    },
+    "item_17": {
+      "label": "Het rapport",
+      "href": "#rapport"
+    },
+    "item_18": {
+      "label": "← Terug naar de kennisbank",
+      "href": "kennisbank"
+    }
+  },
+  "section_03": {
+    "item_01": "Eerst bewijs zien, daarna beslissen?",
+    "item_02": {
+      "label": "Bekijk een voorbeeldrapport",
+      "href": "/voorbeeldrapport-uitgebreid"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

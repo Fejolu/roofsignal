@@ -1,0 +1,60 @@
+{
+  "seo": {
+    "title": "Van bevinding naar onderhoudsprioriteit | RoofSignal",
+    "description": "Hoe wordt een zichtbaar gebrek vertaald naar een bruikbare onderhoudsprioriteit? Lees over bewijs, risico, urgentie en vervolgstappen."
+  },
+  "section_01": {
+    "item_01": "Kennisbank · Onderhoud",
+    "item_02": "Van bevinding naar onderhoudsprioriteit.",
+    "item_03": "Een zichtbaar gebrek krijgt pas betekenis wanneer duidelijk is welk risico het vormt, hoe urgent het is en welke vervolgstap daarbij past."
+  },
+  "section_02": {
+    "item_01": "Twee vergelijkbare scheuren of beschadigingen hoeven niet dezelfde prioriteit te krijgen. Plaats, omvang, mogelijke gevolgschade en onzekerheid bepalen mede wat verstandig is.",
+    "item_02": "1. Begin bij controleerbaar bewijs",
+    "item_03": "Een bevinding beschrijft eerst wat daadwerkelijk zichtbaar is. Bijvoorbeeld: een verschoven dakpan, open voeg, vervuilde goot of beschadigd boeiboord. Beeld en locatie horen bij elkaar, zodat later duidelijk blijft waarop de beoordeling is gebaseerd.",
+    "item_04": "2. Beoordeel het mogelijke risico",
+    "item_05": "Niet ieder gebrek leidt direct tot schade. Een open aansluiting nabij een waterbelaste zone kan echter meer aandacht vragen dan een cosmetische verkleuring. Relevante vragen zijn onder meer: kan water binnendringen, kan een onderdeel loskomen, neemt schade waarschijnlijk toe en raakt het andere bouwdelen?",
+    "item_06": "3. Scheid urgent van planbaar",
+    "item_07": "Een bruikbare prioritering voorkomt dat alles “spoed” wordt. RoofSignal maakt daarom onderscheid tussen zaken die snelle opvolging verdienen, planbaar onderhoud en signalen die vooral moeten worden gevolgd of bij een volgend moment opnieuw beoordeeld.",
+    "item_08": "4. Koppel een passende vervolgstap",
+    "item_09": "Het advies kan variëren van reinigen of herstellen tot specialistisch onderzoek of monitoring. RoofSignal inspecteert uitsluitend met drones. Voor herstel of vervolgonderzoek met fysieke toegang schakelt u een geschikte uitvoerder of specialist in. Als de oorzaak op basis van beelden niet vaststaat, is het eerlijker om gericht vervolgonderzoek te adviseren dan een stellige diagnose te geven.",
+    "item_10": "5. Houd beoordeling en herstelverkoop uit elkaar",
+    "item_11": "Wanneer de beoordelaar niet verdient aan de herstelopdracht, kan de prioriteit worden gebaseerd op zichtbare staat en risico in plaats van verkoopbelang. De eigenaar houdt vervolgens zelf de keuze welke partij onderhoud uitvoert.",
+    "item_12": "<a href=\"werkwijze\">Bekijk hoe RoofSignal werkt</a> of <a href=\"contact\">bespreek een concrete onderhoudsvraag</a>.",
+    "item_13": {
+      "label": "Controleerbaar bewijs",
+      "href": "#bewijs"
+    },
+    "item_14": {
+      "label": "Risico",
+      "href": "#risico"
+    },
+    "item_15": {
+      "label": "Urgentie",
+      "href": "#urgentie"
+    },
+    "item_16": {
+      "label": "Vervolgstap",
+      "href": "#vervolg"
+    },
+    "item_17": {
+      "label": "Onafhankelijkheid",
+      "href": "#onafhankelijk"
+    },
+    "item_18": {
+      "label": "← Terug naar de kennisbank",
+      "href": "kennisbank"
+    }
+  },
+  "section_03": {
+    "item_01": "Eerst bewijs zien, daarna beslissen?",
+    "item_02": {
+      "label": "Bekijk een voorbeeldrapport",
+      "href": "/voorbeeldrapport-uitgebreid"
+    },
+    "item_03": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

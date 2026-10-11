@@ -1,0 +1,66 @@
+{
+  "seo": {
+    "title": "Bouwvoortgang met drones | Bouwproject in beeld | RoofSignal",
+    "description": "Volg uw bouw- of renovatieproject met periodieke droneopnamen. Vergelijk bouwfasen, deel zichtbare aandachtspunten en bespreek 3D-registratie op aanvraag."
+  },
+  "section_01": {
+    "item_01": "Bouwvoortgang met drones · op aanvraag",
+    "item_02": "Uw bouwproject in beeld. Van fase tot fase.",
+    "item_03": "Volg nieuwbouw, renovatie of groot onderhoud met periodieke droneopnamen. Zie wat er verandert en deel de voortgang met uw opdrachtgever, projectteam of investeerders.",
+    "item_04": {
+      "label": "Vraag een offerte aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Wat ontvangt u?",
+      "href": "#oplevering"
+    }
+  },
+  "section_02": {
+    "item_01": "Overzicht voor uw projectteam",
+    "item_02": "Een vaste manier om voortgang vast te leggen.",
+    "item_03": "Van de eerste opname tot de laatste bouwfase: we spreken af welke delen van het project we vastleggen en wanneer. Zo ontstaat een overzichtelijke beeldhistorie voor overleg, afstemming en terugkijken.",
+    "item_04": "Opnamen per bouwfase",
+    "item_05": "Gedateerde overzichts- en detailfoto’s van de afgesproken gebouwen en terreindelen. Op vaste momenten of rond belangrijke mijlpalen.",
+    "item_06": "Vergelijkbare beelden",
+    "item_07": "Opnamen vanuit zoveel mogelijk dezelfde posities en kijkrichtingen. Zo kunt u veranderingen tussen bezoeken eenvoudig terugvinden.",
+    "item_08": "Heldere terugkoppeling",
+    "item_09": "Een beknopt overzicht van de zichtbare voortgang en afgesproken aandachtspunten, met bijbehorende beelden om te delen met uw projectteam."
+  },
+  "section_03": {
+    "item_01": "Voor wie",
+    "item_02": "Voor iedereen die zicht wil houden op de bouw.",
+    "item_03": "Voor projectontwikkelaars en opdrachtgevers die op afstand willen meekijken, aannemers die bouwfasen willen documenteren en vastgoedbeheerders of VvE’s die een renovatie of groot onderhoud laten uitvoeren.",
+    "item_04": "De opnamen richten zich op de zichtbare buitenzijde en het afgesproken bouwterrein. Bouwvoortgangsregistratie is geen bouwkundige opleverkeuring of beoordeling van verborgen werk."
+  },
+  "section_04": {
+    "item_01": "Zo werken we",
+    "item_02": "Afgestemd op het ritme van uw bouwproject.",
+    "item_03": "Project en opnameplan",
+    "item_04": "We bespreken uw locatie, bouwfasen en informatiebehoefte. Vooraf beoordelen we de uitvoerbaarheid van de vlucht en stemmen we de opnamen af met de verantwoordelijke op de bouwplaats.",
+    "item_05": "Eenmalig of periodiek",
+    "item_06": "We plannen een eerste opname en eventuele vervolgbezoeken. Bijvoorbeeld per bouwfase of maandelijks, afgestemd op de werkzaamheden, het weer en de mogelijkheden op locatie.",
+    "item_07": "Beelden en voortgang",
+    "item_08": "U ontvangt de afgesproken selectie beelden en terugkoppeling per opnamedatum. Bij vervolgbezoeken maken we de zichtbare veranderingen inzichtelijk."
+  },
+  "section_05": {
+    "item_01": "Uitbreiding op aanvraag",
+    "item_02": "Uw bouwproject ook in 3D bekijken?",
+    "item_03": "Met fotogrammetrie worden overlappende foto’s samengevoegd tot een ruimtelijk model. Zo kunt u de zichtbare delen van een gebouw en terrein vanuit verschillende hoeken bekijken.",
+    "item_04": "Wilt u een online model met klikbare bevindingen of opnamen van meerdere bouwfasen? We bespreken vooraf welke uitwerking bij uw project past en toetsen de haalbaarheid. De dekking, detailgraad, toegang en eventuele metingen leggen we afzonderlijk vast.",
+    "item_05": "<a class=\"rs-text-link\" href=\"/contact\">Bespreek de mogelijkheden voor uw project →</a>"
+  },
+  "section_06": {
+    "item_01": "Prijs op aanvraag",
+    "item_02": "Een voorstel dat past bij uw project.",
+    "item_03": "De omvang van de locatie, het aantal opnamerondes en de gewenste uitwerking bepalen de prijs. U ontvangt een offerte voor een losse opname of een reeks bezoeken, met duidelijke afspraken over wat u ontvangt."
+  },
+  "section_07": {
+    "item_01": "Wilt u de voortgang van uw bouwproject vastleggen?",
+    "item_02": "Vertel ons waar u bouwt, wanneer het project loopt en wat u in beeld wilt brengen.",
+    "item_03": {
+      "label": "Vraag een offerte aan",
+      "href": "/contact"
+    }
+  }
+}

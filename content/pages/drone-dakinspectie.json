@@ -1,0 +1,66 @@
+{
+  "seo": {
+    "title": "Drone-dakinspectie: beelden, bevindingen en grenzen | RoofSignal",
+    "description": "Onafhankelijke visuele dakinspectie, uitsluitend met drones. RoofSignal rapporteert bevindingen, onderhoudsprioriteiten en beperkingen. Bekijk echte voorbeelden."
+  },
+  "section_01": {
+    "item_01": "Opnamemethode",
+    "item_02": "Drone-dakinspectie met een duidelijke vervolgstap.",
+    "item_03": "RoofSignal voert onafhankelijke visuele inspecties van daken en gevels uitsluitend met drones uit. U ontvangt een helder rapport met bevindingen, onderhoudsprioriteiten en eventuele beperkingen."
+  },
+  "section_02": {
+    "item_01": "Wanneer is een drone geschikt?",
+    "item_02": "Een drone kan overzichts- en detailbeelden maken van dakvlakken, nokken, goten, schoorstenen en aansluitingen die vanaf de grond lastig te zien zijn. Bij een opname gebruiken we verschillende kijkhoeken om zichtbare gebreken en de ligging van details vast te leggen.",
+    "item_03": "Vooraf beoordelen we per locatie of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is. We houden rekening met weer, obstakels, omgeving en vliegruimte. Kan de vlucht niet doorgaan, dan bespreken we of een nieuwe datum mogelijk is. We schakelen niet over op een andere inspectiemethode."
+  },
+  "section_03": {
+    "item_01": "Wat kan zichtbaar worden?",
+    "item_02": "Dakbedekking en details",
+    "item_03": "Verschoven pannen, verwering, zichtbaar los materiaal en onregelmatigheden rond aansluitingen.",
+    "item_04": "Waterafvoer",
+    "item_05": "Vervuiling in goten, zichtbaar stilstaand water en aandachtspunten bij afvoeren en dakranden.",
+    "item_06": "Onderhoudssporen",
+    "item_07": "Eerdere reparaties, verouderd schilderwerk en zichtbare vocht- of uitspoelingssporen aan gevels."
+  },
+  "section_04": {
+    "item_01": "Wat een foto niet bewijst.",
+    "item_02": "RoofSignal inspecteert uitsluitend met drones. De beoordeling is visueel en niet-destructief: we kijken niet door dakbedekking of constructies heen. Een foto alleen bewijst niet of een aansluiting waterdicht is of waar vocht vandaan komt. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport. Waar nodig adviseren we vervolgonderzoek door een geschikte specialist.",
+    "item_03": "RGB-dronebeelden meten geen vocht in materialen en geven geen volledig beeld van de onderconstructie. Thermografie met een drone is een optionele uitbreiding met eigen uitvoeringsvoorwaarden en maakt niet automatisch deel uit van de inspectie."
+  },
+  "section_05": {
+    "item_01": "Van opname naar bruikbare rapportage.",
+    "item_02": "1. Vraag en voorstel",
+    "item_03": "U deelt het adres, uw onderhoudsvraag en eerdere rapporten. We beoordelen vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is en spreken bouwdelen, prijs en opleverdatum af.",
+    "item_04": "2. Inspectie met drones",
+    "item_05": "We inspecteren dak en gevel uitsluitend met drones. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport; we schakelen niet over op een andere inspectiemethode.",
+    "item_06": "3. Rapport en opvolging",
+    "item_07": "U ontvangt foto’s met bevindingen, risico’s en vervolgstappen. Bij een uitgebreid rapport voegen we onderhoudstermijnen en indicatieve herstelkosten toe volgens de afgesproken scope.",
+    "item_08": "Geef bij de aanvraag het adres, uw onderhoudsvraag en bekende lekkages of reparaties door. De offerte bepaalt welke bouwdelen worden opgenomen en wanneer u het rapport ontvangt."
+  },
+  "section_06": {
+    "item_01": "Bekijk een daadwerkelijk inspectierapport.",
+    "item_02": "In Deventer legde de inspectie onder meer onvoldoende dekking van dakpannen en vervormd loodwerk vast. Het rapport bevat de foto’s, risico’s en instructies voor vervolgcontrole door de dakdekker.",
+    "item_03": {
+      "label": "Download voorbeeldrapport Deventer (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-deventer-geanonimiseerd.pdf"
+    },
+    "item_04": "<a href=\"/cases#deventer\">Lees de case uit Deventer</a> · <a href=\"/kennisbank-drone-inspectie-betrouwbaar\">Wat bepaalt de betrouwbaarheid?</a>"
+  },
+  "section_07": {
+    "item_01": "Wat kost een drone-dakinspectie?",
+    "item_02": "De inzet van een drone bepaalt niet alleen de prijs. De omvang, benodigde detailbeelden, bereikbaarheid en analyse in het rapport tellen mee. <a href=\"/kennisbank-dakinspectie-kosten\">Bekijk de kostenvoorbeelden en prijsfactoren</a>; de scope en totaalprijs voor uw gebouw krijgt u vooraf."
+  },
+  "section_08": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Begin met één gebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}

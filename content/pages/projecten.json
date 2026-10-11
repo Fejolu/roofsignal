@@ -1,0 +1,58 @@
+{
+  "seo": {
+    "title": "Uitgevoerde projecten en inspectierapporten | RoofSignal",
+    "description": "Bekijk RoofSignal-projecten in Zutphen en Deventer. Onafhankelijke dak- en gevelinspecties met foto’s, concrete bevindingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": "Projecten",
+    "item_02": "Inspecties die onderhoud bespreekbaar maken.",
+    "item_03": "Van een woning tot een VvE: hieronder ziet u daadwerkelijk opgeleverde rapportages. Elk project begint met een afgebakende onderhoudsvraag."
+  },
+  "section_02": {
+    "item_01": "Twee projecten om zelf te bekijken.",
+    "item_02": {
+      "src": "/assets/praktijk/zutphen-dakdetail.webp",
+      "alt": "Dakdetail uit het Zutphense inspectierapport: los materiaal bij een dakdoorvoer"
+    },
+    "item_03": "Inspectierapport · 3 september 2026",
+    "item_04": "VvE in Zutphen",
+    "item_05": "Daknulmeting van een VvE met vijf appartementen. 12 bevindingen en een onderbouwde onderhoudsplanning.",
+    "item_06": "Geanonimiseerde PDF · 23 pagina’s · 4,5 MB",
+    "item_07": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_08": "<a href=\"/cases#zutphen\">Lees de bevindingen uit Zutphen</a>",
+    "item_09": {
+      "src": "/assets/praktijk/deventer-dakdetail.webp",
+      "alt": "Dakdetail uit het Deventer inspectierapport: aansluiting van de dakpannen"
+    },
+    "item_10": "Inspectierapport · 3 augustus 2026",
+    "item_11": "Woning in Deventer",
+    "item_12": "Gebouwschilinspectie met 10 bevindingen aan dak, gevel en afvoer, inclusief instructies voor de dakdekker.",
+    "item_13": "Geanonimiseerde PDF · 21 pagina’s · 5,3 MB",
+    "item_14": {
+      "label": "Download voorbeeldrapport Deventer (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-deventer-geanonimiseerd.pdf"
+    },
+    "item_15": "<a href=\"/cases#deventer\">Lees de bevindingen uit Deventer</a>"
+  },
+  "section_03": {
+    "item_01": "Een bruikbaar dossier voor de volgende stap.",
+    "item_02": "Na de inspectie beschikt u over een vastgelegd vertrekpunt. U kunt bevindingen bespreken met een dakdekker, offertes vergelijken op dezelfde scope of de onderhoudsplanning bijwerken. Bewaar het rapport naast latere offertes, werkbonnen en herinspecties.",
+    "item_03": "<a href=\"/cases\">Lees de complete praktijkbeschrijvingen</a> of bekijk hoe u een <a href=\"/gebouwdata-vastgoedonderhoud\">onderhoudsdossier per gebouw</a> opbouwt."
+  },
+  "section_04": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Begin met één gebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}

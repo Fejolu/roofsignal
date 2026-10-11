@@ -1,0 +1,56 @@
+{
+  "seo": {
+    "title": "Voor wie | RoofSignal",
+    "description": "Onafhankelijke visuele dak- en gevelinspecties, uitsluitend met drones. Voor VvE’s, vastgoedbeheerders en eigenaren die onderhoud objectief willen prioriteren."
+  },
+  "section_01": {
+    "item_01": "Voor wie",
+    "item_02": "Voor partijen die onderhoud objectief willen prioriteren.",
+    "item_03": "RoofSignal voert onafhankelijke visuele inspecties van daken en gevels uitsluitend met drones uit. Organisaties ontvangen een helder rapport met bevindingen, onderhoudsprioriteiten en vervolgstappen."
+  },
+  "section_02": {
+    "item_01": "Doelgroepen",
+    "item_02": "Eén aanpak, meerdere vastgoedvragen.",
+    "item_03": "VvE beheerders",
+    "item_04": "Onderbouw besluiten richting bestuur, ledenvergadering en MJOP met duidelijk bewijs, prioriteiten en kostencontext.",
+    "item_05": {
+      "label": "Bekijk dakinspectie VvE",
+      "href": "dakinspectie-vve"
+    },
+    "item_06": "Vastgoedbeheerders",
+    "item_07": "Vergelijk objecten, prioriteer herstel en bouw een vergelijkbaar onderhoudsdossier per object op.",
+    "item_08": {
+      "label": "Bekijk beheer toepassing",
+      "href": "vastgoedbeheerders"
+    },
+    "item_09": "Bedrijfspanden",
+    "item_10": "Maak risico’s op daken, gevels, goten en installaties zichtbaar zonder onnodige verstoring.",
+    "item_11": {
+      "label": "Bekijk bedrijfspanden",
+      "href": "bedrijfspanden"
+    },
+    "item_12": "Professionele eigenaren",
+    "item_13": "Krijg grip op rapporten, offertes en opvolging voordat kleine gebreken duur worden.",
+    "item_14": {
+      "label": "Bekijk landelijk werkgebied",
+      "href": "/werkgebied"
+    }
+  },
+  "section_03": {
+    "item_01": "Aanvullende portefeuilles",
+    "item_02": "Ook relevant voor organisaties met bestuurlijke onderhoudsvragen.",
+    "item_03": "Naast de primaire doelgroepen past RoofSignal bij organisaties die meerdere objecten beheren, onderhoud moeten verantwoorden en prioriteiten moeten uitleggen aan bestuur, directie of gebruikers."
+  },
+  "section_04": {
+    "item_01": "Waarom RoofSignal",
+    "item_02": "Van losse waarneming naar bruikbaar onderhoudsbesluit.",
+    "item_03": "De waarde zit in het structureren van bevindingen naar risico, urgentie, kostenindicatie en vervolgstap. Daardoor kan een beheerder, eigenaar of bestuurder sneller beslissen."
+  },
+  "section_05": {
+    "item_01": "Wilt u weten welke objecten als eerste aandacht verdienen?",
+    "item_02": {
+      "label": "Vraag een inspectie aan",
+      "href": "contact"
+    }
+  }
+}

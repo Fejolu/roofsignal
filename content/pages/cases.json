@@ -1,0 +1,60 @@
+{
+  "seo": {
+    "title": "Dakinspecties in de praktijk: Zutphen en Deventer | RoofSignal",
+    "description": "Bekijk twee uitgevoerde inspecties: een VvE in Zutphen en een woning in Deventer. Lees de bevindingen en download de geanonimiseerde rapporten."
+  },
+  "section_01": {
+    "item_01": "Uitgevoerde inspecties",
+    "item_02": "Wat een inspectie concreet oplevert.",
+    "item_03": "Twee praktijkgevallen met de oorspronkelijke bevindingen en voorgestelde vervolgstappen. De rapporten zijn geanonimiseerd en direct te downloaden."
+  },
+  "section_02": {
+    "item_01": "VvE in Zutphen: onderhoud prioriteren.",
+    "item_02": {
+      "src": "/assets/praktijk/zutphen-dakdetail.webp",
+      "alt": "Dakdetail uit het Zutphense inspectierapport: los materiaal bij een dakdoorvoer"
+    },
+    "item_03": "<strong>Opdracht:</strong> een visuele daknulmeting voor een VvE met vijf appartementen, uitgevoerd op 3 september 2026.",
+    "item_04": "<strong>Opgeleverd:</strong> 12 bevindingen met risico, prioriteit en maatregel, gebaseerd op 130 inspectiefoto’s. Daarvan vroeg één bevinding directe opvolging: los materiaal bij een dakdoorvoer.",
+    "item_05": "<strong>Vervolg:</strong> laat de urgente situatie veilig controleren en pak waterophoping, vervuilde goten en verouderde aansluitingen planmatig aan. Het rapport groepeert de maatregelen voor de eerste en latere onderhoudsjaren.",
+    "item_06": "<strong>Onderhoudsreservering:</strong> het rapport bevat een indicatieve raming voor toekomstig herstel, met prijspeil en beperkingen. De inspectie zelf wordt per object geoffreerd.",
+    "item_07": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_08": "<a href=\"/dakinspectie-vve\">Bekijk de dakinspectie voor VvE’s</a> of lees hoe bevindingen bruikbaar worden als <a href=\"/mjop-input-vve\">input voor het MJOP</a>."
+  },
+  "section_03": {
+    "item_01": "Woning in Deventer: van dakdetail naar hersteladvies.",
+    "item_02": {
+      "src": "/assets/praktijk/deventer-dakdetail.webp",
+      "alt": "Dakdetail uit het Deventer inspectierapport: aansluiting van de dakpannen"
+    },
+    "item_03": "<strong>Opdracht:</strong> een Plus-inspectie van dak, gevel en afvoer van een eengezinswoning, uitgevoerd op 3 augustus 2026.",
+    "item_04": "<strong>Opgeleverd:</strong> 10 bevindingen op basis van 71 inspectiebeelden. Eén punt kreeg prioriteit 1 wegens onvoldoende dekking van dakpannen aan de voorzijde.",
+    "item_05": "<strong>Vervolg:</strong> het rapport adviseerde dit punt direct waterkerend te laten herstellen. Vervormd loodwerk en de overgang van plat dak naar pannendak kregen afzonderlijke opvolgtermijnen. De instructie voor de dakdekker maakt duidelijk welke details nadere controle vragen.",
+    "item_06": "<strong>Onderhoudsreservering:</strong> het rapport geeft een indicatie voor het plannen van toekomstig onderhoud. Definitieve herstelkosten hangen af van opname en offertes van uitvoerende bedrijven.",
+    "item_07": {
+      "label": "Download voorbeeldrapport Deventer (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-deventer-geanonimiseerd.pdf"
+    },
+    "item_08": "<a href=\"/drone-dakinspectie\">Lees over drone-dakinspecties</a> en <a href=\"/kennisbank-van-bevinding-naar-prioriteit\">hoe een bevinding een prioriteit krijgt</a>."
+  },
+  "section_04": {
+    "item_01": "Wat deze voorbeelden aantonen.",
+    "item_02": "U kunt de opgeleverde rapportage zelf beoordelen: van beeldbewijs naar waarneming, risico en vervolgactie. We presenteren hier de inspectieresultaten en adviezen. De voorbeelden doen geen uitspraak over later uitgevoerd herstel, gerealiseerde besparingen of een klantbeoordeling."
+  },
+  "section_05": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Begin met één gebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}

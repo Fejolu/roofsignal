@@ -1,0 +1,63 @@
+{
+  "seo": {
+    "title": "Toepassingen en pilots voor vastgoed | RoofSignal",
+    "description": "Bekijk de inspectiediensten, bouwvoortgang met drones op aanvraag en RoofSignal-pilots voor stormschade en publiek vastgoed."
+  },
+  "section_01": {
+    "item_01": "Toepassingen",
+    "item_02": "Eén informatieplatform. Meerdere werkvelden.",
+    "item_03": "RoofSignal maakt waarnemingen bruikbaar als onafhankelijk bewijs, prioriteit en vervolgstap. Onafhankelijke visuele inspectie van daken en gevels, uitsluitend met drones, is onze operationele kern. Voor bouw- en renovatieprojecten bieden we voortgangsregistratie op aanvraag. Daarnaast ontwikkelen we nieuwe werkvelden in afgebakende pilots met inhoudelijke partners."
+  },
+  "section_02": {
+    "item_01": "Duidelijke status",
+    "item_02": "Een passende aanpak per vraag.",
+    "item_03": "Naast onze inspectiediensten kunt u bouwvoortgang op aanvraag laten vastleggen. Voor andere toepassingen starten we waar nodig met een praktijkpilot. Vooraf spreken we af wat u ontvangt en welke expertise of voorbereiding nodig is."
+  },
+  "section_03": {
+    "item_01": "Nu beschikbaar",
+    "item_02": "Objectieve beslisinformatie voor vastgoed.",
+    "item_03": "Gebouwschilinspectie",
+    "item_04": "Bevindingen aan dak, gevel en relevante details, vertaald naar bewijs, prioriteiten met concrete opvolgtermijnen en aanbevolen opvolging.",
+    "item_05": {
+      "label": "Bekijk de inspectiedienst →",
+      "href": "diensten"
+    },
+    "item_06": "VvE & MJOP-input",
+    "item_07": "Actuele conditie-informatie per bouwdeel als onderbouwde input voor onderhoudsplanning en besluitvorming. Geen volledig gecertificeerd MJOP.",
+    "item_08": {
+      "label": "Bekijk MJOP-input →",
+      "href": "mjop-input-vve"
+    },
+    "item_09": "Vastgoedportefeuilles",
+    "item_10": "Vergelijk objecten op risico, urgentie en onderhoudsbehoefte zodat budget en aandacht naar de juiste locaties gaan.",
+    "item_11": {
+      "label": "Bekijk portefeuille-inzicht →",
+      "href": "vastgoedbeheerders"
+    }
+  },
+  "section_04": {
+    "item_01": "Op aanvraag",
+    "item_02": "Bouwvoortgang met drones.",
+    "item_03": "Leg uw bouwproject op vaste momenten vast. Vergelijk bouwfasen vanuit herkenbare gezichtspunten en deel overzichtsbeelden en zichtbare aandachtspunten met uw projectteam. Periodieke opnamen, rapportage en een eventuele 3D-uitwerking stemmen we af op uw project.",
+    "item_04": "<a class=\"rs-text-link\" href=\"/bouwvoortgang\">Bekijk bouwvoortgang met drones →</a>"
+  },
+  "section_05": {
+    "item_01": "Pilot & samenwerking",
+    "item_02": "Nieuwe toepassingen, zorgvuldig begrensd.",
+    "item_03": "Onderstaande werkvelden zijn geen standaardproduct. We onderzoeken ze met opdrachtgevers en erkende specialisten in een concrete praktijksituatie.",
+    "item_04": "Stormschade en objecttriage",
+    "item_05": "Na een storm snel vastleggen welke objecten als eerste nader onderzoek nodig hebben. De uitkomst is een onderbouwde eerste prioritering met locatiegebonden beeldbewijs.",
+    "item_06": "<strong>Afbakening:</strong> geen noodreparatie, constructieve vrijgave of vervanging van een schade-expert.",
+    "item_07": "Publiek vastgoed",
+    "item_08": "Gemeenten en publieke organisaties ondersteunen bij het prioriteren van scholen, sportlocaties en ander maatschappelijk vastgoed op onderhoudsrisico en urgentie.",
+    "item_09": "<strong>Afbakening:</strong> start met een representatieve deelportefeuille en vooraf afgesproken beoordelingskader."
+  },
+  "section_06": {
+    "item_01": "Een concrete pilotvraag bespreken?",
+    "item_02": "We toetsen eerst de vraag, partners, gegevensbehoefte en grenzen. Pas daarna bepalen we of een pilot verantwoord en zinvol is.",
+    "item_03": {
+      "label": "Bespreek een pilot",
+      "href": "contact"
+    }
+  }
+}

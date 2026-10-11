@@ -38,6 +38,6 @@ jobs:
         with:
           version: 2.111.0
       - name: Installeer testomgeving
-        run: python -m pip install pytest
+        run: python -m pip install pytest -r tools/cms-requirements.txt
       - name: Controleer en publiceer database en functies
         run: python tools/supabase_release.py --deploy

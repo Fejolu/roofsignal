@@ -1,0 +1,79 @@
+{
+  "seo": {
+    "title": "Dak- en gevelinspecties voor vastgoedbeheerders | RoofSignal",
+    "description": "Start met één pilotgebouw: onafhankelijke visuele dak- en gevelinspectie, uitsluitend met drones. Rapport met foto’s, bevindingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": "Vastgoedbeheer",
+    "item_02": "Begin met het gebouw waar de meeste vragen spelen.",
+    "item_03": "Maak de onderhoudsvraag per object concreet en bouw van daaruit aan vergelijkbare informatie voor uw portefeuille."
+  },
+  "section_02": {
+    "item_01": "Van objectlijst naar een eerste inspectie.",
+    "item_02": "Een portefeuille hoeft niet in één keer volledig opgenomen te worden. Deel uw objectlijst en geef aan waar onderhoudsbesluiten, meldingen of onvolledige dossiers spelen. Beschikbare inspecties en onderhoudsplannen helpen bepalen welke informatie nog bruikbaar is.",
+    "item_03": "Samen kiezen we één pilotobject. Het voorstel beschrijft het gebouw, de met drones te beoordelen bouwdelen, rapportdiepte, planning en totaalprijs. Een vervolg voor andere gebouwen spreken we afzonderlijk af."
+  },
+  "section_03": {
+    "item_01": "Welke input helpt bij de selectie?",
+    "item_02": "Objectgegevens",
+    "item_03": "Adressen, gebouwtype, bouwjaar en een inschatting van omvang en bereikbaarheid.",
+    "item_04": "Onderhoudsinformatie",
+    "item_05": "Eerdere inspecties, MJOP’s, recente werkzaamheden en bekende lekkage- of gevelmeldingen, voor zover beschikbaar.",
+    "item_06": "Uw besluit",
+    "item_07": "Bijvoorbeeld herstel uitvragen, een onderhoudsbudget onderbouwen of bepalen welk object als eerste nader onderzoek vraagt."
+  },
+  "section_04": {
+    "item_01": "Wat het pilotobject oplevert.",
+    "item_02": "U krijgt een rapport met zichtbare bevindingen per bouwdeel, foto’s, risico’s en aanbevolen vervolgacties. Waar afgesproken voegen we onderhoudstermijnen en indicatieve herstelbedragen toe. We leggen vast welke delen niet of onvoldoende te beoordelen waren.",
+    "item_03": "Bespreek daarna of dezelfde scope past bij vergelijkbare objecten. Vergelijken heeft alleen betekenis wanneer de drone-opname, datum, dekking en prioriteiten duidelijk zijn. Een ouder dossier wordt niet automatisch een actuele conditiebeoordeling."
+  },
+  "section_05": {
+    "item_01": "Bekijk de rapportage vóór uw eerste opdracht.",
+    "item_02": {
+      "src": "/assets/praktijk/zutphen-dakdetail.webp",
+      "alt": "Dakdetail uit het Zutphense inspectierapport: los materiaal bij een dakdoorvoer"
+    },
+    "item_03": "Inspectierapport · 3 september 2026",
+    "item_04": "VvE in Zutphen",
+    "item_05": "Daknulmeting van een VvE met vijf appartementen. 12 bevindingen en een onderbouwde onderhoudsplanning.",
+    "item_06": "Geanonimiseerde PDF · 23 pagina’s · 4,5 MB",
+    "item_07": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_08": "<a href=\"/cases#zutphen\">Lees de bevindingen uit Zutphen</a>",
+    "item_09": {
+      "src": "/assets/praktijk/deventer-dakdetail.webp",
+      "alt": "Dakdetail uit het Deventer inspectierapport: aansluiting van de dakpannen"
+    },
+    "item_10": "Inspectierapport · 3 augustus 2026",
+    "item_11": "Woning in Deventer",
+    "item_12": "Gebouwschilinspectie met 10 bevindingen aan dak, gevel en afvoer, inclusief instructies voor de dakdekker.",
+    "item_13": "Geanonimiseerde PDF · 21 pagina’s · 5,3 MB",
+    "item_14": {
+      "label": "Download voorbeeldrapport Deventer (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-deventer-geanonimiseerd.pdf"
+    },
+    "item_15": "<a href=\"/cases#deventer\">Lees de bevindingen uit Deventer</a>",
+    "item_16": "Deze voorbeelden tonen rapportage op objectniveau. Voor uw portefeuille spreken we apart af welke samenvatting of vergelijking u nodig heeft."
+  },
+  "section_06": {
+    "item_01": "Kosten, planning en grenzen.",
+    "item_02": "De prijs volgt uit omvang, bereikbaarheid en rapportdiepte per gebouw. <a href=\"/kennisbank-dakinspectie-kosten\">Lees hoe uw offerte wordt opgebouwd</a>. Bij meerdere objecten kunnen we de opnameplanning bundelen. U ontvangt een offerte voor de gewenste werkzaamheden per object; reiskosten komen daar apart bij en worden afzonderlijk vermeld.",
+    "item_03": "RoofSignal inspecteert uitsluitend met drones. De beoordeling is visueel en niet-destructief: we kijken niet door dakbedekking of constructies heen. Een foto alleen bewijst niet of een aansluiting waterdicht is of waar vocht vandaan komt. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport. Waar nodig adviseren we vervolgonderzoek door een geschikte specialist.",
+    "item_04": "Meer weten over het bewaren en volgen van informatie? Lees over het <a href=\"/gebouwdata-vastgoedonderhoud\">onderhoudsdossier per gebouw</a>."
+  },
+  "section_07": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Bespreek uw eerste pilotgebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}

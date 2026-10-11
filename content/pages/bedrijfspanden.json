@@ -1,0 +1,49 @@
+{
+  "seo": {
+    "title": "Dak- en gevelinspectie van bedrijfspanden | RoofSignal",
+    "description": "Onafhankelijke visuele inspectie van dak en gevel van uw bedrijfspand, uitsluitend met drones. Rapport met bevindingen, beperkingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": "Voor eigenaren en beheerders",
+    "item_02": "Inzicht in dak en gevel van uw bedrijfspand.",
+    "item_03": "Breng zichtbare aandachtspunten in kaart en bespreek herstel op basis van foto’s, risico’s en concrete vervolgstappen."
+  },
+  "section_02": {
+    "item_01": "Onderhoud afstemmen op het gebruik.",
+    "item_02": "Bij een bedrijfspand raakt onderhoud ook huurders, opslag, installaties en dagelijkse werkzaamheden. Een visuele inspectie helpt vastleggen welke punten aan de buitenzijde aandacht vragen voordat u herstel laat uitvragen.",
+    "item_03": "De opdracht kan bestaan uit platte of hellende dakdelen, dakranden, doorvoeren, gevels en hemelwaterafvoer. Welke onderdelen we beoordelen, bepalen we vooraf. Aanwezige zonnepanelen, installaties en beperkte vliegruimte kunnen het zicht vanuit de drone beperken."
+  },
+  "section_03": {
+    "item_01": "Voorbereiding en uitvoering.",
+    "item_02": "Onderhoudsvraag",
+    "item_03": "Deel terugkerende meldingen, eerdere reparaties en het doel van de inspectie. Geef aan welke delen voor uw bedrijfsvoering bijzonder belangrijk zijn.",
+    "item_04": "Veilige dronevlucht",
+    "item_05": "We stemmen af met de locatiecontactpersoon en beoordelen vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is, rekening houdend met de werkzaamheden op locatie.",
+    "item_06": "Oplevering",
+    "item_07": "U ontvangt beeldbewijs, bevindingen, prioriteiten en vervolgadvies. Gewenste onderhoudstermijnen en kostencontext nemen we expliciet op in de rapportagescope."
+  },
+  "section_04": {
+    "item_01": "Wat u ermee kunt doen.",
+    "item_02": "Gebruik de bevindingen om dezelfde aandachtspunten bij verschillende uitvoerders uit te vragen. Het rapport maakt ook zichtbaar wanneer eerst vervolgonderzoek door een geschikte specialist op het dak of aan een aansluiting nodig is. De afgesproken opleverdatum kan aansluiten op een onderhoudsoverleg of begrotingsronde.",
+    "item_03": "<a href=\"/voorbeeldrapport-uitgebreid\">Bekijk twee inspectierapporten van een woning en een VvE</a>. Deze laten de manier van rapporteren zien; de scope voor uw bedrijfspand wordt apart bepaald."
+  },
+  "section_05": {
+    "item_01": "Inspectieprijs en afbakening.",
+    "item_02": "Oppervlak, aantal dakvlakken, bereikbaarheid en rapportage bepalen de inzet. U krijgt een offerte op aanvraag voor uw object en de gewenste werkzaamheden. Reiskosten komen daar apart bij en worden afzonderlijk vermeld, samen met de btw. <a href=\"/tarieven\">Lees hoe de offerte wordt opgebouwd</a>.",
+    "item_03": "RoofSignal inspecteert uitsluitend met drones. De beoordeling is visueel en niet-destructief: we kijken niet door dakbedekking of constructies heen. Een foto alleen bewijst niet of een aansluiting waterdicht is of waar vocht vandaan komt. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport. Waar nodig adviseren we vervolgonderzoek door een geschikte specialist.",
+    "item_04": "Een visuele gebouwschilinspectie omvat geen controle van de werking van installaties, constructieberekening of vaststelling van de exacte lekkageoorzaak. Als uw vraag dat vereist, benoemen we passend vervolgonderzoek."
+  },
+  "section_06": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Bespreek de onderhoudsvraag van uw bedrijfspand.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}

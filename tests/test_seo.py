@@ -29,7 +29,7 @@ def test_indexable_pages_have_one_h1_and_a_canonical():
         content = path.read_text(encoding="utf-8")
         if 'content="noindex' in content:
             continue
-        assert content.count("<h1>") == 1, path.name
+        assert len(re.findall(r"<h1(?:\s[^>]*)?>", content)) == 1, path.name
         assert content.count('rel="canonical"') == 1, path.name
 
 

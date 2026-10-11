@@ -1,0 +1,128 @@
+{
+  "seo": {
+    "title": "Onafhankelijke dak- en gevelinspectie | RoofSignal",
+    "description": "Onafhankelijke visuele dak- en gevelinspectie, uitsluitend met drones. Voor VvE’s, beheerders en eigenaren. Rapport met bevindingen en onderhoudsprioriteiten."
+  },
+  "section_01": {
+    "item_01": {
+      "src": "/assets/hero-roofsignal-mobile.webp",
+      "alt": ""
+    },
+    "item_02": {
+      "src": "/assets/hero-roofsignal-v6.webp",
+      "alt": ""
+    },
+    "item_03": "Voor VvE’s, beheerders en vastgoedeigenaren",
+    "item_04": "Onafhankelijke dak- en gevelinspectie.",
+    "item_05": "We voeren onafhankelijke visuele inspecties van daken en gevels uitsluitend met drones uit. U ontvangt duidelijke foto’s en een begrijpelijk rapport met bevindingen en onderhoudsprioriteiten om herstel te bespreken en onderhoud te plannen.",
+    "item_06": "Begin met één gebouw.",
+    "item_07": {
+      "label": "Inspectie boeken",
+      "href": "/inspectie-boeken/"
+    },
+    "item_08": {
+      "label": "Bekijk een voorbeeldrapport",
+      "href": "#voorbeeldrapport"
+    }
+  },
+  "section_02": {
+    "item_01": "Bewijs uit de praktijk",
+    "item_02": "Van bevinding naar actie.",
+    "item_03": {
+      "src": "/assets/praktijk/zutphen-dakdetail.webp",
+      "alt": "Dakdetail uit het Zutphense inspectierapport: los materiaal bij een dakdoorvoer"
+    },
+    "item_04": "Werkelijke inspectie · Zutphen",
+    "item_05": "Los materiaal bij een dakdoorvoer",
+    "item_06": "Op de inspectiebeelden lag los hard materiaal bij een grote dakdoorvoer. Het rapport adviseert dit op korte termijn te laten verwijderen en de aansluiting te controleren.",
+    "item_07": "<strong>Wat de VvE ontvangt:</strong> de foto, de waarneming, het risico, de prioriteit en een concrete vervolgstap bij elkaar.",
+    "item_08": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_09": "Bevinding B-01 · inspectie 3 september 2026. De geadviseerde actie is geen bevestiging dat herstel al is uitgevoerd."
+  },
+  "section_03": {
+    "item_01": "Bekijk twee echte inspectierapporten.",
+    "item_02": "Download de geanonimiseerde rapporten direct. U hoeft geen e-mailadres of andere gegevens achter te laten.",
+    "item_03": {
+      "src": "/assets/praktijk/zutphen-dakdetail.webp",
+      "alt": "Dakdetail uit het Zutphense inspectierapport: los materiaal bij een dakdoorvoer"
+    },
+    "item_04": "Inspectierapport · 3 september 2026",
+    "item_05": "VvE in Zutphen",
+    "item_06": "Daknulmeting van een VvE met vijf appartementen. 12 bevindingen en een onderbouwde onderhoudsplanning.",
+    "item_07": "Geanonimiseerde PDF · 23 pagina’s · 4,5 MB",
+    "item_08": {
+      "label": "Download voorbeeldrapport Zutphen (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-zutphen-geanonimiseerd.pdf"
+    },
+    "item_09": "<a href=\"/cases#zutphen\">Lees de bevindingen uit Zutphen</a>",
+    "item_10": {
+      "src": "/assets/praktijk/deventer-dakdetail.webp",
+      "alt": "Dakdetail uit het Deventer inspectierapport: aansluiting van de dakpannen"
+    },
+    "item_11": "Inspectierapport · 3 augustus 2026",
+    "item_12": "Woning in Deventer",
+    "item_13": "Gebouwschilinspectie met 10 bevindingen aan dak, gevel en afvoer, inclusief instructies voor de dakdekker.",
+    "item_14": "Geanonimiseerde PDF · 21 pagina’s · 5,3 MB",
+    "item_15": {
+      "label": "Download voorbeeldrapport Deventer (PDF)",
+      "href": "/downloads/RoofSignal-praktijkrapport-deventer-geanonimiseerd.pdf"
+    },
+    "item_16": "<a href=\"/cases#deventer\">Lees de bevindingen uit Deventer</a>"
+  },
+  "section_04": {
+    "item_01": "Uw eerste inspectie",
+    "item_02": "Zo wordt uw onderhoudsvraag een bruikbaar rapport.",
+    "item_03": "1. Vraag en voorstel",
+    "item_04": "U deelt het adres, uw onderhoudsvraag en eerdere rapporten. We beoordelen vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is en spreken bouwdelen, prijs en opleverdatum af.",
+    "item_05": "2. Inspectie met drones",
+    "item_06": "We inspecteren dak en gevel uitsluitend met drones. Niet of onvoldoende zichtbare delen vermelden we als beperking in het rapport; we schakelen niet over op een andere inspectiemethode.",
+    "item_07": "3. Rapport en opvolging",
+    "item_08": "U ontvangt foto’s met bevindingen, risico’s en vervolgstappen. We benoemen concrete opvolgtermijnen en, waar verantwoord te onderbouwen, indicatieve herstelkosten."
+  },
+  "section_05": {
+    "item_01": "Wat kost RoofSignal Inspectie?",
+    "item_02": "Particulieren",
+    "item_03": "RoofSignal Inspectie van dak én gevel, inclusief een onderbouwd inspectierapport.",
+    "item_04": "<a href=\"/inspectie-boeken/\">Boek een inspectie van uw woning →</a>",
+    "item_05": "VvE’s en VvE-beheerders",
+    "item_06": "Dezelfde inspectiestandaard, afgestemd op de omvang en bereikbaarheid van uw gebouw.",
+    "item_07": "Grotere objecten en overheden",
+    "item_08": "<strong>Offerte op maat</strong>",
+    "item_09": "Voor grotere complexen, meerdere gebouwen of een bijzondere onderzoeksvraag bepalen we de inzet vooraf.",
+    "item_10": "De vanafprijzen gelden voor één object binnen de beschreven omvang met reguliere bereikbaarheid. De uiteindelijke prijs hangt af van de omvang, bouwvorm, bereikbaarheid en uw onderzoeksvraag. Thermische inspectie met een drone is een optionele uitbreiding met een afzonderlijke prijs.",
+    "item_11": {
+      "label": "Bekijk het aanbod en de vanafprijzen",
+      "href": "/tarieven#vanafprijzen"
+    }
+  },
+  "section_06": {
+    "item_01": "Een passende aanpak voor uw gebouw.",
+    "item_02": "VvE’s en VvE-beheerders",
+    "item_03": "Geef het bestuur foto’s, prioriteiten en aanknopingspunten voor onderhoud en het MJOP. <a href=\"/dakinspectie-vve\">Dakinspectie voor uw VvE</a>.",
+    "item_04": "Vastgoedbeheerders",
+    "item_05": "Start met een pilotgebouw en bepaal daarna welke objecten een actuele opname nodig hebben. <a href=\"/vastgoedbeheerders\">Aanpak voor uw portefeuille</a>.",
+    "item_06": "Bedrijfspanden",
+    "item_07": "Breng zichtbare aandachtspunten aan dak en gevel in kaart en plan vervolgonderzoek rond het gebruik van het gebouw. <a href=\"/bedrijfspanden\">Inspectie van een bedrijfspand</a>."
+  },
+  "section_07": {
+    "item_01": "Onafhankelijk van de herstelopdracht.",
+    "item_02": "RoofSignal verkoopt geen reparaties en verdient niet aan extra herstelwerk. U kiest zelf de uitvoerende partij.",
+    "item_03": "<a href=\"/over-ons\">Meer over RoofSignal</a> · <a href=\"/dakinspectie-apeldoorn\">Dakinspectie in Apeldoorn</a> · <a href=\"/werkgebied\">Ons werkgebied</a>"
+  },
+  "section_08": {
+    "item_01": "Uw volgende stap",
+    "item_02": "Begin met één gebouw.",
+    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_04": {
+      "label": "Vraag een inspectie aan",
+      "href": "/contact"
+    },
+    "item_05": {
+      "label": "Bekijk de inspectierapporten",
+      "href": "/voorbeeldrapport-uitgebreid"
+    }
+  }
+}
