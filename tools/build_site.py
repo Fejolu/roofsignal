@@ -212,7 +212,7 @@ def article_html(article, root, header, footer):
 <meta property="og:type" content="article"><meta property="og:site_name" content="RoofSignal"><meta property="og:url" content="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(description)}">{image_meta}
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{e(title)}"><meta name="twitter:description" content="{e(description)}">
-<link rel="stylesheet" href="/assets/public.css?v=20260924-navigation"><link rel="stylesheet" href="/assets/site-public.css?v=20261011-booking-cta">
+<link rel="stylesheet" href="/assets/public.css?v=20260924-navigation"><link rel="stylesheet" href="/assets/site-public.css?v=20261011-layout-review">
 <link rel="stylesheet" href="/assets/knowledge-article.css?v=20260917">
 <script type="application/ld+json">{json_script(schema)}</script>
 <script src="/assets/analytics-config.js?v=20260921-privacy" defer></script><script src="/assets/analytics.js?v=20260921-privacy" defer></script>
