@@ -3,6 +3,12 @@ export const PROFILE_ID = 'pfl_Bef5DYX9w5';
 export const RETRY_WINDOW_MS = 40 * 60 * 1000;
 export const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 export const TERMINAL = new Set(['confirmed','paid_review_required','failed','canceled','expired','not_created']);
+export function publicPaymentStatus(attempt) {
+  if(['confirmed','paid_review_required','failed','canceled','expired'].includes(attempt.status))return attempt.status;
+  // A provider failure/expiry alone is not durable closure. Calendar cleanup
+  // must complete before the customer can start another booking.
+  return ['open','pending','authorized'].includes(attempt.payment_status)?attempt.payment_status:'pending';
+}
 export function euro(cents) {
   if (!Number.isSafeInteger(cents) || cents < 1) throw Error('INVALID_AMOUNT');
   return `${Math.floor(cents/100)}.${String(cents%100).padStart(2,'0')}`;

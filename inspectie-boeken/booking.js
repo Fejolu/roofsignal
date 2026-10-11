@@ -406,26 +406,35 @@ async function showReturnStatus() {
   let retryRequired = true;
   try {
     const data = await api(`/status?token=${encodeURIComponent(token)}`);
-    const status = data?.status;
-    if (data.state === 'checkout_ready') {
+    let result = null;
+    if (data.state === 'checkout_ready' || data.state === 'closed') {
       // The opaque return token identifies the server order when this browser
       // has no local record. Never trust a URL without validating its order.
       const expected = recovery || validateRecoveryRecord({
         version: 1, requestId: data.requestId, quoteId: data.quoteId,
         slotId: data.slotId, currency: data.currency, totalCents: data.totalCents
       });
-      const result = validateRecoveryResponse(data, expected);
-      returnOrder = expected;
-      showPaymentLink(result.checkoutUrl);
-    } else if (data.state === 'closed' && recovery) {
-      applyAttemptResponse(data);
+      result = validateRecoveryResponse(data, expected);
+      if (result.state === 'checkout_ready') {
+        returnOrder = expected;
+        showPaymentLink(result.checkoutUrl);
+      } else if (recovery) {
+        applyAttemptResponse(data);
+      }
     }
+    // A provider's terminal status alone does not prove that the server has
+    // released the calendar hold and durably closed this booking attempt.
+    const closed = result?.state === 'closed';
+    const status = closed ? result.status : result?.state === 'checkout_ready' ? 'open' : 'pending';
     message('booking-status', paymentMessage(status));
-    if (['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) {
+    if (closed && ['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) {
       returnOrder = null;
       form.hidden = false;
+      const url = new URL(window.location.href);
+      url.searchParams.delete('booking');
+      window.history.replaceState(null, '', url);
     }
-    retryRequired = !['confirmed', 'paid_review_required', 'failed', 'canceled', 'expired'].includes(status);
+    retryRequired = !closed;
   } catch (error) {
     clearPaymentLink();
     message('booking-status', `${error.message} Uw afspraak is nog niet bevestigd. U kunt de betaalstatus opnieuw controleren.`);

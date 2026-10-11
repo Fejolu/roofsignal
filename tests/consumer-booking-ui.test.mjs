@@ -174,7 +174,7 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
     assert.ok(element, `Missing page element: ${id}`);
     return element;
   };
-  return { document, get, requests, navigations, storageOperations, stored };
+  return { document, get, requests, navigations, storageOperations, stored, location };
 }
 
 function statusRetry(document) {
@@ -349,8 +349,47 @@ test('A verified expired return allows a fresh booking with or without a local r
     assert.equal(ui.get('checkout-link').hidden, true);
     assert.equal(ui.get('checkout-link').getAttribute('href'), null);
     assert.equal(ui.stored.size, 0);
+    assert.equal(ui.location.searchParams.has('booking'), false, 'A fresh booking must not retain an expired return token');
     assert.match(ui.get('booking-status').textContent, /betaalopdracht is verlopen/);
     assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  }
+});
+
+test('A raw terminal provider status never releases a pending booking or hides its retry', async () => {
+  for (const record of [undefined, recoveryRecord]) {
+    for (const status of ['failed', 'canceled', 'expired', 'confirmed']) {
+      for (const response of [{ status }, readyPayment({ state: 'pending', status, requestClosed: false })]) {
+        const ui = await bookingPage({ configuration: connectedConfiguration, record, returnToken: statusToken,
+          respond(request) {
+            if (request.path.endsWith('/recover')) return { requestId: recoveryRecord.requestId, state: 'pending' };
+            return response;
+          }
+        });
+        assert.equal(ui.get('booking-form').hidden, true);
+        assert.equal(ui.get('checkout-link').hidden, true);
+        assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+        assert.ok(statusRetry(ui.document), 'A provider status must not suppress retry while the server hold is unresolved');
+        assert.match(ui.get('booking-status').textContent, /betaling wordt nog gecontroleerd/);
+        assert.equal(ui.stored.size, record ? 1 : 0);
+        assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+      }
+    }
+  }
+});
+
+test('A terminal return without a durable closure fence cannot unlock either a stored or server-only order', async () => {
+  for (const record of [undefined, recoveryRecord]) {
+    const ui = await bookingPage({ configuration: connectedConfiguration, record, returnToken: statusToken,
+      respond(request) {
+        if (request.path.endsWith('/recover')) return { requestId: recoveryRecord.requestId, state: 'pending' };
+        return readyPayment({ state: 'closed', status: 'expired', requestClosed: false });
+      }
+    });
+    assert.equal(ui.get('booking-form').hidden, true);
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.ok(statusRetry(ui.document));
+    assert.equal(ui.stored.size, record ? 1 : 0);
+    assert.match(ui.get('booking-status').textContent, /nog niet veilig afgehandeld/);
   }
 });
 

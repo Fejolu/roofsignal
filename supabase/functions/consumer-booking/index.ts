@@ -1,6 +1,6 @@
 import {createClient} from 'npm:@supabase/supabase-js@2';
 import {calculateTravel} from '../_shared/consumer-travel-pricing.mjs';
-import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment} from '../_shared/consumer-payment.mjs';
+import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment,publicPaymentStatus} from '../_shared/consumer-payment.mjs';
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {consumerAdminKeys,isConsumerAdmin} from '../_shared/consumer-admin.mjs';
@@ -274,7 +274,7 @@ Deno.serve(async(req:Request)=>{
    const found=assertMode(await one('consumer_attempts','status_token',token),mode);
    if(!admin)await limit('status:'+found.id,12);
    const job=await claim(found.id,null,mode);const a=job.claimed?await progress(job.attempt):job.attempt;
-   return respond({...await view(a),status:['confirmed','paid_review_required','failed','canceled','expired'].includes(a.status)?a.status:a.payment_status||'pending'});
+   return respond({...await view(a),status:publicPaymentStatus(a)});
   }
   if(req.method!=='POST')return respond({error:'METHOD_NOT_ALLOWED'},405);
   const raw=await req.text();if(raw.length>12000)throw Error('INVALID_REQUEST');const body=JSON.parse(raw);

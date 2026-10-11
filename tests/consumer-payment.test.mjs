@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {paymentBody,verifyPayment,mayRetryCreation,reconcilePayment,checkoutHref} from '../supabase/functions/_shared/consumer-payment.mjs';
+import {paymentBody,verifyPayment,mayRetryCreation,reconcilePayment,checkoutHref,publicPaymentStatus} from '../supabase/functions/_shared/consumer-payment.mjs';
 const id='601f78aa-31f3-4c63-941d-07b31df84902';
 const a=()=>({id,quote_id:'q1',reference:'RS-123456',mode:'test',status_token:'b'.repeat(64),slot_start:'2026-10-20T10:00:00Z',status:'payment_pending',lease_token:'lock'});
 const q={id:'q1',total_cents:66429,destination:'Testadres, Apeldoorn'};
@@ -75,6 +75,14 @@ test('Recovery rejects an untrusted Mollie link before presenting it',async()=>{
  let saved=false;
  await assert.rejects(reconcilePayment({attempt:a(),quote:q,payment,calendar:async()=>assert.fail(),save:async()=>{saved=true;}}),/INVALID_CHECKOUT_URL/);
  assert.equal(saved,false);
+});
+test('Public status only reports expiry or failure after the order and calendar are durably closed',()=>{
+ for(const status of ['expired','failed','canceled']) {
+  assert.equal(publicPaymentStatus({status:'payment_pending',payment_status:status}),'pending');
+  assert.equal(publicPaymentStatus({status,payment_status:status}),status);
+ }
+ assert.equal(publicPaymentStatus({status:'payment_pending',payment_status:'open'}),'open');
+ assert.equal(publicPaymentStatus({status:'paid_review_required',payment_status:'paid'}),'paid_review_required');
 });
 test('checkout redirects only to exact HTTPS Mollie hosts',()=>{
  for(const href of ['http://www.mollie.com/pay','https://www.mollie.com.bad.example/pay','https://evil@www.mollie.com/pay'])assert.throws(()=>checkoutHref({_links:{checkout:{href}}}));
