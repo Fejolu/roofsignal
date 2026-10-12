@@ -96,6 +96,13 @@ test('Checkout verifies the same currency, quote, slot, request and amount', () 
   for (const patch of [{ currency: 'USD' }, { currency: undefined }, { totalCents: 66429 }, { totalCents: '36179' }, { quoteId: 'other-quote' }, { slotId: 'other-slot' }, { requestId: 'other-request' }, { reference: '' }]) assert.throws(() => validateCheckout({ ...checkout, ...patch }, expected));
   for (const checkoutUrl of ['https://www.mollie.com.example.org/pay', 'https://evil.example/pay', 'javascript:alert(1)', 'http://www.mollie.com/checkout/test', 'https://user@www.mollie.com/test', 'https://www.mollie.com:444/pay']) assert.throws(() => validateCheckout({ ...checkout, checkoutUrl }, expected));
 });
+test('A recovered direct iDEAL checkout must use its exact official host and the same order', () => {
+  const checkoutUrl = 'https://pay.ideal.nl/pay/existing-payment';
+  assert.equal(validateCheckout({ ...checkout, checkoutUrl }, expected), checkoutUrl);
+  assert.deepEqual(validateRecoveryResponse({ ...checkout, checkoutUrl, state: 'checkout_ready' }, expected), { state: 'checkout_ready', checkoutUrl });
+  for (const url of ['http://pay.ideal.nl/pay', 'https://pay.ideal.nl.example.org/pay', 'https://evil.pay.ideal.nl/pay', 'https://user:secret@pay.ideal.nl/pay', 'https://pay.ideal.nl:444/pay']) assert.throws(() => validateCheckout({ ...checkout, checkoutUrl: url }, expected));
+  assert.throws(() => validateCheckout({ ...checkout, checkoutUrl, totalCents: 66429 }, expected));
+});
 test('Reload recovery stores no address, customer details, notes or payment URL', () => {
   const record = createRecoveryRecord({ ...attempt, customer: { name: 'Private name', email: 'private@example.invalid', notes: 'Private note' } }, quote());
   assert.deepEqual(record, expected);

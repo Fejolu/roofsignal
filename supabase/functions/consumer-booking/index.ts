@@ -1,6 +1,6 @@
 import {createClient} from 'npm:@supabase/supabase-js@2';
 import {calculateTravel} from '../_shared/consumer-travel-pricing.mjs';
-import {UUID,TERMINAL,paymentBody,verifyPayment,checkoutHref,mayRetryCreation,customerInput,reconcilePayment,publicPaymentStatus} from '../_shared/consumer-payment.mjs';
+import {UUID,TERMINAL,paymentBody,verifyPayment,rememberCreatedPayment,mayRetryCreation,customerInput,reconcilePayment,publicPaymentStatus} from '../_shared/consumer-payment.mjs';
 import {sendDelivery} from '../_shared/parken-delivery.mjs';
 import {TERMS_TEXT} from '../_shared/terms-20260924.mjs';
 import {TERMS_TEXT as THERMAL_TERMS_TEXT} from '../_shared/terms-20261011thermografie.mjs';
@@ -177,8 +177,7 @@ async function progress(initial:any,knownPayment:any=null) {
    }
    if(!mayRetryCreation(a,await sha(paymentKey(a.mode))))return await save(a,{status:'creation_review',last_error:'PAYMENT_CREATION_REQUIRES_REVIEW'});
    const payment=await mollie('',{method:'POST',headers:{'Idempotency-Key':a.id},body:JSON.stringify(a.payment_payload)},a.mode);
-   verifyPayment(payment,a,q);
-   a=await save(a,{payment_id:payment.id,checkout_url:payment.status==='open'?checkoutHref(payment):null,payment_status:payment.status,status:'payment_pending'});
+   a=await rememberCreatedPayment({attempt:a,quote:q,payment,save:(patch:any)=>save(a,patch)});
   }
   const payment=knownPayment||await mollie('/'+a.payment_id+(a.mode==='test'?'?testmode=true':''),{},a.mode);
   a=await reconcilePayment({attempt:a,quote:q,payment,calendar,save:async(patch:any)=>{a=await save(a,{...patch,last_error:null});return a;}});

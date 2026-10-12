@@ -1,4 +1,4 @@
-import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261011-losse-inspecties';
+import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261012-direct-betalen';
 
 // Missing or invalid configuration fails closed. All calendar and payment
 // credentials remain on the server.
@@ -27,6 +27,9 @@ let returnOrder = null;
 let revision = 0;
 let quoteExpiryTimer;
 let checkingReturnStatus = false;
+const MAX_CHECKOUT_RECOVERY_POLLS = 8;
+const CHECKOUT_RECOVERY_DELAY_MS = 2000;
+const CHECKOUT_WAIT_LIMIT_MS = 45000;
 
 function message(id, text) {
   const target = el(id);
@@ -122,14 +125,15 @@ class BookingError extends Error {
 
 async function api(path, options = {}) {
   if (!connected) throw new BookingError('Dit is een conceptpagina. Er worden geen gegevens verstuurd en er kan nog niet worden geboekt of betaald.');
+  const { timeoutMs = 60000, ...requestOptions } = options;
   let response;
   try {
     response = await fetch(apiBase + path, {
-      ...options,
+      ...requestOptions,
       credentials: apiBase.startsWith('/') ? 'same-origin' : 'omit',
       cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error',
-      headers: { 'content-type': 'application/json', ...options.headers },
-      signal: AbortSignal.timeout(60000)
+      headers: { 'content-type': 'application/json', ...requestOptions.headers },
+      signal: AbortSignal.timeout(timeoutMs)
     });
   } catch {
     throw new BookingError('De verbinding is onderbroken. Probeer over een ogenblik opnieuw.');
@@ -356,7 +360,31 @@ function applyAttemptResponse(data, resume = false) {
       : 'Uw betaalpagina staat klaar. Klik op Betalen.');
     if (resume) window.location.assign(result.checkoutUrl);
   } else {
-    message('booking-status', 'Uw betaalpagina wordt klaargezet. Probeer over een ogenblik opnieuw via Betalen.');
+    message('booking-status', resume
+      ? 'Uw betaalpagina openen…'
+      : 'Uw betaalpagina wordt klaargezet. Klik op Betalen om verder te gaan.');
+  }
+  return result;
+}
+
+async function followCheckoutAttempt(data, resume = false, deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS) {
+  let result = applyAttemptResponse(data, resume);
+  // Only an explicit Betalen action may continue towards Mollie. A reload
+  // performs one passive lookup, leaving the choice to the customer.
+  if (!resume || result.state !== 'pending') return;
+  const requestId = recovery.requestId;
+  for (let poll = 0; poll < MAX_CHECKOUT_RECOVERY_POLLS && result.state === 'pending'; poll += 1) {
+    const waitMs = Math.min(CHECKOUT_RECOVERY_DELAY_MS, deadline - Date.now());
+    if (waitMs <= 0) break;
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) break;
+    const next = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId }), timeoutMs: remainingMs });
+    result = applyAttemptResponse(next, true);
+  }
+  if (result.state === 'pending') {
+    message('booking-status', '');
+    message('booking-error', 'De betaalpagina is nog niet beschikbaar. Probeer opnieuw via Betalen; uw bestaande betaalopdracht blijft bewaard.');
   }
 }
 
@@ -364,11 +392,13 @@ async function recoverExisting(resume = false) {
   if (!connected || !recovery || loading || recoveryBlocked) return;
   clearPaymentLink();
   loading = true; lockOrder(); updateSummary();
-  message('booking-status', 'Uw betaalpagina ophalen…');
+  message('booking-status', resume ? 'Uw betaalpagina openen…' : 'Uw betaalpagina ophalen…');
   message('booking-error', '');
+  const deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS;
   try {
-    const data = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId: recovery.requestId }) });
-    applyAttemptResponse(data, resume);
+    const data = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId: recovery.requestId }),
+      ...(resume ? { timeoutMs: CHECKOUT_WAIT_LIMIT_MS } : {}) });
+    await followCheckoutAttempt(data, resume, deadline);
   } catch (error) { handleCheckoutError(error); }
   finally { loading = false; updateSummary(); }
 }
@@ -411,11 +441,13 @@ form.addEventListener('submit', async event => {
     lockOrder();
   }
   loading = true; updateSummary();
+  message('booking-status', 'Uw betaalpagina openen…');
+  const deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS;
   try {
-    const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt) });
+    const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt), timeoutMs: CHECKOUT_WAIT_LIMIT_MS });
     // This is a funnel step, never proof of payment or a counted sale.
     window.RoofSignalAnalytics?.track('Inspectie betaling gestart');
-    applyAttemptResponse(payment, true);
+    await followCheckoutAttempt(payment, true, deadline);
   } catch (error) {
     window.RoofSignalAnalytics?.track('Inspectie stap mislukt', { step: 'betaling' });
     handleCheckoutError(error);
