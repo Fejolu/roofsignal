@@ -18,11 +18,11 @@
     <script src="/assets/supabase-app.js?v=23" defer></script>
     <script src="/assets/form-security.js?v=20261011-shared-layout" defer></script>
     <script src="/assets/lead-capture.js?v=20261011-vve-kvk" defer></script>
-    <script src="./vve-inquiry.js?v=20261011-shared-layout" defer></script>
+    <script src="./vve-inquiry.js?v=20261012-contextuele-aanvulling" defer></script>
     <script src="./vve-kvk.js?v=20261011-kvk" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
-    <script src="./booking.js?v=20261011-losse-inspecties" type="module"></script>
+    <script src="./booking.js?v=20261012-contextuele-aanvulling" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
     <a class="rs-skip" href="#main-content">Naar de inhoud</a>
@@ -64,7 +64,7 @@
               <legend><span class="step-number" aria-hidden="true">1</span><span>Kies uw inspectie</span></legend>
               <div class="inspection-choices" role="radiogroup" aria-label="Soort inspectie">
                 <label class="option-card" for="inspection-envelope">
-                  <input disabled id="inspection-envelope" name="inspectionType" type="radio" value="building_envelope" checked required>
+                  <input disabled id="inspection-envelope" name="inspectionType" type="radio" value="building_envelope" required>
                   <span class="option-card__body"><strong>Dak- en gevelinspectie</strong><span>Foto’s, bevindingen en onderhoudsadvies.</span></span>
                   <span class="option-card__price">€361,79 <small>incl. btw</small></span>
                 </label>
@@ -74,7 +74,7 @@
                   <span class="option-card__price">€361,79 <small>incl. btw</small></span>
                 </label>
               </div>
-              <div class="product-addon">
+              <div class="product-addon" id="product-addon" hidden>
               <label class="option-card" id="thermal-option" for="thermal">
                 <input disabled id="thermal" name="thermal" type="checkbox" value="true">
                 <span class="option-card__body"><strong id="addon-title">Thermografische inspectie toevoegen</strong><span id="addon-description">Warmtebeelden van dak en gevel.</span></span>
@@ -85,7 +85,7 @@
               <details class="booking-details">
                 <summary>Wat is inbegrepen?</summary>
                 <div>
-                  <p id="visual-scope">We inspecteren de zichtbare buitenzijde van dak, gevel, goten en schoorsteen met een drone. U ontvangt foto’s, bevindingen en onderhoudsadvies in een digitaal rapport. Bijgebouwen zijn uitgesloten; dit is geen volledige bouwkundige keuring.</p>
+                  <p id="visual-scope" hidden>We inspecteren de zichtbare buitenzijde van dak, gevel, goten en schoorsteen met een drone. U ontvangt foto’s, bevindingen en onderhoudsadvies in een digitaal rapport. Bijgebouwen zijn uitgesloten; dit is geen volledige bouwkundige keuring.</p>
                   <p id="thermal-scope" hidden>U ontvangt warmtebeelden van dak en gevel, met bevindingen in een digitaal rapport. Thermografie toont temperatuurverschillen die op warmteverlies of andere afwijkingen kunnen wijzen. Een warmtebeeld is geen bewijs van een lek of isolatiegebrek. De opname vraagt geschikte meetomstandigheden.</p>
                   <p>U boekt één bezoek van maximaal 45 minuten, inclusief de voorinspectie op locatie. U ontvangt het digitale rapport binnen 2 werkdagen. <a href="/voorbeeldrapport-uitgebreid">Bekijk een voorbeeldrapport</a>.</p>
                   <p>Appartement of ander object? <a href="/contact">Neem contact op</a>.</p>
@@ -193,13 +193,13 @@
             <div class="summary-card">
               <h2 id="summary-title">Uw inspectie</h2>
               <dl class="price-breakdown">
-                <div id="summary-base-row"><dt id="summary-base-label">Dak- en gevelinspectie</dt><dd id="summary-base">€361,79</dd></div>
-                <div><dt id="summary-thermal-label">Thermografie</dt><dd id="summary-thermal">€0,00</dd></div>
+                <div id="summary-base-row"><dt id="summary-base-label">Inspectie</dt><dd id="summary-base">Nog te kiezen</dd></div>
+                <div><dt id="summary-thermal-label">Aanvulling</dt><dd id="summary-thermal">Nog te kiezen</dd></div>
                 <div><dt>Reiskosten</dt><dd class="price-breakdown__pending" id="summary-travel">Na adrescontrole</dd></div>
               </dl>
               <div class="summary-total">
                 <span>Totaal</span>
-                <strong id="summary-total">€361,79</strong>
+                <strong id="summary-total">Kies uw inspectie</strong>
                 <p class="summary-tax">incl. btw</p>
               </div>
               <div class="summary-date"><span class="summary-date__label">Inspectiemoment</span><strong id="summary-date">Nog geen moment gekozen</strong></div>
@@ -216,33 +216,29 @@
               <input type="hidden" name="segment" value="VvE / VvE-beheerder">
               <input type="hidden" name="scope" id="vve-scope" value="VvE-objectaanmelding — dak en gevel, inclusief inspectierapport">
               <input type="hidden" name="thermal_interest" id="vve-thermal-interest" value="no">
+              <input type="hidden" name="inspection_type" id="vve-inspection-product" value="">
               <input type="hidden" name="indicative_price" id="vve-price-detail">
               <fieldset class="booking-fields" disabled id="vve-fields">
               <fieldset class="form-step" data-booking-step="service">
                 <legend><span class="step-number" aria-hidden="true">1</span><span>Kies uw inspectie</span></legend>
                 <div class="inspection-choices" id="vve-inspection-type" role="radiogroup" aria-label="Soort inspectie">
                   <label class="option-card" for="vve-inspection-envelope">
-                    <input id="vve-inspection-envelope" name="inspection_type" type="radio" value="building_envelope" checked required>
+                    <input id="vve-inspection-envelope" name="vve_primary_inspection" type="radio" value="building_envelope" required>
                     <span class="option-card__body"><strong>Dak- en gevelinspectie</strong><span>Foto’s, bevindingen en onderhoudsadvies.</span></span>
                     <span class="option-card__price"><span id="vve-envelope-price">Vanaf €750</span><small>excl. btw</small></span>
                   </label>
                   <label class="option-card" for="vve-inspection-thermal">
-                    <input id="vve-inspection-thermal" name="inspection_type" type="radio" value="thermal" required>
+                    <input id="vve-inspection-thermal" name="vve_primary_inspection" type="radio" value="thermal" required>
                     <span class="option-card__body"><strong>Thermografische inspectie</strong><span>Warmtebeelden en een digitaal rapport.</span></span>
                     <span class="option-card__price"><span id="vve-standalone-price">Vanaf €400</span><small>excl. btw</small></span>
                   </label>
                 </div>
-                <div class="product-addon">
+                <div class="product-addon" id="vve-product-addon" hidden>
                   <label class="option-card" id="vve-thermal-option" for="vve-thermal">
                     <input id="vve-thermal" type="checkbox" value="yes">
-                    <span class="option-card__body"><strong>Thermografische inspectie toevoegen</strong><span>Warmtebeelden van dak en gevel.</span></span>
+                    <span class="option-card__body"><strong id="vve-addon-title">Thermografische inspectie toevoegen</strong><span id="vve-addon-description">Warmtebeelden van dak en gevel.</span></span>
                     <span class="option-card__price"><span id="vve-thermal-price">Vanaf €400</span><small>excl. btw</small></span>
                   </label>
-                  <div class="option-card included-option" id="vve-thermal-included" hidden>
-                    <span class="included-option__check" aria-hidden="true">✓</span>
-                    <span class="option-card__body"><strong>Zelfstandige thermografische inspectie</strong><span>Warmtebeelden en een digitaal rapport.</span></span>
-                    <span class="option-card__price">Inbegrepen <small>bij uw keuze</small></span>
-                  </div>
                 </div>
                 <p class="field-help product-scope">Voor één VvE-object. Prijs op basis van het aantal adressen.</p>
                 <details class="booking-details">
@@ -303,13 +299,13 @@
               <div class="summary-card">
                 <h2 id="vve-summary-title">Uw inspectie</h2>
                 <dl class="price-breakdown">
-                  <div><dt id="vve-summary-base-label">Dak- en gevelinspectie</dt><dd id="vve-summary-base">Nog te bepalen</dd></div>
-                  <div><dt id="vve-summary-thermal-label">Thermografie</dt><dd id="vve-summary-thermal">Niet toegevoegd</dd></div>
+                  <div><dt id="vve-summary-base-label">Inspectie</dt><dd id="vve-summary-base">Nog te kiezen</dd></div>
+                  <div><dt id="vve-summary-thermal-label">Aanvulling</dt><dd id="vve-summary-thermal">Nog te kiezen</dd></div>
                   <div><dt>Reiskosten</dt><dd class="price-breakdown__pending" id="vve-summary-travel">Bij uw voorstel</dd></div>
                 </dl>
                 <div class="summary-total" role="status" aria-live="polite" aria-atomic="true">
-                  <span id="vve-estimate-label">Uw basisprijs</span>
-                  <strong id="vve-estimate">Nog te bepalen</strong>
+                  <span id="vve-estimate-label">Uw prijs</span>
+                  <strong id="vve-estimate">Kies uw inspectie</strong>
                   <p class="summary-tax" id="vve-estimate-vat">excl. btw</p>
                 </div>
                 <div class="summary-date"><span class="summary-date__label">Inspectiemoment</span><strong>Na afstemming</strong></div>

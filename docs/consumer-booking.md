@@ -6,6 +6,11 @@ Ferry heeft bevestigd dat **thermische inspectie zelfstandig te boeken is**, zow
 voor particulieren als VvE’s. De klant kiest dak- en gevelinspectie, thermische
 inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
 
+De formulieren voor Woning en VvE starten zonder vooraf gekozen hoofdinspectie.
+Pas na de keuze verschijnt de andere inspectie als optionele aanvulling. Wisselen
+van hoofdinspectie wist de aanvulling en werkt het overzicht bij. Een combinatie
+behoudt hetzelfde product en totaal, ongeacht de keuzerichting.
+
 - Particulier: dak- en gevelinspectie óf zelfstandige thermografie **€299 excl. /
   €361,79 incl. btw**. Een tweede inspectie tijdens hetzelfde bezoek kost €250 excl. /
   €302,50 incl. btw, ongeacht welke inspectie eerst gekozen is.
