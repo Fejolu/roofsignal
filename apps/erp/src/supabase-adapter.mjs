@@ -19,6 +19,7 @@ function transportDiagnostic(error, stage) {
   // Only static categories survive. The provider's original exception can
   // contain credentials and URLs, so it is never retained on the error object.
   const reason = /illegal invocation/i.test(message) ? 'receiver'
+    : /invalid redirect value|unsupported redirect (?:value|mode)|redirect.*(?:not supported|won.t be implemented)/i.test(message) ? 'redirect'
     : /unsupported cache mode|cache mode.*not supported|cache option.*not (?:implemented|supported)/i.test(message) ? 'cache'
     : /different request|outside.*request context|global scope.*(?:async|io|i\/o)|i\/o.*global scope/i.test(message) ? 'request_scope'
     : /abortsignal\.timeout.*(?:not a function|undefined)/i.test(message) ? 'timeout_api'
@@ -165,7 +166,15 @@ export function createSupabaseAdapter({ url, publishableKey, storageKey, fetch: 
     let transportStage = 'fetch';
     try {
       response = await fetchImpl(base + endpoint, { method, headers: { ...headers, ...(binary ? {} : { 'Content-Type': 'application/json' }) },
-        body, redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) });
+        // workerd deliberately rejects redirect:'error'. Manual mode works on
+        // both runtimes and explicit 3xx rejection keeps credentials at the
+        // configured project instead of forwarding them to another URL.
+        body, redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) });
+      if (response.status >= 300 && response.status < 400) {
+        await response.body?.cancel().catch(() => {});
+        throw Object.assign(new SupabaseAdapterError('SUPABASE_REDIRECT_REJECTED', 502),
+          { transportStage: 'fetch', transportKind: 'Error', transportReason: 'redirect' });
+      }
       transportStage = 'read';
       const bytes = await readLimited(response, binary && response.ok ? MAX_DOCUMENT : MAX_JSON);
       let data;

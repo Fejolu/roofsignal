@@ -50,7 +50,7 @@ test('password sign-in and refresh use public application key and server-only na
   assert.deepEqual(JSON.parse(calls[0].body), { email: 'user@example.invalid', password: 'password123' });
   assert.equal(calls[0].headers.apikey, publishableKey);
   assert.equal(calls[0].headers.Authorization, undefined);
-  assert.equal(calls[0].redirect, 'error');
+  assert.equal(calls[0].redirect, 'manual');
   assert.equal(calls[0].cache, 'no-store');
   assert.equal(one.access_token, access);
   assert.equal(one.refresh_token, refresh);
@@ -251,6 +251,7 @@ test('network/redirect exceptions and provider auth errors are sanitized and rat
 
 test('transport diagnostics keep only a bounded stage, error kind and known runtime category', async () => {
   for (const [message, reason] of [['Illegal invocation: incorrect this SECRET_PRIVATE_KEY', 'receiver'],
+    ['Invalid redirect value, must be one of follow or manual SECRET_PRIVATE_KEY', 'redirect'],
     ['Unsupported cache mode: no-store SECRET_PRIVATE_KEY', 'cache'],
     ['Cannot perform I/O on behalf of a different request SECRET_PRIVATE_KEY', 'request_scope'],
     ['AbortSignal.timeout is not a function SECRET_PRIVATE_KEY', 'timeout_api'],
@@ -269,6 +270,29 @@ test('transport diagnostics keep only a bounded stage, error kind and known runt
     body: { getReader() { throw Object.assign(Error('SECRET_PRIVATE_KEY'), { name: 'SecretCustomException' }); } } }));
   await assert.rejects(badRead.adapter.getUser(access), error => error.transportStage === 'read' && error.transportKind === 'Error'
     && error.transportReason === undefined && !JSON.stringify(error).includes('SECRET_PRIVATE_KEY'));
+});
+
+test('Workers-compatible manual redirect mode never follows a provider redirect or forwards credentials', async () => {
+  const compatible = fixture((_target, options) => {
+    if (options.redirect === 'error') throw new TypeError('Invalid redirect value, must be one of follow or manual');
+    assert.equal(options.redirect, 'manual');
+    return json(session);
+  });
+  assert.equal((await compatible.adapter.signIn('user@example.invalid', 'password123')).user.id, caller);
+  for (const status of [301, 302, 303, 304, 307, 308]) {
+    let canceled = false;
+    const redirect = fixture(() => new Response(status === 304 ? null : new ReadableStream({ cancel() { canceled = true; } }),
+      { status, headers: { Location: 'https://evil.invalid/private?key=SECRET_PRIVATE_KEY' } }));
+    await assert.rejects(redirect.adapter.signIn('user@example.invalid', 'password123'), error => {
+      assert.equal(error.code, 'SUPABASE_REDIRECT_REJECTED');
+      assert.equal(error.transportReason, 'redirect');
+      assert.equal(JSON.stringify(error).includes('SECRET_PRIVATE_KEY'), false);
+      return true;
+    });
+    assert.equal(redirect.calls.length, 1);
+    assert.equal(redirect.calls[0].url.startsWith(url + '/auth/'), true);
+    if (status !== 304) assert.equal(canceled, true);
+  }
 });
 
 test('invalid or oversized JSON/session responses are rejected rather than trusted', async () => {
