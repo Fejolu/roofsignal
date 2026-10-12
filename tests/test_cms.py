@@ -44,7 +44,9 @@ def test_config_and_page_slots_are_complete():
         data = json.loads((ROOT / entry["path"]).read_text())
         check_fields(entry["fields"], data)
         assert entry["name"] in pages
-    assert len(pages) == 32
+    configured = {entry["name"] for entry in fields(config["content"]) if entry["type"] == "file"}
+    assert set(pages) == configured
+    assert "thermografische-inspectie" in configured
 
 
 def test_render_preserves_form_contracts(built):
