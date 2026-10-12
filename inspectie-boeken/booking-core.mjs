@@ -107,7 +107,7 @@ function validateOrderIdentity(data, expected) {
 export function validateCheckout(data, expected) {
   validateOrderIdentity(data, expected);
   const url = new URL(data.checkoutUrl);
-  const hosts = new Set(['www.mollie.com', 'checkout.mollie.com']);
+  const hosts = new Set(['www.mollie.com', 'checkout.mollie.com', 'pay.ideal.nl']);
   if (url.protocol !== 'https:' || !hosts.has(url.hostname) || url.username || url.password || (url.port && url.port !== '443')) throw new Error('Er is geen geldige Mollie-betaalpagina ontvangen.');
   return url.href;
 }

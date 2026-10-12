@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {paymentBody,verifyPayment,mayRetryCreation,reconcilePayment,checkoutHref,publicPaymentStatus} from '../supabase/functions/_shared/consumer-payment.mjs';
+import {paymentBody,verifyPayment,rememberCreatedPayment,mayRetryCreation,reconcilePayment,checkoutHref,publicPaymentStatus} from '../supabase/functions/_shared/consumer-payment.mjs';
 const id='601f78aa-31f3-4c63-941d-07b31df84902';
 const a=()=>({id,quote_id:'q1',reference:'RS-123456',mode:'test',status_token:'b'.repeat(64),slot_start:'2026-10-20T10:00:00Z',status:'payment_pending',lease_token:'lock'});
 const q={id:'q1',total_cents:66429,destination:'Testadres, Apeldoorn'};
 const checkoutUrl='https://checkout.mollie.com/checkout/existing-payment';
 const p=(status='paid')=>({id:'tr_example123',mode:'test',profileId:'pfl_Bef5DYX9w5',amount:{currency:'EUR',value:'664.29'},metadata:{consumerRequestId:id,quoteId:'q1',integration:'roofsignal-consumer-v1',mode:'test'},status,
  ...(status==='open'?{_links:{checkout:{href:checkoutUrl}}}:{})});
-test('Mollie amount and metadata use saved server quote and restrict to iDEAL',()=>{
- const result=paymentBody(a(),q,'https://example.com');assert.deepEqual(result.amount,{currency:'EUR',value:'664.29'});assert.equal(result.testmode,true);assert.equal(result.method,'ideal');assert.equal(result.metadata.consumerRequestId,id);
+test('New payments retain Mollie hosted checkout while limiting methods to iDEAL',()=>{
+ const result=paymentBody(a(),q,'https://example.com');assert.deepEqual(result.amount,{currency:'EUR',value:'664.29'});assert.equal(result.testmode,true);assert.deepEqual(result.method,['ideal']);assert.equal(result.metadata.consumerRequestId,id);
 });
 test('Test and live payment callbacks select separate modes without changing amount or identity',()=>{
  for(const mode of ['test','live']){
@@ -76,6 +76,23 @@ test('Recovery rejects an untrusted Mollie link before presenting it',async()=>{
  await assert.rejects(reconcilePayment({attempt:a(),quote:q,payment,calendar:async()=>assert.fail(),save:async()=>{saved=true;}}),/INVALID_CHECKOUT_URL/);
  assert.equal(saved,false);
 });
+test('A rejected checkout URL cannot lose a verified payment identity or permit re-creation',async()=>{
+ const payment=p('open');payment._links.checkout.href='https://attacker.invalid/payment';
+ let state={...a(),payment_id:null,payment_started_at:new Date().toISOString(),key_fingerprint:'key'};
+ const save=async patch=>(state={...state,...patch});
+ await rememberCreatedPayment({attempt:state,quote:q,payment,save});
+ await assert.rejects(reconcilePayment({attempt:state,quote:q,payment,save,calendar:async()=>assert.fail()}),/INVALID_CHECKOUT_URL/);
+ assert.equal(state.payment_id,payment.id);
+ assert.equal(state.checkout_url,null);
+ assert.equal(mayRetryCreation(state,'key'),false);
+ payment._links.checkout.href=checkoutUrl;
+ await reconcilePayment({attempt:state,quote:q,payment,save,calendar:async()=>assert.fail()});
+ assert.equal(state.payment_id,payment.id);assert.equal(state.checkout_url,checkoutUrl);
+});
+test('Mismatched payment creation cannot be persisted',async()=>{
+ const payment=p('open');payment.amount.value='1.00';
+ await assert.rejects(rememberCreatedPayment({attempt:a(),quote:q,payment,save:async()=>assert.fail('Unverified payment must never be saved')}),/PAYMENT_MISMATCH/);
+});
 test('Public status only reports expiry or failure after the order and calendar are durably closed',()=>{
  for(const status of ['expired','failed','canceled']) {
   assert.equal(publicPaymentStatus({status:'payment_pending',payment_status:status}),'pending');
@@ -84,7 +101,17 @@ test('Public status only reports expiry or failure after the order and calendar 
  assert.equal(publicPaymentStatus({status:'payment_pending',payment_status:'open'}),'open');
  assert.equal(publicPaymentStatus({status:'paid_review_required',payment_status:'paid'}),'paid_review_required');
 });
-test('checkout redirects only to exact HTTPS Mollie hosts',()=>{
- for(const href of ['http://www.mollie.com/pay','https://www.mollie.com.bad.example/pay','https://evil@www.mollie.com/pay'])assert.throws(()=>checkoutHref({_links:{checkout:{href}}}));
- assert.equal(checkoutHref({_links:{checkout:{href:'https://www.mollie.com/checkout/test'}}}),'https://www.mollie.com/checkout/test');
+test('checkout accepts official Mollie and direct iDEAL hosts with strict HTTPS checks',()=>{
+ for(const href of ['http://www.mollie.com/pay','https://www.mollie.com.bad.example/pay','https://evil@www.mollie.com/pay',
+  'http://pay.ideal.nl/pay','https://pay.ideal.nl.bad.example/pay','https://evil.pay.ideal.nl/pay',
+  'https://user:secret@pay.ideal.nl/pay','https://pay.ideal.nl:444/pay'])assert.throws(()=>checkoutHref({_links:{checkout:{href}}}));
+ for(const href of ['https://www.mollie.com/checkout/test','https://checkout.mollie.com/checkout/test','https://pay.ideal.nl/pay/existing-payment'])assert.equal(checkoutHref({_links:{checkout:{href}}}),href);
+});
+test('An existing verified iDEAL payment restores its direct provider link without changing identity',async()=>{
+ const payment=p('open'),href='https://pay.ideal.nl/pay/existing-payment';payment._links.checkout.href=href;
+ const attempt={...a(),payment_id:payment.id,payment_payload:{method:'ideal'},checkout_url:null};
+ const result=await reconcilePayment({attempt,quote:q,payment,calendar:async()=>assert.fail('No calendar changes for an open payment'),
+  save:async patch=>({...attempt,...patch})});
+ assert.equal(result.payment_id,payment.id);assert.equal(result.checkout_url,href);
+ assert.deepEqual(result.payment_payload,{method:'ideal'},'Recovery must retain the original scalar method payload');
 });

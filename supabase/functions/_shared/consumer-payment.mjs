@@ -18,7 +18,9 @@ export function paymentBody(attempt, quote, publicBase) {
   return {
     amount:{currency:'EUR',value:euro(quote.total_cents)},
     description:`RoofSignal ${quote.inspection_type === 'thermal' ? 'Thermische inspectie' : 'Inspectie'} ${attempt.reference}`,
-    profileId:PROFILE_ID, testmode:attempt.mode==='test', method:'ideal', locale:'nl_NL',
+    // An array retains Mollie's hosted payment-method screen. A scalar iDEAL
+    // method skips that screen and may return the official iDEAL checkout.
+    profileId:PROFILE_ID, testmode:attempt.mode==='test', method:['ideal'], locale:'nl_NL',
     redirectUrl:`https://www.roofsignal.nl/inspectie-boeken/?booking=${attempt.status_token}`,
     webhookUrl:`${publicBase}/webhook?mode=${attempt.mode}`,
     metadata:{consumerRequestId:attempt.id,quoteId:quote.id,integration:'roofsignal-consumer-v1',mode:attempt.mode}
@@ -33,9 +35,18 @@ export function verifyPayment(payment,attempt,quote) {
     || !['open','pending','authorized','paid','failed','canceled','expired'].includes(payment.status)) throw Error('PAYMENT_MISMATCH');
   return payment;
 }
+export async function rememberCreatedPayment({attempt,quote,payment,save}) {
+  verifyPayment(payment,attempt,quote);
+  // Keep the verified provider identity even if checkout URL validation or
+  // the following status lookup fails. Recovery then reads this payment;
+  // it never needs another create request or a fresh idempotency key.
+  return await save({payment_id:payment.id,payment_status:payment.status,status:'payment_pending',checkout_url:null});
+}
 export function checkoutHref(payment) {
   const url=new URL(payment?._links?.checkout?.href);
-  if(url.protocol!=='https:'||!['www.mollie.com','checkout.mollie.com'].includes(url.hostname)||url.username||url.password||url.port)throw Error('INVALID_CHECKOUT_URL');
+  // Older saved iDEAL payments can point directly to the provider. Trust only
+  // its exact official host, alongside Mollie's checkout hosts.
+  if(url.protocol!=='https:'||!['www.mollie.com','checkout.mollie.com','pay.ideal.nl'].includes(url.hostname)||url.username||url.password||url.port)throw Error('INVALID_CHECKOUT_URL');
   return url.href;
 }
 export function mayRetryCreation(attempt,keyFingerprint,now=Date.now()) {

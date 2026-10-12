@@ -339,7 +339,7 @@ onder andere voorwaarden.
 
 Leg vóór het betaalverzoek één duurzame betalingspoging vast. Eigen idempotentie is vereist per requestId én per actieve prijsopgave/reservering; ook verversen mag geen tweede betaling creëren. Een database-exclusiviteitsregel moet overlappende claims uitsluiten. Alleen een vrij/bezet-aanroep gevolgd door los een agenda-item toevoegen sluit races niet uit. Definieer tevens hoe gelijktijdige handmatige wijzigingen in de agenda worden voorkomen of afgehandeld.
 
-Maak de Mollie-betaling server-side met de opgeslagen totaalprijs in decimale stringvorm en één stabiele Idempotency-Key, metadata voor de bestaande reservering, nl_NL en vaste redirect-/webhook-URLs uit vertrouwde configuratie. Gebruik snelle, op het account geactiveerde betaalmethoden; vermijd in deze eerste afsprakenflow langlopende bankoverschrijvingen. De klant wordt naar de geverifieerde `_links.checkout.href` gestuurd. De adapter accepteert nu exact www.mollie.com en checkout.mollie.com via HTTPS; bevestig de daadwerkelijk gebruikte Mollie-host met de echte testresponse voordat dit live gaat.
+Maak de Mollie-betaling server-side met de opgeslagen totaalprijs in decimale stringvorm en één stabiele Idempotency-Key, metadata voor de bestaande reservering, nl_NL en vaste redirect-/webhook-URLs uit vertrouwde configuratie. Nieuwe betalingen gebruiken `method: ['ideal']`, zodat de klant eerst Mollie's betaalpagina ziet. Volgens [Mollie's documentatie](https://docs.mollie.com/reference/create-payment) slaat de oudere scalaire keuze `method: 'ideal'` die pagina over. Historische betaalpayloads blijven ongewijzigd bij herstel. De klant wordt naar de geverifieerde `_links.checkout.href` gestuurd. Server en browser accepteren exact `www.mollie.com`, `checkout.mollie.com` en de [officiële iDEAL-betaalpagina](https://ideal.nl/en/security) `pay.ideal.nl`, uitsluitend via HTTPS zonder gebruikersgegevens of afwijkende poort. Het geverifieerde Mollie-betalingsnummer wordt opgeslagen vóór de URL-controle of een volgende statusaanroep, zodat een fout de betaalidentiteit nooit verloren laat gaan.
 
 Succesantwoord:
 
@@ -361,7 +361,7 @@ Vóór het eerste checkoutverzoek slaat de browser onder `roofsignal.consumerBoo
 
 Na een onzekere uitkomst worden de invoervelden vergrendeld. Een volgende poging en een paginaverversing gebruiken `/recover`; zij maken niet opnieuw een checkout aan. De Mollie-idempotentiesleutel wordt volgens de documentatie slechts één uur bewaard: eigen duurzame server-idempotentie en capaciteitsvergrendeling blijven noodzakelijk.
 
-De primaire actie heet **Betalen**. Zodra de server een `checkout_ready`-antwoord geeft, toont de samenvatting een echte link naar de geverifieerde Mollie-betaalpagina van diezelfde opdracht. De browser controleert de opdrachtidentiteit, valuta, totaalprijs en toegestane HTTPS-host vóór het tonen van de link. Een klik op deze link maakt geen nieuwe betaalopdracht aan. Bij een nog lopende voorbereiding blijft **Betalen** beschikbaar om uitsluitend het bestaande request-ID opnieuw op te halen. Bij een fout of een niet-betaalbare status wordt een eerder getoonde link verwijderd. De betaal-URL blijft alleen in geheugen; zij komt niet in `sessionStorage`.
+De primaire actie heet **Betalen**. Eén expliciete klik opent de geverifieerde betaalpagina zodra de server `checkout_ready` teruggeeft. Een nog lopende voorbereiding wordt automatisch gevolgd via maximaal acht `/recover`-verzoeken met twee seconden tussenruimte en maximaal 45 seconden voor het geheel. De knop en invoervelden blijven tijdens deze reeks vergrendeld; alle verzoeken gebruiken hetzelfde request-ID. De browser controleert de opdrachtidentiteit, valuta, totaalprijs en toegestane HTTPS-host vóór iedere doorverwijzing. Een echte betaallink blijft als terugval beschikbaar. Bij een fout of een niet-betaalbare status wordt een eerder getoonde link verwijderd en de bestaande opdracht bewaard. Een paginaverversing doet slechts één passieve herstelcontrole en verwijst niet automatisch door. De betaal-URL blijft alleen in geheugen; zij komt niet in `sessionStorage`.
 
 ### POST /api/consumer-booking/recover
 
@@ -375,7 +375,7 @@ Geef exact één van deze vier responsevormen terug.
 { requestId: string; state: "pending" }
 ```
 
-De adapter houdt de bestaande opdracht vergrendeld en biedt opnieuw controleren aan.
+De adapter houdt de bestaande opdracht vergrendeld. Na een expliciete klik op **Betalen** volgt automatisch de hierboven begrensde herstelreeks.
 
 **Dezelfde bestaande betaling kan worden hervat:**
 
