@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import { stripTypeScriptTypes } from 'node:module';
 import { withdrawalRecord, withdrawalReceipt, isWithdrawal } from '../supabase/functions/_shared/withdrawal.mjs';
+import { vveIntakeDetails } from '../supabase/functions/_shared/vve-intake.mjs';
 import { bookingLegal } from '../supabase/functions/_shared/booking-legal.mjs';
 import { bookingOptions, PARKEN_OFFER_VERSION } from '../supabase/functions/_shared/parken-offer.mjs';
 import { TERMS_TEXT } from '../supabase/functions/_shared/terms-20260921.mjs';
@@ -65,7 +66,7 @@ async function withdrawalEndpoint({ mailOk = true, stored = true, turnstile = tr
   } };
   const source = fs.readFileSync(new URL('../supabase/functions/submit-public-lead/index.ts', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '');
   vm.runInNewContext(stripTypeScriptTypes(source), {
-    serve: fn => { handler = fn; }, createClient: () => service, withdrawalRecord, withdrawalReceipt,
+    serve: fn => { handler = fn; }, createClient: () => service, withdrawalRecord, withdrawalReceipt, vveIntakeDetails,
     Request, Response, crypto, TextEncoder, AbortSignal, Deno: { env: { get: key => key === 'SUPABASE_URL' ? 'https://test.invalid' : 'test-secret' } },
     fetch: async (url, options) => {
       if (url.includes('siteverify')) return new Response(JSON.stringify({ success: turnstile }));

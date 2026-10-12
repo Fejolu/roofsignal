@@ -31,3 +31,22 @@ jobs:
           print(json.dumps(result))
           if not result.get('ok'): sys.exit('Een consumentenboeking of bevestiging vraagt handmatige aandacht.')
           PY
+      - name: Websiteaanmeldingen veilig naar het eigen ERP verwerken
+        if: ${{ always() }}
+        env:
+          AUTOMATION_SECRET: ${{ secrets.CONSUMER_AUTOMATION_SECRET }}
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request,sys
+          secret=os.environ.get('AUTOMATION_SECRET','')
+          if not secret: sys.exit('CONSUMER_AUTOMATION_SECRET ontbreekt.')
+          request=urllib.request.Request('https://kakpticlxlaxtebhsuoh.supabase.co/functions/v1/process-erp-intakes',
+              data=b'{}',headers={'Content-Type':'application/json','x-automation-secret':secret},method='POST')
+          try:
+              with urllib.request.urlopen(request,timeout=45) as response: result=json.load(response)
+          except Exception:
+              sys.exit('ERP-verwerking niet afgerond; brongegevens blijven in de wachtrij.')
+          summary={key:result.get(key) for key in ['ok','disabled','processed','delivered','superseded','failed','needsReview']}
+          print(json.dumps(summary))
+          if not result.get('ok'): sys.exit('Een websiteaanmelding vraagt controle in de ERP-wachtrij.')
+          PY

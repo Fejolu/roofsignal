@@ -36,7 +36,7 @@
     }
     appendDetail(messageLines, "Demo-data", data.get("demo_data") ? "Ja" : "");
 
-    return {
+    const payload = {
       type,
       neighborhood_consent: data.get("neighborhood_consent") === "yes",
       name: readField(data, "name", "Naam"),
@@ -50,6 +50,21 @@
       message: messageLines.join("\n"),
       source_path: window.location.pathname,
     };
+    if (form.dataset.leadContext === "vve-object") {
+      // Send product/object choices separately; the server derives its own
+      // price indication. The existing readable message stays unchanged.
+      payload.vve_intake = {
+        inspection_type: readField(data, "inspection_type"),
+        thermal: data.get("thermal_interest") === "yes",
+        address_count: Number(readField(data, "home_count")),
+        object_scope: readField(data, "object_scope"),
+        object_address: readField(data, "buildings", "Gebouwen", "objecten"),
+        object_city: readField(data, "object_city"),
+        phone: readField(data, "phone", "Telefoon"),
+        kvk_number: readField(data, "kvk_number"),
+      };
+    }
+    return payload;
   }
 
   function successCopy(type) {

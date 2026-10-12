@@ -19,6 +19,10 @@ verify_jwt = false
 [functions.process-parken-integrations]
 verify_jwt = false
 
+# Separate durable ERP handoff; the function authenticates only trusted workers.
+[functions.process-erp-intakes]
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.
