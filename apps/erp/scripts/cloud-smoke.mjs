@@ -86,6 +86,14 @@ export async function cloudSmoke({configPath,provision=false}={}) {
   const handler=createHostedHandler({adapter,cookies,origin:config.origin});
   const elevated={apikey:config.storageKey,...(config.storageKey.startsWith('sb_secret_')?{}:{Authorization:`Bearer ${config.storageKey}`})};
   const fixturesPath=path.join(path.dirname(configPath),'fixtures.json');
+  // Retirement is irreversible for this provisioning script. Check before
+  // any DDL; replaying 003 after 005 would also replace the intake wrapper.
+  try {
+    const file=await stat(fixturesPath);
+    if(!file.isFile()||(file.mode&0o077))throw fail('FIXTURES_MUST_BE_PRIVATE');
+    const saved=JSON.parse(await readFile(fixturesPath,'utf8'));
+    if(saved.retired_at||saved.retirement_completed_at)throw fail('FIXTURES_HAVE_BEEN_RETIRED');
+  }catch(error){if(error.code!=='ENOENT')throw error;}
   const temp=await mkdtemp(path.join(tmpdir(),'roofsignal-erp-cloud-'));await chmod(temp,0o700);
   const checks=[],sessions=[];let stage='schema',fixtures;
   const checked=(condition,code)=>{if(!condition)throw fail(code);};
@@ -139,6 +147,8 @@ export async function cloudSmoke({configPath,provision=false}={}) {
   }
   const write=(session,action,payload={})=>rpc(session,action,{request_id:randomUUID(),...payload});
   try {
+    const intakeSchema=await sql("select to_regclass('erp.website_intakes') is not null as intake_schema_present;",'intake_schema_present');
+    checked(intakeSchema!==true,'INITIAL_FIXTURE_PROVISIONING_ONLY');
     const foundation=await sql("select to_regclass('erp.staff') is not null as foundation_present;",'foundation_present');
     if(foundation!==true)await sql(await readFile(path.join(APP,'db/001_foundation.sql'),'utf8'));
     for(const name of ['002_telephony.sql','003_auth_and_documents.sql','004_private_storage.sql'])await sql(await readFile(path.join(APP,'db',name),'utf8'));

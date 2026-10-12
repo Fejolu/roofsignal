@@ -111,6 +111,16 @@ test('hosted config and anonymous session expose no credentials or development l
   assert.equal(f.events.length, 0);
 });
 
+test('production cannot advertise or silently pretend to send unconfigured recovery mail', async () => {
+  const f = fixture({ options: { environment: 'production' } });
+  const config = await (await f.handler(f.req('/api/config', { method: 'GET' }))).json();
+  assert.equal(config.environment, 'production');
+  assert.equal(config.passwordRecovery, false);
+  const response = await f.handler(f.req('/api/reset-request', { method: 'POST', body: { email: 'ferry@example.invalid' } }));
+  assert.equal(response.status, 503);
+  assert.equal(f.events.some(event => event[0] === 'resetPassword'), false);
+});
+
 test('sign-in binds a verified identity, stores only a session hash and returns an encrypted HttpOnly cookie', async () => {
   const f = fixture(), cookie = await f.login();
   assert.ok(cookie.includes('__Host-roofsignal_session=v1.'));

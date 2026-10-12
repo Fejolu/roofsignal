@@ -87,6 +87,18 @@ test('getUser verifies the token remotely; business RPC always preserves the use
   }
 });
 
+test('website imports can reach only the dedicated service-only RPC', async () => {
+  const { adapter, calls } = fixture(() => json({ accepted: true }));
+  const payload = { source: 'parken', source_id: caller, revision: 1, changed_at: '2026-10-12T19:00:00Z', record: { id: caller } };
+  await adapter.websiteIntake(payload);
+  assert.equal(calls[0].url, `${url}/rest/v1/rpc/roofsignal_erp_intake`);
+  assert.equal(calls[0].headers.apikey, storageKey);
+  assert.equal(calls[0].headers.Authorization, undefined);
+  assert.deepEqual(JSON.parse(calls[0].body), { payload });
+  await assert.rejects(async () => adapter.websiteIntake({ ...payload, source: 'access.grant' }));
+  assert.equal(calls.length, 1);
+});
+
 test('missing tokens, credentials substituted for user identity and unsafe action paths are rejected before fetch', async () => {
   const { adapter, calls } = fixture();
   for (const token of ['', null, undefined, storageKey, publishableKey, legacyKey('service_role'), 'a\r\nb']) {

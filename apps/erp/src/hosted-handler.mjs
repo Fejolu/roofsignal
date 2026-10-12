@@ -83,7 +83,9 @@ function fileName(raw, encoded = false) {
 }
 const encodedFileName = value => encodeURIComponent(value).replace(/[!'()*]/g, char => '%' + char.charCodeAt(0).toString(16).toUpperCase());
 
-export function createHostedHandler({ adapter, cookies, origin, now = Date.now, rateLimitKey = () => 'global' } = {}) {
+export function createHostedHandler({ adapter, cookies, origin, environment = 'test', passwordRecovery = environment === 'test', now = Date.now, rateLimitKey = () => 'global' } = {}) {
+  if (!['test', 'production'].includes(environment)) throw Error('Onbekende ERP-omgeving.');
+  if (typeof passwordRecovery !== 'boolean') throw Error('Ongeldige mailinrichting.');
   let base;
   try {
     const configured = new URL(origin);
@@ -183,7 +185,7 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
       const url = new URL(request.url), path = url.pathname;
       if (url.origin !== base || url.username || url.password) throw fail(403, 'Ongeldige aanvraagbron.');
       if (!['GET', 'HEAD'].includes(request.method) && request.headers.get('origin') !== base) throw fail(403, 'Ongeldige aanvraagbron.');
-      if (path === '/api/config' && request.method === 'GET') return json(200, { mode: 'hosted', environment: 'test', passwordRecovery: true });
+      if (path === '/api/config' && request.method === 'GET') return json(200, { mode: 'hosted', environment, passwordRecovery });
       if (path === '/api/session' && request.method === 'GET') {
         try { const session = await auth(); return json(200, { authenticated: session.purpose === 'login', recovery: session.purpose === 'recovery' }); }
         catch (error) { if (error?.status !== 401) throw error; replacementCookie = cookies.clear(); return json(200, { authenticated: false, recovery: false }); }
@@ -199,6 +201,7 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
         return json(200, { authenticated: true, recovery: false });
       }
       if (path === '/api/reset-request' && request.method === 'POST') {
+        if (!passwordRecovery) throw fail(503, 'Wachtwoordherstel per e-mail is nog niet ingericht.');
         limitAuth('reset', request);
         const input = await readJson(request);
         if (typeof input.email !== 'string' || input.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) throw fail(400, 'Vul een geldig e-mailadres in.');

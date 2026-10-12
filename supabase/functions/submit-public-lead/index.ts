@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { withdrawalRecord, withdrawalReceipt } from "../_shared/withdrawal.mjs";
+import { vveIntakeDetails } from "../_shared/vve-intake.mjs";
 
 const origins = new Set(["https://www.roofsignal.nl", "https://roofsignal.nl", "http://localhost:8080", "http://127.0.0.1:8080"]);
 const allowedTypes = new Set(["report", "price", "contact", "access"]);
@@ -66,6 +67,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Controleer naam en e-mailadres." }), { status: 400, headers });
   }
 
+  let intakeDetails;
+  try { intakeDetails = vveIntakeDetails(body); }
+  catch { return new Response(JSON.stringify({ error: "Controleer de objectgegevens en inspectiekeuze." }), { status: 400, headers }); }
+
   const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const ipHash = await digest(`${Deno.env.get("FORM_RATE_LIMIT_SALT") || "roofsignal"}:${ip}`);
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -83,6 +88,7 @@ serve(async (req) => {
     scope: String(body.scope || "").slice(0, 240) || null,
     message: neighborhood ? `Toestemming wijkupdates v1: ${new Date().toISOString()}. Ja, RoofSignal mag mij e-mailen over Woningscans in volgende wijken. Afmelden via info@roofsignal.nl.` : String(body.message || "").slice(0, 4000) || null,
     source_path: String(body.source_path || "").slice(0, 240),
+    intake_details: intakeDetails,
   };
   const { data, error } = await service.from("lead_requests").insert(record).select("*").single();
   if (error) return new Response(JSON.stringify({ error: "Aanvraag kon niet worden opgeslagen." }), { status: 500, headers });

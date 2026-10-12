@@ -5,6 +5,7 @@
     "create-portal-customer",
     "process-scheduled-invoices",
     "process-parken-integrations",
+    "process-erp-intakes",
     "quote-acceptance",
     "send-appointment-email",
     "send-parken-booking-confirmation",

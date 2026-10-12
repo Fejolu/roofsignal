@@ -2,6 +2,7 @@
 // JWT; the elevated key is reserved for private files and the document RPC.
 // Contracts: supabase/auth openapi.yaml; supabase/storage-js StorageFileApi.ts.
 import { Buffer } from 'node:buffer';
+import { validateWebsiteIntake } from './website-intake-handler.mjs';
 
 const PRODUCTION_PROJECT = 'kakpticlxlaxtebhsuoh';
 const UUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
@@ -228,6 +229,10 @@ export function createSupabaseAdapter({ url, publishableKey, storageKey, fetch: 
     command(accessToken, action, payload = {}) {
       if (typeof action !== 'string' || !/^[a-z][a-z0-9.]{0,80}$/.test(action)) throw invalid();
       return request('/rest/v1/rpc/roofsignal_erp', { method: 'POST', headers: publicHeaders(userToken(accessToken)), body: jsonBody({ action, payload }) });
+    },
+    websiteIntake(input) {
+      const payload = validateWebsiteIntake(input);
+      return request('/rest/v1/rpc/roofsignal_erp_intake', { method: 'POST', headers: privateHeaders(), body: jsonBody({ payload }) });
     },
     async upload(key, bytes, { contentType = 'application/pdf', upsert = false } = {}) {
       const validated = fileKey(key);
