@@ -59,11 +59,14 @@ async function bridge(action:string,data:any={},mode='test') {
  const result=operation.response?.result;if(result?.ok!==true)throw Error('CALENDAR_UNAVAILABLE');return result;
 }
 const paymentKey=(mode:string)=>env(mode==='test'?'MOLLIE_TEST_API_KEY':'MOLLIE_CONSUMER_LIVE_API_KEY');
+const replayedPayments=new WeakMap<object,boolean>();
 async function mollie(path:string,options:RequestInit={},mode='test') {
  const key=paymentKey(mode);if(!key)throw Error('PAYMENT_NOT_CONFIGURED');
  const response=await fetch('https://api.mollie.com/v2/payments'+path,{...options,headers:{Authorization:'Bearer '+key,'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout(18000)});
  const result=await response.json();
- if(!response.ok)throw Error('MOLLIE_HTTP_'+response.status);return result;
+ if(!response.ok)throw Error('MOLLIE_HTTP_'+response.status);
+ replayedPayments.set(result,Boolean(response.headers.get('Idempotent-Replayed')));
+ return result;
 }
 async function addressLookup(input:any) {
  const postcode=String(input?.postcode||'').replace(/\s/g,'').toUpperCase(),number=String(input?.houseNumber||'').trim().toUpperCase();
@@ -163,10 +166,38 @@ async function progress(initial:any,knownPayment:any=null) {
  try{
   if(a.status==='confirmed'){await deliver(a,q);return await save(a,{last_error:null});}
   if(TERMINAL.has(a.status)&&a.status!=='paid_review_required')return a;
+  if(a.preparation_only){
+   // Selecting a time can reserve capacity while contact details are entered.
+   // It never creates a payment, records acceptance, confirms or sends mail.
+   if(knownPayment)throw Error('PREPARATION_PAYMENT_FORBIDDEN');
+   if(Date.parse(a.preparation_expires_at)>Date.now()&&!a.calendar_event_id){
+    try{
+     const hold=await calendar('hold',{requestId:a.id,start:a.slot_start,destination:q.destination});
+     a=await save(a,{calendar_event_id:hold.eventId,last_error:null});
+    }catch(e){
+     if(safeError(e)==='SLOT_UNAVAILABLE'){
+      await calendar('release',{requestId:a.id,start:a.slot_start});
+      return await save(a,{status:'not_created',close_code:'SLOT_UNAVAILABLE'});
+     }throw e;
+    }
+   }
+   // Checkout may have atomically bound consent/customer while the hold ran.
+   // Refresh under our existing lease before choosing the next operation.
+   a=await one('consumer_attempts','id',a.id);
+   if(a.lease_token!==initial.lease_token)throw Error('LEASE_LOST');
+   if(a.preparation_only){
+    if(Date.parse(a.preparation_expires_at)<=Date.now()){
+     await calendar('release',{requestId:a.id,start:a.slot_start});
+     return await save(a,{status:'not_created',close_code:a.close_code||'PREPARATION_EXPIRED',last_error:null});
+    }
+    return await save(a,{preparation_ready_at:a.preparation_ready_at||now(),last_error:null});
+   }
+  }
   if(!a.payment_id&&!knownPayment){
+   const firstCreation=!a.payment_started_at;
    if(!a.payment_started_at){
     let hold;
-    try{hold=await calendar('hold',{requestId:a.id,start:a.slot_start,destination:q.destination});}
+    try{hold=a.calendar_event_id?{eventId:a.calendar_event_id}:await calendar('hold',{requestId:a.id,start:a.slot_start,destination:q.destination});}
     catch(e){
      if(safeError(e)==='SLOT_UNAVAILABLE'){
       await calendar('release',{requestId:a.id,start:a.slot_start});
@@ -178,6 +209,9 @@ async function progress(initial:any,knownPayment:any=null) {
    if(!mayRetryCreation(a,await sha(paymentKey(a.mode))))return await save(a,{status:'creation_review',last_error:'PAYMENT_CREATION_REQUIRES_REVIEW'});
    const payment=await mollie('',{method:'POST',headers:{'Idempotency-Key':a.id},body:JSON.stringify(a.payment_payload)},a.mode);
    a=await rememberCreatedPayment({attempt:a,quote:q,payment,save:(patch:any)=>save(a,patch)});
+   // A genuinely fresh provider response is already current. Idempotent
+   // replays and recovery still GET the latest status before redirecting.
+   if(firstCreation&&!replayedPayments.get(payment))knownPayment=payment;
   }
   const payment=knownPayment||await mollie('/'+a.payment_id+(a.mode==='test'?'?testmode=true':''),{},a.mode);
   a=await reconcilePayment({attempt:a,quote:q,payment,calendar,save:async(patch:any)=>{a=await save(a,{...patch,last_error:null});return a;}});
@@ -186,22 +220,55 @@ async function progress(initial:any,knownPayment:any=null) {
  }catch(e){
   a=await save(a,{last_error:safeError(e)});return a;
  }finally{
-  await checked(db.from('consumer_attempts').update({lease_token:null,locked_until:null,next_attempt_at:new Date(Date.now()+60000).toISOString()}).eq('id',a.id).eq('lease_token',initial.lease_token));
+  await checked(db.from('consumer_attempts').update({lease_token:null,locked_until:null,next_attempt_at:a.preparation_only&&a.preparation_expires_at? a.preparation_expires_at:new Date(Date.now()+60000).toISOString()}).eq('id',a.id).eq('lease_token',initial.lease_token));
  }
 }
 async function view(a:any) {
  if(a.status==='not_created')return {requestId:a.id,state:'not_created',code:'REQUEST_NOT_CREATED',reason:a.close_code,paymentCreated:false,requestClosed:true};
  const q=await one('consumer_quotes','id',a.quote_id);
+ if(a.preparation_only)return {requestId:a.id,state:'pending'};
  const identity={requestId:a.id,quoteId:a.quote_id,slotId:a.slot_id,reference:a.reference,currency:'EUR',totalCents:q.total_cents};
  if(TERMINAL.has(a.status))return {...identity,state:'closed',status:a.status,requestClosed:true};
  if(a.checkout_url&&a.payment_status==='open')return {...identity,state:'checkout_ready',checkoutUrl:a.checkout_url};
  return {requestId:a.id,state:'pending'};
 }
+async function prepare(body:any,mode:string){
+ if(!UUID.test(body.requestId)||!UUID.test(body.quoteId)||!UUID.test(body.slotId))throw Error('INVALID_REQUEST');
+ const [q,s]=await Promise.all([one('consumer_quotes','id',body.quoteId),one('consumer_slots','id',body.slotId)]);
+ assertMode(q,mode);
+ if(!s||s.quote_id!==q.id||q.terms_version!==TERMS||q.pricing_version!==CONSUMER_PRICING_VERSION)throw Error('INVALID_REQUEST');
+ if(Date.parse(q.expires_at)<=Date.now())throw Error('QUOTE_EXPIRED');
+ const payload={prepare:true,quoteId:q.id,slotId:s.id};
+ const result=await claim(body.requestId,{...payload,fingerprint:await sha(JSON.stringify(payload))},mode);
+ const a=result.claimed?await progress(result.attempt):result.attempt;
+ const identity={requestId:body.requestId,quoteId:q.id,slotId:s.id,currency:'EUR',totalCents:q.total_cents};
+ if(!a.preparation_only||a.status==='not_created')return {...identity,state:'not_created',expiresAt:a.preparation_expires_at||q.expires_at};
+ return {...identity,state:a.preparation_ready_at&&Date.parse(a.preparation_expires_at)>Date.now()?'prepared':'pending',expiresAt:a.preparation_expires_at};
+}
+async function discardPreparation(id:string,mode:string){
+ if(!UUID.test(id))throw Error('INVALID_REQUEST');
+ const job=await checked(db.rpc('consumer_discard_preparation',{p_id:id,p_mode:mode}));
+ const a=job.claimed?await progress(job.attempt):job.attempt;
+ return {discarded:a.status==='not_created',pending:a.preparation_only&&a.status!=='not_created'};
+}
+async function recoverAttempt(id:string,mode:string){
+ const found=await one('consumer_attempts','id',id);
+ if(found?.preparation_only){
+  // A browser recovery is only requested after Betalen. An unsubmitted
+  // preparation cannot reconstruct customer/consent from opaque storage.
+  // Fence a lost or delayed final request, then release its hold safely.
+  assertMode(found,mode);
+  await discardPreparation(id,mode);
+  return await view(await one('consumer_attempts','id',id));
+ }
+ const job=await claim(id,null,mode);
+ return await view(job.claimed?await progress(job.attempt):job.attempt);
+}
 async function checkout(body:any,mode:string){
  if(!UUID.test(body.quoteId)||!UUID.test(body.slotId))throw Error('INVALID_REQUEST');
  const customer=customerInput(body);
  if(mode==='test'&&customer.email!=='ferry@roofsignal.nl')throw Error('TEST_EMAIL_REQUIRED');
- const q=await one('consumer_quotes','id',body.quoteId),s=await one('consumer_slots','id',body.slotId);
+ const [q,s]=await Promise.all([one('consumer_quotes','id',body.quoteId),one('consumer_slots','id',body.slotId)]);
  assertMode(q,mode);if(!s||s.quote_id!==q.id||q.terms_version!==body.terms.version||q.terms_version!==TERMS||q.pricing_version!==CONSUMER_PRICING_VERSION)throw Error('INVALID_REQUEST');
  assertEarlyStartConsent(s.start_at,body.terms.earlyStartRequested);
  const payload={quoteId:q.id,slotId:s.id,customer,terms:body.terms};
@@ -220,13 +287,15 @@ async function challenge(token:any) {
  if(!response.ok||!verifiedChallenge(await response.json()))throw Error('CHALLENGE_REQUIRED');
 }
 async function processDue() {
- const due=await checked(db.from('consumer_attempts').select('id,mode').is('test_released_at',null).not('status','in','(not_created,failed,canceled,expired,confirmed)').lte('next_attempt_at',now()).order('next_attempt_at').limit(1));
+ const due=await checked(db.from('consumer_attempts').select('id,mode').is('test_released_at',null).eq('preparation_only',false).not('status','in','(not_created,failed,canceled,expired,confirmed)').lte('next_attempt_at',now()).order('next_attempt_at').limit(1));
+ const abandoned=await checked(db.from('consumer_attempts').select('id,mode').eq('preparation_only',true).neq('status','not_created').lte('preparation_expires_at',now()).order('preparation_expires_at').limit(5));
+ due.push(...abandoned);
  const mailDue=await checked(db.from('consumer_mail_outbox').select('request_id,consumer_attempts!inner(mode,test_released_at)').eq('status','pending').is('consumer_attempts.test_released_at',null).limit(1));
  for(const mail of mailDue)if(!due.some((a:any)=>a.id===mail.request_id))due.push({id:mail.request_id,mode:mail.consumer_attempts.mode});
  const results=[];for(const item of due){const job=await claim(item.id,null,item.mode);if(job.claimed){const a=await progress(job.attempt);results.push({status:a.status,error:a.last_error});}}
  // Counts only: scheduler logs never contain addresses, email or tokens.
  const review=await checked(db.from('consumer_attempts').select('id').eq('mode','live').is('test_released_at',null)
-  .or('status.in.(creation_review,paid_review_required),and(last_error.not.is.null,created_at.lt.'+new Date(Date.now()-10*60000).toISOString()+')'));
+  .or('status.in.(creation_review,paid_review_required),and(last_error.not.is.null,status.neq.not_created,created_at.lt.'+new Date(Date.now()-10*60000).toISOString()+')'));
  const mailReview=await checked(db.from('consumer_mail_outbox').select('id,consumer_attempts!inner(mode)').eq('status','review').eq('consumer_attempts.mode','live'));
  return {ok:review.length===0&&mailReview.length===0,processed:results,reviewCount:review.length,mailReviewCount:mailReview.length};
 }
@@ -296,10 +365,20 @@ Deno.serve(async(req:Request)=>{
    if(!admin)await limit('checkout:'+body.quoteId,6,1200);
    return respond(await checkout(body,mode));
   }
+  if(path==='/prepare'){
+   if(!UUID.test(body.quoteId))throw Error('INVALID_REQUEST');
+   if(!admin)await limit('prepare:'+body.quoteId,6,1200);
+   return respond(await prepare(body,mode));
+  }
+  if(path==='/discard-prepare'){
+   if(!UUID.test(body.requestId))throw Error('INVALID_REQUEST');
+   if(!admin)await limit('discard:'+body.requestId,12);
+   return respond(await discardPreparation(body.requestId,mode));
+  }
   if(path==='/recover'){
    if(!UUID.test(body.requestId))throw Error('INVALID_REQUEST');
    if(!admin)await limit('recover:'+body.requestId,12);
-   const job=await claim(body.requestId,null,mode);return respond(await view(job.claimed?await progress(job.attempt):job.attempt));
+   return respond(await recoverAttempt(body.requestId,mode));
   }
   if(path==='/test-release'){
    if(!admin)return respond({error:'ACCESS_DENIED'},403);

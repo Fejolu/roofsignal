@@ -130,10 +130,12 @@ async function settle() {
   await new Promise(setImmediate);
 }
 
-async function bookingPage({ configuration, record, returnToken = null, respond, securityReady = true, fastCheckoutTimers = false } = {}) {
+async function bookingPage({ configuration, record, returnToken = null, respond, respondPreparation,
+  securityReady = true, fastCheckoutTimers = false } = {}) {
   const document = documentFromHtml(page);
   const location = new URL(`https://www.roofsignal.nl/inspectie-boeken/${returnToken ? `?booking=${returnToken}` : ''}`);
   const requests = [];
+  const knownQuotes = new Map();
   const navigations = [];
   const storageOperations = [];
   const timerDelays = [];
@@ -161,9 +163,9 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
   const schedule = fastCheckoutTimers ? (callback, delay = 0, ...args) => {
     const timer = { canceled: false };
     if (delay <= 60000) {
-      timerDelays.push(delay);
       setImmediate(() => {
         if (timer.canceled) return;
+        timerDelays.push(delay);
         advanceTime(delay);
         callback(...args);
       });
@@ -202,7 +204,8 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
         timeoutMs: signalTimeouts.get(options.signal)
       };
       requests.push(request);
-      assert.ok(respond, `Unexpected request in local preview: ${request.path}`);
+      const isPreparation = ['/prepare', '/discard-prepare'].some(path => request.path.endsWith(path));
+      assert.ok(isPreparation || respond, `Unexpected request in local preview: ${request.path}`);
       // Deliberately no fallback to global fetch: test data never leaves Node.
       let onAbort;
       const interrupted = new Promise((_resolve, reject) => {
@@ -211,7 +214,12 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
         else options.signal.addEventListener('abort', onAbort, { once: true });
       });
       try {
-        const data = await Promise.race([respond(request, { advanceTime }), interrupted]);
+        const reply = isPreparation ? respondPreparation ? respondPreparation(request, { advanceTime })
+          : request.path.endsWith('/discard-prepare') ? { discarded: true, pending: false }
+          : { ...request.body, currency: 'EUR', totalCents: knownQuotes.get(request.body.quoteId)?.totalCents,
+            state: 'prepared', expiresAt: knownQuotes.get(request.body.quoteId)?.expiresAt } : respond(request, { advanceTime });
+        const data = await Promise.race([reply, interrupted]);
+        if (request.path.endsWith('/quote')) knownQuotes.set(data.quoteId, data);
         return Response.json(data);
       } finally {
         options.signal.removeEventListener('abort', onAbort);
@@ -229,7 +237,7 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
     return element;
   };
   return { document, get, requests, navigations, storageOperations, stored, location, timerDelays, timeoutBudgets,
-    elapsedMilliseconds: () => clockTime - startTime };
+    elapsedMilliseconds: () => clockTime - startTime, advanceTime };
 }
 
 function statusRetry(document) {
@@ -559,7 +567,7 @@ test('An invalid integration destination keeps inputs disabled and sends no requ
   assert.deepEqual(ui.storageOperations, []);
 });
 
-async function prepareNewOrder(checkoutResponse, { recoverResponse, fastCheckoutTimers = false } = {}) {
+async function prepareNewOrder(checkoutResponse, { recoverResponse, respondPreparation, fastCheckoutTimers = false } = {}) {
   const quote = {
     quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
     baseCents: 36179, thermalCents: 0, travelCents: 0, totalCents: 36179,
@@ -569,7 +577,7 @@ async function prepareNewOrder(checkoutResponse, { recoverResponse, fastCheckout
   };
   const slotStart = Date.now() + 30 * 86400000;
   const slot = {id:'s1', start:new Date(slotStart).toISOString(), end:new Date(slotStart+2700000).toISOString()};
-  const ui = await bookingPage({configuration:connectedConfiguration, fastCheckoutTimers, respond(request, clock) {
+  const ui = await bookingPage({configuration:connectedConfiguration, fastCheckoutTimers, respondPreparation, respond(request, clock) {
     if (request.path.endsWith('/quote')) return quote;
     if (request.path.endsWith('/availability')) return {quoteId:quote.quoteId,slots:[slot]};
     if (request.path.endsWith('/recover') && recoverResponse) return recoverResponse(request.body, clock, request);
@@ -823,11 +831,11 @@ test('An initial paid result is shown without recreating or reopening payment', 
   assert.deepEqual(ui.navigations,[]);
 });
 
-async function calendarPage(slots, checkoutResponse = null, inline = false, { recoverResponse, fastCheckoutTimers = false } = {}) {
+async function calendarPage(slots, checkoutResponse = null, inline = false, { recoverResponse, respondPreparation, fastCheckoutTimers = false } = {}) {
   const quote={quoteId:recoveryRecord.quoteId,inspectionType:'building_envelope',serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
     travelDescription:'Simulated test route',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),
     address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}};
-  const ui=await bookingPage({configuration:connectedConfiguration,fastCheckoutTimers,respond(request){
+  const ui=await bookingPage({configuration:connectedConfiguration,fastCheckoutTimers,respondPreparation,respond(request){
     if(request.path.endsWith('/quote'))return {...quote,...(inline?{availability:{quoteId:inline==='wrong-id'?'another_quote_012345':quote.quoteId,slots}}:{})};
     if(request.path.endsWith('/availability'))return {quoteId:quote.quoteId,slots};
     if(checkoutResponse && request.path.endsWith('/checkout')) return checkoutResponse(request.body);
@@ -842,6 +850,258 @@ async function calendarPage(slots, checkoutResponse = null, inline = false, { re
 const calendarButton = (ui, day) => ui.get('calendar-days').querySelectorAll('button').find(button => button.value === day);
 const calendarSlot = (id, start, recommended = false) => ({id, start, end:new Date(Date.parse(start)+2700000).toISOString(), recommended});
 const futureYear = new Date().getUTCFullYear() + 1;
+const preparedReply = (request, overrides = {}) => ({ ...request.body, currency: 'EUR', totalCents: 36179,
+  state: 'prepared', expiresAt: new Date(Date.now() + 600000).toISOString(), ...overrides });
+
+test('Only an explicit time choice prepares a calendar hold, without customer data, storage, payment or navigation', async () => {
+  const slot = calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`);
+  const ui = await calendarPage([slot], attempt => readyPayment({ ...attempt }), true, { fastCheckoutTimers: true });
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 0);
+  await ui.get('slots').querySelector('input').dispatch('change');
+  await settle();
+  const prepared = ui.requests.filter(request => request.path.endsWith('/prepare'));
+  assert.equal(prepared.length, 1);
+  assert.deepEqual(Object.keys(prepared[0].body).sort(), ['quoteId', 'requestId', 'slotId']);
+  assert.equal(prepared[0].body.slotId, 's1');
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('name').disabled, false);
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(ui.navigations, []);
+  ui.get('name').value = 'Current customer';
+  ui.get('email').value = 'current@example.invalid';
+  ui.get('phone').value = '0612345678';
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.requestId, prepared[0].body.requestId);
+  assert.equal(checkout.body.customer.name, 'Current customer');
+  assert.equal(checkout.body.terms.accepted, true);
+  assert.equal(prepared.length, 1);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+});
+
+test('Betalen binds the same pending preparation immediately and ignores its late response after final checkout', async () => {
+  let resolvePrepare;
+  let preparationRequest;
+  const prepareResponse = new Promise(resolve => { resolvePrepare = resolve; });
+  const ui = await prepareNewOrder(attempt => readyPayment({ ...attempt }), {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      assert.ok(request.path.endsWith('/prepare'));
+      preparationRequest = request;
+      return prepareResponse;
+    }
+  });
+  assert.ok(preparationRequest);
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('name').disabled, false);
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.requestId, preparationRequest.body.requestId);
+  assert.equal(checkout.body.customer.name, 'Test');
+  assert.equal(checkout.body.terms.accepted, true);
+  assert.equal(ui.elapsedMilliseconds(), 0, 'Current preparation must not delay posting final consent');
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  resolvePrepare(preparedReply(preparationRequest));
+  await settle(); await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/discard-prepare')).length, 0);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, preparationRequest.body.requestId);
+});
+
+test('A changed time awaits the earlier preparation, discards it durably and only then prepares the latest choice', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  let firstRequest;
+  let resolveFirst;
+  let discarded = 0;
+  const events = [];
+  const firstResponse = new Promise(resolve => { resolveFirst = resolve; });
+  const ui = await calendarPage(slots, attempt => readyPayment({ ...attempt }), true, {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      if (request.path.endsWith('/discard-prepare')) {
+        events.push('discard');
+        assert.deepEqual(request.body, { requestId: firstRequest.body.requestId });
+        return ++discarded < 3 ? { discarded: false, pending: true } : { discarded: true, pending: false };
+      }
+      events.push(`prepare:${request.body.slotId}`);
+      if (request.body.slotId === 's1') { firstRequest = request; return firstResponse; }
+      return preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change');
+  await choices[1].dispatch('change');
+  assert.deepEqual(events, ['prepare:s1']);
+  const selectedTime = ui.get('summary-date').textContent;
+  resolveFirst(preparedReply(firstRequest));
+  for (let turn = 0; turn < 12 && !events.includes('prepare:s2'); turn += 1) await settle();
+  assert.deepEqual(events, ['prepare:s1', 'discard', 'discard', 'discard', 'prepare:s2']);
+  assert.equal(ui.get('summary-date').textContent, selectedTime);
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(ui.navigations, []);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const latest = ui.requests.filter(request => request.path.endsWith('/prepare')).at(-1);
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.requestId, latest.body.requestId);
+  assert.equal(checkout.body.slotId, 's2');
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+});
+
+test('Rapid time changes skip superseded drafts and prepare only the latest choice after cleanup', async () => {
+  const slots = ['s1', 's2', 's3'].map((id, index) => calendarSlot(id, `${futureYear}-11-03T${String(9 + index).padStart(2, '0')}:00:00Z`));
+  let firstRequest;
+  let resolveFirst;
+  const firstResponse = new Promise(resolve => { resolveFirst = resolve; });
+  const ui = await calendarPage(slots, null, true, { fastCheckoutTimers: true,
+    respondPreparation(request) {
+      if (request.path.endsWith('/discard-prepare')) return { discarded: true, pending: false };
+      if (request.body.slotId === 's1') { firstRequest = request; return firstResponse; }
+      return preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  for (const choice of choices) await choice.dispatch('change');
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  resolveFirst(preparedReply(firstRequest));
+  for (let turn = 0; turn < 10 && ui.requests.filter(request => request.path.endsWith('/prepare')).length < 2; turn += 1) await settle();
+  assert.deepEqual(ui.requests.filter(request => request.path.endsWith('/prepare')).map(request => request.body.slotId), ['s1', 's3']);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/discard-prepare')).length, 1);
+  assert.equal(ui.stored.size, 0);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Unresolved discard polling is bounded and cannot create an overlapping preparation', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  const ui = await calendarPage(slots, null, true, { fastCheckoutTimers: true,
+    respondPreparation(request) {
+      return request.path.endsWith('/discard-prepare') ? { discarded: false, pending: true } : preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change'); await settle();
+  await choices[1].dispatch('change');
+  for (let turn = 0; turn < 15; turn += 1) await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/discard-prepare')).length, 5);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  assert.equal(ui.elapsedMilliseconds(), 8000);
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('name').disabled, false);
+  assert.equal(ui.get('booking-error').textContent, '');
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Betalen waits at most ten seconds for an older draft and still posts current consent without losing late cleanup', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  let firstRequest;
+  let resolveFirst;
+  const firstResponse = new Promise(resolve => { resolveFirst = resolve; });
+  const ui = await calendarPage(slots, attempt => ({ requestId: attempt.requestId, state: 'not_created',
+    code: 'REQUEST_NOT_CREATED', reason: 'SLOT_UNAVAILABLE', paymentCreated: false, requestClosed: true }), true, {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      if (request.path.endsWith('/discard-prepare')) return { discarded: true, pending: false };
+      firstRequest = request; return firstResponse;
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change');
+  await choices[1].dispatch('change');
+  ui.get('name').value = 'Latest customer';
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.slotId, 's2');
+  assert.equal(checkout.body.customer.name, 'Latest customer');
+  assert.equal(checkout.body.terms.accepted, true);
+  assert.equal(checkout.timeoutMs, 35000);
+  assert.equal(ui.elapsedMilliseconds(), 10000);
+  assert.equal(ui.stored.size, 0);
+  resolveFirst(preparedReply(firstRequest));
+  for (let turn = 0; turn < 10 && !ui.requests.some(request => request.path.endsWith('/discard-prepare')); turn += 1) await settle();
+  const discarded = ui.requests.filter(request => request.path.endsWith('/discard-prepare'));
+  assert.equal(discarded.length, 1);
+  assert.deepEqual(discarded[0].body, { requestId: firstRequest.body.requestId });
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Address, product, day, month and quote expiry invalidate a preparation without creating a final order', async () => {
+  for (const change of ['address', 'product', 'day', 'month', 'expiry']) {
+    const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`),
+      calendarSlot('s2', `${futureYear}-11-04T09:00:00Z`), calendarSlot('s3', `${futureYear}-12-01T09:00:00Z`)];
+    const ui = await calendarPage(slots, null, true, { fastCheckoutTimers: true });
+    await ui.get('slots').querySelector('input').dispatch('change');
+    await settle();
+    const prepared = ui.requests.find(request => request.path.endsWith('/prepare'));
+    if (change === 'address') { ui.get('houseNumber').value = '14'; await ui.get('houseNumber').dispatch('input'); }
+    if (change === 'product') await chooseProduct(ui, 'thermal');
+    if (change === 'day') await calendarButton(ui, `${futureYear}-11-04`).dispatch('click');
+    if (change === 'month') await ui.get('calendar-next').dispatch('click');
+    if (change === 'expiry') { ui.advanceTime(600001); ui.get('termsAccepted').checked = true; await ui.get('booking-form').dispatch('submit'); }
+    await settle(); await settle();
+    const discarded = ui.requests.filter(request => request.path.endsWith('/discard-prepare'));
+    assert.equal(discarded.length, 1, `${change} must discard the abandoned hold`);
+    assert.deepEqual(discarded[0].body, { requestId: prepared.body.requestId });
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+    assert.equal(ui.stored.size, 0);
+    assert.deepEqual(ui.navigations, []);
+  }
+});
+
+test('An invalid or failed preparation never supplies price, identity or a payment URL to final checkout', async () => {
+  for (const response of [
+    request => preparedReply(request, { requestId: recoveryRecord.requestId }),
+    request => preparedReply(request, { totalCents: 1 }),
+    request => preparedReply(request, { slotId: 'another-slot' }),
+    request => preparedReply(request, { expiresAt: '2020-01-01T00:00:00Z' }),
+    request => preparedReply(request, { checkoutUrl: 'https://attacker.invalid/pay' }),
+    () => { throw new Error('Simulated preparation connection failure'); }
+  ]) {
+    const ui = await prepareNewOrder(attempt => readyPayment({ ...attempt }), { fastCheckoutTimers: true, respondPreparation: response });
+    await settle();
+    const draft = ui.requests.find(request => request.path.endsWith('/prepare'));
+    assert.equal(ui.stored.size, 0);
+    assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+    assert.deepEqual(ui.navigations, []);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    await ui.get('booking-form').dispatch('submit');
+    const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+    assert.equal(checkout.body.requestId, draft.body.requestId);
+    assert.equal(checkout.body.quoteId, recoveryRecord.quoteId);
+    assert.equal(checkout.body.slotId, 's1');
+    assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).totalCents, 36179);
+    assert.deepEqual(ui.navigations, [mollieCheckout]);
+  }
+});
+
+test('A failed discard prevents overlapping preparations and final checkout can still safely reject the latest selection', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  const ui = await calendarPage(slots, attempt => ({ requestId: attempt.requestId, state: 'not_created',
+    code: 'REQUEST_NOT_CREATED', reason: 'SLOT_UNAVAILABLE', paymentCreated: false, requestClosed: true }), true, {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      return request.path.endsWith('/discard-prepare') ? { discarded: false, pending: false } : preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change'); await settle();
+  await choices[1].dispatch('change'); await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.slotId, 's2');
+  assert.notEqual(checkout.body.requestId, ui.requests.find(request => request.path.endsWith('/prepare')).body.requestId);
+  assert.equal(ui.stored.size, 0);
+  assert.match(ui.get('booking-status').textContent, /inmiddels bezet/);
+  assert.deepEqual(ui.navigations, []);
+});
 
 test('Combined address result opens the real calendar without a second network request',async()=>{
  const ui=await calendarPage([calendarSlot('fast',`${futureYear}-10-14T09:00:00Z`)],null,true);
@@ -962,8 +1222,9 @@ test('Standalone thermography sends its product, includes only the thermal price
   ui.get('thermal').checked = true;
   await ui.get('thermal').dispatch('change');
   await ui.get('check-address').dispatch('click');
-  assert.equal(ui.requests[1].body.inspectionType, 'building_envelope');
-  assert.equal(ui.requests[1].body.thermal, true);
+  const quotes = ui.requests.filter(request => request.path.endsWith('/quote'));
+  assert.equal(quotes[1].body.inspectionType, 'building_envelope');
+  assert.equal(quotes[1].body.thermal, true);
   assert.equal(ui.get('summary-total').textContent, bookingCore.money(70664));
 });
 

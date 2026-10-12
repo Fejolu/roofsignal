@@ -317,6 +317,23 @@ meervoudig bezoek nog beoordeling vereist.
 
 Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare toekomstige momenten vanaf de volgende kalenderdag teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Uitvoering binnen de volledige Nederlandse bedenktijd blijft afhankelijk van expliciete toestemming bij checkout. Dezelfde beschikbaarheidsregels gelden in het gecombineerde `/quote`-antwoord. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de bedenktijd en beschikbaarheid opnieuw controleren en atomair claimen.
 
+### POST /api/consumer-booking/prepare
+
+Na het expliciet kiezen van een tijdstip bereidt de browser de agendareservering
+voor met `{requestId,quoteId,slotId}`. Dat gebeurt terwijl de klant de gegevens
+invult. De voorbereiding bevat geen klantgegevens, voorwaardenakkoord of
+Mollie-betaling en wordt uitsluitend in het browsergeheugen bijgehouden. De
+server claimt dezelfde capaciteit en controleert de actuele agenda; de tijdelijke
+reservering vervalt na vijf minuten of eerder bij het vervallen van de prijsopgave.
+
+Antwoord: `{requestId,quoteId,slotId,currency:'EUR',totalCents,state:'prepared'|
+'pending'|'not_created',expiresAt}`. Dit bevat geen betaallink of statustoken.
+Bij een andere datum, tijd, adres of inspectie wacht de browser een eerdere
+voorbereiding af en sluit deze via `/discard-prepare` voordat een volgende begint.
+Onbekende of late verzoeken worden met hetzelfde ID afgeschermd; een ingediende
+opdracht kan via dit endpoint nooit worden verwijderd. De bestaande hersteltaak
+ruimt verlopen voorbereidingen op, ook als de browser niet meer openstaat.
+
 ### POST /api/consumer-booking/checkout
 
 Invoer: `{requestId,quoteId,slotId,customer:{name,email,phone,notes},terms:{accepted,version,earlyStartRequested}}`.
@@ -335,7 +352,12 @@ binnen de volledige toepasselijke bedenktijd is
 op het moment van checkout. Een te vroeg moment zonder die toestemming wordt
 afgewezen vóór de betalingspoging wordt aangemaakt. Historische opdrachten worden via `/recover` met hun bestaande
 voorwaarden en toestemming hersteld; er ontstaat daardoor geen nieuwe opdracht
-onder andere voorwaarden.
+onder andere voorwaarden. Bij een geldige voorbereiding neemt de server exact
+dezelfde request-ID, prijsopgave, tijd en agendareservering over en legt pas na de
+klik op **Betalen** de klantgegevens en toestemming vast. Dat kan ook terwijl de
+voorbereidende agendacontrole nog loopt: dezelfde werker leest het bijgewerkte
+akkoord voordat hij een betaling aanmaakt. Een verlopen of afgebroken
+voorbereiding kan nooit door een vertraagd verzoek opnieuw worden geopend.
 
 Leg vóór het betaalverzoek één duurzame betalingspoging vast. Eigen idempotentie is vereist per requestId én per actieve prijsopgave/reservering; ook verversen mag geen tweede betaling creëren. Een database-exclusiviteitsregel moet overlappende claims uitsluiten. Alleen een vrij/bezet-aanroep gevolgd door los een agenda-item toevoegen sluit races niet uit. Definieer tevens hoe gelijktijdige handmatige wijzigingen in de agenda worden voorkomen of afgehandeld.
 
@@ -361,7 +383,7 @@ Vóór het eerste checkoutverzoek slaat de browser onder `roofsignal.consumerBoo
 
 Na een onzekere uitkomst worden de invoervelden vergrendeld. Een volgende poging en een paginaverversing gebruiken `/recover`; zij maken niet opnieuw een checkout aan. De Mollie-idempotentiesleutel wordt volgens de documentatie slechts één uur bewaard: eigen duurzame server-idempotentie en capaciteitsvergrendeling blijven noodzakelijk.
 
-De primaire actie heet **Betalen**. Eén expliciete klik opent de geverifieerde betaalpagina zodra de server `checkout_ready` teruggeeft. Een nog lopende voorbereiding wordt automatisch gevolgd via maximaal acht `/recover`-verzoeken met twee seconden tussenruimte en maximaal 45 seconden voor het geheel. De knop en invoervelden blijven tijdens deze reeks vergrendeld; alle verzoeken gebruiken hetzelfde request-ID. De browser controleert de opdrachtidentiteit, valuta, totaalprijs en toegestane HTTPS-host vóór iedere doorverwijzing. Een echte betaallink blijft als terugval beschikbaar. Bij een fout of een niet-betaalbare status wordt een eerder getoonde link verwijderd en de bestaande opdracht bewaard. Een paginaverversing doet slechts één passieve herstelcontrole en verwijst niet automatisch door. De betaal-URL blijft alleen in geheugen; zij komt niet in `sessionStorage`.
+De primaire actie heet **Betalen**. Eén expliciete klik opent de geverifieerde betaalpagina zodra de server `checkout_ready` teruggeeft. De al voorbereide agendareservering hoeft niet opnieuw via Google te worden aangemaakt. Alleen bij een aantoonbaar nieuwe Mollie-creatie zonder idempotente replay gebruikt de server direct het geverifieerde POST-antwoord; herstel en replay blijven de actuele betaalstatus ophalen. Een nog lopende voorbereiding wordt automatisch gevolgd via maximaal acht `/recover`-verzoeken met twee seconden tussenruimte en maximaal 45 seconden voor het geheel. De knop en invoervelden blijven tijdens deze reeks vergrendeld; alle verzoeken gebruiken hetzelfde request-ID. De browser controleert de opdrachtidentiteit, valuta, totaalprijs en toegestane HTTPS-host vóór iedere doorverwijzing. Een echte betaallink blijft als terugval beschikbaar. Bij een fout of een niet-betaalbare status wordt een eerder getoonde link verwijderd en de bestaande opdracht bewaard. Een paginaverversing doet slechts één passieve herstelcontrole en verwijst niet automatisch door. De betaal-URL blijft alleen in geheugen; zij komt niet in `sessionStorage`.
 
 ### POST /api/consumer-booking/recover
 
