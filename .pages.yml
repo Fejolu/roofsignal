@@ -2865,7 +2865,11 @@ content:
         type: text
       - name: item_03
         label: Tekst · RGB-dronebeelden meten geen vocht in materialen en geven geen vol…
-        type: text
+        type: rich-text
+        options:
+          format: html
+          switcher: false
+          media: false
     - name: section_05
       label: 5. Van opname naar bruikbare rapportage.
       type: object
@@ -3617,7 +3621,11 @@ content:
         required: true
       - name: item_18
         label: Tekst · Zelfstandige of gecombineerde thermische inspectie
-        type: text
+        type: rich-text
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: item_19
         label: Tekst · Thermische drone-opnamen van de afgesproken delen van de gebouwsc…
         type: text
@@ -5117,6 +5125,318 @@ content:
           type: string
           required: true
           description: Een pad zoals /contact of een volledig https://-adres.
+  - name: thermografische-inspectie
+    label: Thermografische inspectie
+    type: file
+    path: content/pages/thermografische-inspectie.json
+    format: json
+    fields:
+    - name: seo
+      label: Zoekresultaten en delen
+      type: object
+      fields:
+      - name: title
+        label: Paginatitel
+        type: string
+        required: true
+      - name: description
+        label: Korte omschrijving
+        type: text
+        required: true
+    - name: section_01
+      label: Onderdeel 01
+      type: object
+      fields:
+      - name: item_01
+        label: Tekst · Warmtebeelden voor woning en VvE
+        type: text
+      - name: item_02
+        label: Kop · Thermografische inspectie van dak en gevel.
+        type: string
+        required: true
+      - name: item_03
+        label: 'Tekst · Waar wijkt het warmtepatroon van uw dak of gevel af? Met thermografie leggen we '
+        type: text
+      - name: item_04
+        label: Knop / link · Boek uw thermische inspectie
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_05
+        label: Knop / link · Meld uw VvE-object aan
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+    - name: section_02
+      label: Onderdeel 02
+      type: object
+      fields:
+      - name: item_01
+        label: Kop · Wat laat een thermische inspectie zien?
+        type: string
+        required: true
+      - name: item_02
+        label: Tekst · Een warmtebeeld toont temperatuurverschillen aan het oppervlak. Die kunnen aanwi
+        type: text
+      - name: item_03
+        label: Kop · Dak en gevel
+        type: string
+        required: true
+      - name: item_04
+        label: Tekst · We bekijken de afgesproken dakvlakken, gevels en aansluitingen met een thermisch
+        type: text
+      - name: item_05
+        label: Kop · Afwijkende warmtepatronen
+        type: string
+        required: true
+      - name: item_06
+        label: Tekst · Opvallende plekken worden herkenbaar vastgelegd, met een beschrijving van de waa
+        type: text
+      - name: item_07
+        label: Kop · Gerichte vervolgstappen
+        type: string
+        required: true
+      - name: item_08
+        label: 'Tekst · U krijgt advies over welke punten controle of vervolgonderzoek vragen voordat u '
+        type: text
+    - name: section_03
+      label: Onderdeel 03
+      type: object
+      fields:
+      - name: item_01
+        label: Kop · Wat ontvangt u?
+        type: string
+        required: true
+      - name: item_02
+        label: Tekst · Een digitaal rapport met warmtebeelden, de locatie van de waarnemingen, onze beo
+        type: text
+      - name: item_03
+        label: Tekst · Bij een particuliere woning ontvangt u het rapport binnen twee werkdagen na de i
+        type: text
+    - name: section_04
+      label: Onderdeel 04
+      type: object
+      fields:
+      - name: item_01
+        label: Kop · Thermografie voor uw woning.
+        type: string
+        required: true
+      - name: item_02
+        label: Tekst · Kies een zelfstandige thermografische inspectie of voeg een visuele dak- en geve
+        type: text
+      - name: item_03
+        label: Kop · Thermografische inspectie
+        type: string
+        required: true
+      - name: item_04
+        label: Tekst · Zelfstandige thermische opname van dak en gevel, inclusief digitaal rapport.
+        type: text
+      - name: item_05
+        label: Kop · Combinatie
+        type: string
+        required: true
+      - name: item_06
+        label: Tekst · Thermografie én een visuele dak- en gevelinspectie, inclusief digitaal rapport.
+        type: text
+      - name: item_07
+        label: Kop · Datum kiezen en afrekenen
+        type: string
+        required: true
+      - name: item_08
+        label: 'Tekst · Na de adrescheck ziet u de reiskosten en kiest u een beschikbaar moment. U kent '
+        type: text
+      - name: item_09
+        label: Knop / link · Boek uw inspectie
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_10
+        label: Knop / link · Bekijk de kosten van een dakinspectie
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+    - name: section_05
+      label: Onderdeel 05
+      type: object
+      fields:
+      - name: item_01
+        label: Kop · Thermografische inspectie voor uw VvE.
+        type: string
+        required: true
+      - name: item_02
+        label: Tekst · Voor een VvE geldt een staffel op basis van het aantal adressen binnen één objec
+        type: text
+      - name: item_03
+        label: Kop · Maximaal 5 adressen
+        type: string
+        required: true
+      - name: item_04
+        label: Tekst · Zelfstandige thermografische inspectie, exclusief reiskosten.
+        type: text
+      - name: item_05
+        label: Kop · 6–10 adressen
+        type: string
+        required: true
+      - name: item_06
+        label: Tekst · Zelfstandige thermografische inspectie, exclusief reiskosten.
+        type: text
+      - name: item_07
+        label: Kop · 11–20 adressen
+        type: string
+        required: true
+      - name: item_08
+        label: Tekst · Zelfstandige thermografische inspectie, exclusief reiskosten.
+        type: text
+      - name: item_09
+        label: Tekst · Vanaf 21 adressen of bij meerdere gebouwen maken we een voorstel op maat. Wilt u
+        type: text
+      - name: item_10
+        label: Knop / link · Meld uw VvE-object aan
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_11
+        label: Knop / link · Bekijk dakinspectie voor VvE’s
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+    - name: section_06
+      label: Onderdeel 06
+      type: object
+      fields:
+      - name: item_01
+        label: Kop · Een bruikbare opname vraagt geschikte omstandigheden.
+        type: string
+        required: true
+      - name: item_02
+        label: Tekst · Thermografie is afhankelijk van onder meer temperatuurverschil, zoninstraling, w
+        type: text
+      - name: item_03
+        label: Tekst · Bij ongeschikt vlieg- of meetweer verplaatsen we de afspraak kosteloos. Een geco
+        type: text
+    - name: section_07
+      label: Onderdeel 07
+      type: object
+      fields:
+      - name: item_01
+        label: Kop · Veelgestelde vragen over thermografie.
+        type: string
+        required: true
+      - name: item_02
+        label: Kop · Kan ik alleen thermografie boeken?
+        type: string
+        required: true
+      - name: item_03
+        label: Tekst · Ja. Zowel particulieren als VvE’s kunnen een zelfstandige thermische inspectie k
+        type: text
+      - name: item_04
+        label: Kop · Bewijst een warmtebeeld een gebrek?
+        type: string
+        required: true
+      - name: item_05
+        label: Tekst · Een afwijkend warmtepatroon is een aanwijzing. Het bewijst op zichzelf geen voch
+        type: text
+      - name: item_06
+        label: Kop · Krijg ik een energielabel?
+        type: string
+        required: true
+      - name: item_07
+        label: Tekst · Deze inspectie levert warmtebeelden en een beoordeling van de opname. Het is gee
+        type: text
+      - name: item_08
+        label: Tekst · Zoekt u inzicht in zichtbare dakgebreken en onderhoud? Bekijk onze drone-dakinsp
+        type: rich-text
+        options:
+          format: html
+          switcher: false
+          media: false
+    - name: section_08
+      label: Onderdeel 08
+      type: object
+      fields:
+      - name: item_01
+        label: Tekst · Vanuit Apeldoorn
+        type: text
+      - name: item_02
+        label: Kop · Kies uw thermische inspectie.
+        type: string
+        required: true
+      - name: item_03
+        label: 'Tekst · RoofSignal werkt vanuit Apeldoorn. Boek een inspectie voor uw woning of meld uw '
+        type: text
+      - name: item_04
+        label: Knop / link · Boek uw inspectie
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_05
+        label: Knop / link · Meld uw VvE-object aan
+        type: object
+        fields:
+        - name: label
+          label: Tekst
+          type: string
+          required: true
+        - name: href
+          label: Bestemming
+          type: string
+          required: true
+      - name: item_06
+        label: Tekst · Meer weten over onze lokale aanpak? Bekijk onafhankelijke dakinspectie in Apeldo
+        type: rich-text
+        options:
+          format: html
+          switcher: false
+          media: false
 - name: existing-articles
   label: Bestaande kennisartikelen
   type: group

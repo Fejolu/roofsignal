@@ -1,64 +1,64 @@
 {
   "seo": {
-    "title": "Kosten gebouwschilinspectie: vanafprijzen en offerte | RoofSignal",
-    "description": "Vanafprijzen voor RoofSignal Inspectie van dak en gevel. Uw object en onderzoeksvraag bepalen de definitieve offerte; reiskosten worden apart vermeld."
+    "title": "Dakinspectie kosten: woning, thermografie en VvE | RoofSignal",
+    "description": "Wat kost een dakinspectie? Bekijk prijzen voor dak- en gevelinspectie, zelfstandige thermografie en VvE’s. Boek uw woninginspectie online of meld uw VvE aan."
   },
   "section_01": {
-    "item_01": "Kennisbank · inspectiekosten",
-    "item_02": "Wat kost een gebouwschilinspectie?",
-    "item_03": "De prijs hangt af van het gebouw en wat u onderzocht en gerapporteerd wilt hebben. U ontvangt hiervoor een offerte op maat. Reiskosten komen daar apart bij."
+    "item_01": "Kennisbank · dakinspectie kosten",
+    "item_02": "Wat kost een dakinspectie?",
+    "item_03": "Bekijk de tarieven voor dak- en gevelinspectie, zelfstandige thermografie en een combinatie. Voor uw woning kunt u direct boeken; voor een VvE ziet u de staffelprijs en meldt u het object vrijblijvend aan."
   },
   "section_02": {
-    "item_01": "Vanafprijzen voor dak én gevel.",
-    "item_02": "Particulieren",
-    "item_03": "RoofSignal Inspectie van dak én gevel, inclusief een onderbouwd inspectierapport.",
-    "item_04": "VvE’s en VvE-beheerders",
-    "item_05": "Dezelfde inspectiestandaard, afgestemd op de omvang en bereikbaarheid van uw gebouw.",
-    "item_06": "Grotere objecten en overheden",
+    "item_01": "Prijzen voor woningen en VvE’s.",
+    "item_02": "Woninginspectie",
+    "item_03": "Kies een dak- en gevelinspectie, een thermografische inspectie of beide. Inclusief digitale rapportage, binnen 2 werkdagen na de inspectie.",
+    "item_04": "VvE-inspectie",
+    "item_05": "De prijs geldt per object en hangt af van het aantal adressen. U kunt dak- en gevelinspectie en thermografie afzonderlijk of samen aanvragen.",
+    "item_06": "Andere of grotere objecten",
     "item_07": "<strong>Offerte op maat</strong>",
-    "item_08": "Voor grotere complexen, meerdere gebouwen of een bijzondere onderzoeksvraag bepalen we de inzet vooraf.",
-    "item_09": "De vanafprijzen gelden voor één object binnen de beschreven omvang met reguliere bereikbaarheid. De uiteindelijke prijs hangt af van de omvang, bouwvorm, bereikbaarheid en uw onderzoeksvraag. Thermische inspectie met een drone is een optionele uitbreiding met een afzonderlijke prijs.",
-    "item_10": "<strong>Reiskosten worden apart vermeld.</strong> U ontvangt vóór de opdracht een offerte met de afgesproken werkzaamheden en het totaalbedrag.",
+    "item_08": "Voor meer dan 20 adressen, meerdere gebouwen, bedrijfspanden of een bijzondere onderzoeksvraag stemmen we de werkzaamheden en prijs vooraf af.",
+    "item_09": "De woningtarieven gelden voor één grondgebonden woning. Bij een VvE tellen de adressen binnen het inspectieobject mee voor de staffel. We bevestigen de werkzaamheden en planning voordat de VvE-opdracht start.",
+    "item_10": "<strong>Uw totaalprijs staat vooraf vast.</strong> Reiskosten worden op basis van het adres berekend. Bij online boeken ziet u deze vóór betaling; bij een VvE-aanmelding staan ze in uw voorstel.",
     "item_11": {
-      "label": "Bekijk RoofSignal Inspectie",
-      "href": "/tarieven#vanafprijzen"
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
     }
   },
   "section_03": {
-    "item_01": "Waarom verschilt de prijs per gebouw?",
-    "item_02": "Omvang en dakvorm",
-    "item_03": "Meer dakvlakken, aansluitingen, bijgebouwen of gevels vragen meer opname en beoordeling. Het aantal woningen alleen zegt niet genoeg.",
-    "item_04": "Toegang en locatie",
-    "item_05": "Veilige vliegruimte voor de drone, obstakels en eventuele reisafstand beïnvloeden de inzet. Deze kosten worden vooraf benoemd.",
-    "item_06": "Onderzoeksvraag en uitbreiding",
-    "item_07": "De rapportstandaard blijft gelijk. Een thermische uitbreiding, aanvullende onderzoeksvraag of extra bezoek kan meer inzet vragen; dat spreken we vooraf af."
+    "item_01": "Wat bepaalt de kosten van een dakinspectie?",
+    "item_02": "Uw object",
+    "item_03": "Een woning en een appartementencomplex vragen een andere inzet. Voor VvE’s gebruiken we een staffel op basis van het aantal adressen; voor grotere of afwijkende objecten maken we een voorstel.",
+    "item_04": "Uw inspectie",
+    "item_05": "De dak- en gevelinspectie beoordeelt zichtbare gebreken en onderhoudspunten. Thermografie brengt temperatuurverschillen in beeld. Kies de methode die past bij uw vraag, of combineer beide.",
+    "item_06": "Locatie en bereikbaarheid",
+    "item_07": "Veilige vliegruimte, obstakels en eventuele aanvullende bezoeken bepalen wat op locatie mogelijk is. Reisafstand en extra werkzaamheden nemen we vooraf mee in uw totaalprijs."
   },
   "section_04": {
-    "item_01": "Wat hoort er in uw offerte?",
-    "item_02": "Een vergelijkbaar voorstel noemt het inspectieobject, de bouwdelen, de methode, de rapportonderdelen, de planning en de totale inspectieprijs. RoofSignal inspecteert uitsluitend met drones en vermeldt de inspectie en rapportage, bijkomende reiskosten en btw afzonderlijk in de offerte. We leggen de afspraken en het totaal vast vóór uitvoering.",
-    "item_03": "<a href=\"/tarieven\">Bekijk RoofSignal Inspectie en de thermische uitbreiding</a>. Heeft u al eerdere rapporten of een concrete herstelvraag? Stuur die context mee bij uw aanvraag."
+    "item_01": "Online boeken of eerst een voorstel?",
+    "item_02": "Voor uw woning kiest u de inspectie, controleert u het adres en kiest u een beschikbaar moment. U rekent daarna het getoonde totaalbedrag af. Voor een VvE meldt u het object vrijblijvend aan met de staffelprijs in beeld; u ontvangt vervolgens een voorstel met werkzaamheden, planning en totaalprijs.",
+    "item_03": "Wilt u eerst weten welke inspectie past? Lees over <a href=\"/thermografische-inspectie\">thermografische inspectie van dak en gevel</a> of bekijk <a href=\"/dakinspectie-apeldoorn\">onafhankelijke dakinspectie in Apeldoorn</a>."
   },
   "section_05": {
-    "item_01": "Inspectieprijs en herstelraming zijn verschillende bedragen.",
-    "item_02": "De inspectieprijs betaalt u voor opname, beoordeling en rapportage. Een herstelraming in het rapport is een inschatting van toekomstige onderhoudskosten. De onderhoudsreservering in een inspectierapport is bedoeld om herstel te plannen; uw inspectie krijgt een eigen offerte.",
-    "item_03": "Definitieve herstelkosten worden pas duidelijk na controle van de situatie, de gekozen oplossing en een offerte van een uitvoerder. Indicatieve bedragen hebben een prijspeil en beperkingen die u in het rapport terugvindt."
+    "item_01": "Inspectiekosten zijn geen herstelkosten.",
+    "item_02": "U betaalt de inspectieprijs voor opname, beoordeling en rapportage. Een eventuele herstelraming in het rapport is een inschatting van toekomstige onderhoudskosten. Dat bedrag maakt geen deel uit van de inspectieprijs.",
+    "item_03": "Definitieve herstelkosten hangen af van de situatie, de gekozen oplossing en een offerte van een uitvoerder. RoofSignal voert geen herstelwerk uit: het rapport helpt u bepalen welk vervolg nodig is."
   },
   "section_06": {
     "item_01": "Wat ontvangt u voor de inspectieprijs?",
-    "item_02": "Bekijk zelf de <a href=\"/voorbeeldrapport-uitgebreid\">geanonimiseerde inspectierapporten uit Zutphen en Deventer</a>. Beide zijn direct als PDF te downloaden, zonder formulier. Nieuwe inspecties volgen dezelfde vaste rapportopbouw; de objectscope spreken we vooraf met u af.",
-    "item_03": "Voor een VvE: <a href=\"/dakinspectie-vve\">dakinspectie voor uw VvE</a>. Voor de opnamemethode: <a href=\"/drone-dakinspectie\">wat een drone-dakinspectie wel en niet laat zien</a>."
+    "item_02": "Een dak- en gevelinspectie levert foto’s, bevindingen en onderhoudsprioriteiten op in een digitaal rapport. Bekijk de <a href=\"/voorbeeldrapport-uitgebreid\">inspectierapporten uit Zutphen en Deventer</a> als voorbeeld; beide zijn direct als PDF te downloaden.",
+    "item_03": "Lees wat een <a href=\"/drone-dakinspectie\">dakinspectie met een drone wel en niet laat zien</a>. Voor bestuur en beheerder beschrijven we apart de <a href=\"/dakinspectie-vve\">dakinspectie voor VvE’s en onderhoudsplanning</a>."
   },
   "section_07": {
     "item_01": "Uw volgende stap",
-    "item_02": "Begin met één gebouw.",
-    "item_03": "Vertel om welk gebouw het gaat en welke onderhoudsvraag speelt. We leggen de scope, rapportage, planning en totale inspectieprijs vooraf vast.",
+    "item_02": "Kies de inspectie die bij uw object past.",
+    "item_03": "Boek uw woninginspectie direct online of meld uw VvE-object vrijblijvend aan. U ziet de prijs voordat u de opdracht bevestigt.",
     "item_04": {
-      "label": "Vraag een inspectie aan",
-      "href": "/contact"
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
     },
     "item_05": {
-      "label": "Bekijk de inspectierapporten",
-      "href": "/voorbeeldrapport-uitgebreid"
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
     }
   }
 }

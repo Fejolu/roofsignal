@@ -1,0 +1,100 @@
+{
+  "seo": {
+    "title": "Thermografische inspectie woning en VvE | RoofSignal",
+    "description": "Thermografische inspectie van dak en gevel met drones. Boek thermografie voor uw woning of meld uw VvE aan. Warmtebeelden, bevindingen en een digitaal rapport."
+  },
+  "section_01": {
+    "item_01": "Warmtebeelden voor woning en VvE",
+    "item_02": "Thermografische inspectie van dak en gevel.",
+    "item_03": "Waar wijkt het warmtepatroon van uw dak of gevel af? Met thermografie leggen we temperatuurverschillen vast en maken we duidelijk welke plekken nader onderzoek verdienen. U kunt de thermische inspectie los boeken of combineren met een dak- en gevelinspectie.",
+    "item_04": {
+      "label": "Boek uw thermische inspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_05": {
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
+    }
+  },
+  "section_02": {
+    "item_01": "Wat laat een thermische inspectie zien?",
+    "item_02": "Een warmtebeeld toont temperatuurverschillen aan het oppervlak. Die kunnen aanwijzingen geven voor warmteverlies, onderbrekingen in de isolatie of afwijkingen bij aansluitingen. RoofSignal beoordeelt het warmtepatroon in de context van het gebouw en de omstandigheden tijdens de opname.",
+    "item_03": "Dak en gevel",
+    "item_04": "We bekijken de afgesproken dakvlakken, gevels en aansluitingen met een thermische camera op de drone.",
+    "item_05": "Afwijkende warmtepatronen",
+    "item_06": "Opvallende plekken worden herkenbaar vastgelegd, met een beschrijving van de waarneming en de betekenis daarvan.",
+    "item_07": "Gerichte vervolgstappen",
+    "item_08": "U krijgt advies over welke punten controle of vervolgonderzoek vragen voordat u besluit over herstel of isolatie."
+  },
+  "section_03": {
+    "item_01": "Wat ontvangt u?",
+    "item_02": "Een digitaal rapport met warmtebeelden, de locatie van de waarnemingen, onze beoordeling en aanbevolen vervolgstappen. De omstandigheden en eventuele beperkingen van de opname worden erbij vermeld.",
+    "item_03": "Bij een particuliere woning ontvangt u het rapport binnen twee werkdagen na de inspectie. Voor een VvE leggen we de werkzaamheden en opleverdatum vooraf vast."
+  },
+  "section_04": {
+    "item_01": "Thermografie voor uw woning.",
+    "item_02": "Kies een zelfstandige thermografische inspectie of voeg een visuele dak- en gevelinspectie toe. De onderstaande prijzen gelden voor één grondgebonden woning.",
+    "item_03": "Thermografische inspectie",
+    "item_04": "Zelfstandige thermische opname van dak en gevel, inclusief digitaal rapport.",
+    "item_05": "Combinatie",
+    "item_06": "Thermografie én een visuele dak- en gevelinspectie, inclusief digitaal rapport.",
+    "item_07": "Datum kiezen en afrekenen",
+    "item_08": "Na de adrescheck ziet u de reiskosten en kiest u een beschikbaar moment. U kent de volledige prijs voordat u betaalt.",
+    "item_09": {
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_10": {
+      "label": "Bekijk de kosten van een dakinspectie",
+      "href": "/kennisbank-dakinspectie-kosten"
+    }
+  },
+  "section_05": {
+    "item_01": "Thermografische inspectie voor uw VvE.",
+    "item_02": "Voor een VvE geldt een staffel op basis van het aantal adressen binnen één object. Meld uw gebouw aan met de prijs in beeld; we stemmen de opname en planning daarna met u af.",
+    "item_03": "Maximaal 5 adressen",
+    "item_04": "Zelfstandige thermografische inspectie, exclusief reiskosten.",
+    "item_05": "6–10 adressen",
+    "item_06": "Zelfstandige thermografische inspectie, exclusief reiskosten.",
+    "item_07": "11–20 adressen",
+    "item_08": "Zelfstandige thermografische inspectie, exclusief reiskosten.",
+    "item_09": "Vanaf 21 adressen of bij meerdere gebouwen maken we een voorstel op maat. Wilt u ook een visuele dak- en gevelinspectie? In de VvE-aanmelding ziet u de bijbehorende combinatieprijs.",
+    "item_10": {
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
+    },
+    "item_11": {
+      "label": "Bekijk dakinspectie voor VvE’s",
+      "href": "/dakinspectie-vve"
+    }
+  },
+  "section_06": {
+    "item_01": "Een bruikbare opname vraagt geschikte omstandigheden.",
+    "item_02": "Thermografie is afhankelijk van onder meer temperatuurverschil, zoninstraling, wind en vocht. Voor onderzoek naar warmteverlies is een voldoende verschil tussen binnen- en buitentemperatuur nodig. We beoordelen vooraf of de omstandigheden passen bij uw onderzoeksvraag.",
+    "item_03": "Bij ongeschikt vlieg- of meetweer verplaatsen we de afspraak kosteloos. Een gecombineerd bezoek is mogelijk wanneer beide inspecties onder geschikte omstandigheden kunnen plaatsvinden."
+  },
+  "section_07": {
+    "item_01": "Veelgestelde vragen over thermografie.",
+    "item_02": "Kan ik alleen thermografie boeken?",
+    "item_03": "Ja. Zowel particulieren als VvE’s kunnen een zelfstandige thermische inspectie kiezen. Een visuele dak- en gevelinspectie is een optionele aanvulling.",
+    "item_04": "Bewijst een warmtebeeld een gebrek?",
+    "item_05": "Een afwijkend warmtepatroon is een aanwijzing. Het bewijst op zichzelf geen vochtprobleem, constructief gebrek of exacte oorzaak. Waar nodig adviseren we vervolgonderzoek.",
+    "item_06": "Krijg ik een energielabel?",
+    "item_07": "Deze inspectie levert warmtebeelden en een beoordeling van de opname. Het is geen energielabelonderzoek en geeft geen garantie over energiebesparing.",
+    "item_08": "Zoekt u inzicht in zichtbare dakgebreken en onderhoud? Bekijk onze <a href=\"/drone-dakinspectie\">drone-dakinspectie</a>. Voor VvE-besturen kan een visuele inspectie ook <a href=\"/mjop-input-vve\">input voor het MJOP</a> leveren."
+  },
+  "section_08": {
+    "item_01": "Vanuit Apeldoorn",
+    "item_02": "Kies uw thermische inspectie.",
+    "item_03": "RoofSignal werkt vanuit Apeldoorn. Boek een inspectie voor uw woning of meld uw VvE-object aan; u ziet vooraf welke prijs en aanpak bij uw gebouw passen.",
+    "item_04": {
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_05": {
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
+    },
+    "item_06": "Meer weten over onze lokale aanpak? Bekijk <a href=\"/dakinspectie-apeldoorn\">onafhankelijke dakinspectie in Apeldoorn</a>."
+  }
+}
