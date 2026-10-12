@@ -12,17 +12,17 @@
     <link rel="icon" href="/assets/roofsignal-bimi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/public.css?v=20260924-navigation">
     <link rel="stylesheet" href="/assets/site-public.css?v=20261011-layout-review">
-    <link rel="stylesheet" href="./booking.css?v=20261011-shared-layout">
+    <link rel="stylesheet" href="./booking.css?v=20261012-zonder-toelichting">
     <script src="./booking-config.js" defer></script>
     <script src="/assets/supabase-config.js" defer></script>
     <script src="/assets/supabase-app.js?v=23" defer></script>
     <script src="/assets/form-security.js?v=20261011-shared-layout" defer></script>
     <script src="/assets/lead-capture.js?v=20261011-vve-kvk" defer></script>
-    <script src="./vve-inquiry.js?v=20261012-contextuele-aanvulling" defer></script>
+    <script src="./vve-inquiry.js?v=20261012-zonder-toelichting" defer></script>
     <script src="./vve-kvk.js?v=20261011-kvk" defer></script>
     <script src="/assets/analytics-config.js?v=20261011" defer></script>
     <script src="/assets/analytics.js?v=20261011" defer></script>
-    <script src="./booking.js?v=20261012-contextuele-aanvulling" type="module"></script>
+    <script src="./booking.js?v=20261012-zonder-toelichting" type="module"></script>
   </head>
   <body class="rs-public consumer-booking-page">
     <a class="rs-skip" href="#main-content">Naar de inhoud</a>
@@ -81,16 +81,6 @@
                 <span class="option-card__price">+ €302,50 <small>incl. btw</small></span>
               </label>
               </div>
-              <p class="field-help product-scope">Voor één grondgebonden woning (hoofdgebouw).</p>
-              <details class="booking-details">
-                <summary>Wat is inbegrepen?</summary>
-                <div>
-                  <p id="visual-scope" hidden>We inspecteren de zichtbare buitenzijde van dak, gevel, goten en schoorsteen met een drone. U ontvangt foto’s, bevindingen en onderhoudsadvies in een digitaal rapport. Bijgebouwen zijn uitgesloten; dit is geen volledige bouwkundige keuring.</p>
-                  <p id="thermal-scope" hidden>U ontvangt warmtebeelden van dak en gevel, met bevindingen in een digitaal rapport. Thermografie toont temperatuurverschillen die op warmteverlies of andere afwijkingen kunnen wijzen. Een warmtebeeld is geen bewijs van een lek of isolatiegebrek. De opname vraagt geschikte meetomstandigheden.</p>
-                  <p>U boekt één bezoek van maximaal 45 minuten, inclusief de voorinspectie op locatie. U ontvangt het digitale rapport binnen 2 werkdagen. <a href="/voorbeeldrapport-uitgebreid">Bekijk een voorbeeldrapport</a>.</p>
-                  <p>Appartement of ander object? <a href="/contact">Neem contact op</a>.</p>
-                </div>
-              </details>
             </fieldset>
 
             <fieldset class="form-step" data-booking-step="object">
@@ -240,22 +230,6 @@
                     <span class="option-card__price"><span id="vve-thermal-price">Vanaf €400</span><small>excl. btw</small></span>
                   </label>
                 </div>
-                <p class="field-help product-scope">Voor één VvE-object. Prijs op basis van het aantal adressen.</p>
-                <details class="booking-details">
-                  <summary>Wat is inbegrepen?</summary>
-                  <div>
-                    <p id="vve-product-title">RoofSignal Inspectie</p>
-                    <p>U ontvangt een digitaal rapport met beelden, bevindingen en onderhoudsadvies. De werkzaamheden, planning en totaalprijs leggen we vooraf vast in uw voorstel.</p>
-                    <h3 id="vve-tiers-title">Basisprijs per object</h3>
-                    <dl class="vve-tiers">
-                      <div data-vve-tier="small"><dt>Maximaal 5 adressen</dt><dd><span id="vve-tier-small-price">€750</span> <small id="vve-tier-small-vat">€907,50 incl. btw</small></dd></div>
-                      <div data-vve-tier="medium"><dt>6–10 adressen</dt><dd><span id="vve-tier-medium-price">€1.000</span> <small id="vve-tier-medium-vat">€1.210 incl. btw</small></dd></div>
-                      <div data-vve-tier="large"><dt>11–20 adressen</dt><dd><span id="vve-tier-large-price">€1.250</span> <small id="vve-tier-large-vat">€1.512,50 incl. btw</small></dd></div>
-                      <div data-vve-tier="custom"><dt>Vanaf 21 adressen of meerdere gebouwen</dt><dd>Maatwerk</dd></div>
-                    </dl>
-                    <p class="field-help" id="vve-tiers-note">Excl. btw, reiskosten en thermografie.</p>
-                  </div>
-                </details>
               </fieldset>
               <fieldset class="form-step" data-booking-step="object">
                 <legend><span class="step-number" aria-hidden="true">2</span><span>Uw object</span></legend>

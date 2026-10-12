@@ -19,18 +19,14 @@ function setup({ configured = true, security = true } = {}) {
   }));
   const get = id => elements.get(id);
   get('vve-object-scope').value = 'single';
-  const rows = ['small', 'medium', 'large', 'custom'].map(key => ({
-    dataset: { vveTier: key }, selected: false,
-    classList: { toggle(name, selected) { rows.find(row => row.dataset.vveTier === key).selected = selected; } }
-  }));
   const window = { location: { search: '', hash: '#vve' }, addEventListener() {},
     RoofSignalBackend: { isConfigured: configured }, RoofSignalFormSecurity: security ? {} : null };
   vm.runInNewContext(script, {
-    document: { getElementById: get, querySelectorAll: selector => selector === '[data-vve-tier]' ? rows : [] },
+    document: { getElementById: get, querySelectorAll: () => [] },
     window, URLSearchParams, Intl, queueMicrotask: callback => callback()
   });
   return {
-    get, rows,
+    get,
     count(value) { get('vve-address-count').value = value; get('vve-address-count').listeners.input(); },
     scope(value) { get('vve-object-scope').value = value; get('vve-object-scope').listeners.change(); },
     addon(value) { get('vve-thermal').checked = value; get('vve-thermal').listeners.change(); },
@@ -84,7 +80,6 @@ test('VvE starts without an inferred inspection or addon, including with populat
   assert.equal(ui.get('vve-thermal-interest').value, 'no');
   assert.equal(normalized(ui.get('vve-envelope-price').textContent), '€1.000,00');
   assert.equal(normalized(ui.get('vve-standalone-price').textContent), '€550,00');
-  assert(ui.rows.every(row => !row.selected));
   const event = ui.submit();
   assert.equal(event.prevented, true);
   assert.equal(event.stopped, true, 'The shared lead handler must not send an inferred product');
@@ -228,7 +223,6 @@ test('Native form reset clears primary, addon, canonical scope and quoted totals
   assert.equal(ui.get('vve-scope').value, '');
   assert.equal(ui.get('vve-price-detail').value, '');
   assert.equal(ui.get('vve-estimate').textContent, 'Kies uw inspectie');
-  assert(ui.rows.every(row => !row.selected));
   assert.equal(ui.submit().prevented, true);
 });
 

@@ -58,8 +58,6 @@ function updateSummary() {
   el('thermal').disabled = !selected || configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
   el('addon-title').textContent = thermalPrimary ? 'Dak- en gevelinspectie toevoegen' : 'Thermografische inspectie toevoegen';
   el('addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : 'Warmtebeelden van dak en gevel.';
-  el('visual-scope').hidden = !selected || thermalOnly;
-  el('thermal-scope').hidden = !selected || !thermal;
   el('summary-base-row').hidden = false;
   el('summary-base-label').textContent = !selected ? 'Inspectie' : thermalPrimary ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
   el('summary-base').textContent = !selected ? 'Nog te kiezen' : money(thermalOnly ? quote?.thermalCents ?? BASE_CENTS : quote?.baseCents ?? BASE_CENTS);
