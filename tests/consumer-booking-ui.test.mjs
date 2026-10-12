@@ -343,7 +343,7 @@ test('A verified expired return allows a fresh booking with or without a local r
     });
     assert.equal(ui.get('booking-form').hidden, false);
     assert.equal(ui.get('postcode').disabled, false);
-    assert.equal(ui.get('check-address').disabled, false);
+    assert.equal(ui.get('check-address').disabled, true, 'A fresh booking starts without an inspection choice');
     assert.equal(ui.get('checkout-button').textContent, 'Betalen');
     assert.equal(ui.get('checkout-button').disabled, true, 'A fresh booking still needs an address, moment and consent');
     assert.equal(ui.get('checkout-link').hidden, true);
@@ -447,6 +447,7 @@ test('A failed return-status retry leaves another visible retry without creating
 
 test('Missing human verification does not send an address or request availability', async () => {
   const ui=await bookingPage({configuration:connectedConfiguration,securityReady:false});
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value='7316BH';ui.get('houseNumber').value='4';
   await ui.get('check-address').dispatch('click');
   assert.equal(ui.requests.length,0);
@@ -454,6 +455,7 @@ test('Missing human verification does not send an address or request availabilit
 });
 test('Explicit preview never reads recovery storage or sends customer input', async () => {
   const ui = await bookingPage({ configuration: { mode: 'preview' }, record: recoveryRecord, returnToken: statusToken });
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value = '7316 BH';
   ui.get('houseNumber').value = '4';
   ui.get('name').value = 'Private preview value';
@@ -499,6 +501,7 @@ async function submitNewOrder(checkoutResponse) {
     assert.ok(request.path.endsWith('/checkout'));
     return checkoutResponse(request.body);
   }});
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value='1234 AB'; ui.get('houseNumber').value='12';
   await ui.get('check-address').dispatch('click');
   const choice = ui.get('slots').querySelector('input');
@@ -545,6 +548,7 @@ async function calendarPage(slots, checkoutResponse = null, inline = false) {
     if(checkoutResponse && request.path.endsWith('/checkout')) return checkoutResponse(request.body);
     assert.fail('No payment should start during calendar selection');
   }});
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value='1234AB';ui.get('houseNumber').value='12';
   await ui.get('check-address').dispatch('click');
   return ui;
@@ -569,11 +573,60 @@ test('Combined address result opens the real calendar without a second network r
  assert.equal(wrong.requests.length,1,'Invalid inline data is rejected, not silently replaced');
 });
 
-const chooseProduct = async (ui, inspectionType) => {
+async function chooseProduct(ui, inspectionType) {
   ui.get('inspection-envelope').checked = inspectionType === 'building_envelope';
   ui.get('inspection-thermal').checked = inspectionType === 'thermal';
   await ui.get(inspectionType === 'thermal' ? 'inspection-thermal' : 'inspection-envelope').dispatch('change');
-};
+}
+
+test('No inspection is preselected; hidden additions cannot create a quote or payment', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration });
+  assert.equal(ui.get('inspection-envelope').checked, false);
+  assert.equal(ui.get('inspection-thermal').checked, false);
+  assert.equal(ui.get('product-addon').hidden, true);
+  assert.equal(ui.get('thermal').checked, false);
+  assert.equal(ui.get('thermal').disabled, true);
+  assert.equal(ui.get('summary-total').textContent, 'Kies uw inspectie');
+  assert.equal(ui.get('check-address').disabled, true);
+  ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  assert.equal(ui.get('thermal').checked, false);
+  await ui.get('check-address').dispatch('click');
+  await ui.get('booking-form').dispatch('submit');
+  assert.match(ui.get('address-status').textContent, /Kies eerst uw inspectie/);
+  assert.equal(ui.requests.length, 0);
+  assert.equal(ui.stored.size, 0);
+});
+
+test('The addon appears for the chosen inspection and never carries into a different primary choice', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration });
+  await chooseProduct(ui, 'building_envelope');
+  assert.equal(ui.get('product-addon').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Thermografische inspectie toevoegen');
+  assert.equal(ui.get('thermal').disabled, false);
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(66429));
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('product-addon').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Dak- en gevelinspectie toevoegen');
+  assert.equal(ui.get('thermal').checked, false);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  await chooseProduct(ui, 'building_envelope');
+  assert.equal(ui.get('thermal').checked, false);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  // Model the browser restoring the HTML defaults before dispatching reset.
+  ui.get('inspection-envelope').checked = false;
+  ui.get('inspection-thermal').checked = false;
+  await ui.get('booking-form').dispatch('reset');
+  await settle();
+  assert.equal(ui.get('product-addon').hidden, true);
+  assert.equal(ui.get('thermal').disabled, true);
+  assert.equal(ui.get('summary-total').textContent, 'Kies uw inspectie');
+});
 
 test('Standalone thermography sends its product, includes only the thermal price and clears choices when switching', async () => {
   const slot = calendarSlot('product-time', new Date(Date.now() + 30 * 86400000).toISOString());
