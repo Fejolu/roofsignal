@@ -19,6 +19,8 @@ function harness({hash='#telephony',staff=true,authenticated=true}={}) {
   const response=(body,ok=true,status=200)=>({ok,status,json:async()=>body});
   const fetch=async(url,options={})=>{
     const body=options.body?JSON.parse(options.body):{};calls.push({url,body});
+    if(url==='/api/config')return response({mode:'demo'});
+    if(url==='/api/session')return response({authenticated});
     if(url==='/api/dev-session'){staff=body.account==='staff';authenticated=true;return response({});}
     if(url==='/api/logout'){authenticated=false;return response({});}
     if(body.action==='snapshot')return authenticated?response(fixture(staff)):response({error:'Inloggen vereist'},false,401);

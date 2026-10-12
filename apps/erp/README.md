@@ -1,6 +1,6 @@
-# Eigen RoofSignal ERP — eerste werkende bouwfase
+# Eigen RoofSignal ERP — medewerker- en klantlogin
 
-Status: lokale proefomgeving, 11 oktober 2026. Eigen software; geen Odoo of ERPNext.
+Status: loginbouwfase, 12 oktober 2026. Eigen software; geen Odoo of ERPNext.
 Er zijn geen echte klanten, boekingen of financiële gegevens overgezet. Deze app en
 haar database worden niet meegenomen in de openbare websitebouw.
 
@@ -25,6 +25,69 @@ npm test
 De ontwikkelserver bindt uitsluitend aan `127.0.0.1`, controleert Host en Origin,
 gebruikt HttpOnly/SameSite-sessies en weigert `NODE_ENV=production`. De accountkiezer
 is nadrukkelijk geen productielogin. Geen echte dossiers in deze proefomgeving invoeren.
+
+## Echte login in een afzonderlijke testomgeving
+
+De nieuwe hosted adapter gebruikt Supabase Auth voor medewerker- en klantaccounts.
+Hetzelfde inlogscherm opent de backoffice of het klantportaal op basis van expliciete
+serverrechten. De proefaccountkiezer bestaat alleen in de lokale demo.
+
+- Een bevestigd account krijgt geen medewerkerrechten of dossier door zijn e-mailadres.
+- Een beheerder kent bestaande accounts toegang tot een organisatie of één object toe.
+  Financiële rechten blijven afzonderlijk; intrekken werkt bij het volgende verzoek.
+- Wachtwoordherstel en uitnodigingen geven uitsluitend een korte herstelsessie.
+  Na het instellen van een wachtwoord moet de gebruiker opnieuw inloggen.
+- De browser krijgt versleutelde HttpOnly-sessiecookies, geen leesbare toegangstokens.
+  Een duurzaam sessieregister controleert verloop en intrekking, ook na serverherstart.
+- De server verifieert de actuele Auth-gebruiker en voert bedrijfsacties uit met diens
+  eigen token. De geheime serversleutel is beperkt tot profiel/sessie/document-RPC's
+  en de private PDF-opslag; zij bepaalt nooit een browserrol.
+- Iedere PDF-download controleert de huidige dossierrechten en rapportvrijgave.
+  Er worden geen downloadlinks uitgegeven die na intrekking nog geldig blijven.
+
+De bestaande website-Supabaseomgeving is hard geblokkeerd in deze adapter.
+De echte cloudproef moet slagen voordat de app online of met echte klanten wordt gebruikt.
+Er worden geen uitnodigingen aan bestaande klanten gestuurd bij het starten of bouwen.
+
+### Testinrichting en controle
+
+Maak pas na goedkeuring het afzonderlijke **RoofSignal ERP test**-project aan.
+Bewaar de volgende configuratie buiten Git, bijvoorbeeld `.local/auth-test.json`,
+met bestandstoegang alleen voor de eigenaar:
+
+```json
+{
+  "url": "https://<testproject>.supabase.co",
+  "testProjectRef": "<testproject>",
+  "publishableKey": "<publieke API-sleutel>",
+  "storageKey": "<geheime serversleutel>",
+  "sessionSecret": "<64 willekeurige hextekens>",
+  "origin": "http://127.0.0.1:8789"
+}
+```
+
+Gebruik de apart beoordeelde testinrichting, niet de migraties of publicatieactie
+van de openbare website. `scripts/cloud-smoke.mjs` controleert projectidentiteit,
+past de ERP-SQL uitsluitend daar toe en maakt met `--provision-fixtures` fictieve,
+bevestigde accounts aan. Er worden geen e-mails verzonden. De proef verifieert echte
+Auth-tokens, klant A/B, rapportvrijgave, private opslag en ingetrokken sessies/rechten:
+
+```sh
+node scripts/configure-auth.mjs .local/auth-test.json --configure-isolated-test
+npm run test:cloud -- .local/auth-test.json --provision-fixtures
+ROOFSIGNAL_ERP_TEST_CONFIG=.local/auth-test.json npm run dev:auth
+```
+
+Voor herstelmails moeten de exacte callback-URL en de twee templates in
+`supabase/templates/` in de geïsoleerde Auth-inrichting zijn ingesteld. Openbare
+registratie en anonieme accounts blijven uit. Verander bij online hosting de vaste
+origin naar de HTTPS-testlocatie; gebruik geen brede wildcard-redirects.
+
+`functions/[[path]].js` en `wrangler.toml` bereiden een afzonderlijk Cloudflare Pages
+testproject voor. Bewaar `ERP_STORAGE_KEY` en `ERP_SESSION_SECRET` als geheimen.
+Gebruik nooit het openbare RoofSignal Pages-project. De hostingconfiguratie verleent
+zelf geen toegang en publiceert niets automatisch. Beperk toegangspogingen ook op
+het hostingplatform; de adapter bevat daarnaast begrensde lokale controles.
 
 ## Wat werkt
 
@@ -68,10 +131,13 @@ ontvangt geen echte telefoongesprekken. De functionele afspraken staan in
 
 `public/` bevat de Nederlandstalige interface. `db/001_foundation.sql` bevat het
 Postgres-gegevensmodel en de afgeschermde `public.roofsignal_erp`-RPC.
-`db/002_telephony.sql` voegt medewerkers-only nummerherkenning toe, zonder directe
+`db/002_telephony.sql` voegt nummerherkenning voor medewerkers toe, zonder directe
 tabeltoegang. De oorspronkelijke opdrachten blijven achter een private functie
 beschikbaar. Deze lokale uitbreiding wordt ook bij bestaande proefdatabases
-toegepast bij herstart, met behoud van dossiers.
+toegepast bij herstart, met behoud van dossiers. `db/003_auth_and_documents.sql`
+voegt accountcontrole, toegangbeheer en het sessieregister toe. In de cloud gebruikt
+`db/004_private_storage.sql` een private PDF-bucket met extra blokkerende regels
+voor rechtstreekse toegang door browsers.
 `src/dev-server.mjs` is uitsluitend de lokale adapter. Dezelfde RPC wordt lokaal
 onder de ongeprivilegieerde `authenticated`-rol uitgevoerd. Voor de databaseproeven
 gebruiken we [PGlite](https://pglite.dev/docs/about), een lokale Postgres-runtime.
@@ -90,7 +156,8 @@ Modelmarkeringen mogen alleen naar een waarneming uit dezelfde inspectieronde ve
 
 PDF's worden lokaal buiten de webroot opgeslagen, gecontroleerd op grootte/type,
 alleen na dossierautorisatie geleverd en als download geserveerd. De browsercache
-is uitgeschakeld. De productieopslag en tijdelijke downloadlinks zijn nog niet ingericht.
+is uitgeschakeld. De hosted adapter gebruikt private opslag met serverdownloads;
+productie-inrichting en back-up/herstel zijn nog niet geactiveerd.
 
 ## Getest
 
@@ -103,6 +170,8 @@ De automatische tests voeren de echte SQL/RPC en HTTP-routes uit:
 - Publicatievoorwaarden, onveranderlijke historie en hetzelfde aandachtspunt over meerdere inspecties.
 - Klantverzoeken, herstelmelding versus beoordeling en profielwijziging zonder rolverhoging.
 - Afgeschermde PDF-upload/download, sessie, CSRF en opslag na herstart.
+- Versleutelde cookies, vervalsing/duplicatie, aflopen, herstelrechten, rollen en
+  ingetrokken sessies; de echte cloudproef staat los van deze lokale tests.
 - Verkeerde koppelingen tussen 3D-modelversie en waarneming geweigerd.
 - Volledige nummerherkenning, gedeelde nummers, afgeschermde nummers en onbekende bellers;
   toegang beperkt tot actieve medewerkers, geen automatische klantaanmaak, behoud na database-update.
@@ -112,11 +181,11 @@ Postgres-sessies, de echte Supabase-authenticatie en de uiteindelijke bestandsop
 
 ## Vervolg vóór gebruik met echte klanten
 
-1. **Besloten testomgeving:** dezelfde SQL eerst in een afzonderlijke Supabase-testomgeving;
-   bestaande identiteit verifiëren, expliciet medewerkerrechten toekennen, echte inlog en
-   accountuitnodiging bouwen. De ontwikkel-accountkiezer en auth-bootstrap mogen daar niet bestaan.
+1. **Besloten testomgeving:** nieuwe Auth-adapter en dezelfde SQL eerst in een afzonderlijke
+   Supabase-testomgeving beproeven, eerste echte beheerder expliciet toekennen en
+   uitnodigingsmails controleren. De ontwikkel-accountkiezer en auth-bootstrap bestaan daar niet.
 2. **Dossiers en bestanden:** private opslag koppelen, upload/download met servercontrole,
-   tijdelijke links en geteste back-up/herstelprocedure. Gebruikersbeheer met intrekken van rechten.
+   geteste back-up/herstelprocedure en controle op achtergebleven private uploads.
 3. **Website → ERP:** productcatalogus met goedgekeurde prijsversies, consumentenboekingen en
    VvE-aanmeldingen idempotent overnemen; prijs, akkoord, betaalreferentie en reisafspraak behouden.
    Bestaande Google/Mollie-routes blijven eigenaar van planning en betalingsbevestiging tot migratie.

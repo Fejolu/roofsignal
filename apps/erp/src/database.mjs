@@ -27,14 +27,27 @@ export async function openDatabase(dataDir) {
       grant execute on function auth.uid() to authenticated;
     `);
     await db.exec(await readFile(new URL('../db/001_foundation.sql',import.meta.url),'utf8'));
-    for (const id of Object.values(USERS)) await db.query('insert into auth.users values ($1)',[id]);
+    for (const id of Object.values(USERS)) await db.query('insert into auth.users(id) values ($1)',[id]);
     await db.query("insert into erp.staff values ($1,'administrator',true)",[USERS.staff]);
     for (const [key,name] of [['staff','RoofSignal medewerker'],['customer','Contact Voorbeeldhof'],['other','Contact Demowoning'],['finance','Financieel contact']]) {
       await db.query('insert into erp.people(user_id,name) values($1,$2)',[USERS[key],name]);
     }
   }
   // Additive local updates preserve existing practice dossiers on restart.
+  // This Auth substitute is only for fictitious local identities; the hosted
+  // adapter uses real Supabase identities and never imports this bootstrap.
+  await db.exec(`
+    do $$ begin
+      if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role nologin; end if;
+    end $$;
+    alter table auth.users add column if not exists email text;
+    alter table auth.users add column if not exists email_confirmed_at timestamptz;
+  `);
+  for (const [account,id] of Object.entries(USERS)) await db.query(
+    'update auth.users set email=$1,email_confirmed_at=coalesce(email_confirmed_at,now()) where id=$2',
+    [`${account}@example.invalid`,id]);
   await db.exec(await readFile(new URL('../db/002_telephony.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../db/003_auth_and_documents.sql',import.meta.url),'utf8'));
   return db;
 }
 
@@ -48,6 +61,16 @@ export async function command(db,user,action,payload={}) {
   });
 }
 export const write = (db,user,action,payload={})=>command(db,user,action,{request_id:randomUUID(),...payload});
+
+// The development server has authenticated its local session and checked the
+// PDF bytes before invoking the same service-only boundary as the hosted adapter.
+export async function trustedDocument(db,caller,payload) {
+  return db.transaction(async tx=>{
+    await tx.exec('set local role service_role');
+    const {rows}=await tx.query('select public.roofsignal_erp_document($1::uuid,$2::jsonb) as result',[caller,JSON.stringify(payload)]);
+    return rows[0].result;
+  });
+}
 
 export async function seedDemo(db) {
   if ((await db.query('select count(*)::int as n from erp.organizations')).rows[0].n) return;

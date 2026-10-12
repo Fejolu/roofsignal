@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, unlink } from 'node:fs/promises';
 import { randomBytes, createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
-import { openDatabase, seedDemo, command, USERS } from './database.mjs';
+import { openDatabase, seedDemo, command, trustedDocument, USERS } from './database.mjs';
 
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const MIME={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml'};
@@ -42,21 +42,25 @@ export async function createDevServer({dataDir=path.join(ROOT,'.local/database')
       if(!hosts.includes(req.headers.host))throw error('Onbekende host',403);
       if(req.method==='POST'&&!hosts.some(h=>req.headers.origin===`http://${h}`))throw error('Verzoek van buiten de proefomgeving geweigerd',403);
       const url=new URL(req.url,`http://${req.headers.host}`);
+      const token=req.headers.cookie?.match(/(?:^|;\s*)roofsignal_dev=([a-f0-9]{64})(?:;|$)/)?.[1];
+      const session=sessions.get(token);
+      if(url.pathname==='/api/config'&&req.method==='GET')return reply(200,{mode:'demo',environment:'local',passwordRecovery:false});
+      if(url.pathname==='/api/session'&&req.method==='GET')return reply(200,{authenticated:Boolean(session&&session.expires>Date.now())});
+      // Logout clears a stale or already-expired cookie as well.
+      if(url.pathname==='/api/logout'&&req.method==='POST') {
+        sessions.delete(token);res.setHeader('Set-Cookie','roofsignal_dev=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return reply(200,{ok:true});
+      }
       if(url.pathname==='/api/dev-session'&&req.method==='POST') {
         const input=await json(req);const user=USERS[input.account];
         if(!user)throw error('Onbekend proefaccount');
-        const token=randomBytes(32).toString('hex');
-        sessions.set(token,{user,expires:Date.now()+8*3600000});
-        res.setHeader('Set-Cookie',`roofsignal_dev=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`);
+        sessions.delete(token);
+        const nextToken=randomBytes(32).toString('hex');
+        sessions.set(nextToken,{user,expires:Date.now()+8*3600000});
+        res.setHeader('Set-Cookie',`roofsignal_dev=${nextToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`);
         return reply(200,{ok:true});
       }
       if(url.pathname.startsWith('/api/')) {
-        const token=req.headers.cookie?.match(/(?:^|;\s*)roofsignal_dev=([a-f0-9]{64})(?:;|$)/)?.[1];
-        const session=sessions.get(token);
-        if(!session||session.expires<Date.now())throw error('Kies een proefaccount om te beginnen',401);
-        if(url.pathname==='/api/logout'&&req.method==='POST') {
-          sessions.delete(token);res.setHeader('Set-Cookie','roofsignal_dev=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return reply(200,{ok:true});
-        }
+        if(!session||session.expires<=Date.now())throw error('Kies een proefaccount om te beginnen',401);
         if(url.pathname==='/api/command'&&req.method==='POST') {
           const input=await json(req);
           if(input.action==='report.attach')throw error('Gebruik de beveiligde PDF-upload',403);
@@ -64,9 +68,9 @@ export async function createDevServer({dataDir=path.join(ROOT,'.local/database')
           if(input.action==='snapshot')result.dev_account=Object.entries(USERS).find(([,id])=>id===session.user)?.[0];
           return reply(200,result);
         }
-        const fileRoute=url.pathname.match(/^\/api\/reports\/([0-9a-f-]+)\/file$/);
+        const fileRoute=url.pathname.match(/^\/api\/reports\/([0-9a-f-]+)\/file$/i);
         if(fileRoute&&uuid.test(fileRoute[1])) {
-          const id=fileRoute[1];
+          const id=fileRoute[1].toLowerCase();
           if(req.method==='GET') {
             const file=await command(db,session.user,'report.file',{id});
             if(!file.key||!privateDir)throw error('Er is nog geen PDF toegevoegd',404);
@@ -81,12 +85,13 @@ export async function createDevServer({dataDir=path.join(ROOT,'.local/database')
             if(!privateDir)throw error('Bestandsopslag niet beschikbaar',503);
             const report=snapshot.reports.find(r=>r.id===id);
             if(!report||report.published_at)throw error('Rapport ontbreekt of is al vrijgegeven',409);
-            const requestId=req.headers['x-request-id'];
-            if(!uuid.test(requestId||''))throw error('Verzoeknummer ontbreekt');
+            const suppliedRequestId=req.headers['x-request-id'];
+            if(!uuid.test(suppliedRequestId||''))throw error('Verzoeknummer ontbreekt');
+            const requestId=suppliedRequestId.toLowerCase();
             if(req.headers['content-type']!=='application/pdf')throw error('Kies een PDF-bestand',415);
             const bytes=await body(req,10485760);
             if(bytes.subarray(0,5).toString()!=='%PDF-')throw error('Dit is geen PDF-bestand');
-            const hash=digest(`${session.user}:${requestId}`).slice(0,32);
+            const hash=digest(`${session.user.toLowerCase()}:${requestId}`).slice(0,32);
             const key=`${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20)}.pdf`;
             const dest=path.join(privateDir,key);let created=false;
             try{await writeFile(dest,bytes,{flag:'wx',mode:0o600});created=true;}catch(e){
@@ -94,7 +99,7 @@ export async function createDevServer({dataDir=path.join(ROOT,'.local/database')
               if(digest(await readFile(dest))!==digest(bytes))throw error('Verzoeknummer al gebruikt voor een ander bestand',409);
             }
             try {
-              const result=await command(db,session.user,'report.attach',{id,request_id:requestId,file_key:key,
+              const result=await trustedDocument(db,session.user,{report_id:id,request_id:requestId,
                 file_name:decodeURIComponent(req.headers['x-file-name']||'Rapport.pdf').replace(/[\r\n]/g,'').slice(0,200),
                 file_size:bytes.length,file_sha256:digest(bytes)});
               return reply(200,result);

@@ -1,0 +1,9 @@
+# Separate ERP test deployment. Never use the public RoofSignal Pages project.
+name = "roofsignal-erp-test"
+pages_build_output_dir = "./public"
+compatibility_date = "2026-10-12"
+compatibility_flags = ["nodejs_compat"]
+
+# Configure only after the isolated project passes cloud-smoke.mjs.
+# ERP_ORIGIN / ERP_SUPABASE_URL / ERP_TEST_PROJECT_REF / ERP_PUBLISHABLE_KEY
+# ERP_STORAGE_KEY and ERP_SESSION_SECRET must be encrypted deployment secrets.

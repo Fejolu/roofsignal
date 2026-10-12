@@ -1,6 +1,7 @@
 import {esc,date,label,badge,icon,empty,button,field,area,select,callPhoneFromHash,callDestination} from './view.mjs';
 const app=document.querySelector('#app'),dialog=document.querySelector('#dialog'),account=document.querySelector('#account');
 let data=null,query='',toastTimer,loadVersion=0,phoneLookupVersion=0,handledCallRoute=null,pendingCallRoute=null;
+let config=null,authView='login',authBusy=false,authVersion=0,recoverySession=false,accessData=null,accessVersion=0,accessLoading=false,accessError='';
 let callView={status:'idle',phone:'',result:null,error:''};
 function cancelPhoneLookup(){++phoneLookupVersion;if(callView.status==='loading')callView={status:'idle',phone:'',result:null,error:''};}
 const byId=(list,id)=>list.find(x=>x.id===id);
@@ -15,34 +16,94 @@ const panel=(title,body,link='')=>`<section class="panel"><div class="panelhead"
 const head=(eyebrow,title,subtitle='',actions='')=>`<header class="pagehead"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div><div class="buttons">${actions}</div></header>`;
 const row=(title,detail,right='',href='')=>`<div class="row"><div class="row-main"><strong>${href?`<a href="${esc(href)}">${esc(title)}</a>`:esc(title)}</strong><p>${esc(detail)}</p></div><div class="row-right">${right}</div></div>`;
 
+function clearWorkspace() {
+  ++authVersion;++loadVersion;++accessVersion;authBusy=false;cancelPhoneLookup();callView={status:'idle',phone:'',result:null,error:''};data=null;accessData=null;accessLoading=false;accessError='';query='';handledCallRoute=null;pendingCallRoute=null;
+  if(dialog.open)dialog.close();dialog.innerHTML='';account.value='';clearTimeout(toastTimer);
+  const t=document.querySelector('#toast');t.hidden=true;t.textContent='';
+}
+function sessionEnded() {
+  clearWorkspace();recoverySession=false;authView='login';welcome();
+}
 async function request(url,options={}) {
-  const response=await fetch(url,options);
+  const generation=authVersion;
+  const response=await fetch(url,{credentials:'same-origin',...options});
   const body=await response.json();
-  if(!response.ok)throw Object.assign(new Error(body.error||'Er ging iets mis.'),{status:response.status});
+  if(!response.ok){
+    if(generation===authVersion&&response.status===401&&(url==='/api/command'||url.startsWith('/api/reports/')))sessionEnded();
+    throw Object.assign(new Error(body.error||'Er ging iets mis.'),{status:response.status,recoveryRequired:body.recovery_required===true});
+  }
   return body;
 }
 const rpc=(action,payload={})=>request('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,payload})});
 function toast(message) {const t=document.querySelector('#toast');t.textContent=message;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,5500);}
+function authShell(content) {
+  return `<main class="welcome auth-welcome"><div class="wordmark">ROOF<span>SIGNAL</span></div>${config?.environment==='test'?'<span class="auth-environment">Testomgeving</span>':''}${content}</main>`;
+}
+function authForm(kind) {
+  const error='<p class="form-error" role="alert" hidden></p>';
+  if(kind==='forgot')return authShell(`<h1>Wachtwoord vergeten?</h1><p>Ontvang een link om een nieuw wachtwoord in te stellen.</p><form class="auth-form" data-auth="reset-request"><label>E-mailadres<input name="email" type="email" autocomplete="email" required maxlength="254"></label>${error}<button class="btn" ${authBusy?'disabled':''}>${authBusy?'Versturen…':'Verstuur herstellink'}</button></form><button class="text-button" data-action="auth.login">Terug naar inloggen</button>`);
+  if(kind==='reset'&&recoverySession)return authShell(`<h1>Nieuw wachtwoord</h1><p>Minimaal 12 tekens, met een hoofdletter, kleine letter en cijfer.</p><form class="auth-form" data-auth="password"><label>Nieuw wachtwoord<input name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="256"></label><label>Herhaal wachtwoord<input name="repeat" type="password" autocomplete="new-password" required minlength="12" maxlength="256"></label>${error}<button class="btn" ${authBusy?'disabled':''}>${authBusy?'Opslaan…':'Wachtwoord opslaan'}</button></form>`);
+  if(kind==='reset-sent')return authShell('<h1>Controleer uw e-mail</h1><p>Als er een account voor dit e-mailadres bestaat, ontvangt u een herstellink.</p><button class="btn" data-action="auth.login">Terug naar inloggen</button>');
+  return authShell(`<h1>Inloggen</h1><p>Uw RoofSignal-werkruimte en vastgoeddossier.</p><form class="auth-form" data-auth="login"><label>E-mailadres<input name="email" type="email" autocomplete="username" required maxlength="254"></label><label>Wachtwoord<input name="password" type="password" autocomplete="current-password" required maxlength="256"></label>${error}<button class="btn" ${authBusy?'disabled':''}>${authBusy?'Inloggen…':'Inloggen'}</button></form>${config?.passwordRecovery?'<button class="text-button" data-action="auth.forgot">Wachtwoord vergeten?</button>':''}`);
+}
 function welcome() {
+  if(config?.mode==='hosted'){app.innerHTML=authForm(authView);return;}
+  if(config?.mode!=='demo'){app.innerHTML=authShell('<h1>Werkruimte niet beschikbaar</h1><p>De verbinding kon niet worden geopend.</p><button class="btn" data-action="bootstrap">Opnieuw proberen</button>');return;}
   app.innerHTML=`<main class="welcome"><div class="wordmark">ROOF<span>SIGNAL</span></div><div class="eyebrow">Eigen ERP & klantportaal</div><h1>Eén dossier.<br>Iedereen het juiste overzicht.</h1><p>Verken de werkruimte met fictieve gegevens. Wat je hier opslaat, blijft in deze lokale proefomgeving bewaard.</p><div class="login-options"><button class="btn" data-account="staff"><span>Open de backoffice<small>Klanten, objecten, opdrachten en rapportvrijgave</small></span>→</button><button class="btn secondary" data-account="customer"><span>Open het klantportaal<small>Eigen object, rapport, datumvoorstel en verzoeken</small></span>→</button></div></main>`;
 }
+async function bootstrap() {
+  clearWorkspace();config=null;recoverySession=false;authView='login';account.disabled=true;
+  const bar=document.querySelector('.devbar');if(bar)bar.hidden=true;
+  const version=authVersion;app.innerHTML=authShell('<p>Werkruimte openen…</p>');
+  try {
+    const next=await request('/api/config');if(version!==authVersion)return;
+    if(!['hosted','demo'].includes(next.mode))throw new Error('Ongeldige werkruimte.');
+    config=next;if(bar)bar.hidden=config.mode!=='demo';account.disabled=config.mode!=='demo';
+    const session=await request('/api/session');if(version!==authVersion)return;
+    recoverySession=config.mode==='hosted'&&session.recovery===true;
+    if(recoverySession){authView='reset';location.hash='reset';welcome();}
+    else if(session.authenticated===true)await load();
+    else welcome();
+  }catch(e){if(version!==authVersion)return;clearWorkspace();config=null;welcome();}
+}
 async function load() {
-  const version=++loadVersion;
-  try {const next=await rpc('snapshot');if(version!==loadVersion)return;data=next;if(data.dev_account)account.value=data.dev_account;render();}
-  catch(e){if(version!==loadVersion)return;data=null;if(e.status===401)welcome();else app.innerHTML=`<main class="welcome error-banner"><h1>Werkruimte niet beschikbaar</h1><p>${esc(e.message)}</p>${button('Opnieuw proberen','reload')}</main>`;}
+  const version=++loadVersion,generation=authVersion;
+  try {const next=await rpc('snapshot');if(version!==loadVersion||generation!==authVersion)return;data=next;if(config?.mode==='demo'&&data.dev_account)account.value=data.dev_account;render();}
+  catch(e){if(version!==loadVersion||generation!==authVersion)return;data=null;if(e.status===401)welcome();else app.innerHTML=`<main class="welcome error-banner"><h1>Werkruimte niet beschikbaar</h1><p>${esc(e.message)}</p>${button('Opnieuw proberen','reload')}</main>`;}
 }
 async function login(value) {
-  if(!value)return;const pendingCall=value==='staff'?(pendingCallRoute||(/^#call(?:\/|$)/.test(location.hash)?location.hash:null)):null;pendingCallRoute=null;++loadVersion;cancelPhoneLookup();handledCallRoute=null;data=null;if(dialog.open)dialog.close();account.disabled=true;app.innerHTML='<div class="welcome">Proefaccount openen…</div>';
-  try {await request('/api/dev-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:value})});account.value=value;query='';location.hash=pendingCall||'overview';await load();}
-  catch(e){welcome();toast(e.message);}
-  finally{account.disabled=false;}
+  if(config?.mode!=='demo'||!value)return;
+  const pendingCall=value==='staff'?(pendingCallRoute||(/^#call(?:\/|$)/.test(location.hash)?location.hash:null)):null;
+  clearWorkspace();const generation=authVersion;account.disabled=true;app.innerHTML='<div class="welcome">Proefaccount openen…</div>';
+  try {await request('/api/dev-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:value})});if(generation!==authVersion)return;account.value=value;location.hash=pendingCall||'overview';await load();}
+  catch(e){if(generation===authVersion){welcome();toast(e.message);}}
+  finally{if(generation===authVersion)account.disabled=false;}
 }
+async function submitAuth(form) {
+  if(config?.mode!=='hosted'||authBusy)return;
+  const kind=form.dataset.auth,values=Object.fromEntries(new FormData(form));
+  if(kind==='password'&&(!recoverySession||values.password!==values.repeat)){const el=form.querySelector('.form-error');el.textContent='De wachtwoorden moeten hetzelfde zijn.';el.hidden=false;return;}
+  if(kind==='password'&&(values.password.length<12||!/[a-z]/.test(values.password)||!/[A-Z]/.test(values.password)||!/[0-9]/.test(values.password))){const el=form.querySelector('.form-error');el.textContent='Gebruik minimaal 12 tekens, met een hoofdletter, kleine letter en cijfer.';el.hidden=false;return;}
+  const pendingCall=kind==='login'&&/^#call(?:\/|$)/.test(location.hash)?location.hash:null;
+  clearWorkspace();authBusy=true;const generation=authVersion;welcome();
+  const endpoint={login:'/api/login','reset-request':'/api/reset-request',password:'/api/password'}[kind];
+  try {
+    if(!endpoint)throw new Error('Deze actie is niet beschikbaar.');
+    await request(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(kind==='reset-request'?{email:values.email}:kind==='password'?{password:values.password}:{email:values.email,password:values.password})});
+    if(generation!==authVersion)return;
+    if(kind==='login'){recoverySession=false;location.hash=pendingCall||'overview';await load();}
+    else {recoverySession=false;authView=kind==='reset-request'?'reset-sent':'login';location.hash='';welcome();if(kind==='password')toast('Uw wachtwoord is opgeslagen. Log opnieuw in.');}
+  }catch(e){if(generation!==authVersion)return;if(kind==='password'&&(e.recoveryRequired||e.status===401)){recoverySession=false;authView='forgot';}welcome();const el=app.querySelector?.('.form-error');if(el){el.textContent=e.message;el.hidden=false;}else toast(e.message);}
+  finally{if(generation===authVersion){authBusy=false;const submit=app.querySelector?.('.auth-form button');if(submit){submit.disabled=false;submit.textContent=kind==='login'?'Inloggen':kind==='password'?'Wachtwoord opslaan':'Verstuur herstellink';}}}
+}
+function canManageAccess(){return data?.staff===true&&data.staff_role==='administrator'&&data.permissions?.manage_access===true;}
 function navigation(active) {
-  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken']]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
+  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken'],...(canManageAccess()?[['access','Toegang']]:[])]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
   const selected={customer:'customers',call:'telephony',object:'objects',order:'orders',report:'reports'}[active]||active;
   return tabs.map(([key,title])=>`<a href="#${key}" class="${selected===key?'active':''}" ${selected===key?'aria-current="page"':''}>${icon(key)}${title}</a>`).join('');
 }
 function overview() {
+  if(!data.staff&&!data.properties.length)return head('Uw RoofSignal-account','Nog geen dossiers toegewezen','Uw dossier verschijnt hier zodra RoofSignal toegang heeft toegekend.')+panel('Mijn gegevens',`<div class="panelbody"><p>U kunt uw contactgegevens alvast controleren.</p><a class="btn secondary" href="#profile">Mijn gegevens</a></div>`);
   const openOrders=data.orders.filter(o=>o.status==='active');
   const drafts=data.reports.filter(r=>r.status==='draft');
   const published=data.reports.filter(r=>r.status==='published');
@@ -66,7 +127,7 @@ function telephonyPage() {
   if(!data.staff)return denied();
   const {status,phone,result,error}=callView;
   let content=status==='paused'?`<p class="call-status">Er staat een oproep klaar. Rond uw formulier af of open de beller.</p>${button('Open beller','call.open')}`:status==='loading'?'<p class="call-status" role="status">Klant zoeken…</p>':status==='error'?`<p class="form-error" role="alert">${esc(error)}</p>`:status==='withheld'?'<p class="call-status">Dit nummer is afgeschermd. Vraag de beller naar zijn naam of klantgegevens.</p>':status==='new'?`<p class="call-status">${esc(result.phone)} is nog niet bekend.</p>${button('Nieuwe klantkaart openen','organization.new',result.phone)}`:status==='choose'?`<p>Dit telefoonnummer hoort bij meerdere klanten. Kies het juiste dossier.</p>${result.customers.map(o=>row(o.name,`${label(o.kind)}${o.contact_name?' · '+o.contact_name:''}`,'',`#customer/${o.id}`)).join('')}`:status==='matched'?'<p class="call-status">Het klantdossier is gevonden.</p>':'<p class="call-status">Een bekende beller opent het klantdossier. Voor een onbekend nummer opent een nieuwe klantkaart.</p>';
-  return head('Klantcontact','Telefonie','Open tijdens een gesprek direct het juiste dossier.')+`<div class="columns"><div>${panel('Nummer opzoeken',`<form class="form call-form" data-phone-lookup>${field('phone','Telefoonnummer','tel',phone,false)}<button class="btn" ${status==='loading'?'disabled':''}>Klant zoeken</button></form><div class="call-result" aria-live="polite">${content}</div>`)}</div><div>${panel('Voys',`<div class="panelbody"><span class="tag orange">Nog niet verbonden</span><p class="hint">U bekijkt een lokale proef met fictieve klanten. De Voys-koppeling is nog niet actief.</p></div>`)}</div></div>`;
+  return head('Klantcontact','Telefonie','Open tijdens een gesprek direct het juiste dossier.')+`<div class="columns"><div>${panel('Nummer opzoeken',`<form class="form call-form" data-phone-lookup>${field('phone','Telefoonnummer','tel',phone,false)}<button class="btn" ${status==='loading'?'disabled':''}>Klant zoeken</button></form><div class="call-result" aria-live="polite">${content}</div>`)}</div><div>${panel('Voys',`<div class="panelbody"><span class="tag orange">Nog niet verbonden</span><p class="hint">${config?.mode==='demo'?'U bekijkt een lokale proef met fictieve klanten. ':''}De Voys-koppeling is nog niet actief.</p></div>`)}</div></div>`;
 }
 async function lookupPhone(phone,route=location.hash) {
   if(!data?.staff)return;const version=++phoneLookupVersion;
@@ -132,15 +193,40 @@ function requestsPage() {
     data.requests.filter(matches).map(r=>panel(esc(label(r.kind)),`<div class="panelbody">${badge(r.status)}<p><small>${esc(propertyName(r.property_id))} · ${date(r.created_at)}</small></p><p class="request-message">${esc(r.message)}</p>${r.preferred_on?`<p><small>Voorkeursdatum: ${date(r.preferred_on)}</small></p>`:''}${r.kind==='repair'?'<p class="hint">Dit is een herstelmelding van de klant; nog geen nieuwe beoordeling door RoofSignal.</p>':''}${r.response?`<div class="response"><b>Reactie RoofSignal</b><br>${esc(r.response)}</div>`:''}${data.staff?`<div class="buttons">${button('Behandelen','request.respond',r.id,true)}</div>`:''}</div>`)).join('')+(data.requests.length?'':empty('Nog geen verzoeken'));
 }
 function profilePage(){return head('Uw account','Mijn gegevens','Werk uw naam en telefoonnummer bij.')+panel('Contactgegevens',`<form class="form profile-form" data-command="profile.save">${field('name','Naam','text',data.person.name)}${field('phone','Telefoonnummer','tel',data.person.phone,false)}<p class="form-error" hidden></p><button class="btn">Gegevens opslaan</button></form>`);}
+const accessRole=value=>({reader:'Dossier lezen',contact:'Contact en verzoeken',finance:'Financieel contact'})[value]||value;
+function accessPage() {
+  if(!canManageAccess())return denied();
+  const intro=head('Beheer','Toegang','Bepaal wie toegang heeft tot welke klant en objecten.',accessData?.people.length&&accessData?.organizations.length?button('Toegang toevoegen','access.new'):'');
+  if(accessLoading||!accessData&&!accessError)return intro+panel('Dossiertoegang','<p class="empty" role="status">Toegang laden…</p>');
+  if(accessError)return intro+panel('Dossiertoegang',`<div class="panelbody"><p class="form-error" role="alert">${esc(accessError)}</p>${button('Opnieuw proberen','access.reload')}</div>`);
+  const person=id=>accessData.people.find(p=>p.user_id===id),org=id=>accessData.organizations.find(o=>o.id===id),prop=id=>accessData.properties.find(p=>p.id===id);
+  return intro+panel('Dossiertoegang',accessData.grants.map(g=>row(person(g.user_id)?.name||person(g.user_id)?.email||'Gebruiker',`${org(g.organization_id)?.name||'Klant'} · ${g.property_id?prop(g.property_id)?.name||'Object':'Alle objecten'} · ${accessRole(g.role)}${g.expires_at?' · tot '+date(g.expires_at):''}`,g.revoked_at?'<span class="tag">Ingetrokken</span>':`${g.expires_at&&Date.parse(g.expires_at)<=Date.now()?'<span class="tag">Verlopen</span>':''}${button('Intrekken','access.revoke',g.id,true)}`)).join('')||empty('Nog geen dossiertoegang','Voeg toegang toe voor een bestaande gebruiker en klant.'))+panel('Medewerkers',accessData.staff.map(s=>row(person(s.user_id)?.name||'Medewerker',s.role==='administrator'?'Beheerder':'Medewerker',`<span class="tag ${s.active?'green':''}">${s.active?'Actief':'Ingetrokken'}</span>`)).join('')||empty('Geen medewerkers'));
+}
+async function loadAccess(force=false) {
+  if(!canManageAccess()||accessLoading||accessData&&!force)return;
+  const generation=authVersion,version=++accessVersion;accessLoading=true;accessError='';
+  try {const result=await rpc('access.snapshot');if(generation!==authVersion||version!==accessVersion)return;
+    if(!['people','organizations','properties','grants','staff'].every(k=>Array.isArray(result[k])))throw new Error('De toegangsgegevens konden niet worden geladen.');accessData=result;
+  }catch(e){if(generation===authVersion&&version===accessVersion)accessError=e.message;}
+  finally{if(generation===authVersion&&version===accessVersion){accessLoading=false;if(location.hash==='#access')render();}}
+}
+function accessPropertyOptions(org) {return [['','Alle objecten van deze klant'],...accessData.properties.filter(p=>p.organization_id===org).map(p=>[p.id,p.name])];}
+function newAccess() {
+  if(!canManageAccess()||!accessData?.people.length||!accessData?.organizations.length)return;
+  const org=accessData.organizations[0].id;
+  showForm('Toegang toevoegen','access.grant',select('user_id','Gebruiker',accessData.people.map(p=>[p.user_id,`${p.name||p.email||'Gebruiker'}${p.name&&p.email?' · '+p.email:''}`]))+select('organization_id','Klant',accessData.organizations.map(o=>[o.id,o.name]))+select('property_id','Objecten',accessPropertyOptions(org))+select('role','Rechten',['reader','contact','finance'].map(role=>[role,accessRole(role)]))+field('expires_at','Vervalt op (optioneel)','datetime-local','',false),{},'Toegang toevoegen');
+  dialog.querySelector('[name="property_id"]').required=false;
+}
 function denied(){return head('Dossier','Niet beschikbaar','Dit onderdeel is niet beschikbaar voor uw account.')+'<a class="btn secondary" href="#overview">Terug naar overzicht</a>';}
 function render() {
   if(!data)return;
   const [route='overview',id,org]=location.hash.slice(1).split('/');
-  const content=({overview,customers,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage})[route];
+  const content=({overview,customers,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage,access:accessPage})[route];
   const page=content?content():route==='customer'?customerPage(id):route==='object'?objectPage(id,org):route==='order'?orderPage(id):route==='report'?reportPage(id):denied();
   const search=['customers','objects','orders','reports','requests'].includes(route)?`<input id="search" class="search" type="search" value="${esc(query)}" placeholder="Zoek in dit overzicht…" aria-label="Zoeken in dit overzicht">`:`<small>${esc(data.person.name)}</small>`;
   app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><div class="wordmark">ROOF<span>SIGNAL</span></div><small>PROPERTY INTELLIGENCE</small></div><div><p class="nav-label">${data.staff?'Werkruimte':'Klantportaal'}</p><nav class="nav" aria-label="Werkruimten">${navigation(route)}</nav></div><div class="sidebar-foot"><strong>${esc(data.person.name)}</strong><small>${data.staff?'RoofSignal backoffice':'Uw persoonlijke dossier'}</small><button data-action="logout">Uitloggen →</button></div></aside><div class="workspace"><header class="topbar"><span>${data.staff?'RoofSignal / Backoffice':'RoofSignal / Klantportaal'}</span>${search}${data.staff&&pendingCallRoute?button('Oproep openen','call.open','',true):''}<button class="text-button mobile-signout" data-action="logout">Uitloggen</button></header><main class="page" id="main">${page}</main></div></div>`;
   if(route==='call'&&data.staff)startCallRoute();
+  if(route==='access'&&canManageAccess()&&!accessData&&!accessError&&!accessLoading)void loadAccess();
 }
 
 function showForm(title,command,fields,context={},submit='Opslaan') {
@@ -166,11 +252,16 @@ function newObservation(id) {
 }
 function action(name,id='') {
   if(name==='close'){dialog.close();return;}
+  if(name==='bootstrap'){void bootstrap();return;}
+  if(name==='auth.login'||name==='auth.forgot'){if(authBusy)return;authView=name==='auth.forgot'&&config?.passwordRecovery?'forgot':'login';welcome();return;}
   if(name==='reload'){load();return;}
-  if(name==='logout'){request('/api/logout',{method:'POST'}).then(()=>{++loadVersion;cancelPhoneLookup();handledCallRoute=null;pendingCallRoute=null;data=null;if(dialog.open)dialog.close();account.value='';welcome();}).catch(e=>toast(e.message));return;}
+  if(name==='logout'){sessionEnded();location.hash='';request('/api/logout',{method:'POST'}).catch(()=>toast('Uitloggen op de server is niet gelukt. Probeer opnieuw.'));return;}
   if(!data)return;cancelPhoneLookup();
   if(name==='call.open'&&data.staff){const route=pendingCallRoute||location.hash;pendingCallRoute=null;handledCallRoute=null;if(dialog.open)dialog.close();if(location.hash===route)render();else location.hash=route;return;}
   if(name==='call.ignore'&&data.staff){pendingCallRoute=null;handledCallRoute=location.hash;dialog.querySelector('.pending-call')?.remove();callView={status:'idle',phone:'',result:null,error:''};render();return;}
+  if(name==='access.reload'&&canManageAccess()){accessData=null;accessError='';void loadAccess(true);render();return;}
+  if(name==='access.new'){newAccess();return;}
+  if(name==='access.revoke'&&canManageAccess()){const grant=accessData?.grants.find(g=>g.id===id&&!g.revoked_at);if(grant)showForm('Toegang intrekken','access.revoke','<p>Deze gebruiker kan dit dossier na het intrekken niet meer openen.</p>',{id},'Toegang intrekken');return;}
   if(name==='organization.new')newCustomer(id);
   if(name==='property.new') {
     if(!data.organizations.length){toast('Voeg eerst een klant toe.');return;}
@@ -200,6 +291,7 @@ document.addEventListener('input',e=>{
   const form=e.target.closest('form[data-command]');if(form)delete form.dataset.requestId;
 });
 document.addEventListener('change',async e=>{
+  if(e.target.name==='organization_id'&&e.target.closest('form')?.dataset.command==='access.grant'&&accessData){const selector=dialog.querySelector('[name="property_id"]');selector.innerHTML=accessPropertyOptions(e.target.value).map(([id,name])=>`<option value="${esc(id)}">${esc(name)}</option>`).join('');selector.value='';}
   if(e.target.name==='finding_id'){
     const fresh=!e.target.value;dialog.querySelector('#new-finding').hidden=!fresh;
     dialog.querySelectorAll('#new-finding input').forEach(input=>{input.required=fresh;input.disabled=!fresh;});
@@ -213,21 +305,25 @@ document.addEventListener('change',async e=>{
   }
 });
 document.addEventListener('submit',async e=>{
+  const authForm=e.target.closest('form[data-auth]');if(authForm){e.preventDefault();void submitAuth(authForm);return;}
   const callForm=e.target.closest('form[data-phone-lookup]');if(callForm){e.preventDefault();void lookupPhone(new FormData(callForm).get('phone')||'');return;}
   const form=e.target.closest('form[data-command]');if(!form)return;e.preventDefault();
+  const generation=authVersion;
   const payload={...Object.fromEntries(new FormData(form)),...form._context};
+  if(form.dataset.command==='access.grant'){payload.property_id=payload.property_id||null;payload.expires_at=payload.expires_at?new Date(payload.expires_at).toISOString():null;}
   if(payload.object){[payload.property_id,payload.organization_id]=payload.object.split('/');delete payload.object;}
   form.dataset.requestId||=crypto.randomUUID();payload.request_id=form.dataset.requestId;
   const buttons=[...form.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);
   const error=form.querySelector('.form-error');error.hidden=true;
   try {
-    const result=await rpc(form.dataset.command,payload);if(dialog.open)dialog.close();
-    await load();
+    const result=await rpc(form.dataset.command,payload);if(generation!==authVersion)return;if(dialog.open)dialog.close();
+    if(form.dataset.command.startsWith('access.'))accessData=null;
+    await load();if(generation!==authVersion)return;
     if(form.dataset.command==='order.create')location.hash=`order/${result.id}`;
     if(form.dataset.command==='property.create')location.hash=`object/${result.id}/${payload.organization_id}`;
     if(form.dataset.command==='organization.create')location.hash=`customer/${result.id}`;
     if(form.dataset.command==='report.save')location.hash=`report/${result.id}`;
     toast('Opgeslagen.');
-  }catch(err){error.textContent=err.message;error.hidden=false;buttons.forEach(b=>b.disabled=false);}
+  }catch(err){if(generation!==authVersion)return;error.textContent=err.message;error.hidden=false;buttons.forEach(b=>b.disabled=false);}
 });
-load();
+bootstrap();

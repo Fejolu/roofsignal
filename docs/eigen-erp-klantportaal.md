@@ -1,6 +1,6 @@
 # Eigen RoofSignal-ERP en klantportaal
 
-Functionele opzet · 11 oktober 2026 · Eigenaar: Ferry Joosten
+Functionele opzet · bijgewerkt 12 oktober 2026 · Eigenaar: Ferry Joosten
 
 ## 1. Vastgestelde richting en status
 
@@ -17,8 +17,11 @@ Dit document legt de scope vast. De precieze rechten, schermen en werkstromen hi
 zijn ontwerpvoorstellen. De eerste werkende lokale bouwfase staat in
 [apps/erp](../apps/erp/README.md): klanten, objecten, opdrachten, inspectieronden,
 bevindingen, rapportvrijgave en klantverzoeken. De proefomgeving gebruikt uitsluitend
-fictieve dossiers. Productielogin, migratie, financiële administratie, agenda-/betaalkoppelingen
-en 3D-viewer zijn nog niet opgeleverd. Er is geen productietoegang verleend en geen
+fictieve dossiers. De volgende bouwfase bevat echte medewerker- en klantlogin,
+wachtwoordherstel, een duurzaam sessieregister, private rapportdownloads en toegangbeheer.
+De afzonderlijke cloudproef en online activering volgen na goedkeuring van de testinrichting.
+Migratie, financiële administratie, agenda-/betaalkoppelingen en 3D-viewer zijn nog niet opgeleverd.
+Er is geen productietoegang verleend en geen
 abonnement of nieuwe prijs vastgesteld.
 
 ## 2. Eén dossier, twee omgevingen
