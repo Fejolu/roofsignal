@@ -167,7 +167,7 @@ begin
   if actual_state=item.managed_order_status and actual_state not in('completed','cancelled') and not item.financial_review and not identity_changed and state not like '%_review' then update erp.orders set status=order_state where id=ord; else order_state:=actual_state; end if;
  end if;
  insert into erp.website_intake_revisions(intake_id,revision,changed_at,record) values(item.id,rev,changed,r);
- update erp.website_intakes set revision=rev,changed_at=changed,record=r,reference=coalesce(r->>'reference',sid::text),source_status=r->>'status',state=importer.state,
+ update erp.website_intakes set revision=rev,changed_at=changed,record=r,reference=coalesce(r->>'reference',case when src='vve' then 'RS-VVE-'||upper(substr(replace(sid::text,'-',''),1,8)) else sid::text end),source_status=r->>'status',state=importer.state,
   payment_id=coalesce(item.payment_id,pay_id),payment_status=pay_status,total_cents=case when item.revision=0 then price else item.total_cents end,
   identity_snapshot=case when item.revision=0 or item.identity_snapshot is null then source_identity else item.identity_snapshot end,identity_review=identity_changed,
   commercial=case when item.revision=0 then importer.commercial else item.commercial end,financial_review=item.financial_review or split_unknown or(item.revision>0 and item.commercial is distinct from importer.commercial),

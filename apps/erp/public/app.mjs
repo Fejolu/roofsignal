@@ -1,7 +1,7 @@
-import {esc,date,label,badge,icon,empty,button,field,area,select,callPhoneFromHash,callDestination} from './view.mjs';
+import {esc,date,label,badge,icon,empty,button,field,area,select,callPhoneFromHash,callDestination,money,dateTime,intakeSource,intakeState} from './view.mjs';
 const app=document.querySelector('#app'),dialog=document.querySelector('#dialog'),account=document.querySelector('#account');
 let data=null,query='',toastTimer,loadVersion=0,phoneLookupVersion=0,handledCallRoute=null,pendingCallRoute=null;
-let config=null,authView='login',authBusy=false,authVersion=0,recoverySession=false,accessData=null,accessVersion=0,accessLoading=false,accessError='';
+let config=null,authView='login',authBusy=false,authVersion=0,recoverySession=false,accessData=null,accessVersion=0,accessLoading=false,accessError='',incomingData=null,incomingLoading=false,incomingError='',incomingVersion=0;
 let callView={status:'idle',phone:'',result:null,error:''};
 function cancelPhoneLookup(){++phoneLookupVersion;if(callView.status==='loading')callView={status:'idle',phone:'',result:null,error:''};}
 const byId=(list,id)=>list.find(x=>x.id===id);
@@ -17,7 +17,7 @@ const head=(eyebrow,title,subtitle='',actions='')=>`<header class="pagehead"><di
 const row=(title,detail,right='',href='')=>`<div class="row"><div class="row-main"><strong>${href?`<a href="${esc(href)}">${esc(title)}</a>`:esc(title)}</strong><p>${esc(detail)}</p></div><div class="row-right">${right}</div></div>`;
 
 function clearWorkspace() {
-  ++authVersion;++loadVersion;++accessVersion;authBusy=false;cancelPhoneLookup();callView={status:'idle',phone:'',result:null,error:''};data=null;accessData=null;accessLoading=false;accessError='';query='';handledCallRoute=null;pendingCallRoute=null;
+  ++authVersion;++loadVersion;++accessVersion;++incomingVersion;incomingData=null;incomingLoading=false;incomingError='';authBusy=false;cancelPhoneLookup();callView={status:'idle',phone:'',result:null,error:''};data=null;accessData=null;accessLoading=false;accessError='';query='';handledCallRoute=null;pendingCallRoute=null;
   if(dialog.open)dialog.close();dialog.innerHTML='';account.value='';clearTimeout(toastTimer);
   const t=document.querySelector('#toast');t.hidden=true;t.textContent='';
 }
@@ -98,7 +98,7 @@ async function submitAuth(form) {
 }
 function canManageAccess(){return data?.staff===true&&data.staff_role==='administrator'&&data.permissions?.manage_access===true;}
 function navigation(active) {
-  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken'],...(canManageAccess()?[['access','Toegang']]:[])]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
+  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['incoming','Websiteboekingen'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken'],...(canManageAccess()?[['access','Toegang']]:[])]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
   const selected={customer:'customers',call:'telephony',object:'objects',order:'orders',report:'reports'}[active]||active;
   return tabs.map(([key,title])=>`<a href="#${key}" class="${selected===key?'active':''}" ${selected===key?'aria-current="page"':''}>${icon(key)}${title}</a>`).join('');
 }
@@ -176,6 +176,8 @@ function orderPage(id) {
   const rounds=data.inspections.filter(i=>i.order_id===id);
   return `<a class="back" href="#orders">← Terug naar opdrachten</a>`+head(propertyName(o.property_id),o.title,`${orgName(o.organization_id)} · ${label(o.service)}`,button('Status wijzigen','order.status',id,true)+button('Inspectieronde toevoegen','inspection.new',id))+
     panel('Opdrachtgegevens',`<div class="panelbody">${badge(o.status)}<p class="report-text">${esc(o.scope||'Nog geen scope vastgelegd.')}</p><small>Rapportdeadline: ${date(o.report_due_on)}</small>${o.internal_note?`<div class="hint"><b>Interne notitie</b><br>${esc(o.internal_note)}</div>`:''}</div>`)+
+    (data.staff&&data.order_sources?.find(s=>s.order_id===id)?sourceOrderPanel(data.order_sources.find(s=>s.order_id===id)):'')+
+    panel('Afspraak',appointmentRows((data.appointments||[]).filter(a=>a.order_id===id)))+
     rounds.map(i=>{const r=reportFor(i.id),locked=Boolean(r?.published_at);return panel(esc(i.label),`<div class="panelbody"><div class="report-footer"><span>Inspectiedatum: <b>${date(i.inspected_on)}</b></span>${!locked?button('Datum vastleggen','inspection.date',i.id,true):badge(r.status)}</div>${observations(data.observations.filter(o=>o.inspection_id===i.id))||'<p class="hint">Nog geen bevindingen vastgelegd.</p>'}<div class="buttons">${!locked?button('Bevinding toevoegen','observation.new',i.id)+button(r?'Rapportconcept bewerken':'Rapportconcept maken','report.new',i.id,true):''}${r?`<a class="btn secondary" href="#report/${r.id}">Rapport openen →</a>`:''}</div></div>`);}).join('');
 }
 function reportRows(reports) {return reports.map(r=>row(r.title,`${date(inspection(r.inspection_id)?.inspected_on)}${inspection(r.inspection_id)?' · '+propertyName(inspection(r.inspection_id).property_id):''}`,badge(r.status),`#report/${r.id}`)).join('')||empty('Nog geen rapporten beschikbaar',data.staff?'Maak een rapportconcept vanuit een inspectieronde.':'Uw rapport verschijnt hier zodra RoofSignal het heeft vrijgegeven.');}
@@ -186,13 +188,53 @@ function reportPage(id) {
     `<div class="columns"><div>${panel('Samenvatting',`<div class="panelbody">${badge(r.status)}<p class="report-text">${esc(r.summary)}</p></div>`)}${panel('Bevindingen & advies',`<div class="panelbody">${observations(data.observations.filter(o=>o.inspection_id===r.inspection_id))||empty('Nog geen bevindingen')}</div>`)}</div><div>${panel('Rapportbestand',`<div class="panelbody">${r.has_file?`<h3>${esc(r.file_name)}</h3><p>${Math.ceil(r.file_size/1024)} kB · PDF</p><a class="btn" href="/api/reports/${r.id}/file" download>Download rapport</a>`:`<p class="muted">${data.staff?'Er is nog geen PDF toegevoegd.':'U kunt het rapport en de bevindingen op deze pagina lezen.'}</p>`}${data.staff&&!r.published_at?`<div class="buttons">${button(r.has_file?'PDF vervangen':'PDF toevoegen','report.upload',id,true)}</div><input type="file" class="upload" id="report-file" accept="application/pdf" data-report="${r.id}"><p class="hint">PDF · maximaal 10 MB</p>`:''}${r.published_at?`<p class="hint">Vrijgegeven op ${date(r.published_at)}</p>`:''}</div>`)}${data.staff?'<p class="hint">Een vrijgegeven inspectie blijft bewaard. Gebruik een nieuwe inspectieronde voor latere waarnemingen.</p>':''}</div></div>`;
 }
 function visitRows(visits){return visits.map(v=>row(date(v.proposed_on),`${propertyName(v.property_id)} · ${v.title}`,badge(v.status))).join('')||empty('Nog geen datumvoorstel','Een volgende inspectieronde wordt in overleg gepland.');}
-function visitsPage(){return head('Planning','Afspraken','Hier ziet u de voorgestelde momenten voor uw volgende inspectie.')+panel('Uw datumvoorstellen',visitRows(data.visits))+`<p class="hint">Een datumvoorstel is nog geen bevestigde afspraak. RoofSignal stemt het tijdstip met u af.</p>`;}
+function appointmentRows(items){return items.map(a=>row(dateTime(a.starts_at),`${propertyName(a.property_id)} · ${a.state==='confirmed'?'Afspraak bevestigd':a.state==='cancelled'?'Afspraak geannuleerd':'Nog af te stemmen'}`,'')).join('')||empty('Nog geen afspraken');}
+function visitsPage(){return head('Planning','Afspraken','Uw inspectiemomenten en datumvoorstellen.')+panel('Afspraken',appointmentRows(data.appointments||[]))+panel('Datumvoorstellen',visitRows(data.visits));}
 function requestRows(items){return items.map(r=>row(label(r.kind),`${propertyName(r.property_id)} · ${date(r.created_at)}`,badge(r.status),'#requests')).join('')||empty('Geen open verzoeken');}
 function requestsPage() {
   return head('Contact & opvolging',data.staff?'Klantverzoeken':'Mijn verzoeken',data.staff?'Beantwoord vragen en volg meldingen op.':'Stel een vraag, meld herstel of geef een wijziging door.',!data.staff&&data.properties.some(p=>p.can_request)?button('Verzoek indienen','request.new'):'')+
     data.requests.filter(matches).map(r=>panel(esc(label(r.kind)),`<div class="panelbody">${badge(r.status)}<p><small>${esc(propertyName(r.property_id))} · ${date(r.created_at)}</small></p><p class="request-message">${esc(r.message)}</p>${r.preferred_on?`<p><small>Voorkeursdatum: ${date(r.preferred_on)}</small></p>`:''}${r.kind==='repair'?'<p class="hint">Dit is een herstelmelding van de klant; nog geen nieuwe beoordeling door RoofSignal.</p>':''}${r.response?`<div class="response"><b>Reactie RoofSignal</b><br>${esc(r.response)}</div>`:''}${data.staff?`<div class="buttons">${button('Behandelen','request.respond',r.id,true)}</div>`:''}</div>`)).join('')+(data.requests.length?'':empty('Nog geen verzoeken'));
 }
 function profilePage(){return head('Uw account','Mijn gegevens','Werk uw naam en telefoonnummer bij.')+panel('Contactgegevens',`<form class="form profile-form" data-command="profile.save">${field('name','Naam','text',data.person.name)}${field('phone','Telefoonnummer','tel',data.person.phone,false)}<p class="form-error" hidden></p><button class="btn">Gegevens opslaan</button></form>`);}
+function sourceOrderPanel(source){return panel('Websiteboeking',`<div class="panelbody"><p><b>${esc(intakeSource(source.source))}</b> · ${esc(source.reference)}</p><p>${esc(intakeState(source.state))}</p><p>Afgesproken totaal: <b>${esc(money(source.total_cents))}</b></p>${source.source==='parken'?'<p class="hint">De pilotboeking bevat geen geverifieerde betaalstatus.</p>':''}${source.identity_review?'<p class="form-error">Contact- of objectgegevens controleren.</p>':''}${source.financial_review?'<p class="form-error">Controleer de oorspronkelijke prijsafspraak.</p>':''}<a class="text-button" href="#incoming/${source.id}">Bekijk oorspronkelijke boeking →</a></div>`);}
+function intakeChoice(item){
+ const r=item.record||{},d=r.intake_details,p=item.commercial||r.quote||r;
+ if(item.source==='consumer')return p.inspection_type==='thermal'?'Thermografische inspectie':p.thermal?'Dak- en gevelinspectie met thermografie':'Dak- en gevelinspectie';
+ if(item.source==='parken')return p.thermography_selected?'Woningscan met thermografie':'Woningscan De Parken';
+ return d?d.inspection_type==='thermal'?'Thermografische inspectie':d.thermal?'Dak- en gevelinspectie met thermografie':'Dak- en gevelinspectie':r.scope||'VvE-inspectieaanvraag';
+}
+function intakePriceRows(parts){return `<dl class="intake-prices">${parts.filter(([,value])=>Number.isInteger(value)).map(([name,value])=>`<div><dt>${esc(name)}</dt><dd>${esc(money(value))}</dd></div>`).join('')}</dl>`;}
+function intakeDetails(item){
+ const r=item.record||{},p=item.commercial||r.quote||r,d=r.intake_details;let html=`<p><b>${esc(intakeChoice(item))}</b></p>`;
+ if(item.source==='consumer'){
+  html+=intakePriceRows([...(p.base_cents?[['Gebouwschilinspectie',p.base_cents]]:[]),...(p.thermal_cents?[['Thermografie',p.thermal_cents]]:[]),['Reiskosten',p.travel_cents]]);
+  if(p.base_cents===null||p.thermal_cents===null)html+='<p class="hint">Uitsplitsing van de oorspronkelijke prijs controleren.</p>';
+  if(item.payment_id)html+=`<p>Mollie: <b>${esc(item.payment_id)}</b><br>${esc(({paid:'Betaald',open:'Nog niet betaald',pending:'Betaling in behandeling',authorized:'Betaling in behandeling',canceled:'Betaling afgebroken',failed:'Betaling mislukt',expired:'Betaaltermijn verlopen'})[item.payment_status]||'Betaalstatus onbekend')}</p>`;
+ }
+ if(item.source==='parken')html+=intakePriceRows([['Woningscan · excl. btw',p.inspection_excl_cents],...(p.thermography_selected?[['Thermografie · excl. btw',p.thermography_excl_cents]]:[])]);
+ if(item.source==='vve'&&d){
+  if(Number.isInteger(d.address_count))html+=`<p>${esc(d.address_count)} adressen opgegeven${d.kvk_number?`<br>KVK: ${esc(d.kvk_number)} (opgegeven)`:''}</p>`;
+  if(d.price_indication?.kind==='indication')html+=intakePriceRows([...(d.price_indication.building_envelope_excl_cents?[['Gebouwschilinspectie · excl. btw',d.price_indication.building_envelope_excl_cents]]:[]),...(d.price_indication.thermal_excl_cents?[['Thermografie · excl. btw',d.price_indication.thermal_excl_cents]]:[])]);
+ }
+ return html;
+}
+function incomingIdentity(item){const r=item.record||{},a=r.quote?.address;return {name:r.customer?.name||r.organization||r.name||'Aanvraag',email:r.customer?.email||r.email||'',phone:r.customer?.phone||r.intake_details?.phone||r.phone||'',address:item.source==='consumer'?`${a?.street||''} ${a?.houseNumber||''}, ${a?.postcode||''} ${a?.city||''}`:item.source==='parken'?`${r.street||''} ${r.house_number||''}, ${r.postcode||''} Apeldoorn`:r.intake_details?`${r.intake_details.object_address||''}, ${r.postcode||''} ${r.intake_details.object_city||''}`:r.postcode||''};}
+function incomingPage(id){
+ if(!data.staff)return denied();
+ const intro=head('Website','Websiteboekingen','Consumentenboekingen, De Parken en VvE-aanvragen.',button('Vernieuwen','incoming.reload','',true));
+ if(incomingLoading||!incomingData&&!incomingError)return intro+panel('Ingekomen',empty('Boekingen laden…'));
+ if(incomingError)return intro+panel('Ingekomen',`<div class="panelbody"><p class="form-error">${esc(incomingError)}</p>${button('Opnieuw proberen','incoming.reload')}</div>`);
+ if(id){const item=incomingData.items.find(i=>i.id===id);if(!item)return denied();const identity=incomingIdentity(item),r=item.record;
+  return `<a class="back" href="#incoming">← Alle websiteboekingen</a>`+head(intakeSource(item.source),identity.name,item.reference)+`<div class="columns"><div>${panel('Oorspronkelijke registratie',`<div class="panelbody"><p><b>${esc(intakeState(item.state))}</b></p>${intakeDetails(item)}<p>${esc(identity.address)}</p><p>${esc(identity.email)}${identity.phone?'<br>'+esc(identity.phone):''}</p>${r.customer?.notes||r.notes?`<p class="request-message">${esc(r.customer?.notes||r.notes)}</p>`:''}${item.source==='vve'?`<p class="request-message">${esc(r.message||'')}</p><p class="hint">Dit is een vrijblijvende aanvraag. De staffelprijs wordt vóór een opdracht afgestemd.</p>`:''}<div class="buttons">${item.order_id?`<a class="btn" href="#order/${item.order_id}">Opdracht openen</a>`:''}${item.organization_id?`<a class="btn secondary" href="#customer/${item.organization_id}">Klant openen</a>`:''}</div></div>`)}</div><div>${panel('Afspraak en betaling',`<div class="panelbody"><p>${item.source==='vve'?'Prijsindicatie':'Totaal'}: <b>${esc(item.source==='vve'&&r.intake_details?.price_indication?.kind==='custom'?'Op maat':money(item.source==='vve'?r.intake_details?.price_indication?.total_incl_cents:item.total_cents))}</b></p><p>${item.source==='parken'?'Betaalstatus niet gekoppeld':item.source==='vve'?'Nog geen opdracht of betaling':esc(intakeState(item.state))}</p>${r.slot_start?`<p>${esc(dateTime(r.slot_start))}</p>`:r.slot_date?`<p>${esc(date(r.slot_date))} · ${esc(r.slot_time)}</p>`:''}${item.identity_review?'<p class="form-error">Contact- of objectgegevens controleren. Het gekoppelde dossier is behouden.</p>':''}${item.financial_review?'<p class="form-error">Prijsafspraak controleren. Het oorspronkelijke bedrag blijft bewaard.</p>':''}<small>Ontvangen: ${esc(dateTime(item.changed_at))}</small></div>`)}</div></div>`;
+ }
+ return intro+panel('Ingekomen',incomingData.items.filter(item=>matches(item)||matches(incomingIdentity(item))).map(item=>{const p=incomingIdentity(item);return row(p.name,`${intakeSource(item.source)} · ${p.address} · ${item.reference}`,`<span class="tag ${item.state==='paid_confirmed'?'green':'orange'}">${esc(intakeState(item.state))}</span>`,`#incoming/${item.id}`);}).join('')||empty('Nog geen websiteboekingen','Nieuwe boekingen en aanvragen verschijnen hier na synchronisatie.'));
+}
+async function loadIncoming(force=false){
+ if(!data?.staff||incomingLoading||incomingData&&!force)return;const version=++incomingVersion,generation=authVersion;incomingLoading=true;incomingError='';
+ try{const result=await rpc('intake.snapshot',{});if(version!==incomingVersion||generation!==authVersion)return;if(!Array.isArray(result.items))throw new Error('De boekingen konden niet worden geladen.');incomingData=result;}
+ catch(e){if(version===incomingVersion&&generation===authVersion)incomingError=e.message;}
+ finally{if(version===incomingVersion&&generation===authVersion){incomingLoading=false;if(location.hash.startsWith('#incoming'))render();}}
+}
 const accessRole=value=>({reader:'Dossier lezen',contact:'Contact en verzoeken',finance:'Financieel contact'})[value]||value;
 function accessPage() {
   if(!canManageAccess())return denied();
@@ -221,11 +263,12 @@ function denied(){return head('Dossier','Niet beschikbaar','Dit onderdeel is nie
 function render() {
   if(!data)return;
   const [route='overview',id,org]=location.hash.slice(1).split('/');
-  const content=({overview,customers,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage,access:accessPage})[route];
+  const content=({overview,customers,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage,access:accessPage,incoming:()=>incomingPage(id)})[route];
   const page=content?content():route==='customer'?customerPage(id):route==='object'?objectPage(id,org):route==='order'?orderPage(id):route==='report'?reportPage(id):denied();
-  const search=['customers','objects','orders','reports','requests'].includes(route)?`<input id="search" class="search" type="search" value="${esc(query)}" placeholder="Zoek in dit overzicht…" aria-label="Zoeken in dit overzicht">`:`<small>${esc(data.person.name)}</small>`;
+  const search=['customers','objects','orders','reports','requests','incoming'].includes(route)?`<input id="search" class="search" type="search" value="${esc(query)}" placeholder="Zoek in dit overzicht…" aria-label="Zoeken in dit overzicht">`:`<small>${esc(data.person.name)}</small>`;
   app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><div class="wordmark">ROOF<span>SIGNAL</span></div><small>PROPERTY INTELLIGENCE</small></div><div><p class="nav-label">${data.staff?'Werkruimte':'Klantportaal'}</p><nav class="nav" aria-label="Werkruimten">${navigation(route)}</nav></div><div class="sidebar-foot"><strong>${esc(data.person.name)}</strong><small>${data.staff?'RoofSignal backoffice':'Uw persoonlijke dossier'}</small><button data-action="logout">Uitloggen →</button></div></aside><div class="workspace"><header class="topbar"><span>${data.staff?'RoofSignal / Backoffice':'RoofSignal / Klantportaal'}</span>${search}${data.staff&&pendingCallRoute?button('Oproep openen','call.open','',true):''}<button class="text-button mobile-signout" data-action="logout">Uitloggen</button></header><main class="page" id="main">${page}</main></div></div>`;
   if(route==='call'&&data.staff)startCallRoute();
+  if(route==='incoming'&&data.staff&&!incomingData&&!incomingError&&!incomingLoading)void loadIncoming();
   if(route==='access'&&canManageAccess()&&!accessData&&!accessError&&!accessLoading)void loadAccess();
 }
 
@@ -259,6 +302,7 @@ function action(name,id='') {
   if(!data)return;cancelPhoneLookup();
   if(name==='call.open'&&data.staff){const route=pendingCallRoute||location.hash;pendingCallRoute=null;handledCallRoute=null;if(dialog.open)dialog.close();if(location.hash===route)render();else location.hash=route;return;}
   if(name==='call.ignore'&&data.staff){pendingCallRoute=null;handledCallRoute=location.hash;dialog.querySelector('.pending-call')?.remove();callView={status:'idle',phone:'',result:null,error:''};render();return;}
+  if(name==='incoming.reload'&&data.staff){incomingData=null;incomingError='';void loadIncoming(true);render();return;}
   if(name==='access.reload'&&canManageAccess()){accessData=null;accessError='';void loadAccess(true);render();return;}
   if(name==='access.new'){newAccess();return;}
   if(name==='access.revoke'&&canManageAccess()){const grant=accessData?.grants.find(g=>g.id===id&&!g.revoked_at);if(grant)showForm('Toegang intrekken','access.revoke','<p>Deze gebruiker kan dit dossier na het intrekken niet meer openen.</p>',{id},'Toegang intrekken');return;}
