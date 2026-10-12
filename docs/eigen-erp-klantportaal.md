@@ -14,14 +14,18 @@ objecten, rapportages, afspraken en periodieke planning, eigen beheer, facturen 
 een fotogrammetrisch 3D-model met klikbare aandachtspunten.
 
 Dit document legt de scope vast. De precieze rechten, schermen en werkstromen hieronder
-zijn ontwerpvoorstellen. De eerste werkende lokale bouwfase staat in
+zijn ontwerpvoorstellen. De werkende bouwfase staat in
 [apps/erp](../apps/erp/README.md): klanten, objecten, opdrachten, inspectieronden,
 bevindingen, rapportvrijgave en klantverzoeken. De proefomgeving gebruikt uitsluitend
-fictieve dossiers. De volgende bouwfase bevat echte medewerker- en klantlogin,
+fictieve dossiers. Deze bouwfase bevat echte medewerker- en klantlogin,
 wachtwoordherstel, een duurzaam sessieregister, private rapportdownloads en toegangbeheer.
 De goedgekeurde afzonderlijke Supabase-testomgeving is ingericht. De echte login-,
 dossier-, herstel- en private bestandsproeven zijn geslaagd met drie fictieve accounts.
-De online hosting en het eerste echte beheeraccount worden nog ingericht.
+De afzonderlijke Cloudflare-testomgeving staat op
+<https://roofsignal-erp-test.pages.dev>. Ook de online HTTPS- en browserproeven slagen:
+medewerker- en klantlogin, afgeschermde dossiers, private PDF-downloads en sessie-intrekking.
+111 ERP-tests en 119 websitecontroles slagen. Het eerste echte beheeraccount en
+uitnodigingen aan echte gebruikers zijn nog niet geactiveerd.
 Migratie, financiële administratie, agenda-/betaalkoppelingen en 3D-viewer zijn nog niet opgeleverd.
 Er is geen productietoegang verleend en geen
 abonnement of nieuwe prijs vastgesteld.

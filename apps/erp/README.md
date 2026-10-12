@@ -1,7 +1,8 @@
 # Eigen RoofSignal ERP — medewerker- en klantlogin
 
-Status: echte login getest in afzonderlijke Supabase-omgeving, 12 oktober 2026.
-Eigen software; geen Odoo of ERPNext. Online hosting wordt nog ingericht.
+Status: medewerker- en klantlogin online getest, 12 oktober 2026.
+Eigen software; geen Odoo of ERPNext. De afzonderlijke testomgeving staat op
+<https://roofsignal-erp-test.pages.dev>.
 Er zijn geen echte klanten, boekingen of financiële gegevens overgezet. Deze app en
 haar database worden niet meegenomen in de openbare websitebouw.
 
@@ -48,13 +49,14 @@ serverrechten. De proefaccountkiezer bestaat alleen in de lokale demo.
 
 De bestaande website-Supabaseomgeving is hard geblokkeerd in deze adapter.
 De echte cloudproef is geslaagd in **RoofSignal ERP test** (`seyuhowazudrhgrbwtbk`),
-met drie fictieve accounts. Online hosting en het eerste echte beheeraccount zijn nog
-niet geactiveerd. De test is geen vrijgave voor echte klantgegevens.
+met drie fictieve accounts. De aparte Cloudflare-testomgeving is gepubliceerd en
+heeft de HTTPS-proef doorlopen. Het eerste echte beheeraccount is nog niet geactiveerd.
+De test is geen vrijgave voor echte klantgegevens.
 Er worden geen uitnodigingen aan bestaande klanten gestuurd bij het starten of bouwen.
 
 ### Testinrichting en controle
 
-Maak pas na goedkeuring het afzonderlijke **RoofSignal ERP test**-project aan.
+Het afzonderlijke **RoofSignal ERP test**-project is met goedkeuring aangemaakt.
 Bewaar de volgende configuratie buiten Git, bijvoorbeeld `.local/auth-test.json`,
 met bestandstoegang alleen voor de eigenaar:
 
@@ -86,10 +88,14 @@ Voor herstelmails moeten de exacte callback-URL en de twee templates in
 registratie en anonieme accounts blijven uit. Verander bij online hosting de vaste
 origin naar de HTTPS-testlocatie; gebruik geen brede wildcard-redirects.
 
-`functions/[[path]].js` en `wrangler.toml` bereiden een afzonderlijk Cloudflare Pages
-testproject voor. Bewaar `ERP_STORAGE_KEY` en `ERP_SESSION_SECRET` als geheimen.
-Gebruik nooit het openbare RoofSignal Pages-project. De hostingconfiguratie verleent
-zelf geen toegang en publiceert niets automatisch. Beperk toegangspogingen ook op
+`functions/[[path]].js` en `wrangler.toml` ondersteunen het afzonderlijke Cloudflare
+Pages-project `roofsignal-erp-test`. Dit bouwt de branch `codex/eigen-erp-fundament`
+van `Fejolu/roofsignal`, met `apps/erp` als hoofdmap, `npm ci` als bouwopdracht en
+`public` als uitvoermap. De zes ERP-instellingen staan als versleutelde geheimen
+in de Production-omgeving van dit testproject. Het woord Production in Cloudflare
+maakt deze fictieve ERP-test geen productieadministratie. Preview-publicaties krijgen
+geen testgeheimen. De adapter weigert onbekende origins en providerredirects.
+Gebruik nooit het openbare RoofSignal Pages-project. Beperk toegangspogingen ook op
 het hostingplatform; de adapter bevat daarnaast begrensde lokale controles.
 
 ## Wat werkt
@@ -192,16 +198,19 @@ exact één winnaar. Dezelfde accounts zijn ook via het browserinlogscherm gecon
 Een fictief object bevat twee vrijgegeven inspectieronden, een leesbare voorbeeld-PDF
 en een voorstel voor de volgende halfjaarlijkse ronde. Er is geen klantmail verstuurd.
 
-109 lokale ERP-tests en 119 websitecontroles slagen. De Cloudflare-server compileert
-met Wrangler 4.149.0. De afzonderlijke online publicatie volgt op deze proeven.
+111 lokale ERP-tests en 119 websitecontroles slagen; 33 CMS-pagina's bouwen correct.
+De Cloudflare-server compileert met Wrangler 4.149.0. De afzonderlijke online omgeving
+doorliep daarna de HTTPS-proef: medewerker- en klantlogin, klant A/B-isolatie,
+private PDF-download, versleutelde Secure/HttpOnly-cookie, weigeren van anonieme
+schrijfverzoeken en weigeren van een gekopieerde cookie na uitloggen. De online
+browser toont de twee inspectieronden en het halfjaarlijkse datumvoorstel.
 
 ## Vervolg vóór gebruik met echte klanten
 
-1. **Besloten testomgeving:** nieuwe Auth-adapter en dezelfde SQL eerst in een afzonderlijke
-   Supabase-testomgeving beproeven, eerste echte beheerder expliciet toekennen en
-   uitnodigingsmails controleren. De ontwikkel-accountkiezer en auth-bootstrap bestaan daar niet.
-2. **Dossiers en bestanden:** private opslag koppelen, upload/download met servercontrole,
-   geteste back-up/herstelprocedure en controle op achtergebleven private uploads.
+1. **Eigen beheeraccount en mails:** eerste echte beheerder expliciet toekennen en
+   uitnodigingsmails controleren. De ontwikkel-accountkiezer en auth-bootstrap bestaan online niet.
+2. **Beheer van dossiers en bestanden:** back-up/herstelprocedure beproeven en controle
+   op achtergebleven private uploads toevoegen. Private opslag en serverdownloads zijn getest.
 3. **Website → ERP:** productcatalogus met goedgekeurde prijsversies, consumentenboekingen en
    VvE-aanmeldingen idempotent overnemen; prijs, akkoord, betaalreferentie en reisafspraak behouden.
    Bestaande Google/Mollie-routes blijven eigenaar van planning en betalingsbevestiging tot migratie.
