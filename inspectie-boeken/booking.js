@@ -30,6 +30,12 @@ let checkingReturnStatus = false;
 const MAX_CHECKOUT_RECOVERY_POLLS = 8;
 const CHECKOUT_RECOVERY_DELAY_MS = 2000;
 const CHECKOUT_WAIT_LIMIT_MS = 45000;
+const MAX_PREPARATION_DISCARD_POLLS = 5;
+let preparationGeneration = 0;
+let preparation = null;
+let activePreparation = null;
+let preparationQueue = Promise.resolve();
+let submissionStarted = false;
 
 function message(id, text) {
   const target = el(id);
@@ -97,6 +103,7 @@ function showPaymentLink(validatedUrl) {
 
 function clearQuote() {
   if (recovery || recoveryBlocked) return;
+  invalidatePreparation();
   revision += 1;
   clearTimeout(quoteExpiryTimer);
   quote = null;
@@ -143,6 +150,87 @@ async function api(path, options = {}) {
   catch { throw new BookingError('De boekingsservice geeft nog geen bruikbaar antwoord.', response.status); }
   if (!response.ok) throw new BookingError(typeof data?.error === 'string' ? data.error : 'De aanvraag kon niet worden verwerkt.', response.status, data);
   return data;
+}
+
+function invalidatePreparation() {
+  if (submissionStarted || recovery || recoveryBlocked) return;
+  preparationGeneration += 1;
+  preparation = null;
+  if (activePreparation) queuePreparationWork();
+}
+
+function validatePreparationResponse(data, draft) {
+  if (!data || data.requestId !== draft.requestId || data.quoteId !== draft.quoteId || data.slotId !== draft.slotId
+      || data.currency !== 'EUR' || data.totalCents !== draft.totalCents
+      || !['prepared', 'pending', 'not_created'].includes(data.state)
+      || Object.hasOwn(data, 'checkoutUrl') || !Number.isFinite(Date.parse(data.expiresAt))
+      || (data.state !== 'not_created' && Date.parse(data.expiresAt) <= Date.now())) {
+    throw new BookingError('De voorbereiding hoort niet bij uw gekozen inspectie.');
+  }
+  return data;
+}
+
+async function discardPreparation(draft) {
+  for (let poll = 0; poll < MAX_PREPARATION_DISCARD_POLLS; poll += 1) {
+    if (poll) await new Promise(resolve => setTimeout(resolve, CHECKOUT_RECOVERY_DELAY_MS));
+    const result = await api('/discard-prepare', { method: 'POST', body: JSON.stringify({ requestId: draft.requestId }) });
+    if (!result || typeof result.discarded !== 'boolean' || typeof result.pending !== 'boolean') {
+      throw new BookingError('De eerdere voorbereiding kon niet worden afgehandeld.');
+    }
+    if (result.discarded && !result.pending) return true;
+    if (!result.pending) return false;
+  }
+  return false;
+}
+
+function queuePreparationWork() {
+  // Await an earlier preparation before discarding it. Aborting the browser
+  // request cannot prove that an upstream calendar hold was never created.
+  preparationQueue = preparationQueue.then(async () => {
+    const desired = preparation;
+    if (activePreparation && activePreparation !== desired) {
+      const abandoned = activePreparation;
+      if (!await discardPreparation(abandoned)) return;
+      if (activePreparation === abandoned) activePreparation = null;
+    }
+    if (!desired || desired !== preparation || desired.generation !== preparationGeneration
+        || desired.started || submissionStarted || recovery || recoveryBlocked) return;
+    desired.started = true;
+    activePreparation = desired;
+    try {
+      const data = await api('/prepare', { method: 'POST', body: JSON.stringify({ requestId: desired.requestId,
+        quoteId: desired.quoteId, slotId: desired.slotId }) });
+      desired.response = validatePreparationResponse(data, desired);
+    } catch (error) {
+      // Payment remains available: final checkout reuses this same opaque ID
+      // and lets the server resolve a failed or incomplete preflight.
+      desired.error = error;
+    }
+  }).catch(() => {
+    // A failed discard keeps the earlier draft active. A later selection may
+    // retry cleanup; it must never create an overlapping preparation.
+  });
+  return preparationQueue;
+}
+
+function prepareSelectedSlot() {
+  if (!connected || !quote || !selectedSlot || submissionStarted || recovery || recoveryBlocked) return;
+  if (preparation?.quoteId === quote.quoteId && preparation.slotId === selectedSlot.id
+      && preparation.totalCents === quote.totalCents) return;
+  preparationGeneration += 1;
+  preparation = { requestId: crypto.randomUUID(), quoteId: quote.quoteId, slotId: selectedSlot.id,
+    totalCents: quote.totalCents, generation: preparationGeneration, started: false };
+  queuePreparationWork();
+}
+
+async function waitForOlderPreparation(requestId, deadline) {
+  if (!activePreparation || activePreparation.requestId === requestId) return;
+  let timer;
+  try {
+    await Promise.race([preparationQueue, new Promise(resolve => {
+      timer = setTimeout(resolve, Math.max(0, Math.min(10000, deadline - Date.now())));
+    })]);
+  } finally { clearTimeout(timer); }
 }
 
 const slotDay = slot => new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(slot.start));
@@ -211,6 +299,7 @@ function renderSlots(slots) {
 }
 
 function renderSelectedDay() {
+  invalidatePreparation();
   selectedSlot = null;
   el('slots').replaceChildren();
   el('calendar-times').hidden = !selectedDay;
@@ -229,7 +318,7 @@ function renderSelectedDay() {
     input.addEventListener('change', () => {
       if (calendarLocked() || slotDay(slot) !== selectedDay || !availableSlots.includes(slot)) return;
       el('earlyStartRequested').checked = false;
-      selectedSlot = slot; updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen');
+      selectedSlot = slot; prepareSelectedSlot(); updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen');
     });
     label.append(input, text); el('slots').append(label);
   }
@@ -315,6 +404,7 @@ function persistRecovery(record) {
 
 // Call only after a verified terminal result or explicit not-created fence.
 function releaseRecovery() {
+  const releasedRequestId = recovery?.requestId;
   try {
     sessionStorage.removeItem(RECOVERY_STORAGE_KEY);
     if (sessionStorage.getItem(RECOVERY_STORAGE_KEY) !== null) throw new Error();
@@ -323,6 +413,8 @@ function releaseRecovery() {
     throw new BookingError('De afgehandelde betaalopdracht kan niet veilig worden gewist. Neem contact op met RoofSignal.');
   }
   recovery = null; checkoutAttempt = null; closedStatus = null; returnOrder = null;
+  submissionStarted = false; preparation = null; preparationGeneration += 1;
+  if (activePreparation?.requestId === releasedRequestId) activePreparation = null;
   clearPaymentLink();
   lockOrder(false); form.hidden = false;
   const url = new URL(window.location.href);
@@ -429,22 +521,29 @@ form.addEventListener('submit', async event => {
     if (!el('termsAccepted').checked) return message('booking-error', 'Controleer uw akkoord met de voorwaarden.');
     const earlyStart = needsEarlyStart(selectedSlot.start);
     if (earlyStart && !el('earlyStartRequested').checked) return message('booking-error', 'Geef toestemming voor uitvoering binnen de bedenktijd of kies een later moment.');
+    submissionStarted = true;
     checkoutAttempt = {
-      requestId: crypto.randomUUID(), quoteId: quote.quoteId, slotId: selectedSlot.id,
+      requestId: preparation?.quoteId === quote.quoteId && preparation.slotId === selectedSlot.id
+        && preparation.totalCents === quote.totalCents ? preparation.requestId : crypto.randomUUID(),
+      quoteId: quote.quoteId, slotId: selectedSlot.id,
       customer: { name: el('name').value.trim(), email: el('email').value.trim(), phone: el('phone').value.trim(), notes: el('notes').value.trim() },
       terms: { accepted: true, version: quote.termsVersion, earlyStartRequested: earlyStart && el('earlyStartRequested').checked }
     };
     // Persist only opaque IDs and the approved EUR amount BEFORE any request.
     // Reloads recover by requestId; an uncertain request is never recreated.
     try { persistRecovery(createRecoveryRecord(checkoutAttempt, quote)); }
-    catch (error) { checkoutAttempt = null; message('booking-error', error.message); updateSummary(); return; }
+    catch (error) { checkoutAttempt = null; submissionStarted = false; message('booking-error', error.message); updateSummary(); return; }
     lockOrder();
   }
   loading = true; updateSummary();
   message('booking-status', 'Uw betaalpagina openen…');
   const deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS;
   try {
-    const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt), timeoutMs: CHECKOUT_WAIT_LIMIT_MS });
+    // Final consent/customer data always reaches the server, even if the
+    // background hold is still running. The same ID joins that preparation.
+    await waitForOlderPreparation(checkoutAttempt.requestId, deadline);
+    const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt),
+      timeoutMs: Math.max(1, deadline - Date.now()) });
     // This is a funnel step, never proof of payment or a counted sale.
     window.RoofSignalAnalytics?.track('Inspectie betaling gestart');
     await followCheckoutAttempt(payment, true, deadline);
