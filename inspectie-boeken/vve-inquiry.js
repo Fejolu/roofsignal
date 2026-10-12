@@ -12,9 +12,9 @@
   // These are enquiry
   // indications only: no calendar reservation, order or payment is created.
   const tiers = [
-    { maximum: 5, key: 'small', net: 750, gross: 907.50, thermalNet: 400, thermalGross: 484 },
-    { maximum: 10, key: 'medium', net: 1000, gross: 1210, thermalNet: 550, thermalGross: 665.50 },
-    { maximum: 20, key: 'large', net: 1250, gross: 1512.50, thermalNet: 750, thermalGross: 907.50 }
+    { maximum: 5, net: 750, gross: 907.50, thermalNet: 400, thermalGross: 484 },
+    { maximum: 10, net: 1000, gross: 1210, thermalNet: 550, thermalGross: 665.50 },
+    { maximum: 20, net: 1250, gross: 1512.50, thermalNet: 750, thermalGross: 907.50 }
   ];
 
   function showAudience(audience) {
@@ -42,21 +42,10 @@
     const scope = byId('vve-object-scope').value;
     const tier = valid && scope === 'single' ? tiers.find(item => count <= item.maximum) : null;
     const custom = scope !== 'single' || (valid && count > 20);
-    const key = inspection ? tier?.key || (custom ? 'custom' : '') : '';
     byId('vve-thermal-interest').value = thermal ? 'yes' : 'no';
     byId('vve-scope').value = !inspection ? '' : thermalOnly
       ? 'VvE-objectaanmelding — thermografische inspectie, inclusief rapport'
       : `VvE-objectaanmelding — dak en gevel, inclusief inspectierapport${thermal ? ' en thermografie' : ''}`;
-    byId('vve-product-title').textContent = thermalPrimary ? 'RoofSignal Thermografie' : 'RoofSignal Inspectie';
-    byId('vve-tiers-title').textContent = thermalPrimary ? 'Thermografie per object' : 'Basisprijs per object';
-    byId('vve-tiers-note').textContent = thermalPrimary ? 'Excl. btw en reiskosten.' : 'Excl. btw, reiskosten en thermografie.';
-    for (const item of tiers) {
-      byId(`vve-tier-${item.key}-price`).textContent = money(thermalPrimary ? item.thermalNet : item.net);
-      byId(`vve-tier-${item.key}-vat`).textContent = `${money(thermalPrimary ? item.thermalGross : item.gross)} incl. btw`;
-    }
-    for (const row of document.querySelectorAll('[data-vve-tier]')) {
-      row.classList.toggle('selected', row.dataset.vveTier === key);
-    }
     const net = tier ? (envelope ? tier.net : 0) + (thermal ? tier.thermalNet : 0) : 0;
     const gross = tier ? (envelope ? tier.gross : 0) + (thermal ? tier.thermalGross : 0) : 0;
     byId('vve-envelope-price').textContent = tier ? money(tier.net) : custom ? 'Op maat' : `Vanaf ${money(tiers[0].net)}`;

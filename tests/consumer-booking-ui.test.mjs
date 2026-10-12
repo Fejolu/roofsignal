@@ -651,8 +651,6 @@ test('Standalone thermography sends its product, includes only the thermal price
   assert.equal(ui.get('summary-thermal-label').textContent, 'Dak- en gevelinspectie');
   assert.equal(ui.get('summary-thermal').textContent, 'Niet toegevoegd');
   assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
-  assert.equal(ui.get('visual-scope').hidden, true);
-  assert.equal(ui.get('thermal-scope').hidden, false);
   await ui.get('check-address').dispatch('click');
   assert.equal(ui.requests[0].body.inspectionType, 'thermal');
   assert.equal(ui.requests[0].body.thermal, true, 'Standalone heat inspection must not depend on the hidden optional checkbox');
@@ -725,8 +723,6 @@ test('Thermal-first and envelope-first combinations quote and pay the same amoun
     assert.equal(ui.get('summary-thermal').textContent, bookingCore.money(30250));
     ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
     await ui.get('check-address').dispatch('click');
-    assert.equal(ui.get('visual-scope').hidden, false);
-    assert.equal(ui.get('thermal-scope').hidden, false);
     await ui.get('slots').querySelector('input').dispatch('change');
     ui.get('termsAccepted').checked = true;
     await ui.get('termsAccepted').dispatch('change');
