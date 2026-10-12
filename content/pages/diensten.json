@@ -1,7 +1,7 @@
 {
   "seo": {
     "title": "Gebouwschilrapportage en onderhoudsadvies | RoofSignal diensten",
-    "description": "Onafhankelijke visuele inspecties van daken en gevels, uitsluitend met drones. Heldere gebouwschilrapportage met bevindingen en onderhoudsprioriteiten."
+    "description": "Onafhankelijke dak- en gevelinspecties en thermische inspecties met drones. Thermografie zelfstandig boeken of combineren, met heldere rapportage en vervolgstappen."
   },
   "section_01": {
     "item_01": "Property Intelligence in de praktijk",
@@ -34,7 +34,7 @@
     "item_08": "Hoe vertaalt RoofSignal een bevinding naar een bruikbare prioriteit? Lees: <a class=\"rs-text-link\" href=\"/kennisbank-van-bevinding-naar-prioriteit\">Van bevinding naar onderhoudsprioriteit</a>"
   },
   "section_05": {
-    "item_01": "Gerichte zoekvragen",
+    "item_01": "Voor uw onderhoudsvraag",
     "item_02": "Begin bij de concrete vraag. Bouw verder aan uw vastgoedinzicht.",
     "item_03": "Landelijk werkgebied",
     "item_04": "Onafhankelijke gebouwinformatie en uniforme rapportage voor objecten door heel Nederland.",
@@ -45,20 +45,20 @@
     "item_06": "Dakinspectie VvE",
     "item_07": "Onderbouw dakonderhoud met bewijs, prioriteit en input voor bestuur of ALV.",
     "item_08": {
-      "label": "Bekijk pagina",
-      "href": "dakinspectie-vve"
+      "label": "Bekijk dakinspectie voor VvE’s →",
+      "href": "/dakinspectie-vve"
     },
     "item_09": "Drone dakinspectie",
     "item_10": "Bekijk hoe we uitsluitend met drones inspecteren en welke grenzen daarbij horen.",
     "item_11": {
-      "label": "Bekijk pagina",
-      "href": "drone-dakinspectie"
+      "label": "Bekijk dakinspectie met een drone →",
+      "href": "/drone-dakinspectie"
     },
     "item_12": "MJOP-input VvE",
     "item_13": "Maak onderhoudsplanning concreter met actuele bevindingen per bouwdeel.",
     "item_14": {
-      "label": "Bekijk pagina",
-      "href": "mjop-input-vve"
+      "label": "Bekijk inspectie als MJOP-input →",
+      "href": "/mjop-input-vve"
     }
   },
   "section_06": {
@@ -68,14 +68,28 @@
     "item_04": "<a class=\"rs-text-link\" href=\"/bouwvoortgang\">Bekijk bouwvoortgang met drones →</a>"
   },
   "section_07": {
-    "item_01": "Eerst een voorbeeldrapport bekijken of direct een offerte aanvragen?",
+    "item_01": "Bekijk een voorbeeldrapport of boek uw inspectie.",
     "item_02": {
       "label": "Bekijk een voorbeeldrapport",
       "href": "/voorbeeldrapport-uitgebreid"
     },
     "item_03": {
-      "label": "Vraag een inspectie aan",
-      "href": "contact"
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
+    }
+  },
+  "section_08": {
+    "item_01": "Thermische inspectie",
+    "item_02": "Inzicht in warmteverlies en isolatieafwijkingen.",
+    "item_03": "Met warmtebeelden vanuit een drone onderzoeken we uw gebouw op thermische afwijkingen. U ontvangt een rapport met bevindingen en aanbevolen vervolgstappen. Afwijkingen zijn aanwijzingen; we beoordelen ze samen met de opnameomstandigheden.",
+    "item_04": "Voor uw woning of VvE, zelfstandig te boeken of te combineren met een dak- en gevelinspectie.",
+    "item_05": {
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_06": {
+      "label": "Bekijk thermografische inspectie →",
+      "href": "/thermografische-inspectie"
     }
   }
 }

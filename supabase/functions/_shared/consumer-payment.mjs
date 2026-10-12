@@ -3,6 +3,12 @@ export const PROFILE_ID = 'pfl_Bef5DYX9w5';
 export const RETRY_WINDOW_MS = 40 * 60 * 1000;
 export const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 export const TERMINAL = new Set(['confirmed','paid_review_required','failed','canceled','expired','not_created']);
+export function publicPaymentStatus(attempt) {
+  if(['confirmed','paid_review_required','failed','canceled','expired'].includes(attempt.status))return attempt.status;
+  // A provider failure/expiry alone is not durable closure. Calendar cleanup
+  // must complete before the customer can start another booking.
+  return ['open','pending','authorized'].includes(attempt.payment_status)?attempt.payment_status:'pending';
+}
 export function euro(cents) {
   if (!Number.isSafeInteger(cents) || cents < 1) throw Error('INVALID_AMOUNT');
   return `${Math.floor(cents/100)}.${String(cents%100).padStart(2,'0')}`;
@@ -11,8 +17,10 @@ export function paymentBody(attempt, quote, publicBase) {
   if (!UUID.test(attempt.id) || quote.id !== attempt.quote_id || !['test','live'].includes(attempt.mode)) throw Error('INVALID_ATTEMPT');
   return {
     amount:{currency:'EUR',value:euro(quote.total_cents)},
-    description:`RoofSignal Inspectie ${attempt.reference}`,
-    profileId:PROFILE_ID, testmode:attempt.mode==='test', method:'ideal', locale:'nl_NL',
+    description:`RoofSignal ${quote.inspection_type === 'thermal' ? 'Thermische inspectie' : 'Inspectie'} ${attempt.reference}`,
+    // An array retains Mollie's hosted payment-method screen. A scalar iDEAL
+    // method skips that screen and may return the official iDEAL checkout.
+    profileId:PROFILE_ID, testmode:attempt.mode==='test', method:['ideal'], locale:'nl_NL',
     redirectUrl:`https://www.roofsignal.nl/inspectie-boeken/?booking=${attempt.status_token}`,
     webhookUrl:`${publicBase}/webhook?mode=${attempt.mode}`,
     metadata:{consumerRequestId:attempt.id,quoteId:quote.id,integration:'roofsignal-consumer-v1',mode:attempt.mode}
@@ -27,9 +35,18 @@ export function verifyPayment(payment,attempt,quote) {
     || !['open','pending','authorized','paid','failed','canceled','expired'].includes(payment.status)) throw Error('PAYMENT_MISMATCH');
   return payment;
 }
+export async function rememberCreatedPayment({attempt,quote,payment,save}) {
+  verifyPayment(payment,attempt,quote);
+  // Keep the verified provider identity even if checkout URL validation or
+  // the following status lookup fails. Recovery then reads this payment;
+  // it never needs another create request or a fresh idempotency key.
+  return await save({payment_id:payment.id,payment_status:payment.status,status:'payment_pending',checkout_url:null});
+}
 export function checkoutHref(payment) {
   const url=new URL(payment?._links?.checkout?.href);
-  if(url.protocol!=='https:'||!['www.mollie.com','checkout.mollie.com'].includes(url.hostname)||url.username||url.password||url.port)throw Error('INVALID_CHECKOUT_URL');
+  // Older saved iDEAL payments can point directly to the provider. Trust only
+  // its exact official host, alongside Mollie's checkout hosts.
+  if(url.protocol!=='https:'||!['www.mollie.com','checkout.mollie.com','pay.ideal.nl'].includes(url.hostname)||url.username||url.password||url.port)throw Error('INVALID_CHECKOUT_URL');
   return url.href;
 }
 export function mayRetryCreation(attempt,keyFingerprint,now=Date.now()) {
@@ -54,7 +71,7 @@ export async function reconcilePayment({attempt,quote,payment,calendar,save}) {
   }
   if(payment.status==='paid') {
     // Persist the verified money receipt before touching the calendar.
-    attempt=await save({payment_id:payment.id,payment_status:'paid',status:'paid_review_required'});
+    attempt=await save({payment_id:payment.id,payment_status:'paid',status:'paid_review_required',checkout_url:null});
     try {
       await calendar('confirm',{requestId:attempt.id,start:attempt.slot_start,destination:quote.destination,reference:attempt.reference});
     } catch { return attempt; }
@@ -65,7 +82,10 @@ export async function reconcilePayment({attempt,quote,payment,calendar,save}) {
     // Capacity is only released after the provider proves payment cannot occur
     // AND our exact calendar hold has been removed. A network timeout is pending.
     await calendar('release',{requestId:attempt.id,start:attempt.slot_start});
-    return await save({payment_id:payment.id,payment_status:payment.status,status:payment.status});
+    return await save({payment_id:payment.id,payment_status:payment.status,status:payment.status,checkout_url:null});
   }
-  return await save({payment_id:payment.id,payment_status:payment.status,status:'payment_pending'});
+  // Always derive the resumable checkout from the verified current provider
+  // response. An earlier interrupted/pending creation may not have saved it.
+  return await save({payment_id:payment.id,payment_status:payment.status,status:'payment_pending',
+    checkout_url:payment.status==='open'?checkoutHref(payment):null});
 }

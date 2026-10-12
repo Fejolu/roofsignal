@@ -126,5 +126,9 @@
   "kennisbank-wat-ziet-een-dakinspectie": {
     "template": "kennisbank-wat-ziet-een-dakinspectie.html",
     "label": "Wat ziet een dakinspectie"
+  },
+  "thermografische-inspectie": {
+    "template": "thermografische-inspectie.html",
+    "label": "Thermografische inspectie"
   }
 }

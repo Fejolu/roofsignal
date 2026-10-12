@@ -30,6 +30,16 @@ export function withdrawalLastDay(agreement) {
 export function earlyStartRequired(start,agreement=Date.now()) {
  return dutchDay(start)<=withdrawalLastDay(agreement);
 }
+export function assertEarlyStartConsent(start,requested,agreement=Date.now()) {
+ if(typeof requested!=='boolean')throw Error('INVALID_REQUEST');
+ if(earlyStartRequired(start,agreement)&&requested!==true)throw Error('EARLY_START_CONSENT_REQUIRED');
+}
+export function assertAfterWithdrawal(start,agreement=Date.now()) {
+ if(earlyStartRequired(start,agreement))throw Error('AFTER_WITHDRAWAL_REQUIRED');
+}
+export function daysAfterWithdrawal(days,agreement=Date.now()) {
+ return days.filter(day=>!earlyStartRequired(day.start,agreement));
+}
 export function reportDueDay(inspection) {
  let due=dutchDay(inspection),remaining=2;
  while(remaining){due=shift(due,1);if(isDutchWorkingDay(due))remaining--;}

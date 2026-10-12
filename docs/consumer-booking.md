@@ -1,5 +1,91 @@
 # RoofSignal — algemene consumentenboeking
 
+## Zelfstandige thermische inspectie — besluit 11 oktober 2026
+
+Ferry heeft bevestigd dat **thermische inspectie zelfstandig te boeken is**, zowel
+voor particulieren als VvE’s. De klant kiest dak- en gevelinspectie, thermische
+inspectie of beide. Thermografie vereist geen voorafgaande gebouwschilinspectie.
+
+De formulieren voor Woning en VvE starten zonder vooraf gekozen hoofdinspectie.
+Pas na de keuze verschijnt de andere inspectie als optionele aanvulling. Wisselen
+van hoofdinspectie wist de aanvulling en werkt het overzicht bij. Een combinatie
+behoudt hetzelfde product en totaal, ongeacht de keuzerichting.
+
+- Particulier: dak- en gevelinspectie óf zelfstandige thermografie **€299 excl. /
+  €361,79 incl. btw**. Een tweede inspectie tijdens hetzelfde bezoek kost €250 excl. /
+  €302,50 incl. btw, ongeacht welke inspectie eerst gekozen is.
+  De combinatie blijft €549 excl. / €664,29 incl. btw.
+- VvE: maximaal 5 adressen €400 excl. / €484 incl.; 6–10 adressen €550 excl. /
+  €665,50 incl.; 11–20 adressen €750 excl. / €907,50 incl. btw.
+  Bij zelfstandige thermografie telt geen basisinspectie mee. Bij een combinatie
+  blijft dezelfde thermografiestaffel een toeslag op de basisprijs.
+- De bestaande reiskostenregeling geldt voor beide producten en de combinatie.
+  Eén algemene online woningboeking omvat één bezoek van maximaal 45 minuten.
+  Twee vooraf afgesproken bezoeken vragen een offerte met twee reiskostentoeslagen;
+  verplaatsen wegens ongeschikt weer kost niets extra.
+- Particulieren kiezen een beschikbaar moment en betalen via Mollie. Uitvoering binnen
+  de bedenktijd vereist hun afzonderlijke, uitdrukkelijke verzoek. Zonder dat verzoek
+  wordt pas na de bedenktijd begonnen.
+  Het digitale rapport volgt binnen twee werkdagen na de inspectie.
+- VvE’s melden hun object vrijblijvend aan met de staffelprijs in beeld. Deze route
+  reserveert geen agenda en maakt geen betaling. Vanaf 21 adressen, meerdere gebouwen
+  of afwijkende scope blijft een maatwerkofferte nodig.
+- Thermische afwijkingen worden beoordeeld met de opnameomstandigheden en zijn
+  aanwijzingen, geen automatisch bewijs van een gebrek of oorzaak.
+
+Nieuwe prijsopgaven gebruiken voorwaardenversie `2026-10-11-consumer-los` en
+`legal/consumentenboeking-2026-10-11-los.txt` en prijsversie
+`2026-10-11-equal-standalone`. De aanvullende migratie bewaart oudere records en
+invoer van de vorige server onder `2026-10-11-thermal-legacy`. Bestaande prijsopgaven en
+opdrachten houden hun opgeslagen product, prijs en voorwaardenversie. De
+Parken-pilot behoudt haar afzonderlijke aanbod en reisafspraken.
+
+De actuele dienstteksten staan in de Pages CMS-bronnen voor Diensten, Aanpak &
+offerte, de homepage en Dakinspectie VvE. De lokale kopie van het medewerkershandboek
+is bijgewerkt; deze wijziging publiceert geen Odoo-artikel of Obsidian-vaultbestand.
+
+## Korte toestemming voor eerdere uitvoering — correctie 11 oktober 2026
+
+Ferry heeft zijn eerdere antwoord gecorrigeerd: uitvoering binnen de bedenktijd
+blijft mogelijk met het voorgestelde **korte, afzonderlijke akkoord**:
+
+> Ik verzoek om uitvoering binnen de bedenktijd. Na volledige uitvoering, inclusief rapport, vervalt mijn herroepingsrecht
+
+Het vakje is niet vooraf aangevinkt. Alleen een datum kiezen of de algemene
+voorwaarden accepteren geeft geen toestemming voor vroegere uitvoering. De klant
+krijgt vóór betalen ook duidelijk te zien dat bij herroeping alleen het al
+uitgevoerde deel evenredig verschuldigd is. De lange voormalige checkbox en de
+inline link “Boeking herroepen” keren niet terug; de afzonderlijke herroepingsroute
+blijft beschikbaar.
+
+Beschikbare toekomstige momenten kunnen vanaf de volgende kalenderdag worden
+getoond, binnen de bestaande werkdagen, reistijden en agendabeperkingen. Een keuze
+binnen de toepasselijke bedenktijd vereist bij checkout uitdrukkelijk
+`terms.earlyStartRequested: true`. Zonder die toestemming kan alleen een moment na
+de volledige bedenktijd worden afgerekend. De API vereist een echte boolean;
+ontbrekende of anders getypte toestemming wordt afgewezen.
+
+De server berekent bij checkout opnieuw het einde van de bedenktijd via
+`withdrawalLastDay`. De termijn begint op de dag na de overeenkomst en houdt
+rekening met verlenging door weekends, algemeen erkende feestdagen en daarmee
+gelijkgestelde dagen. Ook een inspectie op de laatste dag vereist eerdere-starttoestemming.
+Een te vroeg moment zonder toestemming wordt vóór het maken van een betaling
+geweigerd. Zowel de keuze als het moment van aanvaarding worden bewaard; de
+bevestiging vermeldt de vastgelegde keuze en bevat de overeengekomen voorwaarden.
+
+Nieuwe prijsopgaven en opdrachten gebruiken versie `2026-10-11-consumer-los` en
+`legal/consumentenboeking-2026-10-11-los.txt`, met dezelfde korte toestemming als
+de eerdere versie `2026-10-11-consumer-kort`. De eerdere versies, inclusief de
+versies die uitsluitend planning na de bedenktijd toelieten, blijven ongewijzigd
+beschikbaar. Bestaande opdrachten houden hun eigen voorwaarden en vastgelegde
+keuze; herstel en bevestiging maken daarvoor geen nieuwe opdracht onder gewijzigde
+afspraken. De Parken-pilot en vrijblijvende VvE-aanmelding behouden hun eigen route.
+
+Primaire broncontrole: [ACM — Bedenktijd](https://www.acm.nl/nl/verkoop-aan-consumenten/klantenservice/bedenktijd),
+onder meer starten en volledige uitvoering van diensten tijdens de bedenktijd.
+De bestaande algemene voorwaarden van 11 oktober 2026 regelen dit al; alleen de
+aanvullende boekingsvoorwaarden krijgen een nieuwe, onveranderlijke versie.
+
 ## VvE-objectaanmelding — besluit 11 oktober 2026
 
 De gebruiker kiest expliciet **object aanmelden met staffelprijs**, met op dezelfde
@@ -17,8 +103,9 @@ tonen van de grotere basisstaffels in deze aanvraagroute toe.
 
 Ferry heeft op 11 oktober ook de thermografiestaffel goedgekeurd (RS-2026-10-11):
 maximaal 5 adressen + €400 excl. / €484 incl. btw; 6–10 adressen + €550 excl. /
-€665,50 incl.; 11–20 adressen + €750 excl. / €907,50 incl. De checkbox toont de
-passende toeslag en telt deze bij selectie direct op bij de basisprijs. De totalen
+€665,50 incl.; 11–20 adressen + €750 excl. / €907,50 incl. Bij een gecombineerde
+inspectie telt het formulier de passende thermografietoeslag bij de basisprijs. Bij
+zelfstandige thermografie geldt alleen de thermografiestaffel. De gecombineerde totalen
 zijn respectievelijk €1.150 / €1.391,50, €1.550 / €1.875,50 en €2.000 / €2.420
 (excl. / incl. btw), vóór eventuele reiskosten. Maatwerk blijft maatwerk, ook met
 thermografie. De woningafspraak van 45 minuten en de particuliere toeslag worden
@@ -51,12 +138,14 @@ Repository: `Fejolu/roofsignal`, branch `codex/consumer-booking-20261010`. Websi
 ## Door de gebruiker bevestigde uitvoering
 
 - Eén grondgebonden woning/hoofdgebouw; uitsluitend drone-inspectie. Afwijkende objecten en bijgebouwen via offerte.
-- Basis €361,79 inclusief btw; thermografie + €302,50; samen €664,29 vóór reizen.
+- Dak- en gevelinspectie óf zelfstandige thermografie €361,79 inclusief btw;
+  tweede inspectie in hetzelfde bezoek €302,50; combinatie €664,29 vóór reizen.
 - Digitaal inspectierapport **binnen twee werkdagen na de inspectie**.
-- Online **één gecombineerd bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie, onder geschikte meet- en vliegomstandigheden.
+- Online **één bezoek van maximaal 45 minuten**, inclusief voorinspectie op locatie,
+  voor de gekozen inspectie of combinatie, onder geschikte meet- en vliegomstandigheden.
 - Twee vooraf afgesproken bezoeken: offerte met **twee reiskostentoeslagen**. Verplaatsen door ongeschikt weer: geen extra kosten.
 - Reizen: **enkele autorit over de weg vanaf 7316 BH 4**. <=25 km €0; >25–75 km €42,35; >75–150 km €90,75; >150 km offerte. Grenzen op ongeronde meters.
-- Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, vanaf de volgende kalenderdag.
+- Agenda `ferry.joosten@gmail.com`, maandag–vrijdag 09:00–16:00, vanaf de volgende kalenderdag. Uitvoering binnen de volledige Nederlandse bedenktijd vereist voor nieuwe algemene consumentenboekingen het afzonderlijke korte akkoord.
 - Planning houdt rekening met autoroutes tussen afspraken. Nabije afspraken worden aanbevolen zonder andere afspraken te verplaatsen.
 - Implementatiekeuze: 15 minuten marge bovenop berekende reistijd; ook heen-/terugreis binnen de werktijden. Ontbrekende locaties van aangrenzende bezette afspraken blokkeren automatische inpassing.
 
@@ -81,6 +170,7 @@ Tarievenbron: [Odoo-handboek 04 Reiskosten](https://roofsignal.odoo.com/odoo/kno
 - PDOK-adrescontrole met exacte postcode/huisnummermatch; Google-autoroute bepaalt de serverprijs. PDOK is geen controle van objecttype of vliegtoestemming.
 - Onveranderlijke serverprijsopgave met routebewijs, reisbeleid en vervaltijd; geen bedragen uit browserinvoer.
 - Opgeslagen tijdsloten, één actieve boeking per prijsopgave en vergrendeling tegen overlap; Google controleert ook de reisruimte voordat een eigen reservering ontstaat.
+- Inspectiemomenten binnen de volledige Nederlandse bedenktijd kunnen alleen met afzonderlijke expliciete toestemming worden afgerekend; checkout berekent de termijn opnieuw vóór een betaling ontstaat. Zonder die toestemming is alleen een later moment toegestaan.
 - Duurzame request-ID en herstelblokkade voorkomen dat een vertraagd verzoek na een “niet aangemaakt”-antwoord toch een betaling begint.
 - Mollie-bedrag, valuta, profiel, modus en metadata worden gecontroleerd. Een terugkeer-URL is nooit betaalbewijs.
 - Betaling wordt vóór agendabevestiging vastgelegd. Bij een agendafout blijft de status “betaald, afstemming nodig”.
@@ -138,16 +228,52 @@ De conceptmelding en concepttitel zijn op deze branch verwijderd, HTML en `_head
 
 ### POST /api/consumer-booking/quote
 
+Sinds de snelheidsverbetering van 11 oktober 2026 bevat het succesvolle antwoord ook
+`availability: {quoteId, slots, sourceCheckedAt}` volgens het hieronder beschreven
+beschikbaarheidscontract. De browser controleert deze gegevens en toont de agenda
+zonder een tweede netwerkverzoek. Alleen bij een oudere server zonder dit veld
+gebruikt de browser nog de afzonderlijke beschikbaarheidsroute.
+
+De besloten Google-koppeling leest met `context` het hele venster van 21 dagen eenmaal
+uit. De backend bepaalt met dezelfde planningsregels als de vergrendelde checkout
+welke autoroutes nodig zijn en vraagt die met maximaal acht gelijktijdige `route`-aanroepen
+op. Reeds bekende routes worden tegelijk met de verse agenda uitgelezen, zodat daarvoor
+geen extra Google-aanroepen nodig zijn. Dat voorkomt opeenvolgende Google Maps-wachttijden bij een nieuw adres. Alleen
+de backend ontvangt de tijdvakken en locaties van afspraken; de browser krijgt uitsluitend
+de prijsopgave en beschikbare inspectiemomenten. De oudere gecombineerde `plan`-actie
+blijft beschikbaar voor terugrollen. Een Google-toegangstoken wordt uitsluitend in het
+servergeheugen gedeeld en vóór het verstrijken vernieuwd. Routeafstanden en statische autorijtijden
+worden maximaal één uur hergebruikt, met afzonderlijke sleutels per rijrichting.
+Vrij/bezet-gegevens worden niet gecachet. Bij reserveren en bevestigen worden agenda
+en benodigde routes opnieuw gecontroleerd onder de bestaande scriptvergrendeling.
+De uitrolvolgorde is Google-script (met `context`), consumentenbackend, website; de oudere routes
+blijven ondersteund. Toegangsrechten, reistarieven en inspectieduur blijven gelijk.
+
+Bronnen: [Google: batchbewerkingen](https://developers.google.com/apps-script/guides/support/best-practices),
+[agenda over een datumbereik](https://developers.google.com/apps-script/reference/calendar/calendar#getEvents(Date,Date)),
+[tijdelijke routecache](https://developers.google.com/apps-script/reference/cache/cache).
+
 Invoer:
 
 ```ts
 {
   address: { postcode: string; houseNumber: string };
+  inspectionType: "building_envelope" | "thermal";
+  pricingVersion: "2026-10-11-equal-standalone";
   thermal: boolean;
 }
 ```
 
-De client verstuurt alleen postcode en huisnummer voor de adrescontrole. Straat en plaats zijn readonly velden die uitsluitend worden gevuld uit het serverantwoord. De server hanteert Nederland als land voor deze propositie.
+`building_envelope` met `thermal: false` is de dak- en gevelinspectie; met `true`
+is het de combinatie. `thermal` is de zelfstandige thermische inspectie en vereist
+`thermal: true`. De server bepaalt de productprijs; de browser levert geen bedragen.
+Een combinatie wordt in beide keuzerichtingen als `building_envelope` met
+`thermal: true` verstuurd. De getoonde hoofdinspectie en toevoeging mogen wisselen;
+het gecombineerde product en totaal blijven gelijk.
+
+De client verstuurt alleen postcode en huisnummer als adresgegevens voor de
+adrescontrole. Straat en plaats zijn readonly velden die uitsluitend worden gevuld
+uit het serverantwoord. De server hanteert Nederland als land voor deze propositie.
 
 Server valideert adres, productgeschiktheid, vlieg-/locatiebeperkingen en of directe boeking mogelijk is. Adrescontrole betekent op zichzelf geen toestemming om te vliegen. Afwijkende of onvoldoende controleerbare objecten niet afrekenen; doorleiden naar contact. Server berekent alle bedragen in integer eurocenten, inclusief btw. Geen totaalbedrag van de client accepteren.
 
@@ -158,8 +284,9 @@ Vereist succesantwoord; bedragen zijn typen of vaste productwaarden, geen voorbe
   serviceable: true;
   quoteId: string;               // ondoorzichtig; minimaal 16 tekens
   currency: "EUR";
-  baseCents: 36179;
-  thermalCents: 0 | 30250;
+  inspectionType: "building_envelope" | "thermal";
+  baseCents: 0 | 36179;          // nul bij zelfstandige thermografie
+  thermalCents: 0 | 30250 | 36179; // 36179 bij zelfstandige thermografie
   travelCents: number;           // niet-negatieve integer; beoordeelde reisprijs
   totalCents: number;            // baseCents + thermalCents + travelCents
   travelDescription: string;    // niet-lege servertekst, geen HTML
@@ -177,21 +304,64 @@ Vereist succesantwoord; bedragen zijn typen of vaste productwaarden, geen voorbe
 
 Het gevonden adres moet bij de aangevraagde postcode en het huisnummer horen. De adapter controleert die koppeling en normaliseert hoofdletters en spaties. `travelDescription` wordt via `textContent` weergegeven; de browser berekent geen afstand of tarief.
 
-Sla de prijsopgave duurzaam en onveranderlijk op, inclusief gehanteerde reisbeleidsversie en goedkeuring. Alle overeengekomen bezoeken en reiskosten moeten in deze prijs zijn opgenomen. Onbeoordeelde of onbekende reiskosten mogen niet stilzwijgend nul worden. Gebruik passende geldigheidsduur, toegangscontrole op de prijsopgave, inputlimieten en misbruikbeperking. Geen `serviceable: true` retourneren als het reisbeleid of een meervoudig bezoek nog beoordeling vereist.
+Sla de prijsopgave duurzaam en onveranderlijk op, inclusief inspectietype,
+gehanteerde reisbeleidsversie en goedkeuring. Oude prijsopgaven krijgen als
+inspectietype `building_envelope`; hun vastgelegde prijs wordt niet opnieuw berekend.
+Alle overeengekomen bezoeken en reiskosten moeten in deze prijs zijn opgenomen.
+Onbeoordeelde of onbekende reiskosten mogen niet stilzwijgend nul worden. Gebruik
+passende geldigheidsduur, toegangscontrole op de prijsopgave, inputlimieten en
+misbruikbeperking. Geen `serviceable: true` retourneren als het reisbeleid of een
+meervoudig bezoek nog beoordeling vereist.
 
 ### GET /api/consumer-booking/availability?quoteId=...
 
-Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare momenten teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de beschikbaarheid opnieuw controleren en atomair claimen.
+Antwoord: `{quoteId,slots:[{id,start,end}]}`. `quoteId` moet gelijk zijn aan de aangevraagde quote. Tijden zijn ISO 8601 met Z of expliciete offset; de browser toont Europe/Amsterdam. Alleen actuele, werkelijk beschikbare toekomstige momenten vanaf de volgende kalenderdag teruggeven, berekend met inspectieduur, reisbuffer, geblokkeerde tijd en reeds openstaande reserveringen. Uitvoering binnen de volledige Nederlandse bedenktijd blijft afhankelijk van expliciete toestemming bij checkout. Dezelfde beschikbaarheidsregels gelden in het gecombineerde `/quote`-antwoord. Geen namen of andere gegevens uit agendapunten publiceren. Het kiezen van een moment in de browser is nog geen reservering. De adapter controleert vlak vóór checkout opnieuw of het geselecteerde moment nog in de toekomst ligt; de server moet de bedenktijd en beschikbaarheid opnieuw controleren en atomair claimen.
+
+### POST /api/consumer-booking/prepare
+
+Na het expliciet kiezen van een tijdstip bereidt de browser de agendareservering
+voor met `{requestId,quoteId,slotId}`. Dat gebeurt terwijl de klant de gegevens
+invult. De voorbereiding bevat geen klantgegevens, voorwaardenakkoord of
+Mollie-betaling en wordt uitsluitend in het browsergeheugen bijgehouden. De
+server claimt dezelfde capaciteit en controleert de actuele agenda; de tijdelijke
+reservering vervalt na vijf minuten of eerder bij het vervallen van de prijsopgave.
+
+Antwoord: `{requestId,quoteId,slotId,currency:'EUR',totalCents,state:'prepared'|
+'pending'|'not_created',expiresAt}`. Dit bevat geen betaallink of statustoken.
+Bij een andere datum, tijd, adres of inspectie wacht de browser een eerdere
+voorbereiding af en sluit deze via `/discard-prepare` voordat een volgende begint.
+Onbekende of late verzoeken worden met hetzelfde ID afgeschermd; een ingediende
+opdracht kan via dit endpoint nooit worden verwijderd. De bestaande hersteltaak
+ruimt verlopen voorbereidingen op, ook als de browser niet meer openstaat.
 
 ### POST /api/consumer-booking/checkout
 
 Invoer: `{requestId,quoteId,slotId,customer:{name,email,phone,notes},terms:{accepted,version,earlyStartRequested}}`.
 
-Server leest de opgeslagen prijsopgave, controleert verval, adres en scope, valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw, controleert de actuele agenda en claimt de capaciteit atomair. Controleer het verzoek om vervroegde uitvoering server-side tegen de daadwerkelijke datum van overeenkomst en toepasselijke bedenktijd. De front-endcontrole is slechts hulp bij invoer.
+Voor een nieuwe algemene consumentenboeking is `terms.earlyStartRequested` een
+expliciete boolean: `true` uitsluitend na het afzonderlijke korte akkoord, anders
+`false`. Een ontbrekende of anders getypte waarde wordt afgewezen. `terms.version`
+moet overeenkomen met de opgeslagen prijsopgave en de actuele versie
+`2026-10-11-consumer-los`.
+
+Server leest de opgeslagen prijsopgave, controleert verval, adres en scope,
+valideert consumentengegevens/voorwaarden en het gewenste startmoment opnieuw,
+controleert de actuele agenda en claimt de capaciteit atomair. Voor een startmoment
+binnen de volledige toepasselijke bedenktijd is
+`terms.earlyStartRequested === true` vereist; de einddatum wordt opnieuw berekend
+op het moment van checkout. Een te vroeg moment zonder die toestemming wordt
+afgewezen vóór de betalingspoging wordt aangemaakt. Historische opdrachten worden via `/recover` met hun bestaande
+voorwaarden en toestemming hersteld; er ontstaat daardoor geen nieuwe opdracht
+onder andere voorwaarden. Bij een geldige voorbereiding neemt de server exact
+dezelfde request-ID, prijsopgave, tijd en agendareservering over en legt pas na de
+klik op **Betalen** de klantgegevens en toestemming vast. Dat kan ook terwijl de
+voorbereidende agendacontrole nog loopt: dezelfde werker leest het bijgewerkte
+akkoord voordat hij een betaling aanmaakt. Een verlopen of afgebroken
+voorbereiding kan nooit door een vertraagd verzoek opnieuw worden geopend.
 
 Leg vóór het betaalverzoek één duurzame betalingspoging vast. Eigen idempotentie is vereist per requestId én per actieve prijsopgave/reservering; ook verversen mag geen tweede betaling creëren. Een database-exclusiviteitsregel moet overlappende claims uitsluiten. Alleen een vrij/bezet-aanroep gevolgd door los een agenda-item toevoegen sluit races niet uit. Definieer tevens hoe gelijktijdige handmatige wijzigingen in de agenda worden voorkomen of afgehandeld.
 
-Maak de Mollie-betaling server-side met de opgeslagen totaalprijs in decimale stringvorm en één stabiele Idempotency-Key, metadata voor de bestaande reservering, nl_NL en vaste redirect-/webhook-URLs uit vertrouwde configuratie. Gebruik snelle, op het account geactiveerde betaalmethoden; vermijd in deze eerste afsprakenflow langlopende bankoverschrijvingen. De klant wordt naar de geverifieerde `_links.checkout.href` gestuurd. De adapter accepteert nu exact www.mollie.com en checkout.mollie.com via HTTPS; bevestig de daadwerkelijk gebruikte Mollie-host met de echte testresponse voordat dit live gaat.
+Maak de Mollie-betaling server-side met de opgeslagen totaalprijs in decimale stringvorm en één stabiele Idempotency-Key, metadata voor de bestaande reservering, nl_NL en vaste redirect-/webhook-URLs uit vertrouwde configuratie. Nieuwe betalingen gebruiken `method: ['ideal']`, zodat de klant eerst Mollie's betaalpagina ziet. Volgens [Mollie's documentatie](https://docs.mollie.com/reference/create-payment) slaat de oudere scalaire keuze `method: 'ideal'` die pagina over. Historische betaalpayloads blijven ongewijzigd bij herstel. De klant wordt naar de geverifieerde `_links.checkout.href` gestuurd. Server en browser accepteren exact `www.mollie.com`, `checkout.mollie.com` en de [officiële iDEAL-betaalpagina](https://ideal.nl/en/security) `pay.ideal.nl`, uitsluitend via HTTPS zonder gebruikersgegevens of afwijkende poort. Het geverifieerde Mollie-betalingsnummer wordt opgeslagen vóór de URL-controle of een volgende statusaanroep, zodat een fout de betaalidentiteit nooit verloren laat gaan.
 
 Succesantwoord:
 
@@ -213,6 +383,8 @@ Vóór het eerste checkoutverzoek slaat de browser onder `roofsignal.consumerBoo
 
 Na een onzekere uitkomst worden de invoervelden vergrendeld. Een volgende poging en een paginaverversing gebruiken `/recover`; zij maken niet opnieuw een checkout aan. De Mollie-idempotentiesleutel wordt volgens de documentatie slechts één uur bewaard: eigen duurzame server-idempotentie en capaciteitsvergrendeling blijven noodzakelijk.
 
+De primaire actie heet **Betalen**. Eén expliciete klik opent de geverifieerde betaalpagina zodra de server `checkout_ready` teruggeeft. De al voorbereide agendareservering hoeft niet opnieuw via Google te worden aangemaakt. Alleen bij een aantoonbaar nieuwe Mollie-creatie zonder idempotente replay gebruikt de server direct het geverifieerde POST-antwoord; herstel en replay blijven de actuele betaalstatus ophalen. Een nog lopende voorbereiding wordt automatisch gevolgd via maximaal acht `/recover`-verzoeken met twee seconden tussenruimte en maximaal 45 seconden voor het geheel. De knop en invoervelden blijven tijdens deze reeks vergrendeld; alle verzoeken gebruiken hetzelfde request-ID. De browser controleert de opdrachtidentiteit, valuta, totaalprijs en toegestane HTTPS-host vóór iedere doorverwijzing. Een echte betaallink blijft als terugval beschikbaar. Bij een fout of een niet-betaalbare status wordt een eerder getoonde link verwijderd en de bestaande opdracht bewaard. Een paginaverversing doet slechts één passieve herstelcontrole en verwijst niet automatisch door. De betaal-URL blijft alleen in geheugen; zij komt niet in `sessionStorage`.
+
 ### POST /api/consumer-booking/recover
 
 Invoer: `{requestId:string}`. Dit herstelendpoint moet ook werken wanneer de browser het oorspronkelijke checkoutantwoord nooit heeft ontvangen. Een request-ID moet als onvoorspelbaar geheim worden behandeld, met geschikte toegangscontrole, rate-limiting en minimale responsgegevens.
@@ -225,7 +397,7 @@ Geef exact één van deze vier responsevormen terug.
 { requestId: string; state: "pending" }
 ```
 
-De adapter houdt de bestaande opdracht vergrendeld en biedt opnieuw controleren aan.
+De adapter houdt de bestaande opdracht vergrendeld. Na een expliciete klik op **Betalen** volgt automatisch de hierboven begrensde herstelreeks.
 
 **Dezelfde bestaande betaling kan worden hervat:**
 
@@ -306,7 +478,7 @@ Een lokale timer mag een nog betaalbare Mollie-poging niet vrijgeven. Reconcilia
 
 ### GET /api/consumer-booking/status?token=...
 
-Server verifieert token en verwerkt/reconcilieert de bestaande poging. Antwoord bevat minimaal `{status}` met `confirmed`, `paid_review_required`, `open`, `pending`, `failed`, `canceled` of `expired`. Alleen beperkte informatie teruggeven, nooit de ruwe Mollie-response of volledig klantdossier. Zet Cache-Control: no-store en een passend Referrer-Policy; neem statustokens niet op in analytics en serverlogs. Zonder verifieerbare status blijft de afspraak onbevestigd.
+Server verifieert token en verwerkt/reconcilieert de bestaande poging. Antwoord bevat `{status, ...view}` met `confirmed`, `paid_review_required`, `open`, `pending`, `failed`, `canceled` of `expired`, plus dezelfde beperkte opdrachtidentiteit en herstelstatus als `/recover`. Alleen bij een geverifieerde open betaling bevat `view` een bruikbare Mollie-checkout-URL. Zo kan de terugkeerpagina ook zonder lokale browseropslag **Betalen** tonen, buiten het eventueel verborgen boekingsformulier. Met een bestaand lokaal herstelrecord moet de serverresponse daar exact bij aansluiten. Alleen beperkte informatie teruggeven, nooit de ruwe Mollie-response of volledig klantdossier. Zet Cache-Control: no-store en een passend Referrer-Policy; neem statustokens niet op in analytics en serverlogs. Zonder verifieerbare status blijft de afspraak onbevestigd.
 
 ## Controle en plaatsing
 
@@ -338,3 +510,11 @@ Voor de consumentenboeking zijn uitsluitend expliciete proefbetalingen, gemarkee
 - https://docs.mollie.com/docs/handling-payment-status — statusafhandeling en niet zelf voorspellen van verval.
 - https://docs.mollie.com/reference/api-idempotency — API-idempotentie vervangt geen eigen duurzame idempotentie.
 - https://docs.mollie.com/reference/testing — gescheiden testbetalingen.
+
+De betaalknop heet **Betalen**. De voorgaande voorwaardenversie
+`2026-10-11-consumer-pay` en `legal/consumentenboeking-2026-10-11-betalen.txt`
+wijzigde uitsluitend de knopnaam. Alle eerder geaccepteerde voorwaardenversies
+blijven onveranderd beschikbaar voor bestaande opdrachten; de huidige versie voor
+de zelfstandige productkeuze staat bovenaan. De Mollie-link komt uitsluitend uit
+de geverifieerde actuele betaalstatus; een terugkeerpagina kan diezelfde link op
+basis van het geheime statustoken tonen, ook zonder lokale herstelopslag.

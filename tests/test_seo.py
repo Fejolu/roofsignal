@@ -1,4 +1,5 @@
 import re
+from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -77,13 +78,21 @@ def test_public_navigation_uses_one_approach_and_proposal_destination():
 
 
 def test_public_prices_distinguish_starting_quotes_and_fixed_pilot():
-    for path in ("index.html", "tarieven.html", "kennisbank-dakinspectie-kosten.html"):
+    for path in ("index.html", "tarieven.html"):
         content = read(path)
         assert "Vanaf €361,79 incl. btw" in content, path
         assert "Vanaf €750 excl. btw" in content, path
         assert "offerte" in content.lower(), path
         assert "€1.000" not in content and "€1.250" not in content, path
         assert '"priceCurrency"' not in content, path
+    costs = read("kennisbank-dakinspectie-kosten.html")
+    cost_text = BeautifulSoup(costs, "html.parser").main.get_text(" ", strip=True)
+    assert "€361,79" in cost_text and "€664,29" in cost_text
+    assert "Alle bedragen inclusief btw." in cost_text
+    assert "Alle bedragen exclusief btw." in cost_text
+    assert all(price in costs for price in ("€750", "€1.000", "€1.250", "€400", "€550"))
+    assert '/inspectie-boeken/' in costs and '/inspectie-boeken/#vve' in costs
+    assert '"priceCurrency"' not in costs
     pilot = read("de-parken/index.html")
     assert "€361,79 incl. btw" in pilot
     assert "Vanaf €" not in pilot

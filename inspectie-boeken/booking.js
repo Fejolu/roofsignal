@@ -1,4 +1,4 @@
-import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs';
+import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261012-direct-betalen';
 
 // Missing or invalid configuration fails closed. All calendar and payment
 // credentials remain on the server.
@@ -22,40 +22,88 @@ let checkoutAttempt = null;
 let recovery = null;
 let recoveryBlocked = false;
 let closedStatus = null;
+let checkoutUrl = null;
+let returnOrder = null;
 let revision = 0;
 let quoteExpiryTimer;
 let checkingReturnStatus = false;
+const MAX_CHECKOUT_RECOVERY_POLLS = 8;
+const CHECKOUT_RECOVERY_DELAY_MS = 2000;
+const CHECKOUT_WAIT_LIMIT_MS = 45000;
+const MAX_PREPARATION_DISCARD_POLLS = 5;
+let preparationGeneration = 0;
+let preparation = null;
+let activePreparation = null;
+let preparationQueue = Promise.resolve();
+let submissionStarted = false;
 
 function message(id, text) {
   const target = el(id);
   if (target) { target.textContent = text; target.hidden = !text; }
 }
 
+// A combined visit has the same server product whichever inspection is chosen first.
+const primaryInspection = () => el('inspection-thermal').checked ? 'thermal' : el('inspection-envelope').checked ? 'building_envelope' : null;
+const chosenInspection = () => !primaryInspection() ? null : primaryInspection() === 'thermal' && !el('thermal').checked ? 'thermal' : 'building_envelope';
+const chosenThermal = () => Boolean(primaryInspection()) && (el('inspection-thermal').checked || el('thermal').checked);
+
+function updateEarlyStartConsent() {
+  const needed = Boolean(selectedSlot && needsEarlyStart(selectedSlot.start));
+  el('early-start-consent').hidden = !needed;
+  el('earlyStartRequested').required = needed;
+  if (!needed) el('earlyStartRequested').checked = false;
+  return !needed || el('earlyStartRequested').checked;
+}
+
 function updateSummary() {
-  const thermal = el('thermal').checked;
-  el('summary-base').textContent = money(BASE_CENTS);
-  el('summary-thermal').textContent = thermal ? money(THERMAL_CENTS) : 'Niet toegevoegd';
+  const selected = Boolean(primaryInspection());
+  if (!selected) el('thermal').checked = false;
+  const inspectionType = quote?.inspectionType || chosenInspection();
+  const thermal = quote ? quote.thermalCents > 0 : chosenThermal();
+  const thermalOnly = inspectionType === 'thermal';
+  const thermalPrimary = el('inspection-thermal').checked;
+  const combined = !thermalOnly && thermal;
+  el('product-addon').hidden = !selected;
+  el('thermal').disabled = !selected || configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
+  el('addon-title').textContent = thermalPrimary ? 'Dak- en gevelinspectie toevoegen' : 'Thermografische inspectie toevoegen';
+  el('addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : 'Warmtebeelden van dak en gevel.';
+  el('summary-base-row').hidden = false;
+  el('summary-base-label').textContent = !selected ? 'Inspectie' : thermalPrimary ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
+  el('summary-base').textContent = !selected ? 'Nog te kiezen' : money(thermalOnly ? quote?.thermalCents ?? BASE_CENTS : quote?.baseCents ?? BASE_CENTS);
+  el('summary-thermal-label').textContent = !selected ? 'Aanvulling' : thermalPrimary ? 'Dak- en gevelinspectie' : 'Thermografie';
+  el('summary-thermal').textContent = !selected ? 'Nog te kiezen' : combined ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
-  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery ? money(recovery.totalCents) : money(subtotal(thermal));
+  el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : selected ? money(subtotal(thermal, inspectionType)) : 'Kies uw inspectie';
   el('address-result').hidden = !quote;
   el('summary-date').textContent = selectedSlot ? slotLabel(selectedSlot) : 'Nog te kiezen';
-  if (recovery && !quote) {
+  if ((recovery || returnOrder) && !quote) {
     for (const id of ['summary-base', 'summary-thermal', 'summary-travel']) el(id).textContent = 'In uw bestaande opdracht';
     el('summary-date').textContent = 'Bij uw bestaande betaalopdracht';
   }
-  const ready = connected && !recoveryBlocked && !loading && (recovery || (quote && selectedSlot && el('termsAccepted').checked));
+  const earlyStartAccepted = updateEarlyStartConsent();
+  const ready = connected && !recoveryBlocked && !loading && !checkingReturnStatus && (recovery || (quote && selectedSlot && el('termsAccepted').checked && earlyStartAccepted));
   el('checkout-button').disabled = !ready;
-  el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : recovery ? 'Bestaande betaalopdracht controleren' : quote ? `Boek en betaal ${money(quote.totalCents)}` : 'Boek en betaal';
-  el('check-address').disabled = configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
-  const consentRequired = selectedSlot && needsEarlyStart(selectedSlot.start);
-  el('earlyStartRequested').required = Boolean(consentRequired);
-  el('early-start-consent').hidden = !consentRequired;
-  if (!consentRequired && !recovery) el('earlyStartRequested').checked = false;
+  el('checkout-button').hidden = Boolean(checkoutUrl);
+  el('checkout-button').textContent = loading ? 'Even geduld…' : closedStatus ? 'Een nieuwe inspectie boeken' : 'Betalen';
+  el('checkout-link').hidden = !checkoutUrl;
+  el('check-address').disabled = !selected || configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
   updateCalendarControls();
+}
+
+function clearPaymentLink() {
+  checkoutUrl = null;
+  el('checkout-link').removeAttribute('href');
+  el('checkout-link').hidden = true;
+}
+
+function showPaymentLink(validatedUrl) {
+  checkoutUrl = validatedUrl;
+  el('checkout-link').setAttribute('href', validatedUrl);
 }
 
 function clearQuote() {
   if (recovery || recoveryBlocked) return;
+  invalidatePreparation();
   revision += 1;
   clearTimeout(quoteExpiryTimer);
   quote = null;
@@ -84,23 +132,105 @@ class BookingError extends Error {
 
 async function api(path, options = {}) {
   if (!connected) throw new BookingError('Dit is een conceptpagina. Er worden geen gegevens verstuurd en er kan nog niet worden geboekt of betaald.');
+  const { timeoutMs = 60000, ...requestOptions } = options;
   let response;
   try {
     response = await fetch(apiBase + path, {
-      ...options,
+      ...requestOptions,
       credentials: apiBase.startsWith('/') ? 'same-origin' : 'omit',
       cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error',
-      headers: { 'content-type': 'application/json', ...options.headers },
-      signal: AbortSignal.timeout(60000)
+      headers: { 'content-type': 'application/json', ...requestOptions.headers },
+      signal: AbortSignal.timeout(timeoutMs)
     });
   } catch {
-    throw new BookingError('De verbinding is onderbroken. Controleer uw bestaande betaalopdracht voordat u opnieuw probeert te boeken.');
+    throw new BookingError('De verbinding is onderbroken. Probeer over een ogenblik opnieuw.');
   }
   let data;
   try { data = await response.json(); }
   catch { throw new BookingError('De boekingsservice geeft nog geen bruikbaar antwoord.', response.status); }
   if (!response.ok) throw new BookingError(typeof data?.error === 'string' ? data.error : 'De aanvraag kon niet worden verwerkt.', response.status, data);
   return data;
+}
+
+function invalidatePreparation() {
+  if (submissionStarted || recovery || recoveryBlocked) return;
+  preparationGeneration += 1;
+  preparation = null;
+  if (activePreparation) queuePreparationWork();
+}
+
+function validatePreparationResponse(data, draft) {
+  if (!data || data.requestId !== draft.requestId || data.quoteId !== draft.quoteId || data.slotId !== draft.slotId
+      || data.currency !== 'EUR' || data.totalCents !== draft.totalCents
+      || !['prepared', 'pending', 'not_created'].includes(data.state)
+      || Object.hasOwn(data, 'checkoutUrl') || !Number.isFinite(Date.parse(data.expiresAt))
+      || (data.state !== 'not_created' && Date.parse(data.expiresAt) <= Date.now())) {
+    throw new BookingError('De voorbereiding hoort niet bij uw gekozen inspectie.');
+  }
+  return data;
+}
+
+async function discardPreparation(draft) {
+  for (let poll = 0; poll < MAX_PREPARATION_DISCARD_POLLS; poll += 1) {
+    if (poll) await new Promise(resolve => setTimeout(resolve, CHECKOUT_RECOVERY_DELAY_MS));
+    const result = await api('/discard-prepare', { method: 'POST', body: JSON.stringify({ requestId: draft.requestId }) });
+    if (!result || typeof result.discarded !== 'boolean' || typeof result.pending !== 'boolean') {
+      throw new BookingError('De eerdere voorbereiding kon niet worden afgehandeld.');
+    }
+    if (result.discarded && !result.pending) return true;
+    if (!result.pending) return false;
+  }
+  return false;
+}
+
+function queuePreparationWork() {
+  // Await an earlier preparation before discarding it. Aborting the browser
+  // request cannot prove that an upstream calendar hold was never created.
+  preparationQueue = preparationQueue.then(async () => {
+    const desired = preparation;
+    if (activePreparation && activePreparation !== desired) {
+      const abandoned = activePreparation;
+      if (!await discardPreparation(abandoned)) return;
+      if (activePreparation === abandoned) activePreparation = null;
+    }
+    if (!desired || desired !== preparation || desired.generation !== preparationGeneration
+        || desired.started || submissionStarted || recovery || recoveryBlocked) return;
+    desired.started = true;
+    activePreparation = desired;
+    try {
+      const data = await api('/prepare', { method: 'POST', body: JSON.stringify({ requestId: desired.requestId,
+        quoteId: desired.quoteId, slotId: desired.slotId }) });
+      desired.response = validatePreparationResponse(data, desired);
+    } catch (error) {
+      // Payment remains available: final checkout reuses this same opaque ID
+      // and lets the server resolve a failed or incomplete preflight.
+      desired.error = error;
+    }
+  }).catch(() => {
+    // A failed discard keeps the earlier draft active. A later selection may
+    // retry cleanup; it must never create an overlapping preparation.
+  });
+  return preparationQueue;
+}
+
+function prepareSelectedSlot() {
+  if (!connected || !quote || !selectedSlot || submissionStarted || recovery || recoveryBlocked) return;
+  if (preparation?.quoteId === quote.quoteId && preparation.slotId === selectedSlot.id
+      && preparation.totalCents === quote.totalCents) return;
+  preparationGeneration += 1;
+  preparation = { requestId: crypto.randomUUID(), quoteId: quote.quoteId, slotId: selectedSlot.id,
+    totalCents: quote.totalCents, generation: preparationGeneration, started: false };
+  queuePreparationWork();
+}
+
+async function waitForOlderPreparation(requestId, deadline) {
+  if (!activePreparation || activePreparation.requestId === requestId) return;
+  let timer;
+  try {
+    await Promise.race([preparationQueue, new Promise(resolve => {
+      timer = setTimeout(resolve, Math.max(0, Math.min(10000, deadline - Date.now())));
+    })]);
+  } finally { clearTimeout(timer); }
 }
 
 const slotDay = slot => new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(slot.start));
@@ -169,6 +299,7 @@ function renderSlots(slots) {
 }
 
 function renderSelectedDay() {
+  invalidatePreparation();
   selectedSlot = null;
   el('slots').replaceChildren();
   el('calendar-times').hidden = !selectedDay;
@@ -186,7 +317,8 @@ function renderSelectedDay() {
     input.setAttribute('aria-label', slotLabel(slot) + (slot.recommended === true ? ' · Aanbevolen: we zijn al in de buurt' : ''));
     input.addEventListener('change', () => {
       if (calendarLocked() || slotDay(slot) !== selectedDay || !availableSlots.includes(slot)) return;
-      selectedSlot = slot; updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen');
+      el('earlyStartRequested').checked = false;
+      selectedSlot = slot; prepareSelectedSlot(); updateSummary(); window.RoofSignalAnalytics?.track('Inspectie moment gekozen');
     });
     label.append(input, text); el('slots').append(label);
   }
@@ -207,6 +339,7 @@ for (const [id, direction] of [['calendar-previous', -1], ['calendar-next', 1]])
 el('check-address').addEventListener('click', async () => {
   if (loading || recovery || recoveryBlocked) return;
   message('booking-error', '');
+  if (!chosenInspection()) return message('address-status', 'Kies eerst uw inspectie.');
   if (!connected) {
     message('address-status', 'Dit is een conceptpagina. De adrescontrole, echte agenda en betaling worden pas actief na aansluiting op RoofSignal. Uw invoer blijft in deze pagina.');
     return;
@@ -220,14 +353,15 @@ el('check-address').addEventListener('click', async () => {
     if (!window.RoofSignalFormSecurity) throw new Error('Formulierbeveiliging wordt nog geladen. Probeer het over een ogenblik opnieuw.');
     window.RoofSignalFormSecurity.ensureReady(form);
     const turnstileToken = window.RoofSignalFormSecurity.getPayload(form).turnstile_token;
-    const thermal = el('thermal').checked;
+    const inspectionType = chosenInspection();
+    const thermal = chosenThermal();
     clearQuote(); const requestRevision = revision;
     loading = true; el('check-address').disabled = true; updateSummary();
-    message('address-status', 'Adres en reiskosten controleren…');
-    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, turnstileToken, campaign: window.RoofSignalAnalytics?.campaign || null }) });
+    message('address-status', 'Adres en beschikbare momenten controleren…');
+    const received = await api('/quote', { method: 'POST', body: JSON.stringify({ address, thermal, inspectionType, turnstileToken, campaign: window.RoofSignalAnalytics?.campaign || null }) });
     if (requestRevision !== revision) return;
-    quote = validateQuote(received, thermal, Date.now(), address);
-    window.RoofSignalAnalytics?.track('Inspectie prijs gecontroleerd', { thermography: thermal });
+    quote = validateQuote(received, thermal, Date.now(), address, inspectionType);
+    window.RoofSignalAnalytics?.track('Inspectie prijs gecontroleerd', { thermography: thermal, inspectionType });
     el('street').value = quote.address.street;
     el('city').value = quote.address.city;
     message('address-status', '');
@@ -235,7 +369,9 @@ el('check-address').addEventListener('click', async () => {
       if (!recovery) { clearQuote(); message('address-status', 'Uw prijsopgave is verlopen. Controleer uw adres opnieuw voor actuele prijzen en tijden.'); }
     }, Math.min(Date.parse(quote.expiresAt) - Date.now(), 2147483647));
     message('slot-status', 'Beschikbare momenten ophalen…');
-    const availability = await api(`/availability?quoteId=${encodeURIComponent(quote.quoteId)}`);
+    // The current server prepares both in one call. Retain the separate route
+    // for old server versions during rollout; malformed inline data fails closed.
+    const availability = received.availability ?? await api(`/availability?quoteId=${encodeURIComponent(quote.quoteId)}`);
     if (requestRevision !== revision) return;
     const checkedSlots = validateSlots(availability, Date.now(), quote.quoteId);
     renderSlots(checkedSlots);
@@ -268,6 +404,7 @@ function persistRecovery(record) {
 
 // Call only after a verified terminal result or explicit not-created fence.
 function releaseRecovery() {
+  const releasedRequestId = recovery?.requestId;
   try {
     sessionStorage.removeItem(RECOVERY_STORAGE_KEY);
     if (sessionStorage.getItem(RECOVERY_STORAGE_KEY) !== null) throw new Error();
@@ -275,7 +412,10 @@ function releaseRecovery() {
     recoveryBlocked = true;
     throw new BookingError('De afgehandelde betaalopdracht kan niet veilig worden gewist. Neem contact op met RoofSignal.');
   }
-  recovery = null; checkoutAttempt = null; closedStatus = null;
+  recovery = null; checkoutAttempt = null; closedStatus = null; returnOrder = null;
+  submissionStarted = false; preparation = null; preparationGeneration += 1;
+  if (activePreparation?.requestId === releasedRequestId) activePreparation = null;
+  clearPaymentLink();
   lockOrder(false); form.hidden = false;
   const url = new URL(window.location.href);
   url.searchParams.delete('booking');
@@ -284,15 +424,17 @@ function releaseRecovery() {
 }
 
 function handleCheckoutError(error) {
+  clearPaymentLink();
   message('booking-status', '');
   if (recovery && canReleaseAttempt(error.data, recovery.requestId)) {
     try { releaseRecovery(); }
     catch (storageError) { message('booking-error', storageError.message); return; }
   }
-  message('booking-error', `${error.message}${recovery ? ' Gebruik de knop om uw bestaande betaalopdracht te controleren. De gegevens blijven vergrendeld; start geen tweede boeking.' : ''}`);
+  message('booking-error', `${error.message}${recovery ? ' Klik op Betalen om opnieuw te proberen.' : ''}`);
 }
 
 function applyAttemptResponse(data, resume = false) {
+  clearPaymentLink();
   const result = validateRecoveryResponse(data, recovery);
   if (result.state === 'not_created') {
     releaseRecovery();
@@ -304,22 +446,51 @@ function applyAttemptResponse(data, resume = false) {
     else releaseRecovery();
     message('booking-status', paymentMessage(result.status));
   } else if (result.state === 'checkout_ready') {
+    showPaymentLink(result.checkoutUrl);
     message('booking-status', resume
-      ? 'Uw betaalopdracht is gereed. U gaat nu naar de beveiligde betaalpagina van Mollie.'
-      : 'Uw bestaande betaalopdracht is gevonden. Gebruik de knop om verder te gaan naar dezelfde beveiligde betaalpagina.');
+      ? 'U gaat naar de beveiligde betaalpagina van Mollie.'
+      : 'Uw betaalpagina staat klaar. Klik op Betalen.');
     if (resume) window.location.assign(result.checkoutUrl);
   } else {
-    message('booking-status', 'Uw bestaande betaalopdracht wordt nog gecontroleerd. Start geen tweede boeking. Controleer de status over een ogenblik opnieuw.');
+    message('booking-status', resume
+      ? 'Uw betaalpagina openen…'
+      : 'Uw betaalpagina wordt klaargezet. Klik op Betalen om verder te gaan.');
+  }
+  return result;
+}
+
+async function followCheckoutAttempt(data, resume = false, deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS) {
+  let result = applyAttemptResponse(data, resume);
+  // Only an explicit Betalen action may continue towards Mollie. A reload
+  // performs one passive lookup, leaving the choice to the customer.
+  if (!resume || result.state !== 'pending') return;
+  const requestId = recovery.requestId;
+  for (let poll = 0; poll < MAX_CHECKOUT_RECOVERY_POLLS && result.state === 'pending'; poll += 1) {
+    const waitMs = Math.min(CHECKOUT_RECOVERY_DELAY_MS, deadline - Date.now());
+    if (waitMs <= 0) break;
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) break;
+    const next = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId }), timeoutMs: remainingMs });
+    result = applyAttemptResponse(next, true);
+  }
+  if (result.state === 'pending') {
+    message('booking-status', '');
+    message('booking-error', 'De betaalpagina is nog niet beschikbaar. Probeer opnieuw via Betalen; uw bestaande betaalopdracht blijft bewaard.');
   }
 }
 
 async function recoverExisting(resume = false) {
   if (!connected || !recovery || loading || recoveryBlocked) return;
+  clearPaymentLink();
   loading = true; lockOrder(); updateSummary();
+  message('booking-status', resume ? 'Uw betaalpagina openen…' : 'Uw betaalpagina ophalen…');
   message('booking-error', '');
+  const deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS;
   try {
-    const data = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId: recovery.requestId }) });
-    applyAttemptResponse(data, resume);
+    const data = await api('/recover', { method: 'POST', body: JSON.stringify({ requestId: recovery.requestId }),
+      ...(resume ? { timeoutMs: CHECKOUT_WAIT_LIMIT_MS } : {}) });
+    await followCheckoutAttempt(data, resume, deadline);
   } catch (error) { handleCheckoutError(error); }
   finally { loading = false; updateSummary(); }
 }
@@ -339,62 +510,107 @@ form.addEventListener('submit', async event => {
     return;
   }
   if (!quote || !selectedSlot) return message('booking-error', 'Controleer eerst uw adres en kies een beschikbaar moment.');
+  if (!chosenInspection()) return message('booking-error', 'Kies eerst uw inspectie.');
   if (!checkoutAttempt) {
     try {
-      validateQuote(quote, el('thermal').checked, Date.now(), { postcode: el('postcode').value, houseNumber: el('houseNumber').value });
+      validateQuote(quote, chosenThermal(), Date.now(), { postcode: el('postcode').value, houseNumber: el('houseNumber').value }, chosenInspection());
       validateSelectedSlot(selectedSlot);
     }
     catch (error) { clearQuote(); return message('booking-error', error.message); }
     if (!form.reportValidity()) return;
-    if (!el('termsAccepted').checked || (needsEarlyStart(selectedSlot.start) && !el('earlyStartRequested').checked)) return message('booking-error', 'Controleer uw akkoord met de voorwaarden en, indien nodig, eerdere uitvoering.');
+    if (!el('termsAccepted').checked) return message('booking-error', 'Controleer uw akkoord met de voorwaarden.');
+    const earlyStart = needsEarlyStart(selectedSlot.start);
+    if (earlyStart && !el('earlyStartRequested').checked) return message('booking-error', 'Geef toestemming voor uitvoering binnen de bedenktijd of kies een later moment.');
+    submissionStarted = true;
     checkoutAttempt = {
-      requestId: crypto.randomUUID(), quoteId: quote.quoteId, slotId: selectedSlot.id,
+      requestId: preparation?.quoteId === quote.quoteId && preparation.slotId === selectedSlot.id
+        && preparation.totalCents === quote.totalCents ? preparation.requestId : crypto.randomUUID(),
+      quoteId: quote.quoteId, slotId: selectedSlot.id,
       customer: { name: el('name').value.trim(), email: el('email').value.trim(), phone: el('phone').value.trim(), notes: el('notes').value.trim() },
-      terms: { accepted: true, version: quote.termsVersion, earlyStartRequested: el('earlyStartRequested').checked }
+      terms: { accepted: true, version: quote.termsVersion, earlyStartRequested: earlyStart && el('earlyStartRequested').checked }
     };
     // Persist only opaque IDs and the approved EUR amount BEFORE any request.
     // Reloads recover by requestId; an uncertain request is never recreated.
     try { persistRecovery(createRecoveryRecord(checkoutAttempt, quote)); }
-    catch (error) { checkoutAttempt = null; message('booking-error', error.message); updateSummary(); return; }
+    catch (error) { checkoutAttempt = null; submissionStarted = false; message('booking-error', error.message); updateSummary(); return; }
     lockOrder();
   }
   loading = true; updateSummary();
+  message('booking-status', 'Uw betaalpagina openen…');
+  const deadline = Date.now() + CHECKOUT_WAIT_LIMIT_MS;
   try {
-    const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt) });
+    // Final consent/customer data always reaches the server, even if the
+    // background hold is still running. The same ID joins that preparation.
+    await waitForOlderPreparation(checkoutAttempt.requestId, deadline);
+    const payment = await api('/checkout', { method: 'POST', body: JSON.stringify(checkoutAttempt),
+      timeoutMs: Math.max(1, deadline - Date.now()) });
     // This is a funnel step, never proof of payment or a counted sale.
     window.RoofSignalAnalytics?.track('Inspectie betaling gestart');
-    applyAttemptResponse(payment, true);
+    await followCheckoutAttempt(payment, true, deadline);
   } catch (error) {
     window.RoofSignalAnalytics?.track('Inspectie stap mislukt', { step: 'betaling' });
     handleCheckoutError(error);
   } finally { loading = false; updateSummary(); }
 });
 
-for (const id of ['postcode', 'houseNumber', 'thermal']) {
-  el(id).addEventListener(id === 'thermal' ? 'change' : 'input', clearQuote);
+for (const id of ['postcode', 'houseNumber', 'thermal', 'inspection-envelope', 'inspection-thermal']) {
+  el(id).addEventListener(['postcode', 'houseNumber'].includes(id) ? 'input' : 'change', () => {
+    if (!recovery && !recoveryBlocked && ['inspection-envelope', 'inspection-thermal'].includes(id)) el('thermal').checked = false;
+    clearQuote();
+  });
 }
 el('termsAccepted').addEventListener('change', updateSummary);
 el('earlyStartRequested').addEventListener('change', updateSummary);
+form.addEventListener('reset', () => Promise.resolve().then(clearQuote));
 
 async function showReturnStatus() {
   const token = new URLSearchParams(window.location.search).get('booking');
   if (!connected || checkingReturnStatus || !token || !/^[A-Za-z0-9_-]{32,200}$/.test(token)) return;
   // A redirect parameter can select a record; it never proves payment.
   checkingReturnStatus = true;
+  clearPaymentLink();
+  updateSummary();
   form.hidden = true;
   el('booking-status-actions').replaceChildren();
   message('booking-status', 'Uw betaalstatus controleren…');
   let retryRequired = true;
   try {
     const data = await api(`/status?token=${encodeURIComponent(token)}`);
-    const status = data?.status;
+    let result = null;
+    if (data.state === 'checkout_ready' || data.state === 'closed') {
+      // The opaque return token identifies the server order when this browser
+      // has no local record. Never trust a URL without validating its order.
+      const expected = recovery || validateRecoveryRecord({
+        version: 1, requestId: data.requestId, quoteId: data.quoteId,
+        slotId: data.slotId, currency: data.currency, totalCents: data.totalCents
+      });
+      result = validateRecoveryResponse(data, expected);
+      if (result.state === 'checkout_ready') {
+        returnOrder = expected;
+        showPaymentLink(result.checkoutUrl);
+      } else if (recovery) {
+        applyAttemptResponse(data);
+      }
+    }
+    // A provider's terminal status alone does not prove that the server has
+    // released the calendar hold and durably closed this booking attempt.
+    const closed = result?.state === 'closed';
+    const status = closed ? result.status : result?.state === 'checkout_ready' ? 'open' : 'pending';
     message('booking-status', paymentMessage(status));
-    if (['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) form.hidden = false;
-    retryRequired = !['confirmed', 'paid_review_required', 'failed', 'canceled', 'expired'].includes(status);
+    if (closed && ['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) {
+      returnOrder = null;
+      form.hidden = false;
+      const url = new URL(window.location.href);
+      url.searchParams.delete('booking');
+      window.history.replaceState(null, '', url);
+    }
+    retryRequired = !closed;
   } catch (error) {
+    clearPaymentLink();
     message('booking-status', `${error.message} Uw afspraak is nog niet bevestigd. U kunt de betaalstatus opnieuw controleren.`);
   } finally {
     checkingReturnStatus = false;
+    updateSummary();
     // A failed retry must leave another retry available. Keep action controls
     // outside the live-region text and outside the potentially hidden form.
     if (retryRequired) {

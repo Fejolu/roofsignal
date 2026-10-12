@@ -1,13 +1,13 @@
 {
   "seo": {
-    "title": "RoofSignal Inspectie | Dak, gevel en thermische uitbreiding",
-    "description": "Dak- en gevelinspectie uitsluitend met drones, inclusief rapportage. Thermografie met drone optioneel. Vanafprijzen; definitieve offerte op maat, reiskosten apart."
+    "title": "Dak, gevel en thermische inspectie | RoofSignal",
+    "description": "Dak- en gevelinspectie en thermische inspectie met drones, inclusief rapportage. Thermografie zelfstandig boeken of combineren. Bekijk het aanbod en de prijzen."
   },
   "section_01": {
     "item_01": "Aanpak & offerte",
     "item_02": "RoofSignal Inspectie",
     "item_03": "Dak en gevel in één onafhankelijke visuele inspectie, uitsluitend met drones. U ontvangt een helder inspectierapport met bewijsfoto’s, bevindingen, onderhoudsprioriteiten en praktische vervolgstappen.",
-    "item_04": "Voor particulieren, VvE’s, beheerders en overheden. Thermische inspectie met een drone is optioneel."
+    "item_04": "Voor particulieren, VvE’s, beheerders en overheden. U kunt thermische inspectie zelfstandig boeken of combineren met dak- en gevelinspectie."
   },
   "section_02": {
     "item_01": "Het complete inspectieaanbod",
@@ -33,11 +33,19 @@
       "href": "/voorbeeldrapport-uitgebreid"
     },
     "item_17": "Thermische inspectie",
-    "item_18": "Breid RoofSignal Inspectie uit met warmtebeelden vanuit een drone voor een gerichte onderzoeksvraag, bijvoorbeeld over mogelijke isolatieafwijkingen of warmteverlies.",
+    "item_18": "Onderzoek mogelijke isolatieafwijkingen en warmteverlies met warmtebeelden vanuit een drone. Boek thermografie zelfstandig of combineer deze met dak- en gevelinspectie. <a href=\"/thermografische-inspectie\">Bekijk de thermografische inspectie</a>.",
     "item_19": "Thermische drone-opnamen van de afgesproken delen van de gebouwschil",
     "item_20": "Beoordeling in samenhang met gewone foto’s en de opnameomstandigheden",
-    "item_21": "Bevindingen, beperkingen en advies in hetzelfde inspectierapport",
-    "item_22": "We bespreken vooraf of thermografie met de drone zinvol, veilig, toegestaan en technisch uitvoerbaar is. Weer, temperatuurverschillen en vliegomstandigheden kunnen een apart opnamemoment nodig maken. De uitbreiding en eventuele extra inzet staan afzonderlijk in uw offerte."
+    "item_21": "Rapport met thermische bevindingen, beperkingen en aanbevolen vervolgstappen",
+    "item_22": "Een thermische afwijking is een aanwijzing voor nader onderzoek. We beoordelen de beelden samen met de opnameomstandigheden. Bij ongeschikt weer verplaatsen we de afspraak kosteloos.",
+    "item_23": {
+      "label": "Boek uw inspectie",
+      "href": "/inspectie-boeken/"
+    },
+    "item_24": {
+      "label": "Meld uw VvE-object aan",
+      "href": "/inspectie-boeken/#vve"
+    }
   },
   "section_03": {
     "item_01": "Zo werkt RoofSignal",
@@ -46,7 +54,7 @@
     "item_04": "Vraag bespreken",
     "item_05": "We bespreken uw object, aanleiding en de informatie die u nodig heeft.",
     "item_06": "Scope & voorstel",
-    "item_07": "U ontvangt een offerte voor dak en gevel, met eventuele thermografie, planning en reiskosten apart vermeld.",
+    "item_07": "We leggen de gekozen inspectie, planning en volledige prijs vooraf vast. Bij een VvE of afwijkend object ontvangt u een voorstel op maat.",
     "item_08": "Inspecteren",
     "item_09": "We leggen de met drones zichtbare delen van dak en gevel systematisch vast met overzichtsbeelden en relevante details.",
     "item_10": "Beoordelen",
@@ -76,7 +84,7 @@
     "item_09": "Grotere objecten en overheden",
     "item_10": "<strong>Offerte op maat</strong>",
     "item_11": "Voor grotere complexen, meerdere gebouwen of een bijzondere onderzoeksvraag bepalen we de inzet vooraf.",
-    "item_12": "De vanafprijzen gelden voor één object binnen de beschreven omvang met reguliere bereikbaarheid. De uiteindelijke prijs hangt af van de omvang, bouwvorm, bereikbaarheid en uw onderzoeksvraag. Thermische inspectie met een drone is een optionele uitbreiding met een afzonderlijke prijs.",
+    "item_12": "De vanafprijzen gelden voor één object binnen de beschreven omvang met reguliere bereikbaarheid. De uiteindelijke prijs hangt af van de omvang, bouwvorm, bereikbaarheid en uw onderzoeksvraag. Thermische inspectie kunt u zelfstandig boeken of toevoegen aan de dak- en gevelinspectie.",
     "item_13": {
       "label": "Vraag een inspectie aan",
       "href": "/contact"
@@ -90,8 +98,8 @@
     "item_05": "Het aantal gebouwen en adressen, de omvang van dak en gevel en de bouwvorm bepalen de benodigde inzet.",
     "item_06": "Bereikbaarheid en uitvoering",
     "item_07": "We beoordelen vooraf of de dronevlucht veilig, toegestaan en technisch uitvoerbaar is. Hoogte, obstakels en vliegruimte bepalen mede de planning.",
-    "item_08": "Thermische uitbreiding",
-    "item_09": "Als u thermografie wilt toevoegen, leggen we de onderzoeksvraag, uitvoeringsvoorwaarden en meerprijs vooraf vast."
+    "item_08": "Thermische inspectie",
+    "item_09": "Bij zelfstandige of gecombineerde thermografie leggen we meetdoel, bouwdelen, uitvoeringsvoorwaarden en prijs vooraf vast."
   },
   "section_07": {
     "item_01": "Bij iedere RoofSignal Inspectie",

@@ -18,7 +18,10 @@ function executeRoofSignal(data) {
   if(Session.getEffectiveUser().getEmail()!==RS_CALENDAR)throw Error('UNAUTHORIZED');
   if(!data||JSON.stringify(data).length>12000||!RS_MODES.includes(data.mode))throw Error('INVALID_REQUEST');
   if(data.action==='health')return {ok:true,mode:data.mode,calendar:RS_CALENDAR,timeZone:BOOKING_TIME_ZONE,inspectionMinutes:INSPECTION_MINUTES};
-  if(!['route','availability','hold','confirm','release'].includes(data.action))throw Error('UNKNOWN_ACTION');
+  if(!['route','context','availability','plan','hold','confirm','release'].includes(data.action))throw Error('UNKNOWN_ACTION');
+  // Reading a calendar does not reserve capacity. Only mutations need the
+  // global lock; checkout always re-reads the actual day under that lock.
+  if(['route','context','availability','plan'].includes(data.action))return {ok:true,...rsDispatch(data)};
   const lock=LockService.getScriptLock();
   if(!lock.tryLock(20000))throw Error('CALENDAR_BUSY');
   try {return {ok:true,...rsDispatch(data)};}finally{lock.releaseLock();}
@@ -30,12 +33,29 @@ function rsLocation(value) {
   if(!location||location.length>250)throw Error('INVALID_LOCATION');
   return location;
 }
+function rsRouteKey(from,to) {
+  return 'route-v1-'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,from+'\n'+to));
+}
+function rsCachedRoute(stored) {
+  if(stored)try {
+    const route=JSON.parse(stored),age=Date.now()-Date.parse(route.calculatedAt);
+    if(Number.isSafeInteger(route.distanceMeters)&&route.distanceMeters>=0&&Number.isFinite(route.durationSeconds)&&route.durationSeconds>=0&&age>=0&&age<3600000)return route;
+  }catch(_){} // A missing/evicted/malformed cache entry is a normal miss.
+  return null;
+}
 function rsRoute(from,to,cache) {
   from=rsLocation(from);to=rsLocation(to);
   const key=from+'\n'+to;
   if(cache[key]===null)throw Error('ROUTE_UNAVAILABLE');
   if(cache[key])return cache[key];
   if(from===to)return {distanceMeters:0,durationSeconds:0};
+  // Reuse static road routes for browsing, never the busy calendar or a
+  // checkout decision. The directional key keeps outbound/return trips apart.
+  const sharedKey=cache.shared?rsRouteKey(from,to):null;
+  if(sharedKey) {
+    const route=rsCachedRoute(CacheService.getScriptCache().get(sharedKey));
+    if(route){cache[key]=route;return route;}
+  }
   const response=Maps.newDirectionFinder().setOrigin(from).setDestination(to)
     .setRegion('nl').setLanguage('nl').setMode(Maps.DirectionFinder.Mode.DRIVING).setAlternatives(false).getDirections();
   if(response&&['ZERO_RESULTS','NOT_FOUND','INVALID_REQUEST'].includes(response.status)) {
@@ -44,10 +64,15 @@ function rsRoute(from,to,cache) {
   const leg=response&&response.status==='OK'&&response.routes[0]&&response.routes[0].legs[0];
   if(!leg||!Number.isSafeInteger(leg.distance.value)||leg.distance.value<0||!Number.isFinite(leg.duration.value)||leg.duration.value<0)throw Error('ROUTE_SERVICE_UNAVAILABLE');
   const route={distanceMeters:leg.distance.value,durationSeconds:leg.duration.value,provider:'Google Maps via Apps Script',calculatedAt:new Date().toISOString()};
-  cache[key]=route;return route;
+  cache[key]=route;
+  if(sharedKey)CacheService.getScriptCache().put(sharedKey,JSON.stringify(route),3600);
+  return route;
 }
+const RS_DAY_OFFSETS={};
 function rsLocalTime(day,minute) {
-  const offset=Utilities.formatDate(new Date(day+'T12:00:00Z'),BOOKING_TIME_ZONE,'Z');
+  // Formatting through a Google service for every candidate made the old
+  // 21-day loop very slow. One offset per date also preserves DST boundaries.
+  const offset=RS_DAY_OFFSETS[day]||(RS_DAY_OFFSETS[day]=Utilities.formatDate(new Date(day+'T12:00:00Z'),BOOKING_TIME_ZONE,'Z'));
   const hour=String(Math.floor(minute/60)).padStart(2,'0'),min=String(minute%60).padStart(2,'0');
   return new Date(day+'T'+hour+':'+min+':00'+offset.slice(0,3)+':'+offset.slice(3));
 }
@@ -55,16 +80,22 @@ function rsCalendar() {
   const calendar=CalendarApp.getCalendarById(RS_CALENDAR);
   if(!calendar)throw Error('CALENDAR_UNAVAILABLE');return calendar;
 }
-function rsEvents(calendar,day,excludeMarker) {
-  return calendar.getEvents(rsLocalTime(day,0),rsLocalTime(day,1440-1)).filter(e=>{
+function rsReadEvents(calendar,start,end,excludeMarker) {
+  return calendar.getEvents(start,end).filter(e=>{
     return (!excludeMarker||e.getDescription()!==excludeMarker)&&e.getTransparency()!==CalendarApp.EventTransparency.TRANSPARENT;
   }).map(e=>({start:e.getStartTime().toISOString(),end:e.getEndTime().toISOString(),location:e.getLocation()||null}));
 }
-function rsDaySlots(calendar,day,destination,cache,excludeMarker,existingHold=false) {
+function rsEvents(calendar,day,excludeMarker) {
+  const nextDay=new Date(Date.parse(day+'T12:00:00Z')+86400000).toISOString().slice(0,10);
+  return rsReadEvents(calendar,rsLocalTime(day,0),rsLocalTime(nextDay,0),excludeMarker);
+}
+function rsDaySlots(calendar,day,destination,cache,excludeMarker,existingHold=false,knownEvents=null) {
   if(day<localDay(Date.now())||(!existingHold&&day===localDay(Date.now())))return [];
   const weekday=new Date(day+'T12:00:00Z').getUTCDay();
   if(weekday===0||weekday===6)return [];
-  const events=rsEvents(calendar,day,excludeMarker),slots=[];
+  const nextDay=new Date(Date.parse(day+'T12:00:00Z')+86400000).toISOString().slice(0,10);
+  const lower=rsLocalTime(day,0).getTime(),upper=rsLocalTime(nextDay,0).getTime();
+  const events=knownEvents===null?rsEvents(calendar,day,excludeMarker):knownEvents.filter(e=>Date.parse(e.start)<upper&&Date.parse(e.end)>lower),slots=[];
   const dayStart=rsLocalTime(day,540),dayEnd=rsLocalTime(day,960);
   // An unusable appointment location blocks the adjacent gap, not every other
   // day. Service/quota failures still abort availability: they are not no-route.
@@ -89,17 +120,52 @@ function rsFind(calendar,start,marker) {
     .filter(event=>event.getDescription()===marker);
 }
 function rsDispatch(data) {
-  const cache={};
-  if(data.action==='route')return rsRoute(RS_ORIGIN,rsLocation(data.destination),cache);
+  const cache={shared:['route','availability','plan'].includes(data.action)};
+  if(data.action==='route')return rsRoute(data.from===undefined?RS_ORIGIN:rsLocation(data.from),rsLocation(data.destination),cache);
   const calendar=rsCalendar();
-  if(data.action==='availability') {
+  if(data.action==='context') {
+    // Owner-authenticated server only. Never return this context to a browser:
+    // appointment locations are private and needed only to calculate travel.
+    const today=localDay(Date.now()),dateAt=offset=>new Date(Date.parse(today+'T12:00:00Z')+offset*86400000).toISOString().slice(0,10);
+    const sourceCheckedAt=new Date().toISOString(),days=[];
+    const events=rsReadEvents(calendar,rsLocalTime(dateAt(1),0),rsLocalTime(dateAt(22),0));
+    for(let offset=1;offset<=21;offset++) {
+      const day=dateAt(offset),weekday=new Date(day+'T12:00:00Z').getUTCDay();
+      if(weekday===0||weekday===6)continue;
+      days.push({start:rsLocalTime(day,540).toISOString(),end:rsLocalTime(day,960).toISOString(),
+        lower:rsLocalTime(day,0).toISOString(),upper:rsLocalTime(dateAt(offset+1),0).toISOString()});
+    }
+    // Include already known directions in the same RPC. Only missing routes
+    // require parallel Maps executions; the calendar itself is always fresh.
+    const cachedRoutes=[];
+    if(data.destination!==undefined) {
+      const destination=rsLocation(data.destination),pairs=new Map();
+      for(const raw of [RS_ORIGIN,...events.map(e=>e.location)]) {
+        let address;try{address=rsLocation(raw);}catch(_){continue;}
+        for(const [from,to] of [[address,destination],[destination,address]]) {
+          if(from!==to)pairs.set(rsRouteKey(from,to),{from,to});
+        }
+      }
+      const stored=pairs.size?CacheService.getScriptCache().getAll([...pairs.keys()]):{};
+      for(const [id,pair] of pairs) {
+        const route=rsCachedRoute(stored[id]);
+        if(route)cachedRoutes.push({...pair,route});
+      }
+    }
+    return {origin:RS_ORIGIN,days,events,sourceCheckedAt,cachedRoutes};
+  }
+  if(data.action==='availability'||data.action==='plan') {
     const destination=rsLocation(data.destination),slots=[];
     const today=localDay(Date.now());
+    const dateAt=offset=>new Date(Date.parse(today+'T12:00:00Z')+offset*86400000).toISOString().slice(0,10);
+    const sourceCheckedAt=new Date().toISOString();
+    const events=rsReadEvents(calendar,rsLocalTime(dateAt(1),0),rsLocalTime(dateAt(22),0));
+    const route=data.action==='plan'?rsRoute(RS_ORIGIN,destination,cache):null;
     for(let offset=1;offset<=21;offset++) {
-      const day=new Date(Date.parse(today+'T12:00:00Z')+offset*86400000).toISOString().slice(0,10);
-      slots.push(...rsDaySlots(calendar,day,destination,cache));
+      const day=dateAt(offset);
+      slots.push(...rsDaySlots(calendar,day,destination,cache,null,false,events));
     }
-    return {slots:prioritizeSlots(slots),sourceCheckedAt:new Date().toISOString()};
+    return {slots:prioritizeSlots(slots),sourceCheckedAt,...(route?{route}:{})};
   }
   const marker=rsMarker(data),start=new Date(data.start);
   if(!Number.isFinite(start.getTime()))throw Error('INVALID_TIME');

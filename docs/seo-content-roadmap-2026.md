@@ -50,3 +50,15 @@ Ieder artikel linkt naar één primaire dienst, één doelgroep, een relevante c
 - Gebaseerd op bestaande RoofSignal-inspectierapporten en najaarsonderhoudsinformatie van Vereniging Eigen Huis.
 - Ontsloten via kennisbank, VvE-dakinspectiepagina en sitemap.
 - Zoekvolume en ranking niet vastgesteld; Search Console blijft nodig voor resultaatmeting.
+
+
+## Uitvoering 12 oktober 2026: Apeldoorn, VvE, kosten en thermografie
+
+Search Console is geraadpleegd voor recente zoekvragen en bestemmingspagina’s. De meetbasis voor vervolgcontroles is lokaal bewaard en wordt niet in de publieke website opgenomen.
+
+- **VvE:** ‘dakinspectie vve’ is een kansrijke bestaande zoekvraag. De dienstenpagina is de hoofdroute; kennisbank en kosten ondersteunen met gerichte links.
+- **Kosten:** het artikel geeft het actuele vaste woningaanbod en de VvE-staffels weer, inclusief zelfstandige thermografie, en sluit aan op ‘dakinspectie kosten’.
+- **Apeldoorn:** de bestaande URL en onafhankelijke titel blijven behouden. Aanbod, prijzen en boekingsroutes zijn actueel gemaakt, met regionale rapportvoorbeelden.
+- **Thermografie:** de nieuwe dienstenpagina vult het bestaande aanbod aan; zoekvolume en verwachte aanvragen zijn nog niet vastgesteld.
+
+Interne links vanuit diensten, tarieven, de dronepagina en kennisbank maken de vier routes vindbaar. De nieuwe pagina is opgenomen in Pages CMS en de sitemap. Werkelijke bedragen blijven buiten vrij bewerkbare CMS-velden. Vergelijk vervolgcijfers per zoekvraag en pagina; meet betaalde boekingen en VvE-aanmeldingen apart.

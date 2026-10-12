@@ -1,6 +1,7 @@
 // UI guards only. The connected server must independently enforce every rule.
 import {earlyStartRequired} from './booking-dates.mjs';
 export const BASE_CENTS = 36179;
+// The second inspection during the same visit costs less than a standalone one.
 export const THERMAL_CENTS = 30250;
 export const TIME_ZONE = 'Europe/Amsterdam';
 export const RECOVERY_STORAGE_KEY = 'roofsignal.consumerBooking.pending.v1';
@@ -43,20 +44,23 @@ export function normalizeHouseNumber(value) {
   return number;
 }
 
-export function subtotal(thermal) {
-  return BASE_CENTS + (thermal ? THERMAL_CENTS : 0);
+export function subtotal(thermal, inspectionType = 'building_envelope') {
+  if (!['building_envelope', 'thermal'].includes(inspectionType)) throw new Error('Kies een geldige inspectie.');
+  return BASE_CENTS + (inspectionType === 'building_envelope' && thermal ? THERMAL_CENTS : 0);
 }
 
 function validInstant(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value));
 }
 
-export function validateQuote(data, thermal, now = Date.now(), requestedAddress = null) {
+export function validateQuote(data, thermal, now = Date.now(), requestedAddress = null, inspectionType = 'building_envelope') {
   if (!data || data.serviceable !== true) throw new Error('Voor dit adres is eerst afstemming nodig. Neem contact op met RoofSignal.');
   if (typeof data.quoteId !== 'string' || data.quoteId.length < 16) throw new Error('De prijsopgave is onvolledig.');
-  if (data.currency !== 'EUR' || data.baseCents !== BASE_CENTS || data.thermalCents !== (thermal ? THERMAL_CENTS : 0)) throw new Error('De prijsopgave wijkt af van deze pagina. Neem contact op voordat u betaalt.');
+  const baseCents = inspectionType === 'thermal' ? 0 : BASE_CENTS;
+  const thermalCents = inspectionType === 'thermal' ? BASE_CENTS : thermal ? THERMAL_CENTS : 0;
+  if (!['building_envelope', 'thermal'].includes(inspectionType) || data.inspectionType !== inspectionType || data.currency !== 'EUR' || data.baseCents !== baseCents || data.thermalCents !== thermalCents) throw new Error('De prijsopgave wijkt af van uw gekozen inspectie. Controleer uw adres opnieuw.');
   if (!Number.isSafeInteger(data.travelCents) || data.travelCents < 0) throw new Error('De reiskosten zijn nog niet vastgesteld. Er kan nog niet worden afgerekend.');
-  if (!Number.isSafeInteger(data.totalCents) || data.totalCents !== subtotal(thermal) + data.travelCents) throw new Error('De totaalprijs kon niet worden gecontroleerd.');
+  if (!Number.isSafeInteger(data.totalCents) || data.totalCents !== subtotal(thermal, inspectionType) + data.travelCents) throw new Error('De totaalprijs kon niet worden gecontroleerd.');
   if (!validInstant(data.expiresAt) || Date.parse(data.expiresAt) <= now) throw new Error('Deze prijsopgave is verlopen. Controleer uw adres opnieuw.');
   if (typeof data.termsVersion !== 'string' || !data.termsVersion) throw new Error('De opdrachtvoorwaarden ontbreken.');
   if (!nonEmptyString(data.travelDescription)) throw new Error('De toelichting op de reiskosten ontbreekt.');
@@ -103,7 +107,7 @@ function validateOrderIdentity(data, expected) {
 export function validateCheckout(data, expected) {
   validateOrderIdentity(data, expected);
   const url = new URL(data.checkoutUrl);
-  const hosts = new Set(['www.mollie.com', 'checkout.mollie.com']);
+  const hosts = new Set(['www.mollie.com', 'checkout.mollie.com', 'pay.ideal.nl']);
   if (url.protocol !== 'https:' || !hosts.has(url.hostname) || url.username || url.password || (url.port && url.port !== '443')) throw new Error('Er is geen geldige Mollie-betaalpagina ontvangen.');
   return url.href;
 }

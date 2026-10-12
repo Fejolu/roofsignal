@@ -37,6 +37,7 @@ class Element {
   }
   setAttribute(name, value) { this.attributes[name] = String(value); }
   getAttribute(name) { return this.attributes[name] ?? null; }
+  removeAttribute(name) { delete this.attributes[name]; }
   get children() { return this.childNodes.filter(node => node instanceof Element); }
   get textContent() {
     return this.childNodes.map(node => node instanceof Element ? node.textContent : node).join('');
@@ -129,12 +130,49 @@ async function settle() {
   await new Promise(setImmediate);
 }
 
-async function bookingPage({ configuration, record, returnToken = null, respond, securityReady = true } = {}) {
+async function bookingPage({ configuration, record, returnToken = null, respond, respondPreparation,
+  securityReady = true, fastCheckoutTimers = false } = {}) {
   const document = documentFromHtml(page);
   const location = new URL(`https://www.roofsignal.nl/inspectie-boeken/${returnToken ? `?booking=${returnToken}` : ''}`);
   const requests = [];
+  const knownQuotes = new Map();
   const navigations = [];
   const storageOperations = [];
+  const timerDelays = [];
+  const timeoutBudgets = [];
+  const signalTimeouts = new WeakMap();
+  const pendingTimeouts = new Map();
+  const startTime = Date.now();
+  let clockTime = startTime;
+  const advanceTime = milliseconds => {
+    clockTime += milliseconds;
+    for (const [signal, timeout] of pendingTimeouts) {
+      if (timeout.at <= clockTime) {
+        timeout.controller.abort(new DOMException('Simulated network timeout', 'TimeoutError'));
+        pendingTimeouts.delete(signal);
+      }
+    }
+  };
+  // Checkout retries run against a deterministic clock. The longer quote
+  // expiry timer stays dormant, as it does during a customer's short payment
+  // action. No test payment, route or customer input can leave this harness.
+  class ClockDate extends Date {
+    constructor(...args) { super(...(args.length ? args : [clockTime])); }
+    static now() { return clockTime; }
+  }
+  const schedule = fastCheckoutTimers ? (callback, delay = 0, ...args) => {
+    const timer = { canceled: false };
+    if (delay <= 60000) {
+      setImmediate(() => {
+        if (timer.canceled) return;
+        timerDelays.push(delay);
+        advanceTime(delay);
+        callback(...args);
+      });
+    }
+    return timer;
+  } : (...args) => setTimeout(...args).unref();
+  const cancel = fastCheckoutTimers ? timer => { if (timer) timer.canceled = true; } : clearTimeout;
   const stored = new Map(record ? [[bookingCore.RECOVERY_STORAGE_KEY, JSON.stringify(record)]] : []);
   const window = {
     RoofSignalFormSecurity: { ensureReady() { if(!securityReady)throw Error('Bevestig eerst dat u geen geautomatiseerde aanvraag verstuurt.');return true; }, getPayload() { return {turnstile_token:'unit-test-only'}; }, reset() {} },
@@ -146,7 +184,14 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
   };
   const context = vm.createContext({
     ...bookingCore, window, document, URL, URLSearchParams, crypto,
-    setTimeout: (...args) => setTimeout(...args).unref(), clearTimeout, AbortSignal: { timeout: () => new AbortController().signal },
+    ...(fastCheckoutTimers ? { Date: ClockDate } : {}),
+    setTimeout: schedule, clearTimeout: cancel, AbortSignal: { timeout(milliseconds) {
+      const controller = new AbortController();
+      timeoutBudgets.push(milliseconds);
+      signalTimeouts.set(controller.signal, milliseconds);
+      pendingTimeouts.set(controller.signal, { controller, at: clockTime + milliseconds });
+      return controller.signal;
+    } },
     sessionStorage: {
       getItem(key) { storageOperations.push(['get', key]); return stored.get(key) ?? null; },
       setItem(key, value) { storageOperations.push(['set', key]); stored.set(key, value); },
@@ -155,13 +200,31 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
     fetch: async (url, options = {}) => {
       const request = {
         url: String(url), path: new URL(url, location).pathname,
-        method: options.method || 'GET', body: options.body ? JSON.parse(options.body) : null
+        method: options.method || 'GET', body: options.body ? JSON.parse(options.body) : null,
+        timeoutMs: signalTimeouts.get(options.signal)
       };
       requests.push(request);
-      assert.ok(respond, `Unexpected request in local preview: ${request.path}`);
+      const isPreparation = ['/prepare', '/discard-prepare'].some(path => request.path.endsWith(path));
+      assert.ok(isPreparation || respond, `Unexpected request in local preview: ${request.path}`);
       // Deliberately no fallback to global fetch: test data never leaves Node.
-      const data = await respond(request);
-      return Response.json(data);
+      let onAbort;
+      const interrupted = new Promise((_resolve, reject) => {
+        onAbort = () => reject(options.signal.reason);
+        if (options.signal.aborted) onAbort();
+        else options.signal.addEventListener('abort', onAbort, { once: true });
+      });
+      try {
+        const reply = isPreparation ? respondPreparation ? respondPreparation(request, { advanceTime })
+          : request.path.endsWith('/discard-prepare') ? { discarded: true, pending: false }
+          : { ...request.body, currency: 'EUR', totalCents: knownQuotes.get(request.body.quoteId)?.totalCents,
+            state: 'prepared', expiresAt: knownQuotes.get(request.body.quoteId)?.expiresAt } : respond(request, { advanceTime });
+        const data = await Promise.race([reply, interrupted]);
+        if (request.path.endsWith('/quote')) knownQuotes.set(data.quoteId, data);
+        return Response.json(data);
+      } finally {
+        options.signal.removeEventListener('abort', onAbort);
+        pendingTimeouts.delete(options.signal);
+      }
     }
   });
   vm.runInContext(publicConfiguration, context, { filename: 'booking-config.js' });
@@ -173,12 +236,244 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
     assert.ok(element, `Missing page element: ${id}`);
     return element;
   };
-  return { document, get, requests, navigations, storageOperations, stored };
+  return { document, get, requests, navigations, storageOperations, stored, location, timerDelays, timeoutBudgets,
+    elapsedMilliseconds: () => clockTime - startTime, advanceTime };
 }
 
 function statusRetry(document) {
   return document.querySelectorAll('button').find(button => visible(button) && !button.disabled && /betaalstatus.*controleren/i.test(button.textContent));
 }
+
+const mollieCheckout = 'https://www.mollie.com/checkout/test-payment-identity';
+const readyPayment = (overrides = {}) => ({
+  ...recoveryRecord, reference: 'ROOFSIGNAL-TEST', state: 'checkout_ready',
+  status: 'open', checkoutUrl: mollieCheckout, ...overrides
+});
+
+test('A recovered payment exposes a real Betalen anchor for the same Mollie order', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return readyPayment();
+    }
+  });
+  const pay = ui.get('checkout-link');
+  assert.equal(pay.tagName, 'a');
+  assert.equal(pay.textContent, 'Betalen');
+  assert.equal(pay.getAttribute('href'), mollieCheckout);
+  assert.ok(visible(pay));
+  assert.equal(ui.get('checkout-button').hidden, true);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  assert.equal(ui.requests.length, 1);
+  await pay.dispatch('click');
+  assert.equal(ui.requests.length, 1, 'Following the existing link must not create or recover a second payment');
+  assert.deepEqual(ui.navigations, [], 'Reload must leave the payment choice to the customer');
+});
+
+test('Betalen retries a pending order with its original requestId and then exposes its checkout link', async () => {
+  let recoveryCalls = 0;
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return ++recoveryCalls === 1 ? { requestId: recoveryRecord.requestId, state: 'pending' } : readyPayment();
+    }
+  });
+  assert.equal(ui.get('checkout-button').textContent, 'Betalen');
+  assert.ok(visible(ui.get('checkout-button')));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+  assert.equal(ui.get('checkout-link').hidden, true);
+  assert.match(ui.get('booking-status').textContent, /betaalpagina wordt klaargezet/i);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(recoveryCalls, 2);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.ok(visible(ui.get('checkout-link')));
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+});
+
+test('One Betalen retry of a saved order keeps waiting until its existing Mollie checkout becomes ready', async () => {
+  let recoveryCalls = 0;
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, fastCheckoutTimers: true,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return ++recoveryCalls < 4 ? { requestId: recoveryRecord.requestId, state: 'pending' } : readyPayment();
+    }
+  });
+  assert.equal(recoveryCalls, 1, 'A reload performs only one passive lookup');
+  assert.deepEqual(ui.navigations, []);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(recoveryCalls, 4);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+});
+
+test('The initial Betalen action retains one payment identity and leaves a usable link if navigation is interrupted', async () => {
+  const ui = await submitNewOrder(attempt => readyPayment({ requestId: attempt.requestId }));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.ok(visible(ui.get('checkout-link')));
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  const stored = JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY));
+  assert.deepEqual(Object.keys(stored).sort(), Object.keys(recoveryRecord).sort());
+  assert.equal(stored.requestId, ui.requests.find(request => request.path.endsWith('/checkout')).body.requestId);
+  assert.equal(stored.checkoutUrl, undefined);
+});
+
+test('A Mollie return without local storage exposes its server-identified payment outside the hidden form', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, returnToken: statusToken,
+    respond(request) {
+      assert.ok(request.path.endsWith('/status'));
+      return readyPayment();
+    }
+  });
+  assert.equal(ui.get('booking-form').hidden, true);
+  assert.ok(visible(ui.get('checkout-link')));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(recoveryRecord.totalCents));
+  assert.equal(ui.stored.size, 0, 'A return response must not store a payment URL or create a new local attempt');
+  assert.equal(ui.requests.length, 1);
+});
+
+test('Closed, pending or failed status checks remove an earlier payment link', async () => {
+  for (const next of [
+    { ...readyPayment(), state: 'closed', requestClosed: true, status: 'expired' },
+    { requestId: recoveryRecord.requestId, state: 'pending', status: 'pending' },
+    new Error('Simulated status failure')
+  ]) {
+    let statusCalls = 0;
+    const ui = await bookingPage({ configuration: connectedConfiguration, returnToken: statusToken,
+      respond(request) {
+        assert.ok(request.path.endsWith('/status'));
+        if (++statusCalls === 1) return readyPayment();
+        if (next instanceof Error) throw next;
+        return next;
+      }
+    });
+    assert.ok(visible(ui.get('checkout-link')));
+    await statusRetry(ui.document).dispatch('click');
+    await settle();
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  }
+});
+
+test('Recovery refuses checkout URLs from another host or another order', async () => {
+  for (const response of [
+    readyPayment({ checkoutUrl: 'https://mollie.com.attacker.invalid/pay' }),
+    readyPayment({ checkoutUrl: 'http://www.mollie.com/pay' }),
+    readyPayment({ checkoutUrl: 'https://user:secret@www.mollie.com/pay' }),
+    readyPayment({ quoteId: 'another_quote_0123456789' }),
+    readyPayment({ totalCents: 1 })
+  ]) {
+    const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord,
+      respond() { return response; }
+    });
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.ok(visible(ui.get('booking-error')));
+    assert.deepEqual(ui.navigations, []);
+    assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  }
+});
+
+test('A return-token payment must match the browser order when a recovery record already exists', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, returnToken: statusToken,
+    respond(request) {
+      if (request.path.endsWith('/recover')) return readyPayment();
+      return readyPayment({ slotId: 'another-slot' });
+    }
+  });
+  assert.equal(ui.get('booking-form').hidden, true);
+  assert.equal(ui.get('checkout-link').hidden, true);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+  assert.match(ui.get('booking-status').textContent, /hoort niet bij/);
+  assert.ok(statusRetry(ui.document));
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('A confirmed return removes payment and offers only a new inspection without charging again', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, returnToken: statusToken,
+    respond(request) {
+      if (request.path.endsWith('/recover')) return readyPayment();
+      return readyPayment({ state: 'closed', status: 'confirmed', requestClosed: true });
+    }
+  });
+  assert.equal(ui.get('checkout-link').hidden, true);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+  assert.equal(ui.get('checkout-button').textContent, 'Een nieuwe inspectie boeken');
+  assert.match(ui.get('booking-status').textContent, /betaling is ontvangen/);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('booking-form').hidden, false);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+});
+
+test('A verified expired return allows a fresh booking with or without a local recovery record', async () => {
+  for (const record of [undefined, recoveryRecord]) {
+    const ui = await bookingPage({ configuration: connectedConfiguration, record, returnToken: statusToken,
+      respond(request) {
+        if (request.path.endsWith('/recover')) return { requestId: recoveryRecord.requestId, state: 'pending' };
+        return readyPayment({ state: 'closed', status: 'expired', requestClosed: true });
+      }
+    });
+    assert.equal(ui.get('booking-form').hidden, false);
+    assert.equal(ui.get('postcode').disabled, false);
+    assert.equal(ui.get('check-address').disabled, true, 'A fresh booking starts without an inspection choice');
+    assert.equal(ui.get('checkout-button').textContent, 'Betalen');
+    assert.equal(ui.get('checkout-button').disabled, true, 'A fresh booking still needs an address, moment and consent');
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.equal(ui.stored.size, 0);
+    assert.equal(ui.location.searchParams.has('booking'), false, 'A fresh booking must not retain an expired return token');
+    assert.match(ui.get('booking-status').textContent, /betaalopdracht is verlopen/);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  }
+});
+
+test('A raw terminal provider status never releases a pending booking or hides its retry', async () => {
+  for (const record of [undefined, recoveryRecord]) {
+    for (const status of ['failed', 'canceled', 'expired', 'confirmed']) {
+      for (const response of [{ status }, readyPayment({ state: 'pending', status, requestClosed: false })]) {
+        const ui = await bookingPage({ configuration: connectedConfiguration, record, returnToken: statusToken,
+          respond(request) {
+            if (request.path.endsWith('/recover')) return { requestId: recoveryRecord.requestId, state: 'pending' };
+            return response;
+          }
+        });
+        assert.equal(ui.get('booking-form').hidden, true);
+        assert.equal(ui.get('checkout-link').hidden, true);
+        assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+        assert.ok(statusRetry(ui.document), 'A provider status must not suppress retry while the server hold is unresolved');
+        assert.match(ui.get('booking-status').textContent, /betaling wordt nog gecontroleerd/);
+        assert.equal(ui.stored.size, record ? 1 : 0);
+        assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+      }
+    }
+  }
+});
+
+test('A terminal return without a durable closure fence cannot unlock either a stored or server-only order', async () => {
+  for (const record of [undefined, recoveryRecord]) {
+    const ui = await bookingPage({ configuration: connectedConfiguration, record, returnToken: statusToken,
+      respond(request) {
+        if (request.path.endsWith('/recover')) return { requestId: recoveryRecord.requestId, state: 'pending' };
+        return readyPayment({ state: 'closed', status: 'expired', requestClosed: false });
+      }
+    });
+    assert.equal(ui.get('booking-form').hidden, true);
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.ok(statusRetry(ui.document));
+    assert.equal(ui.stored.size, record ? 1 : 0);
+    assert.match(ui.get('booking-status').textContent, /nog niet veilig afgehandeld/);
+  }
+});
 
 test('Recovery errors after a Mollie return remain visible while the same payment is retained', async () => {
   let recoverCalls = 0;
@@ -234,6 +529,7 @@ test('A failed return-status retry leaves another visible retry without creating
 
 test('Missing human verification does not send an address or request availability', async () => {
   const ui=await bookingPage({configuration:connectedConfiguration,securityReady:false});
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value='7316BH';ui.get('houseNumber').value='4';
   await ui.get('check-address').dispatch('click');
   assert.equal(ui.requests.length,0);
@@ -241,6 +537,7 @@ test('Missing human verification does not send an address or request availabilit
 });
 test('Explicit preview never reads recovery storage or sends customer input', async () => {
   const ui = await bookingPage({ configuration: { mode: 'preview' }, record: recoveryRecord, returnToken: statusToken });
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value = '7316 BH';
   ui.get('houseNumber').value = '4';
   ui.get('name').value = 'Private preview value';
@@ -270,28 +567,37 @@ test('An invalid integration destination keeps inputs disabled and sends no requ
   assert.deepEqual(ui.storageOperations, []);
 });
 
-async function submitNewOrder(checkoutResponse) {
+async function prepareNewOrder(checkoutResponse, { recoverResponse, respondPreparation, fastCheckoutTimers = false } = {}) {
   const quote = {
-    quoteId: recoveryRecord.quoteId, serviceable: true, currency: 'EUR',
+    quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
     baseCents: 36179, thermalCents: 0, travelCents: 0, totalCents: 36179,
     travelDescription: 'Lokale test; geen werkelijke route.', termsVersion: 'test',
     expiresAt: new Date(Date.now() + 600000).toISOString(),
     address: {postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}
   };
-  const slot = {id:'s1', start:new Date(Date.now()+86400000).toISOString(), end:new Date(Date.now()+89100000).toISOString()};
-  const ui = await bookingPage({configuration:connectedConfiguration, respond(request) {
+  const slotStart = Date.now() + 30 * 86400000;
+  const slot = {id:'s1', start:new Date(slotStart).toISOString(), end:new Date(slotStart+2700000).toISOString()};
+  const ui = await bookingPage({configuration:connectedConfiguration, fastCheckoutTimers, respondPreparation, respond(request, clock) {
     if (request.path.endsWith('/quote')) return quote;
     if (request.path.endsWith('/availability')) return {quoteId:quote.quoteId,slots:[slot]};
+    if (request.path.endsWith('/recover') && recoverResponse) return recoverResponse(request.body, clock, request);
     assert.ok(request.path.endsWith('/checkout'));
-    return checkoutResponse(request.body);
+    return checkoutResponse(request.body, clock, request);
   }});
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value='1234 AB'; ui.get('houseNumber').value='12';
   await ui.get('check-address').dispatch('click');
   const choice = ui.get('slots').querySelector('input');
   assert.ok(choice); await choice.dispatch('change');
   ui.get('name').value='Test'; ui.get('email').value='test@example.invalid';
-  ui.get('termsAccepted').checked=true; ui.get('earlyStartRequested').checked=true;
-  await ui.get('booking-form').dispatch('submit'); await settle();
+  ui.get('termsAccepted').checked=true;
+  return ui;
+}
+
+async function submitNewOrder(checkoutResponse, options) {
+  const ui = await prepareNewOrder(checkoutResponse, options);
+  await ui.get('booking-form').dispatch('submit');
+  await settle();
   return ui;
 }
 
@@ -304,13 +610,217 @@ test('A slot lost during checkout releases only a durably closed attempt and inv
   assert.deepEqual(ui.navigations,[]);
 });
 
-test('A still-pending initial checkout retains the same recovery record without claiming an error or redirect', async () => {
-  const ui=await submitNewOrder(attempt=>({requestId:attempt.requestId,state:'pending'}));
+test('One Betalen action waits through pending replies and opens the same Mollie payment without another click', async () => {
+  let recoveryCalls = 0;
+  let requestId;
+  const ui = await submitNewOrder(attempt => {
+    requestId = attempt.requestId;
+    return { requestId, state: 'pending' };
+  }, {
+    fastCheckoutTimers: true,
+    recoverResponse(body) {
+      assert.deepEqual(body, { requestId });
+      return ++recoveryCalls === 1 ? { requestId, state: 'pending' } : readyPayment({ requestId });
+    }
+  });
+  assert.equal(recoveryCalls, 2);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.equal(ui.get('name').value, 'Test');
+  assert.equal(ui.get('postcode').value, '1234 AB');
+  assert.equal(ui.get('summary-date').textContent.includes('Nog te kiezen'), false);
+  assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, requestId);
+});
+
+test('A double submit while payment is pending creates only one payment and still opens Mollie automatically', async () => {
+  let resolveCheckout;
+  let resolveRecovery;
+  let requestId;
+  const checkoutResponse = new Promise(resolve => { resolveCheckout = resolve; });
+  const recoveryResponse = new Promise(resolve => { resolveRecovery = resolve; });
+  const ui = await prepareNewOrder(attempt => {
+    requestId = attempt.requestId;
+    return checkoutResponse;
+  }, {
+    fastCheckoutTimers: true,
+    recoverResponse(body) {
+      assert.deepEqual(body, { requestId });
+      return recoveryResponse;
+    }
+  });
+  const firstClick = ui.get('booking-form').dispatch('submit');
+  const secondClick = ui.get('booking-form').dispatch('submit');
+  await settle();
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  resolveCheckout({ requestId, state: 'pending' });
+  for (let turn = 0; turn < 5 && !ui.requests.some(request => request.path.endsWith('/recover')); turn += 1) await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.get('booking-status').textContent, 'Uw betaalpagina openen…');
+  const pendingClick = ui.get('booking-form').dispatch('submit');
+  resolveRecovery(readyPayment({ requestId }));
+  await Promise.all([firstClick, secondClick, pendingClick]);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+});
+
+test('A still-pending initial checkout stops bounded waiting while retaining the same payment for retry', async () => {
+  const pending = body => ({ requestId: body.requestId, state: 'pending' });
+  const ui = await submitNewOrder(pending, { fastCheckoutTimers: true, recoverResponse: pending });
   assert.equal(ui.stored.size,1);
   assert.equal(ui.get('postcode').disabled,true);
-  assert.match(ui.get('booking-status').textContent,/nog gecontroleerd/);
-  assert.equal(ui.get('booking-error').textContent,'');
+  assert.equal(ui.get('booking-status').textContent, '');
+  assert.match(ui.get('booking-error').textContent, /betaalpagina is nog niet beschikbaar/);
+  assert.match(ui.get('booking-error').textContent, /bestaande betaalopdracht blijft bewaard/);
+  assert.equal(ui.get('checkout-button').textContent, 'Betalen');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 8);
+  assert.equal(ui.timerDelays.reduce((total, delay) => total + delay, 0), 16000);
   assert.deepEqual(ui.navigations,[]);
+});
+
+test('Slow checkout and recovery replies share one 45-second deadline without restarting the network budget', async () => {
+  let requestId;
+  const ui = await submitNewOrder((attempt, clock, request) => {
+    requestId = attempt.requestId;
+    assert.equal(request.timeoutMs, 45000);
+    clock.advanceTime(30000);
+    return { requestId, state: 'pending' };
+  }, {
+    fastCheckoutTimers: true,
+    recoverResponse(body, clock, request) {
+      assert.deepEqual(body, { requestId });
+      assert.equal(request.timeoutMs, 13000, 'Initial checkout and the first wait already consumed 32 seconds');
+      clock.advanceTime(12000);
+      return { requestId, state: 'pending' };
+    }
+  });
+  assert.equal(ui.elapsedMilliseconds(), 45000);
+  assert.deepEqual(ui.timerDelays, [2000, 1000]);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+  assert.equal(ui.get('checkout-button').disabled, false);
+  assert.match(ui.get('booking-error').textContent, /bestaande betaalopdracht blijft bewaard/);
+  assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, requestId);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('A recovery that never answers is aborted at the remaining checkout deadline and preserves a safe retry', async () => {
+  let requestId;
+  const ui = await submitNewOrder(attempt => {
+    requestId = attempt.requestId;
+    return { requestId, state: 'pending' };
+  }, {
+    fastCheckoutTimers: true,
+    recoverResponse(body, clock, request) {
+      assert.deepEqual(body, { requestId });
+      assert.equal(request.timeoutMs, 43000, 'The polling delay consumes part of the same 45-second budget');
+      clock.advanceTime(request.timeoutMs);
+      // Fetch must reject through the supplied abort signal even though the
+      // upstream request itself never resolves or rejects.
+      return new Promise(() => {});
+    }
+  });
+  assert.equal(ui.elapsedMilliseconds(), 45000);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+  assert.match(ui.get('booking-error').textContent, /verbinding is onderbroken/i);
+  assert.equal(ui.get('checkout-button').disabled, false);
+  assert.equal(ui.get('postcode').disabled, true);
+  assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, requestId);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('A connection failure during automatic recovery preserves the original order and a usable Betalen retry', async () => {
+  let requestId;
+  const ui = await submitNewOrder(attempt => {
+    requestId = attempt.requestId;
+    return { requestId, state: 'pending' };
+  }, {
+    fastCheckoutTimers: true,
+    recoverResponse(body) {
+      assert.deepEqual(body, { requestId });
+      throw new Error('Simulated recovery connection failure');
+    }
+  });
+  assert.match(ui.get('booking-error').textContent, /verbinding is onderbroken/i);
+  assert.ok(visible(ui.get('booking-error')));
+  assert.equal(ui.get('checkout-button').textContent, 'Betalen');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  assert.equal(ui.get('postcode').disabled, true);
+  assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, requestId);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Automatic recovery validates the Mollie destination and payment identity before navigating', async () => {
+  for (const tamper of [
+    { checkoutUrl: 'https://mollie.com.attacker.invalid/pay' },
+    { checkoutUrl: 'http://www.mollie.com/pay' },
+    { requestId: '7cbf44a0-0d1c-4a33-99c0-1b5859ae2010' },
+    { quoteId: 'another_quote_0123456789' },
+    { totalCents: 1 },
+    { slotId: 'another-slot' }
+  ]) {
+    let requestId;
+    const ui = await submitNewOrder(attempt => {
+      requestId = attempt.requestId;
+      return { requestId, state: 'pending' };
+    }, {
+      fastCheckoutTimers: true,
+      recoverResponse() { return readyPayment({ requestId, ...tamper }); }
+    });
+    assert.deepEqual(ui.navigations, []);
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.ok(visible(ui.get('booking-error')));
+    assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, requestId);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+  }
+});
+
+test('Automatic recovery stops at a closed or not-created attempt without opening Mollie or starting another order', async () => {
+  for (const terminal of [
+    { state: 'closed', status: 'confirmed', requestClosed: true },
+    { state: 'closed', status: 'expired', requestClosed: true },
+    { state: 'not_created', code: 'REQUEST_NOT_CREATED', reason: 'SLOT_UNAVAILABLE', paymentCreated: false, requestClosed: true }
+  ]) {
+    let requestId;
+    const ui = await submitNewOrder(attempt => {
+      requestId = attempt.requestId;
+      return { requestId, state: 'pending' };
+    }, {
+      fastCheckoutTimers: true,
+      recoverResponse() { return readyPayment({ requestId, ...terminal }); }
+    });
+    assert.deepEqual(ui.navigations, []);
+    assert.equal(ui.get('checkout-link').hidden, true);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/recover')).length, 1);
+    assert.equal(ui.stored.size, terminal.status === 'confirmed' ? 1 : 0);
+  }
+});
+
+test('Reloading a pending payment performs only one passive recovery and never resumes checkout automatically', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, fastCheckoutTimers: true,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return { requestId: recoveryRecord.requestId, state: 'pending' };
+    }
+  });
+  await settle();
+  assert.equal(ui.requests.length, 1);
+  assert.equal(ui.timerDelays.length, 0);
+  assert.deepEqual(ui.navigations, []);
+  assert.equal(ui.get('checkout-button').disabled, false);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
 });
 
 test('An initial paid result is shown without recreating or reopening payment', async () => {
@@ -321,16 +831,18 @@ test('An initial paid result is shown without recreating or reopening payment', 
   assert.deepEqual(ui.navigations,[]);
 });
 
-async function calendarPage(slots, checkoutResponse = null) {
-  const quote={quoteId:recoveryRecord.quoteId,serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
+async function calendarPage(slots, checkoutResponse = null, inline = false, { recoverResponse, respondPreparation, fastCheckoutTimers = false } = {}) {
+  const quote={quoteId:recoveryRecord.quoteId,inspectionType:'building_envelope',serviceable:true,currency:'EUR',baseCents:36179,thermalCents:0,travelCents:0,totalCents:36179,
     travelDescription:'Simulated test route',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),
     address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'}};
-  const ui=await bookingPage({configuration:connectedConfiguration,respond(request){
-    if(request.path.endsWith('/quote'))return quote;
+  const ui=await bookingPage({configuration:connectedConfiguration,fastCheckoutTimers,respondPreparation,respond(request){
+    if(request.path.endsWith('/quote'))return {...quote,...(inline?{availability:{quoteId:inline==='wrong-id'?'another_quote_012345':quote.quoteId,slots}}:{})};
     if(request.path.endsWith('/availability'))return {quoteId:quote.quoteId,slots};
     if(checkoutResponse && request.path.endsWith('/checkout')) return checkoutResponse(request.body);
+    if(recoverResponse && request.path.endsWith('/recover')) return recoverResponse(request.body);
     assert.fail('No payment should start during calendar selection');
   }});
+  await chooseProduct(ui, 'building_envelope');
   ui.get('postcode').value='1234AB';ui.get('houseNumber').value='12';
   await ui.get('check-address').dispatch('click');
   return ui;
@@ -338,31 +850,562 @@ async function calendarPage(slots, checkoutResponse = null) {
 const calendarButton = (ui, day) => ui.get('calendar-days').querySelectorAll('button').find(button => button.value === day);
 const calendarSlot = (id, start, recommended = false) => ({id, start, end:new Date(Date.parse(start)+2700000).toISOString(), recommended});
 const futureYear = new Date().getUTCFullYear() + 1;
+const preparedReply = (request, overrides = {}) => ({ ...request.body, currency: 'EUR', totalCents: 36179,
+  state: 'prepared', expiresAt: new Date(Date.now() + 600000).toISOString(), ...overrides });
 
-test('address details and early-start consent appear only when relevant and reset when the choice changes', async () => {
+test('Only an explicit time choice prepares a calendar hold, without customer data, storage, payment or navigation', async () => {
+  const slot = calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`);
+  const ui = await calendarPage([slot], attempt => readyPayment({ ...attempt }), true, { fastCheckoutTimers: true });
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 0);
+  await ui.get('slots').querySelector('input').dispatch('change');
+  await settle();
+  const prepared = ui.requests.filter(request => request.path.endsWith('/prepare'));
+  assert.equal(prepared.length, 1);
+  assert.deepEqual(Object.keys(prepared[0].body).sort(), ['quoteId', 'requestId', 'slotId']);
+  assert.equal(prepared[0].body.slotId, 's1');
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('name').disabled, false);
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(ui.navigations, []);
+  ui.get('name').value = 'Current customer';
+  ui.get('email').value = 'current@example.invalid';
+  ui.get('phone').value = '0612345678';
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.requestId, prepared[0].body.requestId);
+  assert.equal(checkout.body.customer.name, 'Current customer');
+  assert.equal(checkout.body.terms.accepted, true);
+  assert.equal(prepared.length, 1);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+});
+
+test('Betalen binds the same pending preparation immediately and ignores its late response after final checkout', async () => {
+  let resolvePrepare;
+  let preparationRequest;
+  const prepareResponse = new Promise(resolve => { resolvePrepare = resolve; });
+  const ui = await prepareNewOrder(attempt => readyPayment({ ...attempt }), {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      assert.ok(request.path.endsWith('/prepare'));
+      preparationRequest = request;
+      return prepareResponse;
+    }
+  });
+  assert.ok(preparationRequest);
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('name').disabled, false);
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.requestId, preparationRequest.body.requestId);
+  assert.equal(checkout.body.customer.name, 'Test');
+  assert.equal(checkout.body.terms.accepted, true);
+  assert.equal(ui.elapsedMilliseconds(), 0, 'Current preparation must not delay posting final consent');
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  resolvePrepare(preparedReply(preparationRequest));
+  await settle(); await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/discard-prepare')).length, 0);
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+  assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).requestId, preparationRequest.body.requestId);
+});
+
+test('A changed time awaits the earlier preparation, discards it durably and only then prepares the latest choice', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  let firstRequest;
+  let resolveFirst;
+  let discarded = 0;
+  const events = [];
+  const firstResponse = new Promise(resolve => { resolveFirst = resolve; });
+  const ui = await calendarPage(slots, attempt => readyPayment({ ...attempt }), true, {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      if (request.path.endsWith('/discard-prepare')) {
+        events.push('discard');
+        assert.deepEqual(request.body, { requestId: firstRequest.body.requestId });
+        return ++discarded < 3 ? { discarded: false, pending: true } : { discarded: true, pending: false };
+      }
+      events.push(`prepare:${request.body.slotId}`);
+      if (request.body.slotId === 's1') { firstRequest = request; return firstResponse; }
+      return preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change');
+  await choices[1].dispatch('change');
+  assert.deepEqual(events, ['prepare:s1']);
+  const selectedTime = ui.get('summary-date').textContent;
+  resolveFirst(preparedReply(firstRequest));
+  for (let turn = 0; turn < 12 && !events.includes('prepare:s2'); turn += 1) await settle();
+  assert.deepEqual(events, ['prepare:s1', 'discard', 'discard', 'discard', 'prepare:s2']);
+  assert.equal(ui.get('summary-date').textContent, selectedTime);
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.deepEqual(ui.navigations, []);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const latest = ui.requests.filter(request => request.path.endsWith('/prepare')).at(-1);
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.requestId, latest.body.requestId);
+  assert.equal(checkout.body.slotId, 's2');
+  assert.deepEqual(ui.navigations, [mollieCheckout]);
+});
+
+test('Rapid time changes skip superseded drafts and prepare only the latest choice after cleanup', async () => {
+  const slots = ['s1', 's2', 's3'].map((id, index) => calendarSlot(id, `${futureYear}-11-03T${String(9 + index).padStart(2, '0')}:00:00Z`));
+  let firstRequest;
+  let resolveFirst;
+  const firstResponse = new Promise(resolve => { resolveFirst = resolve; });
+  const ui = await calendarPage(slots, null, true, { fastCheckoutTimers: true,
+    respondPreparation(request) {
+      if (request.path.endsWith('/discard-prepare')) return { discarded: true, pending: false };
+      if (request.body.slotId === 's1') { firstRequest = request; return firstResponse; }
+      return preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  for (const choice of choices) await choice.dispatch('change');
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  resolveFirst(preparedReply(firstRequest));
+  for (let turn = 0; turn < 10 && ui.requests.filter(request => request.path.endsWith('/prepare')).length < 2; turn += 1) await settle();
+  assert.deepEqual(ui.requests.filter(request => request.path.endsWith('/prepare')).map(request => request.body.slotId), ['s1', 's3']);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/discard-prepare')).length, 1);
+  assert.equal(ui.stored.size, 0);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Unresolved discard polling is bounded and cannot create an overlapping preparation', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  const ui = await calendarPage(slots, null, true, { fastCheckoutTimers: true,
+    respondPreparation(request) {
+      return request.path.endsWith('/discard-prepare') ? { discarded: false, pending: true } : preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change'); await settle();
+  await choices[1].dispatch('change');
+  for (let turn = 0; turn < 15; turn += 1) await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/discard-prepare')).length, 5);
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  assert.equal(ui.elapsedMilliseconds(), 8000);
+  assert.equal(ui.stored.size, 0);
+  assert.equal(ui.get('name').disabled, false);
+  assert.equal(ui.get('booking-error').textContent, '');
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Betalen waits at most ten seconds for an older draft and still posts current consent without losing late cleanup', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  let firstRequest;
+  let resolveFirst;
+  const firstResponse = new Promise(resolve => { resolveFirst = resolve; });
+  const ui = await calendarPage(slots, attempt => ({ requestId: attempt.requestId, state: 'not_created',
+    code: 'REQUEST_NOT_CREATED', reason: 'SLOT_UNAVAILABLE', paymentCreated: false, requestClosed: true }), true, {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      if (request.path.endsWith('/discard-prepare')) return { discarded: true, pending: false };
+      firstRequest = request; return firstResponse;
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change');
+  await choices[1].dispatch('change');
+  ui.get('name').value = 'Latest customer';
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.slotId, 's2');
+  assert.equal(checkout.body.customer.name, 'Latest customer');
+  assert.equal(checkout.body.terms.accepted, true);
+  assert.equal(checkout.timeoutMs, 35000);
+  assert.equal(ui.elapsedMilliseconds(), 10000);
+  assert.equal(ui.stored.size, 0);
+  resolveFirst(preparedReply(firstRequest));
+  for (let turn = 0; turn < 10 && !ui.requests.some(request => request.path.endsWith('/discard-prepare')); turn += 1) await settle();
+  const discarded = ui.requests.filter(request => request.path.endsWith('/discard-prepare'));
+  assert.equal(discarded.length, 1);
+  assert.deepEqual(discarded[0].body, { requestId: firstRequest.body.requestId });
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Address, product, day, month and quote expiry invalidate a preparation without creating a final order', async () => {
+  for (const change of ['address', 'product', 'day', 'month', 'expiry']) {
+    const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`),
+      calendarSlot('s2', `${futureYear}-11-04T09:00:00Z`), calendarSlot('s3', `${futureYear}-12-01T09:00:00Z`)];
+    const ui = await calendarPage(slots, null, true, { fastCheckoutTimers: true });
+    await ui.get('slots').querySelector('input').dispatch('change');
+    await settle();
+    const prepared = ui.requests.find(request => request.path.endsWith('/prepare'));
+    if (change === 'address') { ui.get('houseNumber').value = '14'; await ui.get('houseNumber').dispatch('input'); }
+    if (change === 'product') await chooseProduct(ui, 'thermal');
+    if (change === 'day') await calendarButton(ui, `${futureYear}-11-04`).dispatch('click');
+    if (change === 'month') await ui.get('calendar-next').dispatch('click');
+    if (change === 'expiry') { ui.advanceTime(600001); ui.get('termsAccepted').checked = true; await ui.get('booking-form').dispatch('submit'); }
+    await settle(); await settle();
+    const discarded = ui.requests.filter(request => request.path.endsWith('/discard-prepare'));
+    assert.equal(discarded.length, 1, `${change} must discard the abandoned hold`);
+    assert.deepEqual(discarded[0].body, { requestId: prepared.body.requestId });
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+    assert.equal(ui.stored.size, 0);
+    assert.deepEqual(ui.navigations, []);
+  }
+});
+
+test('An invalid or failed preparation never supplies price, identity or a payment URL to final checkout', async () => {
+  for (const response of [
+    request => preparedReply(request, { requestId: recoveryRecord.requestId }),
+    request => preparedReply(request, { totalCents: 1 }),
+    request => preparedReply(request, { slotId: 'another-slot' }),
+    request => preparedReply(request, { expiresAt: '2020-01-01T00:00:00Z' }),
+    request => preparedReply(request, { checkoutUrl: 'https://attacker.invalid/pay' }),
+    () => { throw new Error('Simulated preparation connection failure'); }
+  ]) {
+    const ui = await prepareNewOrder(attempt => readyPayment({ ...attempt }), { fastCheckoutTimers: true, respondPreparation: response });
+    await settle();
+    const draft = ui.requests.find(request => request.path.endsWith('/prepare'));
+    assert.equal(ui.stored.size, 0);
+    assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+    assert.deepEqual(ui.navigations, []);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), null);
+    await ui.get('booking-form').dispatch('submit');
+    const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+    assert.equal(checkout.body.requestId, draft.body.requestId);
+    assert.equal(checkout.body.quoteId, recoveryRecord.quoteId);
+    assert.equal(checkout.body.slotId, 's1');
+    assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).totalCents, 36179);
+    assert.deepEqual(ui.navigations, [mollieCheckout]);
+  }
+});
+
+test('A failed discard prevents overlapping preparations and final checkout can still safely reject the latest selection', async () => {
+  const slots = [calendarSlot('s1', `${futureYear}-11-03T09:00:00Z`), calendarSlot('s2', `${futureYear}-11-03T10:00:00Z`)];
+  const ui = await calendarPage(slots, attempt => ({ requestId: attempt.requestId, state: 'not_created',
+    code: 'REQUEST_NOT_CREATED', reason: 'SLOT_UNAVAILABLE', paymentCreated: false, requestClosed: true }), true, {
+    fastCheckoutTimers: true,
+    respondPreparation(request) {
+      return request.path.endsWith('/discard-prepare') ? { discarded: false, pending: false } : preparedReply(request);
+    }
+  });
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change'); await settle();
+  await choices[1].dispatch('change'); await settle();
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/prepare')).length, 1);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const checkout = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.slotId, 's2');
+  assert.notEqual(checkout.body.requestId, ui.requests.find(request => request.path.endsWith('/prepare')).body.requestId);
+  assert.equal(ui.stored.size, 0);
+  assert.match(ui.get('booking-status').textContent, /inmiddels bezet/);
+  assert.deepEqual(ui.navigations, []);
+});
+
+test('Combined address result opens the real calendar without a second network request',async()=>{
+ const ui=await calendarPage([calendarSlot('fast',`${futureYear}-10-14T09:00:00Z`)],null,true);
+ assert.equal(ui.get('booking-calendar').hidden,false);
+ assert.equal(ui.get('slots').querySelector('input').value,'fast');
+ assert.equal(ui.requests.length,1);
+ assert.ok(ui.requests[0].path.endsWith('/quote'));
+ assert.equal(ui.get('checkout-button').disabled,true,'A customer must still choose a time and consent');
+ const empty=await calendarPage([],null,true);
+ assert.equal(empty.requests.length,1);
+ assert.equal(empty.get('booking-calendar').hidden,true);
+ const wrong=await calendarPage([calendarSlot('wrong',`${futureYear}-10-14T09:00:00Z`)],null,'wrong-id');
+ assert.equal(wrong.get('booking-calendar').hidden,true);
+ assert.equal(wrong.get('checkout-button').disabled,true);
+ assert.equal(wrong.requests.length,1,'Invalid inline data is rejected, not silently replaced');
+});
+
+async function chooseProduct(ui, inspectionType) {
+  ui.get('inspection-envelope').checked = inspectionType === 'building_envelope';
+  ui.get('inspection-thermal').checked = inspectionType === 'thermal';
+  await ui.get(inspectionType === 'thermal' ? 'inspection-thermal' : 'inspection-envelope').dispatch('change');
+}
+
+test('No inspection is preselected; hidden additions cannot create a quote or payment', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration });
+  assert.equal(ui.get('inspection-envelope').checked, false);
+  assert.equal(ui.get('inspection-thermal').checked, false);
+  assert.equal(ui.get('product-addon').hidden, true);
+  assert.equal(ui.get('thermal').checked, false);
+  assert.equal(ui.get('thermal').disabled, true);
+  assert.equal(ui.get('summary-total').textContent, 'Kies uw inspectie');
+  assert.equal(ui.get('check-address').disabled, true);
+  ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  assert.equal(ui.get('thermal').checked, false);
+  await ui.get('check-address').dispatch('click');
+  await ui.get('booking-form').dispatch('submit');
+  assert.match(ui.get('address-status').textContent, /Kies eerst uw inspectie/);
+  assert.equal(ui.requests.length, 0);
+  assert.equal(ui.stored.size, 0);
+});
+
+test('The addon appears for the chosen inspection and never carries into a different primary choice', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration });
+  await chooseProduct(ui, 'building_envelope');
+  assert.equal(ui.get('product-addon').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Thermografische inspectie toevoegen');
+  assert.equal(ui.get('thermal').disabled, false);
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(66429));
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('product-addon').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Dak- en gevelinspectie toevoegen');
+  assert.equal(ui.get('thermal').checked, false);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  await chooseProduct(ui, 'building_envelope');
+  assert.equal(ui.get('thermal').checked, false);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  // Model the browser restoring the HTML defaults before dispatching reset.
+  ui.get('inspection-envelope').checked = false;
+  ui.get('inspection-thermal').checked = false;
+  await ui.get('booking-form').dispatch('reset');
+  await settle();
+  assert.equal(ui.get('product-addon').hidden, true);
+  assert.equal(ui.get('thermal').disabled, true);
+  assert.equal(ui.get('summary-total').textContent, 'Kies uw inspectie');
+});
+
+test('Standalone thermography sends its product, includes only the thermal price and clears choices when switching', async () => {
+  const slot = calendarSlot('product-time', new Date(Date.now() + 30 * 86400000).toISOString());
+  const ui = await bookingPage({ configuration: connectedConfiguration, respond(request) {
+    assert.ok(request.path.endsWith('/quote'));
+    const { inspectionType, thermal } = request.body;
+    const baseCents = inspectionType === 'thermal' ? 0 : 36179;
+    const thermalCents = inspectionType === 'thermal' ? 36179 : thermal ? 30250 : 0;
+    return { quoteId: recoveryRecord.quoteId, inspectionType, serviceable: true, currency: 'EUR', baseCents, thermalCents,
+      travelCents: 4235, totalCents: baseCents + thermalCents + 4235, travelDescription: 'Simulated route',
+      termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
+      address: { postcode: '1234AB', houseNumber: '12', street: 'Teststraat', city: 'Testplaats', country: 'NL' },
+      availability: { quoteId: recoveryRecord.quoteId, slots: [slot] } };
+  }});
+  ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('thermal-option').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Dak- en gevelinspectie toevoegen');
+  assert.equal(ui.get('summary-base-row').hidden, false);
+  assert.equal(ui.get('summary-base-label').textContent, 'Thermografische inspectie');
+  assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
+  assert.equal(ui.get('summary-thermal-label').textContent, 'Dak- en gevelinspectie');
+  assert.equal(ui.get('summary-thermal').textContent, 'Niet toegevoegd');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  await ui.get('check-address').dispatch('click');
+  assert.equal(ui.requests[0].body.inspectionType, 'thermal');
+  assert.equal(ui.requests[0].body.thermal, true, 'Standalone heat inspection must not depend on the hidden optional checkbox');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(40414));
+  await ui.get('slots').querySelector('input').dispatch('change');
+  ui.get('termsAccepted').checked = true;
+  await ui.get('termsAccepted').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  await chooseProduct(ui, 'building_envelope');
+  assert.equal(ui.get('booking-calendar').hidden, true);
+  assert.equal(ui.get('slots').querySelectorAll('input').length, 0);
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.get('summary-date').textContent, 'Nog te kiezen');
+  assert.equal(ui.get('summary-base-row').hidden, false);
+  assert.equal(ui.get('thermal-option').hidden, false);
+  assert.equal(ui.get('addon-title').textContent, 'Thermografische inspectie toevoegen');
+  assert.equal(ui.get('summary-base-label').textContent, 'Dak- en gevelinspectie');
+  assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
+  assert.equal(ui.get('summary-thermal-label').textContent, 'Thermografie');
+  assert.equal(ui.get('summary-thermal').textContent, 'Niet toegevoegd');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+  assert.equal(ui.get('checkout-button').disabled, true);
+  ui.get('thermal').checked = true;
+  await ui.get('thermal').dispatch('change');
+  await ui.get('check-address').dispatch('click');
+  const quotes = ui.requests.filter(request => request.path.endsWith('/quote'));
+  assert.equal(quotes[1].body.inspectionType, 'building_envelope');
+  assert.equal(quotes[1].body.thermal, true);
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(70664));
+});
+
+test('A stale envelope quote never unlocks checkout for a newly selected thermal inspection', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, respond() {
+    return { quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
+      baseCents: 36179, thermalCents: 30250, travelCents: 0, totalCents: 66429, travelDescription: 'Simulated route',
+      termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
+      address: { postcode: '1234AB', houseNumber: '12', street: 'Teststraat', city: 'Testplaats', country: 'NL' } };
+  }});
+  await chooseProduct(ui, 'thermal');
+  ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+  await ui.get('check-address').dispatch('click');
+  assert.match(ui.get('address-status').textContent, /wijkt af van uw gekozen inspectie/);
+  assert.equal(ui.get('booking-calendar').hidden, true);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  assert.equal(ui.requests.length, 1);
+});
+
+test('Thermal-first and envelope-first combinations quote and pay the same amount', async () => {
+  for (const first of ['thermal', 'building_envelope']) {
+    const slot = calendarSlot('combined-time', new Date(Date.now() + 30 * 86400000).toISOString());
+    const ui = await bookingPage({ configuration: connectedConfiguration, respond(request) {
+      if (request.path.endsWith('/checkout')) return { ...request.body, reference: 'TEST-COMBINATION', state: 'checkout_ready', status: 'open', currency: 'EUR', totalCents: 66429, checkoutUrl: mollieCheckout };
+      assert.ok(request.path.endsWith('/quote'));
+      assert.equal(request.body.inspectionType, 'building_envelope');
+      assert.equal(request.body.thermal, true);
+      return { quoteId: recoveryRecord.quoteId, inspectionType: 'building_envelope', serviceable: true, currency: 'EUR',
+        baseCents: 36179, thermalCents: 30250, travelCents: 0, totalCents: 66429, travelDescription: 'Simulated route',
+        termsVersion: 'test', expiresAt: new Date(Date.now() + 600000).toISOString(),
+        address: { postcode: '1234AB', houseNumber: '12', street: 'Teststraat', city: 'Testplaats', country: 'NL' },
+        availability: { quoteId: recoveryRecord.quoteId, slots: [slot] } };
+    }});
+    await chooseProduct(ui, first);
+    assert.equal(ui.get('thermal').checked, false, 'A second product must never be added automatically');
+    assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
+    ui.get('thermal').checked = true;
+    await ui.get('thermal').dispatch('change');
+    assert.equal(ui.get('summary-total').textContent, bookingCore.money(66429));
+    assert.equal(ui.get('summary-base-label').textContent, first === 'thermal' ? 'Thermografische inspectie' : 'Dak- en gevelinspectie');
+    assert.equal(ui.get('summary-thermal-label').textContent, first === 'thermal' ? 'Dak- en gevelinspectie' : 'Thermografie');
+    assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
+    assert.equal(ui.get('summary-thermal').textContent, bookingCore.money(30250));
+    ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
+    await ui.get('check-address').dispatch('click');
+    await ui.get('slots').querySelector('input').dispatch('change');
+    ui.get('termsAccepted').checked = true;
+    await ui.get('termsAccepted').dispatch('change');
+    await ui.get('booking-form').dispatch('submit');
+    assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 1);
+    assert.equal(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)).totalCents, 66429);
+    assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+    assert.equal(ui.get('thermal').disabled, true);
+  }
+});
+
+test('A thermal payment created before the price change recovers its agreed EUR302.50', async () => {
+  const oldThermal = { ...recoveryRecord, totalCents: 30250 };
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: oldThermal, respond(request) {
+    assert.ok(request.path.endsWith('/recover'));
+    assert.deepEqual(request.body, { requestId: oldThermal.requestId });
+    return readyPayment({ totalCents: oldThermal.totalCents });
+  }});
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(30250));
+  assert.equal(ui.get('checkout-link').getAttribute('href'), mollieCheckout);
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), oldThermal);
+  assert.equal(ui.requests.length, 1);
+});
+
+test('Product changes cannot alter or replace a locked pending payment', async () => {
+  const ui = await bookingPage({ configuration: connectedConfiguration, record: recoveryRecord, fastCheckoutTimers: true,
+    respond(request) {
+      assert.ok(request.path.endsWith('/recover'));
+      assert.deepEqual(request.body, { requestId: recoveryRecord.requestId });
+      return { requestId: recoveryRecord.requestId, state: 'pending' };
+    }
+  });
+  assert.equal(ui.get('inspection-envelope').disabled, true);
+  assert.equal(ui.get('inspection-thermal').disabled, true);
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('summary-total').textContent, bookingCore.money(recoveryRecord.totalCents));
+  assert.deepEqual(JSON.parse(ui.stored.get(bookingCore.RECOVERY_STORAGE_KEY)), recoveryRecord);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.requests.length, 10, 'One passive lookup, one active recovery and eight bounded follow-up lookups retain the same payment');
+  assert.ok(ui.requests.every(request => request.path.endsWith('/recover')));
+});
+
+test('address details reset and early-start consent is never preaccepted or required for a later date', async () => {
   const initial = await bookingPage({ configuration: connectedConfiguration });
   assert.equal(initial.get('address-result').hidden, true);
   assert.equal(initial.get('early-start-consent').hidden, true);
-  const soon = calendarSlot('soon', new Date(Date.now() + 3 * 86400000).toISOString());
+  assert.equal(initial.get('earlyStartRequested').checked, false);
+  assert.equal(initial.get('earlyStartRequested').required, false);
+  assert.match(initial.get('early-start-consent').textContent, /Ik verzoek om uitvoering binnen de bedenktijd\. Na volledige uitvoering, inclusief rapport, vervalt mijn herroepingsrecht\./);
+  assert.doesNotMatch(page, /Boeking herroepen|Ik verzoek RoofSignal om tijdens de bedenktijd te beginnen/);
+  assert.equal(initial.get('termsAccepted').checked, false);
+  assert.equal(initial.get('termsAccepted').required, true);
   const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
-  const ui = await calendarPage([soon, later]);
+  const ui = await calendarPage([later]);
   assert.equal(ui.get('address-result').hidden, false);
   assert.equal(ui.get('street').value, 'Teststraat');
-  assert.equal(ui.get('early-start-consent').hidden, true);
-  await ui.get('slots').querySelector('input').dispatch('change');
-  assert.equal(ui.get('early-start-consent').hidden, false);
-  assert.equal(ui.get('earlyStartRequested').required, true);
-  ui.get('earlyStartRequested').checked = true;
-  const laterDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam' }).format(new Date(later.start));
-  if (!calendarButton(ui, laterDay)) await ui.get('calendar-next').dispatch('click');
-  await calendarButton(ui, laterDay).dispatch('click');
   await ui.get('slots').querySelector('input').dispatch('change');
   assert.equal(ui.get('early-start-consent').hidden, true);
   assert.equal(ui.get('earlyStartRequested').required, false);
-  assert.equal(ui.get('earlyStartRequested').checked, false);
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.get('checkout-button').disabled, true);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('termsAccepted').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, false);
   await ui.get('postcode').dispatch('input');
   assert.equal(ui.get('address-result').hidden, true);
   assert.equal(ui.get('street').value, '');
+  assert.equal(ui.get('termsAccepted').checked, false);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+});
+
+test('an early inspection needs its own explicit consent before payment or a pending record can be created', async () => {
+  const early = calendarSlot('early', new Date(Date.now() + 2 * 86400000).toISOString());
+  const pending = attempt => ({ requestId: attempt.requestId, state: 'pending' });
+  const ui = await calendarPage([early], pending, false, { fastCheckoutTimers: true, recoverResponse: pending });
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, false);
+  assert.equal(ui.get('earlyStartRequested').required, true);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  ui.get('termsAccepted').checked = true;
+  await ui.get('termsAccepted').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, true);
+  await ui.get('booking-form').dispatch('submit');
+  assert.equal(ui.requests.filter(request => request.path.endsWith('/checkout')).length, 0);
+  assert.equal(ui.stored.size, 0);
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('earlyStartRequested').dispatch('change');
+  assert.equal(ui.get('checkout-button').disabled, false);
+  await ui.get('booking-form').dispatch('submit');
+  const sent = ui.requests.filter(request => request.path.endsWith('/checkout'));
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].body.terms.earlyStartRequested, true);
+  assert.equal(ui.get('earlyStartRequested').disabled, true);
+  assert.equal(ui.stored.size, 1);
+});
+
+test('changing an early time, day, address or product clears the separate consent', async () => {
+  const start = Date.parse(new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10) + 'T08:00:00Z');
+  const early = calendarSlot('early', new Date(start).toISOString());
+  const other = calendarSlot('other', new Date(start + 3600000).toISOString());
+  const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
+  const ui = await calendarPage([early, other, later]);
+  const choices = ui.get('slots').querySelectorAll('input');
+  await choices[0].dispatch('change');
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('earlyStartRequested').dispatch('change');
+  await choices[1].dispatch('change');
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('earlyStartRequested').dispatch('change');
+  const laterDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(later.start));
+  while (!calendarButton(ui, laterDay)) await ui.get('calendar-next').dispatch('click');
+  await calendarButton(ui, laterDay).dispatch('click');
+  await ui.get('slots').querySelector('input').dispatch('change');
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  assert.equal(ui.get('earlyStartRequested').required, false);
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('postcode').dispatch('input');
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+  assert.equal(ui.get('early-start-consent').hidden, true);
+  ui.get('earlyStartRequested').checked = true;
+  await chooseProduct(ui, 'thermal');
+  assert.equal(ui.get('earlyStartRequested').checked, false);
+});
+
+test('a later inspection submits no early-start request even if a stale checkbox was set', async () => {
+  const later = calendarSlot('later', new Date(Date.now() + 30 * 86400000).toISOString());
+  const pending = attempt => ({ requestId: attempt.requestId, state: 'pending' });
+  const ui = await calendarPage([later], pending, false, { fastCheckoutTimers: true, recoverResponse: pending });
+  await ui.get('slots').querySelector('input').dispatch('change');
+  ui.get('termsAccepted').checked = true;
+  ui.get('earlyStartRequested').checked = true;
+  await ui.get('booking-form').dispatch('submit');
+  const sent = ui.requests.find(request => request.path.endsWith('/checkout'));
+  assert.equal(sent.body.terms.earlyStartRequested, false);
 });
 
 test('Calendar displays only verified dates, retains the recommended day and clears a previous time when changing day',async()=>{
@@ -445,14 +1488,17 @@ test('Changing an address removes stale calendar choices; an empty availability 
 
 test('Checkout submits the time chosen in the calendar and locks all calendar controls while payment is pending',async()=>{
   const first=`${futureYear}-11-03`,second=`${futureYear}-11-04`;
-  const ui=await calendarPage([calendarSlot('first',first+'T09:00:00Z'),calendarSlot('chosen',second+'T09:00:00Z')],attempt=>({requestId:attempt.requestId,state:'pending'}));
+  const pending = attempt => ({ requestId: attempt.requestId, state: 'pending' });
+  const ui=await calendarPage([calendarSlot('first',first+'T09:00:00Z'),calendarSlot('chosen',second+'T09:00:00Z')],pending,false,{fastCheckoutTimers:true,recoverResponse:pending});
   const firstButton=calendarButton(ui,first);
   await calendarButton(ui,second).dispatch('click');
   await ui.get('slots').querySelector('input').dispatch('change');
   const selectedLabel=ui.get('summary-date').textContent;
-  ui.get('termsAccepted').checked=true;ui.get('earlyStartRequested').checked=true;
+  ui.get('termsAccepted').checked=true;
   await ui.get('booking-form').dispatch('submit');
-  assert.equal(ui.requests.find(request=>request.path.endsWith('/checkout')).body.slotId,'chosen');
+  const checkout = ui.requests.find(request=>request.path.endsWith('/checkout'));
+  assert.equal(checkout.body.slotId,'chosen');
+  assert.equal(checkout.body.terms.earlyStartRequested,false,'The removed consent must never be silently granted');
   assert.ok(ui.get('booking-calendar').querySelectorAll('button, input').every(control=>control.disabled));
   await firstButton.dispatch('click');
   assert.equal(ui.get('summary-date').textContent,selectedLabel);
