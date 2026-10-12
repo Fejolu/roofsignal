@@ -24,11 +24,23 @@ dossier-, herstel- en private bestandsproeven zijn geslaagd met drie fictieve ac
 De afzonderlijke Cloudflare-testomgeving staat op
 <https://roofsignal-erp-test.pages.dev>. Ook de online HTTPS- en browserproeven slagen:
 medewerker- en klantlogin, afgeschermde dossiers, private PDF-downloads en sessie-intrekking.
-111 ERP-tests en 119 websitecontroles slagen. Het eerste echte beheeraccount en
-uitnodigingen aan echte gebruikers zijn nog niet geactiveerd.
-Migratie, financiële administratie, agenda-/betaalkoppelingen en 3D-viewer zijn nog niet opgeleverd.
-Er is geen productietoegang verleend en geen
-abonnement of nieuwe prijs vastgesteld.
+Het eerste echte beheeraccount, **Ferry Joosten · ferry@roofsignal.nl**, is actief:
+de eigenaar heeft zelf zijn wachtwoord ingesteld en de login bevestigd. Toegang
+volgt uit een expliciete administratorrol, nooit uit een e-maildomein.
+
+De gegevenskoppeling voor consumentenboekingen, De Parken en VvE-aanvragen is
+gebouwd en getest; **activering staat nog open**. De afzonderlijke ERP-database
+is `seyuhowazudrhgrbwtbk`; de online hostnaam bevat voorlopig nog `test`.
+De drie fictieve accounts zijn nog niet afgesloten. Hun afsluiting, de nieuwe
+beperkte koppelsleutel en publicatie wachten op afzonderlijk akkoord.
+168 ERP-tests en de bestaande 119 websitecontroles slagen, vóór de laatste
+interface-aanpassing voor websiteboekingen. De afsluitende suite wordt daarna uitgevoerd.
+
+Er zijn geen echte klantboekingen geïmporteerd of uitnodigingen aan echte klanten
+verzonden. Herstel per e-mail blijft bij zakelijke activering uit tot SMTP en
+bezorging zijn getest; de eigenaaractivatie werkt zonder e-mail. Financiële
+administratie, vervanging van de agenda-/betaalverwerking en de 3D-viewer zijn nog
+niet opgeleverd. Er is geen abonnement of nieuwe prijs vastgesteld.
 
 ## 2. Eén dossier, twee omgevingen
 
@@ -40,6 +52,13 @@ bevindingenset en modelversie; interne notities en concepten blijven intern.
 Het portaal krijgt RoofSignal-vormgeving en een ingang vanaf roofsignal.nl.
 Pages CMS blijft voor openbare website-inhoud. Klantbestanden en 3D-modellen horen
 in afgeschermde opslag buiten de openbare CMS-mediabibliotheek.
+
+De openbare website heeft een eigen database en blijft voorlopig de bron voor
+online boekingen, Google-agenda-afspraken en Mollie-betalingen. De voorbereide
+koppeling bewaart een kopie daarvan in de eigen backoffice, inclusief de bestaande
+prijsafspraak en herkomst. Een import maakt geen nieuwe betaling, bevestigingsmail
+of klantlogin aan. Zie [Website → eigen ERP](erp-website-intakes.md) voor de
+gegevensafspraken en gecontroleerde activering.
 
 ## 3. Voorgestelde klantnavigatie
 
@@ -72,12 +91,17 @@ Een zwaar of ontbrekend 3D-model mag toegang tot het rapport en de bevindingen n
 
 Voorstel eerste rollen: dossierlezer, klantcontact met beheerrechten, en financiële
 contactpersoon. De laatste kan facturen zien zonder automatisch technische dossiers te openen.
-RoofSignal kent aanvankelijk toegang toe. Zelf andere personen uitnodigen volgt pas met
+RoofSignal kent aanvankelijk toegang toe. In de huidige bouwfase kan alleen een
+administrator bestaande, bevestigde accounts machtigen of hun machtiging intrekken.
+Een nieuwe websiteklant krijgt daarom niet automatisch portaaltoegang.
+Zelf andere personen uitnodigen volgt pas met
 expliciete grenzen aan wat de uitnodiger mag delen.
 
-Alle gegevensverzoeken en bestanden krijgen een controle op de server, ook 3D-modelbestanden,
-texturen en foto’s. Alleen knoppen verbergen is onvoldoende. Tijdelijke downloadlinks
-verlopen; nieuwe toegang wordt na intrekken van rechten geweigerd. Reeds gedownloade
+Alle gegevensverzoeken en bestanden krijgen een controle op de server, ook toekomstige
+3D-modelbestanden, texturen en foto’s. Alleen knoppen verbergen is onvoldoende.
+De huidige PDF-route controleert bij iedere download opnieuw de dossierrechten en
+vrijgave; zij geeft geen losstaande downloadlink uit. Nieuwe toegang wordt na
+intrekken van rechten geweigerd. Reeds gedownloade
 bestanden kunnen niet achteraf worden teruggenomen. Dit volgt de uitgangspunten van
 [OWASP voor autorisatie](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html).
 
@@ -172,6 +196,12 @@ Leg afzonderlijk vast welke rapporten, modellen, actualisaties en eventuele host
 zijn overeengekomen. Toegang kan daarop worden afgestemd, zonder al prijzen of
 abonnementen voor 3D vast te stellen. Een technisch dossierrecht geeft niet automatisch
 toegang tot alle facturen van dezelfde beheerportefeuille.
+
+In de voorbereide websitekoppeling ziet de medewerker de oorspronkelijke bedragen,
+prijsversie, Mollie-referentie en bronstatus. Dit is de registratie van een afspraak
+en betaalstatus, geen eigen factuur of boekhoudkundige verwerking. De bronbedragen
+blijven behouden bij een latere tariefwijziging. Een VvE-staffelindicatie blijft
+vrijblijvend en wordt niet als overeengekomen prijs of betaling behandeld.
 
 ## 9. Telefonie en Voys
 

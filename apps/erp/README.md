@@ -1,9 +1,14 @@
 # Eigen RoofSignal ERP — medewerker- en klantlogin
 
-Status: medewerker- en klantlogin online getest, 12 oktober 2026.
+Status: eigen beheeraccount actief; websitekoppeling voorbereid, 12 oktober 2026.
 Eigen software; geen Odoo of ERPNext. De afzonderlijke testomgeving staat op
 <https://roofsignal-erp-test.pages.dev>.
-Er zijn geen echte klanten, boekingen of financiële gegevens overgezet. Deze app en
+Ferry's beheeraccount is aangemaakt en met een zelf gekozen wachtwoord ingelogd.
+De koppeling voor consumentenboekingen, De Parken en VvE-aanvragen is gebouwd en
+getest, maar nog niet runtime geactiveerd. Er zijn geen echte klanten, boekingen
+of financiële gegevens overgezet. De drie fictieve accounts zijn nog niet afgesloten;
+die handeling en de nieuwe, beperkte koppelsleutel wachten op expliciete toestemming.
+Deze app en
 haar database worden niet meegenomen in de openbare websitebouw.
 
 ## Starten en testen
@@ -39,19 +44,24 @@ serverrechten. De proefaccountkiezer bestaat alleen in de lokale demo.
   Financiële rechten blijven afzonderlijk; intrekken werkt bij het volgende verzoek.
 - Wachtwoordherstel en uitnodigingen geven uitsluitend een korte herstelsessie.
   Na het instellen van een wachtwoord moet de gebruiker opnieuw inloggen.
+  Bij zakelijke activering blijft herstel per e-mail uit totdat SMTP en
+  bezorging zijn ingericht en getest. De handmatige eigenaaractivatie werkt zonder e-mail.
 - De browser krijgt versleutelde HttpOnly-sessiecookies, geen leesbare toegangstokens.
   Een duurzaam sessieregister controleert verloop en intrekking, ook na serverherstart.
 - De server verifieert de actuele Auth-gebruiker en voert bedrijfsacties uit met diens
-  eigen token. De geheime serversleutel is beperkt tot profiel/sessie/document-RPC's
-  en de private PDF-opslag; zij bepaalt nooit een browserrol.
+  eigen token. De adapter gebruikt de geheime serversleutel alleen voor
+  profiel/sessie/document-RPC's, private PDF-opslag en de afzonderlijke
+  website-inname-RPC; zij bepaalt nooit een browserrol. De website ontvangt deze sleutel niet.
 - Iedere PDF-download controleert de huidige dossierrechten en rapportvrijgave.
   Er worden geen downloadlinks uitgegeven die na intrekking nog geldig blijven.
 
 De bestaande website-Supabaseomgeving is hard geblokkeerd in deze adapter.
 De echte cloudproef is geslaagd in **RoofSignal ERP test** (`seyuhowazudrhgrbwtbk`),
 met drie fictieve accounts. De aparte Cloudflare-testomgeving is gepubliceerd en
-heeft de HTTPS-proef doorlopen. Het eerste echte beheeraccount is nog niet geactiveerd.
-De test is geen vrijgave voor echte klantgegevens.
+heeft de HTTPS-proef doorlopen. **Ferry Joosten · ferry@roofsignal.nl** is de eerste
+expliciete administrator; de eigenaar heeft zelf het wachtwoord ingesteld en de login
+bevestigd. De hostnaam bevat nog `test` en de ERP-database blijft gescheiden van de website.
+Het beheeraccount activeert de websitekoppeling of andere klantaccounts niet vanzelf.
 Er worden geen uitnodigingen aan bestaande klanten gestuurd bij het starten of bouwen.
 
 ### Testinrichting en controle
@@ -75,7 +85,11 @@ Gebruik de apart beoordeelde testinrichting, niet de migraties of publicatieacti
 van de openbare website. `scripts/cloud-smoke.mjs` controleert projectidentiteit,
 past de ERP-SQL uitsluitend daar toe en maakt met `--provision-fixtures` fictieve,
 bevestigde accounts aan. Er worden geen e-mails verzonden. De proef verifieert echte
-Auth-tokens, klant A/B, rapportvrijgave, private opslag en ingetrokken sessies/rechten:
+Auth-tokens, klant A/B, rapportvrijgave, private opslag en ingetrokken sessies/rechten.
+Dit is uitsluitend een eerste inrichting: na aanwezigheid van `005_website_intake.sql`
+of een opgeslagen afsluitmarkering weigert het script opnieuw proefaccounts te provisioneren.
+Zo worden afgeschermde rechten niet opnieuw aangezet en wordt de innamefunctie niet overschreven.
+De onderstaande proef is al uitgevoerd; voer haar niet opnieuw op de bestaande omgeving uit:
 
 ```sh
 node scripts/configure-auth.mjs .local/auth-test.json --configure-isolated-test
@@ -83,10 +97,12 @@ npm run test:cloud -- .local/auth-test.json --provision-fixtures
 ROOFSIGNAL_ERP_TEST_CONFIG=.local/auth-test.json npm run dev:auth
 ```
 
-Voor herstelmails moeten de exacte callback-URL en de twee templates in
+Voor toekomstige herstelmails moeten de exacte callback-URL en de twee templates in
 `supabase/templates/` in de geïsoleerde Auth-inrichting zijn ingesteld. Openbare
 registratie en anonieme accounts blijven uit. Verander bij online hosting de vaste
-origin naar de HTTPS-testlocatie; gebruik geen brede wildcard-redirects.
+origin naar de HTTPS-testlocatie; gebruik geen brede wildcard-redirects. De templates
+zijn voorbereid; zij bevestigen geen werkende SMTP-bezorging. Voor zakelijk gebruik
+blijft `ERP_PASSWORD_RECOVERY` uit totdat die keten is getest.
 
 `functions/[[path]].js` en `wrangler.toml` ondersteunen het afzonderlijke Cloudflare
 Pages-project `roofsignal-erp-test`. Dit bouwt de branch `codex/eigen-erp-fundament`
@@ -94,7 +110,9 @@ van `Fejolu/roofsignal`, met `apps/erp` als hoofdmap, `npm ci` als bouwopdracht 
 `public` als uitvoermap. De zes ERP-instellingen staan als versleutelde geheimen
 in de Production-omgeving van dit testproject. Het woord Production in Cloudflare
 maakt deze fictieve ERP-test geen productieadministratie. Preview-publicaties krijgen
-geen testgeheimen. De adapter weigert onbekende origins en providerredirects.
+geen testgeheimen. `ERP_ENVIRONMENT` bepaalt het omgevingslabel en
+`ERP_PASSWORD_RECOVERY` de beschikbaarheid van herstel per e-mail. De aparte
+`ERP_INTAKE_SECRET` wordt pas na akkoord ingesteld. De adapter weigert onbekende origins en providerredirects.
 Gebruik nooit het openbare RoofSignal Pages-project. Beperk toegangspogingen ook op
 het hostingplatform; de adapter bevat daarnaast begrensde lokale controles.
 
@@ -115,6 +133,26 @@ het hostingplatform; de adapter bevat daarnaast begrensde lokale controles.
   afzonderlijke dossier- en financiële rollen en direct intrekbare rechten.
 - Auditregistratie en herhaalbare schrijfverzoeken zonder dubbele records.
 - Database-identiteit voor 3D-modelversies en markeringen op waarnemingen; nog geen viewer.
+
+### Websiteboekingen — gebouwd, activering nog open
+
+De werkruimte **Websiteboekingen** ontvangt voorbereide kopieën van consumentenboekingen,
+De Parken en VvE-aanvragen. De bron bewaart iedere te verwerken wijziging in een
+duurzame wachtrij; het bestaande vijfminutenwerkproces stuurt haar naar één vast ERP-adres.
+Dit is geen directe synchronisatie na een klik; planning van de workflow kan vertraging geven.
+
+Consumentenboekingen en pilotafspraken krijgen één gekoppeld dossier en opdracht per
+bronidentiteit, met de opgeslagen prijs, akkoordversie, inspectiekeuze en afspraakstatus.
+Mollie-referentie en betaalstatus worden uitsluitend uit de bron overgenomen. Een
+pilotbevestiging is geen betalingsbewijs. Een VvE-aanvraag blijft een vrijblijvende aanvraag
+met een prijsindicatie; zij maakt geen opdracht, factuur, betaling of portaalrecht aan.
+Historische bedragen worden niet herberekend met huidige tarieven. Onbekende prijssplitsing,
+veranderde prijsafspraak of gewijzigde contact-/objectidentiteit krijgen een controlemelding.
+
+De nieuwe bronmigratie, worker en ERP-ontvanger zijn getest. Publicatie, afsluiten van de
+proefaccounts en het instellen van de beperkte HMAC-koppelsleutel zijn nog niet uitgevoerd.
+De volledige gegevensafspraken, stappen en acceptatieproeven staan in
+[Website → eigen ERP](../../docs/erp-website-intakes.md).
 
 Een datumvoorstel reserveert geen agendatijd. Een herstelmelding wijzigt geen
 inspectieoordeel. Vrijgegeven rapporten en waarnemingen worden niet overschreven.
@@ -147,6 +185,10 @@ toegepast bij herstart, met behoud van dossiers. `db/003_auth_and_documents.sql`
 voegt accountcontrole, toegangbeheer en het sessieregister toe. In de cloud gebruikt
 `db/004_private_storage.sql` een private PDF-bucket met extra blokkerende regels
 voor rechtstreekse toegang door browsers.
+`db/005_website_intake.sql` voegt bronregistraties, onveranderlijke revisies en
+overgenomen afspraken toe. Het scherm en de server verbergen expliciet gemarkeerde
+proeforganisaties en proefidentiteiten. Oude tokens van afgesloten proefaccounts
+en nieuwe machtigingen voor zulke accounts worden door de RPC geweigerd.
 `src/dev-server.mjs` is uitsluitend de lokale adapter. Dezelfde RPC wordt lokaal
 onder de ongeprivilegieerde `authenticated`-rol uitgevoerd. Voor de databaseproeven
 gebruiken we [PGlite](https://pglite.dev/docs/about), een lokale Postgres-runtime.
@@ -166,7 +208,7 @@ Modelmarkeringen mogen alleen naar een waarneming uit dezelfde inspectieronde ve
 PDF's worden lokaal buiten de webroot opgeslagen, gecontroleerd op grootte/type,
 alleen na dossierautorisatie geleverd en als download geserveerd. De browsercache
 is uitgeschakeld. De hosted adapter gebruikt private opslag met serverdownloads;
-productie-inrichting en back-up/herstel zijn nog niet geactiveerd.
+de websitekoppeling en back-up/herstel zijn nog niet geactiveerd.
 
 ## Getest
 
@@ -198,7 +240,10 @@ exact één winnaar. Dezelfde accounts zijn ook via het browserinlogscherm gecon
 Een fictief object bevat twee vrijgegeven inspectieronden, een leesbare voorbeeld-PDF
 en een voorstel voor de volgende halfjaarlijkse ronde. Er is geen klantmail verstuurd.
 
-111 lokale ERP-tests en 119 websitecontroles slagen; 33 CMS-pagina's bouwen correct.
+167 lokale ERP-tests en de bestaande 119 websitecontroles slagen, gemeten vóór de
+laatste interface-aanpassing voor websiteboekingen. De afsluitende suite volgt na
+die wijziging. Ook de nieuwe VvE-gegevensprojectie en HMAC-/wachtrijgrenzen zijn getest.
+De bestaande 33 CMS-pagina's bouwen correct.
 De Cloudflare-server compileert met Wrangler 4.149.0. De afzonderlijke online omgeving
 doorliep daarna de HTTPS-proef: medewerker- en klantlogin, klant A/B-isolatie,
 private PDF-download, versleutelde Secure/HttpOnly-cookie, weigeren van anonieme
@@ -207,12 +252,15 @@ browser toont de twee inspectieronden en het halfjaarlijkse datumvoorstel.
 
 ## Vervolg vóór gebruik met echte klanten
 
-1. **Eigen beheeraccount en mails:** eerste echte beheerder expliciet toekennen en
-   uitnodigingsmails controleren. De ontwikkel-accountkiezer en auth-bootstrap bestaan online niet.
+1. **Proefaccounts en websitekoppeling:** na specifiek akkoord de drie fictieve accounts
+   blokkeren, hun ERP-rechten en sessies intrekken en hun dossiers afschermen. De eerste
+   echte administrator is actief. Publiceer vervolgens de geteste innameketen en bewijs
+   ontvangst vóór activering. Herstel per e-mail blijft uit tot SMTP en bezorging zijn getest.
 2. **Beheer van dossiers en bestanden:** back-up/herstelprocedure beproeven en controle
    op achtergebleven private uploads toevoegen. Private opslag en serverdownloads zijn getest.
-3. **Website → ERP:** productcatalogus met goedgekeurde prijsversies, consumentenboekingen en
-   VvE-aanmeldingen idempotent overnemen; prijs, akkoord, betaalreferentie en reisafspraak behouden.
+3. **Website → ERP:** de gebouwde bronwachtrij en ontvanger activeren na een providerproef;
+   historische import alleen expliciet en in begrensde batches. Bewaar prijs, akkoord,
+   betaalreferentie en reisafspraak. Dit maakt geen nieuwe klantmails of portaalrechten.
    Bestaande Google/Mollie-routes blijven eigenaar van planning en betalingsbevestiging tot migratie.
 4. **Offerte en financiën:** offertes, orderregels, facturen, creditnota's en gecontroleerde
    betalingsverwerking. Daarna eigen grootboek, dagboeken, btw-verwerking, bankafstemming,
@@ -223,7 +271,8 @@ browser toont de twee inspectieronden en het halfjaarlijkse datumvoorstel.
    waarnemingen, datumselectie en mobiele lijstweergave. Geen automatische geometrische
    vergelijking zonder gecontroleerde uitlijning.
 
-De SQL staat bewust buiten `supabase/migrations/`: samenvoegen van deze bouwfase mag
-geen automatische migratie van productie, klantuitnodiging of omschakeling van het
-bestaande portaal veroorzaken. Productie-inrichting en migratie worden als afzonderlijke,
-geteste veranderingen uitgevoerd.
+De ERP-SQL staat bewust buiten `supabase/migrations/` en wordt uitsluitend in de
+afzonderlijke ERP-database toegepast. De nieuwe bronwachtrij staat wél in de
+website-Supabasemigraties; publicatie daarvan loopt via de bestaande productie-release.
+Houd deze publicatieroutes gescheiden. Geen ERP-bouw of import geeft automatisch
+portaalrechten, nodigt klanten uit of schakelt het bestaande portaal om.

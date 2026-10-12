@@ -1,0 +1,197 @@
+# Websiteboekingen → eigen RoofSignal ERP
+
+Technische en functionele afspraken · 12 oktober 2026
+
+## Status
+
+**Gebouwd en getest; activering nog niet uitgevoerd.** De gegevensketen voor
+consumentenboekingen, De Parken en VvE-aanvragen is voorbereid. De runtime-sleutel,
+publicatie en het afsluiten van de drie fictieve accounts wachten op specifiek akkoord.
+De automatische goedkeuringscontrole heeft het blokkeren van die accounts geweigerd
+omdat dit nog niet afzonderlijk was toegestaan. Er zijn geen proefaccounts geblokkeerd
+en geen echte websiteboekingen geïmporteerd.
+
+Het eigen beheeraccount **Ferry Joosten · ferry@roofsignal.nl** is wel geactiveerd.
+Ferry heeft zelf een wachtwoord ingesteld en is ingelogd. De eigenaaractivatie
+verstuurde geen e-mail. Het account heeft expliciete administratorrechten; een
+e-mailadres of domein bepaalt nooit een rol.
+
+De afsluitende suite telt 168 geslaagde ERP-tests. De bestaande 119 websitecontroles
+slagen eveneens; ook de GitHub-controles en beide Cloudflare-publicaties zijn geslaagd.
+Dit document bevestigt geen live ontvangst; na activering hoort hieronder een
+afzonderlijke providerproef met datum en resultaat te worden vastgelegd.
+
+## Gescheiden bron en bestemming
+
+| Onderdeel | Vastgelegde omgeving en verantwoordelijkheid |
+|---|---|
+| Openbare website | `roofsignal.nl`; bestaande Supabase `kakpticlxlaxtebhsuoh`. Bron van boekingen, akkoord, prijzen, Google-afspraken en Mollie-statussen. |
+| Eigen ERP | Afzonderlijke Supabase `seyuhowazudrhgrbwtbk`; projectnaam voorlopig **RoofSignal ERP test**. Eigen klant-, object-, opdracht- en rapportgegevens. |
+| ERP-webomgeving | `https://roofsignal-erp-test.pages.dev`; aparte Cloudflare Pages-publicatie. De hostnaam bevat nog `test`. |
+| Enige ontvanger | `https://roofsignal-erp-test.pages.dev/api/website-intake`; vast in de bronworker. |
+
+De ERP-adapter weigert de website-Supabaseomgeving als ERP-database. ERP-migraties
+staan in `apps/erp/db/`, buiten de automatische website-migraties. De nieuwe
+bronwachtrij staat wel in `supabase/migrations/` en volgt de bestaande website-release.
+Deze twee publicatieroutes mogen niet worden verwisseld.
+
+De bestaande Google-/Mollie-functies blijven verantwoordelijk voor reserveren,
+bevestigen, betalen en herstellen. De ERP-koppeling registreert hun uitkomst en
+roept geen nieuwe betaling of agendareservering aan. Zij verstuurt geen klantmail
+en maakt geen Auth-account of portaalmachtiging aan.
+
+## Wat wordt overgenomen?
+
+| Bron | ERP-registratie | Prijs en betaling |
+|---|---|---|
+| Consumentenboeking | Eén gekoppelde klant/object/opdracht per bronidentiteit, inspectiekeuze, akkoordversie en extern afspraakmoment. Nog niet betaalde boekingen blijven concept; een bronbevestiging na betaling maakt de opdracht actief. | Opgeslagen prijs, reiskosten, Mollie-referentie en bronbetaalstatus. |
+| De Parken | Pilotopdracht met de opgeslagen optie, afspraak en pilotstatus. Een oude interesse in thermografie wordt niet als aankoop geïnterpreteerd. | Pilotprijs indien vastgelegd; geen betaling afleiden uit een afspraakbevestiging. |
+| VvE-aanmelding | Vrijblijvende aanvraag in Websiteboekingen. Nieuwe inzendingen bevatten inspectiekeuze, aantal adressen en objectgegevens. | Servermatig bepaalde staffelindicatie; nog geen overeengekomen prijs of betaling. |
+
+Voor consumenten worden de opgeslagen basis-/thermografiebedragen, reiskosten,
+totaal, prijsversie, voorwaardenversie, Mollie-referentie en betaalstatus bewaard.
+Bedragen zijn hele eurocenten; zij worden niet uit de huidige websiteprijzen herberekend.
+Bij een onbekende historische componentverdeling blijven beide componenten onbekend
+en blijft het oorspronkelijke totaal bewaard, met een financiële controlemelding.
+
+Pilotbedragen en voorwaarden worden alleen overgenomen wanneer die in de bron staan.
+Een pilotbevestiging betekent een afspraak; zij bevat geen geverifieerde Mollie-betaling.
+Ontbrekende bedragen verschijnen als **Niet vastgelegd**, zonder verzonnen nulprijs.
+
+Een VvE-indicatie is altijd **niet geaccepteerd** en exclusief nog af te stemmen
+reiskosten. Het serverdeel bepaalt de staffel uit de gekozen inspectie, omvang en
+aantal adressen; een door de browser opgegeven bedrag geldt niet als prijsbron.
+Meerdere gebouwen of een grotere omvang blijven maatwerk. Een VvE-aanvraag maakt
+geen operationele opdracht, afspraak, factuur, betaling of klantlogin aan. Historische
+aanvragen zonder gestructureerde velden blijven leesbare aanvragen; hun tekst wordt
+niet geautomatiseerd als prijsafspraak geïnterpreteerd. Een opgegeven KVK-nummer
+geldt niet als geverifieerde identiteit of bewijs van het aantal adressen.
+
+## Herhaalbare verwerking en historie
+
+De bronwachtrij `erp_intake_outbox` gebruikt `(source, source_id)` als identiteit.
+Een inhoudelijke wijziging verhoogt de revisie. Alleen een gewijzigde technische
+`updated_at` verhoogt haar niet. De worker neemt maximaal tien records per ronde
+onder een tijdelijke verwerkingsclaim; een oude ontvangstbevestiging kan een
+nieuwere revisie niet als afgehandeld markeren.
+
+De ERP-ontvanger bewaart iedere geaccepteerde revisie afzonderlijk. Dezelfde revisie
+met dezelfde inhoud is herhaalbaar; een oudere revisie wordt zonder terugzetten
+bevestigd. Andere inhoud met hetzelfde revisienummer wordt geweigerd. Er ontstaat
+geen tweede opdracht of inspectieronde door een herhaald verzoek.
+
+De oorspronkelijke commerciële afspraak en het gekoppelde dossier blijven behouden.
+Een latere prijswijziging krijgt een financiële controlemelding. Een gewijzigde
+contact- of objectidentiteit krijgt een afzonderlijke identiteitscontrole; zij
+overschrijft het dossier niet. De actuele bronregistratie blijft zichtbaar naast
+de oorspronkelijke opdracht. Handmatig bewerkt of afgerond medewerkerswerk wordt
+niet stilzwijgend door een bronupdate teruggezet.
+
+Een reeds overgenomen checkout die vóór betaling sluit met `not_created` wordt
+als niet afgerond verwerkt, met een geannuleerde externe afspraak. Een nooit
+ingediende voorbereiding maakt geen nieuw ERP-dossier. Ook na identiteitscontrole
+blijft een daadwerkelijk geannuleerde afspraak geannuleerd.
+
+## Wachtrij, snelheid en storingen
+
+De websitehandeling wacht niet op een HTTP-verzoek aan het ERP. De bron schrijft
+alleen de eigen duurzame wachtrij. De voorbereide worker wordt aangeroepen vanuit
+de bestaande workflow **Consumentenboekingen controleren en bevestigen**, met een
+schema van elke vijf minuten. De ERP-stap draait ook wanneer de consumentencontrole
+in die ronde faalt. Het vijfminutenschema is geen maximumvertraging: de scheduler
+kan later starten en achterstanden worden in begrensde batches verwerkt.
+
+Bij transport- of configuratiefouten blijft de bronregistratie in de wachtrij met
+begrensde herhaalpogingen. Ongeldige inhoud of een revisieconflict vraagt handmatige
+controle. Alleen vaste foutcodes worden opgeslagen en gelogd; providerberichten,
+klantadressen en geheime links worden niet in workflow-uitvoer opgenomen.
+Een uitgevallen ERP-ontvanger maakt geen betaling ongedaan en stuurt geen tweede
+bevestigingsmail. De workflow kan herstel of benodigde controle melden.
+
+## Toegang en gegevensbeperking
+
+- De bronprojecties gebruiken expliciete veldlijsten. Checkout-URL's, hersteltokens,
+  providerpayloads, routesleutels en interne claims worden niet geëxporteerd.
+- De beperkte koppelsleutel ondertekent de exacte JSON met HMAC-SHA256 en een tijdstip.
+  De ontvanger controleert de handtekening, maximaal vijf minuten tijdverschil,
+  methode, vaste route, inhoudstype, grootte en toegestane bronvelden.
+- Deze sleutel geeft uitsluitend toegang tot de innamefunctie. Zij kan geen
+  medewerkersessie maken, portaalrechten toekennen, rapport publiceren of geld innen.
+- De website ontvangt geen ERP-servicekey. De ERP-server gebruikt zijn eigen
+  servicesleutel voor één geautoriseerde inname-RPC; browsers kunnen die niet aanroepen.
+- Websiteboekingen zijn alleen voor actieve medewerkers zichtbaar. Klanten zien
+  uitsluitend hun expliciet toegewezen dossiers en vrijgegeven rapporten.
+- Proefidentiteiten worden expliciet geregistreerd. Na afsluiting weigert de SQL-RPC
+  ook een oude proef-JWT en een nieuwe machtiging voor zo'n account. Afgeschermde
+  proeforganisaties verschijnen niet in dossiers of telefoonherkenning.
+
+Bewaar geen sleutelwaarden, sessiecookies, wachtwoorden, activatietokens of volledige
+activatie-URL's in dit document, Git, publicatiebestanden of workflow-uitvoer.
+
+## Gecontroleerde activering
+
+De eigenaarlogin en ERP-migratie zijn uitgevoerd. De geteste ontvanger en interface
+zijn gepubliceerd op de ERP-branch; zonder koppelsleutel blijft gegevensoverdracht dicht.
+De onderstaande overige stappen wachten op het specifieke akkoord en de providerproef.
+
+1. **Akkoord afronden:** specifiek akkoord voor het afsluiten van de drie bekende
+   proefaccounts, de beperkte koppelsleutel in beide omgevingen en de publicatie.
+   De automatische goedkeuringscontrole heeft de accountblokkering eerder geweigerd;
+   voer die stap niet uit voordat het afzonderlijke akkoord er is.
+2. **ERP-database:** pas de beoordeelde `005_website_intake.sql` uitsluitend toe in
+   het vastgelegde ERP-project. Gebruik geen nieuwe volledige cloud-smoke-inrichting;
+   die zou nieuwe proefrecords maken en weigert daarom een reeds ingerichte innameomgeving.
+3. **Proefaccounts afsluiten:** controleer Ferry's bevestigde login en actieve
+   administratorrol. `scripts/account-admin.mjs retire-fixtures` controleert precies
+   de drie bekende Auth-identiteiten en twee proeforganisaties. Het trekt eerst
+   ERP-rollen, machtigingen en sessies in, markeert de proefgegevens en blokkeert
+   vervolgens de Auth-accounts. Historie en PDF's worden niet verwijderd. Een
+   gedeeltelijk mislukte Auth-blokkering is veilig herhaalbaar. De audit bevat
+   `owner.bootstrap` en `fixtures.retire`, zonder dubbele regels bij een herhaling.
+4. **Ontvanger publiceren:** publiceer de eigen ERP-app in het aparte Pages-project,
+   met de bestaande zes ERP-geheimen en de nieuwe `ERP_INTAKE_SECRET`. Zet het zakelijke
+   omgevingslabel bewust; herstel per e-mail blijft uit tot SMTP en bezorging zijn getest.
+   De uitnodigings-/herstelcallback voor handmatige activatie blijft beschikbaar.
+5. **Websitebron publiceren:** de bestaande release past eerst
+   `20261012223000_erp_intake_outbox.sql` toe, inclusief het optionele VvE-veld,
+   en publiceert de geteste bronfuncties en worker. Houd `ERP_INTAKE_ENABLED` uit
+   totdat de ontvangerproef slaagt. Stel de beperkte `ERP_INTAKE_SECRET` ook hier in;
+   gebruik geen ERP-servicekey als brongeheim.
+6. **Providerproef:** bewijs de echte ontvangst, dubbele levering, prijs-/statusbehoud,
+   afgesloten proefrechten en foutafhandeling. Voer hiervoor geen nieuwe echte
+   betaling, klantmail, portaaluitnodiging of agendareservering uit.
+7. **Nieuwe wijzigingen activeren:** zet pas daarna `ERP_INTAKE_ENABLED=true` en
+   controleer de eerste verwerkingsronde, wachtrijstatus en ERP-weergave. Leg de
+   werkelijke datum en resultaten vast; pas dan mag de status hier naar actief.
+8. **Historische import:** alleen na expliciet akkoord de paginering van
+   `backfill_erp_intakes` gebruiken. De migratie importeert historische records niet
+   vanzelf. Begin begrensd, controleer de mapping en herhaal zonder duplicaten.
+
+Bij een verkeerde mapping of uitval kan `ERP_INTAKE_ENABLED` weer uit. Nieuwe
+bronwijzigingen blijven dan duurzaam klaarstaan; planning en betalingen blijven
+bij de bestaande verwerking. Dossiers en bronhistorie worden niet verwijderd om
+een koppeling te pauzeren.
+
+## Geteste grenzen en resterende oplevering
+
+De lokale proeven voeren echte PostgreSQL-functies uit voor projectie, bronwachtrij,
+revisies, service-only toegang, prijsbehoud, nieuwe en oude VvE-aanvragen, identiteits-
+en financiële controle, proefafscherming en afgesloten JWT's. De HTTP-proeven toetsen
+HMAC, replay, verkeerde handtekeningen, bodygrenzen, redirects, ontvangstbevestiging,
+herhaling en tijdelijk uitgevallen transport. De eigenaaractivatie en de eerdere
+Auth-/Storage-proef zijn met echte providers gecontroleerd.
+
+De nieuwe live bron→ERP-providerproef en de uiteindelijke activering staan nog open.
+Facturen, creditnota's, grootboek, bankafstemming, eigen capaciteitsplanning, echte
+Voys-notificaties en de 3D-viewer zijn afzonderlijke volgende onderdelen. De innameketen
+levert hun brongegevens; zij bevestigt die functies niet als opgeleverd.
+
+## Bronnen in deze checkout
+
+- [Bronmigratie](../supabase/migrations/20261012223000_erp_intake_outbox.sql)
+- [Bronworker](../supabase/functions/process-erp-intakes/index.ts) en [ondertekening/verwerking](../supabase/functions/_shared/erp-intake.mjs)
+- [VvE-metadata](../supabase/functions/_shared/vve-intake.mjs)
+- [ERP-ontvanger](../apps/erp/src/website-intake-handler.mjs) en [ERP-inname-SQL](../apps/erp/db/005_website_intake.sql)
+- [Bestaande verwerkingsworkflow](../.github/workflows/process-consumer-bookings.yml)
+- [Accountactivatie en proefafsluiting](../apps/erp/scripts/account-admin.mjs)
+- [ERP-README](../apps/erp/README.md), [functioneel ontwerp](eigen-erp-klantportaal.md) en [consumentenboeking](consumer-booking.md)
