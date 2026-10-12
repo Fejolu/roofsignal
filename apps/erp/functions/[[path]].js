@@ -14,7 +14,7 @@ function handler(env) {
     publishableKey: env.ERP_PUBLISHABLE_KEY, storageKey: env.ERP_STORAGE_KEY, redirectOrigin: env.ERP_ORIGIN });
   const cookies = createSessionCookies({ secret: env.ERP_SESSION_SECRET, origin: env.ERP_ORIGIN });
   // Cloudflare supplies this header; this module is not used by the local server.
-  const handle = createHostedHandler({ adapter, cookies, origin: env.ERP_ORIGIN,
+  const handle = createHostedHandler({ adapter, cookies, origin: env.ERP_ORIGIN, diagnostics: true,
     rateLimitKey: request => request.headers.get('CF-Connecting-IP') || 'unknown' });
   cached = { values, handle };
   return handle;

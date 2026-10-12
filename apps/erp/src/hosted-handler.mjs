@@ -83,7 +83,7 @@ function fileName(raw, encoded = false) {
 }
 const encodedFileName = value => encodeURIComponent(value).replace(/[!'()*]/g, char => '%' + char.charCodeAt(0).toString(16).toUpperCase());
 
-export function createHostedHandler({ adapter, cookies, origin, now = Date.now, rateLimitKey = () => 'global' } = {}) {
+export function createHostedHandler({ adapter, cookies, origin, now = Date.now, rateLimitKey = () => 'global', diagnostics = false } = {}) {
   let base;
   try {
     const configured = new URL(origin);
@@ -142,9 +142,13 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
     }
     return { session, cookie: changed ? await cookies.encode(session) : null };
   }
+  async function step(phase, run) {
+    try { return await run(); }
+    catch (error) { if (error && typeof error === 'object') error.erpPhase = phase; throw error; }
+  }
   async function newSession(native, purpose, request, onRotation) {
     const tokens = nativeTokens(native, now());
-    const user = confirmedUser(await adapter.getUser(tokens.accessToken), native.user?.id);
+    const user = confirmedUser(await step('verify', () => adapter.getUser(tokens.accessToken)), native.user?.id);
     const previous = await cookies.decode(request);
     if (validSession(previous, now())) {
       const revoked = await checkedRegistry({ ...previous, user: previous.user.toLowerCase() }, 'revoke');
@@ -153,11 +157,12 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
     }
     const session = { id: capability(), user: user.id.toLowerCase(), ...tokens,
       expiresAt: now() + (purpose === 'recovery' ? 10 * 60000 : 8 * 3600000), purpose };
-    await adapter.ensureProfile(session.user, { name: (user.user_metadata?.name || user.user_metadata?.full_name || 'Gebruiker').slice(0, 150) });
-    const registered = await adapter.session(session.user, 'register', { session_hash: await hash(session.id), purpose,
-      expires_at: new Date(session.expiresAt).toISOString() });
+    await step('profile', () => adapter.ensureProfile(session.user, { name: (user.user_metadata?.name || user.user_metadata?.full_name || 'Gebruiker').slice(0, 150) }));
+    const sessionHash = await hash(session.id);
+    const registered = await step('registry', () => adapter.session(session.user, 'register', { session_hash: sessionHash, purpose,
+      expires_at: new Date(session.expiresAt).toISOString() }));
     if (registered?.valid !== true || registered.purpose !== purpose || Date.parse(registered.expires_at) !== session.expiresAt) throw fail(503, genericMessage(503));
-    return { session, cookie: await cookies.encode(session) };
+    return { session, cookie: await step('cookie', () => cookies.encode(session)) };
   }
   const headers = () => new Headers({ 'Cache-Control': 'no-store, private', Pragma: 'no-cache',
     'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow, noarchive',
@@ -193,7 +198,7 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
         const input = await readJson(request);
         if (typeof input.email !== 'string' || typeof input.password !== 'string' || input.password.length > 256) throw fail(401, 'E-mailadres of wachtwoord is niet juist.');
         let opened;
-        try { opened = await newSession(await adapter.signIn(input.email, input.password), 'login', request, () => { replacementCookie = cookies.clear(); }); }
+        try { opened = await newSession(await step('signin', () => adapter.signIn(input.email, input.password)), 'login', request, () => { replacementCookie = cookies.clear(); }); }
         catch (error) { if (error?.status && error.status < 500) throw fail(401, 'E-mailadres of wachtwoord is niet juist.'); throw error; }
         replacementCookie = opened.cookie;
         return json(200, { authenticated: true, recovery: false });
@@ -309,7 +314,9 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
       if (recoveryConsumed || (status === 401 && new URL(request.url).pathname === '/api/password')) {
         return json(status, { error: 'De herstelsessie is beëindigd. Vraag een nieuwe herstellink aan.', recovery_required: true });
       }
-      return json(status, { error: error?.[ownError] ? error.message : genericMessage(status) });
+      return json(status, { error: error?.[ownError] ? error.message : genericMessage(status),
+        ...(diagnostics ? { phase: ['signin', 'verify', 'profile', 'registry', 'cookie'].includes(error?.erpPhase) ? error.erpPhase : 'handler',
+          code: /^SUPABASE_[A-Z_]+$/.test(error?.code || '') ? error.code : 'ERP_RUNTIME' } : {}) });
     }
   };
 }
