@@ -1,6 +1,7 @@
 # Eigen RoofSignal ERP — medewerker- en klantlogin
 
-Status: loginbouwfase, 12 oktober 2026. Eigen software; geen Odoo of ERPNext.
+Status: echte login getest in afzonderlijke Supabase-omgeving, 12 oktober 2026.
+Eigen software; geen Odoo of ERPNext. Online hosting wordt nog ingericht.
 Er zijn geen echte klanten, boekingen of financiële gegevens overgezet. Deze app en
 haar database worden niet meegenomen in de openbare websitebouw.
 
@@ -46,7 +47,9 @@ serverrechten. De proefaccountkiezer bestaat alleen in de lokale demo.
   Er worden geen downloadlinks uitgegeven die na intrekking nog geldig blijven.
 
 De bestaande website-Supabaseomgeving is hard geblokkeerd in deze adapter.
-De echte cloudproef moet slagen voordat de app online of met echte klanten wordt gebruikt.
+De echte cloudproef is geslaagd in **RoofSignal ERP test** (`seyuhowazudrhgrbwtbk`),
+met drie fictieve accounts. Online hosting en het eerste echte beheeraccount zijn nog
+niet geactiveerd. De test is geen vrijgave voor echte klantgegevens.
 Er worden geen uitnodigingen aan bestaande klanten gestuurd bij het starten of bouwen.
 
 ### Testinrichting en controle
@@ -178,6 +181,19 @@ De automatische tests voeren de echte SQL/RPC en HTTP-routes uit:
 
 PGlite is geen vervanging voor een productieproef met meerdere gelijktijdige
 Postgres-sessies, de echte Supabase-authenticatie en de uiteindelijke bestandsopslag.
+
+### Uitgevoerde cloudproef · 12 oktober 2026
+
+De afzonderlijke testomgeving doorliep echte Auth-, Postgres- en Storage-verzoeken:
+medewerker en klant A/B, verborgen concepten/interne notities, gebruikersgebonden RPC,
+private PDF-upload/download, directe tabel-/opslagtoegang geweigerd, intrekken van
+dossierrechten en sessies, hersteltoken en twee gelijktijdige wachtwoordverzoeken met
+exact één winnaar. Dezelfde accounts zijn ook via het browserinlogscherm gecontroleerd.
+Een fictief object bevat twee vrijgegeven inspectieronden, een leesbare voorbeeld-PDF
+en een voorstel voor de volgende halfjaarlijkse ronde. Er is geen klantmail verstuurd.
+
+109 lokale ERP-tests en 119 websitecontroles slagen. De Cloudflare-server compileert
+met Wrangler 4.149.0. De afzonderlijke online publicatie volgt op deze proeven.
 
 ## Vervolg vóór gebruik met echte klanten
 

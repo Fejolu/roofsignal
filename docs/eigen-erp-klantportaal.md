@@ -19,7 +19,9 @@ zijn ontwerpvoorstellen. De eerste werkende lokale bouwfase staat in
 bevindingen, rapportvrijgave en klantverzoeken. De proefomgeving gebruikt uitsluitend
 fictieve dossiers. De volgende bouwfase bevat echte medewerker- en klantlogin,
 wachtwoordherstel, een duurzaam sessieregister, private rapportdownloads en toegangbeheer.
-De afzonderlijke cloudproef en online activering volgen na goedkeuring van de testinrichting.
+De goedgekeurde afzonderlijke Supabase-testomgeving is ingericht. De echte login-,
+dossier-, herstel- en private bestandsproeven zijn geslaagd met drie fictieve accounts.
+De online hosting en het eerste echte beheeraccount worden nog ingericht.
 Migratie, financiële administratie, agenda-/betaalkoppelingen en 3D-viewer zijn nog niet opgeleverd.
 Er is geen productietoegang verleend en geen
 abonnement of nieuwe prijs vastgesteld.

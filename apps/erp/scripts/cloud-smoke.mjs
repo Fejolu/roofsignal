@@ -26,6 +26,49 @@ function foundValue(value,key) {
   }
 }
 
+// Deterministic, renderable one-page fixture. ASCII keeps byte positions exact
+// across runtimes; this contains no customer details, dates or real findings.
+export function createFixturePdf() {
+  const literal=value=>'('+value.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')+')';
+  const text=(font,size,x,y,value,color='0.07 0.09 0.08')=>`${color} rg\nBT /${font} ${size} Tf 1 0 0 1 ${x} ${y} Tm ${literal(value)} Tj ET\n`;
+  const stream='q\n0.72 0.22 0.04 rg\n48 782 499 4 re f\n'
+    +text('F2',23,48,743,'ROOFSIGNAL')
+    +text('F1',10,48,721,'EIGEN ERP EN KLANTPORTAAL - TESTOMGEVING','0.32 0.36 0.34')
+    +text('F2',19,48,664,'Fictief inspectierapport')
+    +text('F1',11,48,639,'Dit document bevat uitsluitend fictieve testgegevens.')
+    +text('F1',11,48,622,'Er is geen inspectie uitgevoerd.')
+    +text('F2',12,48,566,'Testdoel')
+    +text('F1',11,48,543,'Controleren dat alleen de juiste klant het vrijgegeven rapport')
+    +text('F1',11,48,526,'kan downloaden vanuit het eigen objectdossier.')
+    +text('F2',12,48,474,'Voorbeeldobject')
+    +text('F1',11,48,451,'Voorbeeldgebouw - geen werkelijk klantadres.')
+    +text('F2',12,48,399,'Fictieve bevinding')
+    +text('F1',11,48,376,'Dakgoot: een testwaarneming voor de werking van het portaal.')
+    +text('F1',11,48,359,'Deze tekst geeft geen oordeel over een bestaand gebouw.')
+    +text('F2',12,48,307,'Rapportstatus')
+    +text('F1',11,48,284,'Proefdocument. Niet gebruiken voor onderhoudsbeslissingen.')
+    +'0.82 0.84 0.83 RG 0.5 w 48 88 m 547 88 l S\n'
+    +text('F1',8,48,70,'RoofSignal ERP testomgeving | Geen klant- of inspectiedossier','0.32 0.36 0.34')
+    +text('F1',8,532,70,'1 / 1','0.32 0.36 0.34')+'Q\n';
+  const objects=[
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+    `<< /Length ${Buffer.byteLength(stream,'ascii')} >>\nstream\n${stream}endstream`,
+  ];
+  let pdf='%PDF-1.4\n';const offsets=[0];
+  for(const [index,object] of objects.entries()) {
+    offsets.push(Buffer.byteLength(pdf,'ascii'));pdf+=`${index+1} 0 obj\n${object}\nendobj\n`;
+  }
+  const xref=Buffer.byteLength(pdf,'ascii');
+  pdf+=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`;
+  for(const offset of offsets.slice(1))pdf+=`${String(offset).padStart(10,'0')} 00000 n \n`;
+  pdf+=`trailer\n<< /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(pdf,'ascii');
+}
+
 export async function cloudSmoke({configPath,provision=false}={}) {
   if(!provision)throw fail('EXPLICIT_PROVISION_FLAG_REQUIRED');
   if(typeof configPath!=='string'||!configPath)throw fail('PRIVATE_CONFIG_REQUIRED');
@@ -163,7 +206,7 @@ export async function cloudSmoke({configPath,provision=false}={}) {
     checks.push('Eigen objecttoegang; concepten en interne notities afgeschermd');
 
     stage='private-pdf';
-    const pdf=Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
+    const pdf=createFixturePdf();
     const requestId=randomUUID();
     const upload=()=>call(staff,`/api/reports/${da.report_id}/file`,{body:pdf,headers:{'Content-Type':'application/pdf','X-Request-ID':requestId,'X-File-Name':'Fictief-voorbeeldrapport.pdf'}});
     checked((await upload()).status===200,'TRUSTED_UPLOAD_FAILED');checked((await upload()).status===200,'UPLOAD_RETRY_FAILED');
