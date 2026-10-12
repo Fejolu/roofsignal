@@ -249,6 +249,28 @@ test('network/redirect exceptions and provider auth errors are sanitized and rat
     && error.providerCode === 'over_email_send_rate_limit' && !error.message.includes('Email leaked'));
 });
 
+test('transport diagnostics keep only a bounded stage, error kind and known runtime category', async () => {
+  for (const [message, reason] of [['Illegal invocation: incorrect this SECRET_PRIVATE_KEY', 'receiver'],
+    ['Unsupported cache mode: no-store SECRET_PRIVATE_KEY', 'cache'],
+    ['Cannot perform I/O on behalf of a different request SECRET_PRIVATE_KEY', 'request_scope'],
+    ['AbortSignal.timeout is not a function SECRET_PRIVATE_KEY', 'timeout_api'],
+    ['ReadableStream is locked SECRET_PRIVATE_KEY', 'stream'], ['Unable to decompress SECRET_PRIVATE_KEY', 'encoding']]) {
+    const { adapter } = fixture(() => { throw new TypeError(message); });
+    await assert.rejects(adapter.getUser(access), error => {
+      assert.equal(error.transportStage, 'fetch');
+      assert.equal(error.transportKind, 'TypeError');
+      assert.equal(error.transportReason, reason);
+      assert.equal(JSON.stringify(error).includes('SECRET_PRIVATE_KEY'), false);
+      assert.equal(error.cause, undefined);
+      return true;
+    });
+  }
+  const badRead = fixture(() => ({ headers: new Headers(), ok: true,
+    body: { getReader() { throw Object.assign(Error('SECRET_PRIVATE_KEY'), { name: 'SecretCustomException' }); } } }));
+  await assert.rejects(badRead.adapter.getUser(access), error => error.transportStage === 'read' && error.transportKind === 'Error'
+    && error.transportReason === undefined && !JSON.stringify(error).includes('SECRET_PRIVATE_KEY'));
+});
+
 test('invalid or oversized JSON/session responses are rejected rather than trusted', async () => {
   for (const data of [{ ...session, access_token: storageKey }, { ...session, user: { id: 'not-a-UUID' } },
     { ...session, expires_in: -1 }, { ...session, token_type: 'secret' }, { ...session, refresh_token: null }]) {

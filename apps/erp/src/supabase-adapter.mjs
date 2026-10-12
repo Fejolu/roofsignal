@@ -13,6 +13,21 @@ const PROVIDER_CODES = new Set(['invalid_credentials', 'email_not_confirmed', 'u
   'over_email_send_rate_limit', 'over_request_rate_limit', 'weak_password', 'same_password',
   'P0001', '42501', '23503', '23505', '23514', 'PGRST301', 'PGRST302',
   'not_found', 'object_not_found', 'NoSuchKey', 'Duplicate', 'already_exists']);
+function transportDiagnostic(error, stage) {
+  const kind = ['TypeError', 'TimeoutError', 'AbortError', 'Error'].includes(error?.name) ? error.name : 'Error';
+  const message = typeof error?.message === 'string' ? error.message : '';
+  // Only static categories survive. The provider's original exception can
+  // contain credentials and URLs, so it is never retained on the error object.
+  const reason = /illegal invocation/i.test(message) ? 'receiver'
+    : /unsupported cache mode|cache mode.*not supported|cache option.*not (?:implemented|supported)/i.test(message) ? 'cache'
+    : /different request|outside.*request context|global scope.*(?:async|io|i\/o)|i\/o.*global scope/i.test(message) ? 'request_scope'
+    : /abortsignal\.timeout.*(?:not a function|undefined)/i.test(message) ? 'timeout_api'
+    : /timeout|timed out/i.test(message) ? 'timeout'
+    : /reader.*(?:released|locked)|readablestream.*(?:locked|closed)|stream.*(?:premature|closed)/i.test(message) ? 'stream'
+    : /unsupported.*encoding|invalid.*content.encoding|decompress/i.test(message) ? 'encoding'
+    : /fetch failed/i.test(message) ? 'fetch_failed' : undefined;
+  return { transportStage: stage, transportKind: kind, ...(reason ? { transportReason: reason } : {}) };
+}
 
 export class SupabaseAdapterError extends Error {
   constructor(code, status = 502, providerCode) {
@@ -147,9 +162,11 @@ export function createSupabaseAdapter({ url, publishableKey, storageKey, fetch: 
   async function request(endpoint, { method = 'GET', headers, body, binary = false } = {}) {
     // endpoint is an internal constant or a strictly validated UUID filename.
     let response;
+    let transportStage = 'fetch';
     try {
       response = await fetchImpl(base + endpoint, { method, headers: { ...headers, ...(binary ? {} : { 'Content-Type': 'application/json' }) },
         body, redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) });
+      transportStage = 'read';
       const bytes = await readLimited(response, binary && response.ok ? MAX_DOCUMENT : MAX_JSON);
       let data;
       if (!binary || !response.ok) {
@@ -173,7 +190,7 @@ export function createSupabaseAdapter({ url, publishableKey, storageKey, fetch: 
       // Provider messages and exception causes can contain tokens, addresses or
       // URLs. Never propagate their text to logs or to the browser.
       if (error instanceof SupabaseAdapterError) throw error;
-      throw new SupabaseAdapterError('SUPABASE_UNAVAILABLE', 503);
+      throw Object.assign(new SupabaseAdapterError('SUPABASE_UNAVAILABLE', 503), transportDiagnostic(error, transportStage));
     }
   }
   const authSession = async (endpoint, body) => sessionView(await request(endpoint,

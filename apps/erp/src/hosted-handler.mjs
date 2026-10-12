@@ -316,7 +316,10 @@ export function createHostedHandler({ adapter, cookies, origin, now = Date.now, 
       }
       return json(status, { error: error?.[ownError] ? error.message : genericMessage(status),
         ...(diagnostics ? { phase: ['signin', 'verify', 'profile', 'registry', 'cookie'].includes(error?.erpPhase) ? error.erpPhase : 'handler',
-          code: /^SUPABASE_[A-Z_]+$/.test(error?.code || '') ? error.code : 'ERP_RUNTIME' } : {}) });
+          code: /^SUPABASE_[A-Z_]+$/.test(error?.code || '') ? error.code : 'ERP_RUNTIME',
+          transportStage: ['fetch', 'read'].includes(error?.transportStage) ? error.transportStage : null,
+          transportKind: ['TypeError', 'TimeoutError', 'AbortError', 'Error'].includes(error?.transportKind) ? error.transportKind : null,
+          transportReason: ['receiver', 'cache', 'request_scope', 'timeout_api', 'timeout', 'stream', 'encoding', 'fetch_failed', 'redirect'].includes(error?.transportReason) ? error.transportReason : null } : {}) });
     }
   };
 }
