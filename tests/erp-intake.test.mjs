@@ -6,6 +6,7 @@ import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
 import { ERP_INTAKE_ENDPOINT, intakeEnvelope, signIntake, sendIntake, processIntakes } from '../supabase/functions/_shared/erp-intake.mjs';
 import { consumerAdminKeys, isConsumerAdmin } from '../supabase/functions/_shared/consumer-admin.mjs';
+import { verifyErpDispatch } from '../supabase/functions/_shared/erp-dispatch-auth.mjs';
 
 const secret = 'b'.repeat(64), instant = Date.parse('2026-10-12T21:00:00Z');
 const job = () => {
@@ -107,6 +108,7 @@ async function worker(environment = {}, options = {}) {
   const source = await readFile(new URL('../supabase/functions/process-erp-intakes/index.ts', import.meta.url), 'utf8');
   vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import[^\n]+\n/gm,'')), {
     Request, Response, Error, Boolean, consumerAdminKeys, isConsumerAdmin,
+    verifyErpDispatch: (request,key) => verifyErpDispatch(request,key,{now:()=>instant}),
     Deno: { env: { get: name => environment[name] } },
     serve: handler => { handle = handler; },
     processIntakes: args => processIntakes({ ...args, send: async (job, key) => {
@@ -117,14 +119,55 @@ async function worker(environment = {}, options = {}) {
       calls.push({ kind: 'client', url, key });
       return { rpc: async (name,args) => {
         calls.push({ kind: 'rpc', name, args });
-        return { data: name === 'claim_erp_intakes' ? [options.job || job()] : true, error: null };
+        if(name==='consume_erp_intake_scheduler_nonce'&&options.nonceError)
+          return {data:null,error:{message:'Sensitive provider text'}};
+        return { data: name === 'claim_erp_intakes' ? [options.job || job()]
+          :name==='consume_erp_intake_scheduler_nonce'?options.nonceAccepted!==false:true,error:null };
       }, from: name => ({ select: () => ({ eq: async () => {
         calls.push({ kind: 'review', name }); return { count: options.review || 0, error: null };
       } }) }) };
     },
   });
-  return { calls, handle: (headers = {}, method = 'POST') => handle(new Request('https://source.example.invalid/functions/v1/process-erp-intakes', { method, headers })) };
+  return { calls, handle: (headers = {}, method = 'POST',body='{}') => handle(new Request('https://source.example.invalid/functions/v1/process-erp-intakes', { method,headers,body:method==='POST'?body:undefined })) };
 }
+
+function dispatchHeaders() {
+  const timestamp=String(Math.floor(instant/1000)),nonce=randomUUID();
+  return {'x-roofsignal-dispatch-timestamp':timestamp,'x-roofsignal-dispatch-nonce':nonce,
+    'x-roofsignal-dispatch-signature':createHmac('sha256',Buffer.from(secret,'hex'))
+      .update(timestamp+'.erp-drain:v1.'+nonce+'.{}').digest('hex')};
+}
+
+test('actual worker consumes a verified scheduler nonce before claiming canonical records',async()=>{
+  const app=await worker({ERP_INTAKE_ENABLED:'true',ERP_INTAKE_SECRET:secret,
+    SUPABASE_SECRET_KEYS:JSON.stringify({default:'sb_secret_private-test'}),SUPABASE_URL:'https://source.example.invalid'});
+  const headers=dispatchHeaders(),response=await app.handle(headers);
+  assert.equal(response.status,200);assert.equal((await response.json()).delivered,1);
+  const rpc=app.calls.filter(c=>c.kind==='rpc');
+  assert.equal(rpc[0].name,'consume_erp_intake_scheduler_nonce');
+  assert.equal(rpc[0].args.p_nonce,headers['x-roofsignal-dispatch-nonce']);
+  assert.equal(Number(rpc[0].args.p_timestamp),Number(headers['x-roofsignal-dispatch-timestamp']));
+  assert.equal(rpc[1].name,'claim_erp_intakes');
+});
+
+test('replayed or unavailable scheduler nonce never claims a queue and sanitizes failures',async()=>{
+  for(const options of [{nonceAccepted:false},{nonceError:true}]){
+    const app=await worker({ERP_INTAKE_ENABLED:'true',ERP_INTAKE_SECRET:secret,
+      SUPABASE_SECRET_KEYS:JSON.stringify({default:'sb_secret_private-test'}),SUPABASE_URL:'https://source.example.invalid'},options);
+    const response=await app.handle(dispatchHeaders());
+    assert.equal(response.status,options.nonceError?503:401);
+    assert.doesNotMatch(await response.text(),/Sensitive provider text/);
+    assert.deepEqual(app.calls.filter(c=>c.kind==='rpc').map(c=>c.name),['consume_erp_intake_scheduler_nonce']);
+    assert.equal(app.calls.filter(c=>c.kind==='send').length,0);
+  }
+});
+
+test('a forged scheduler signature or nonempty command body is rejected before database access',async()=>{
+  const app=await worker({ERP_INTAKE_ENABLED:'true',ERP_INTAKE_SECRET:secret,SUPABASE_SERVICE_ROLE_KEY:'private'});
+  assert.equal((await app.handle({...dispatchHeaders(),'x-roofsignal-dispatch-signature':'0'.repeat(64)})).status,401);
+  assert.equal((await app.handle(dispatchHeaders(),'POST','{"source":"consumer"}')).status,401);
+  assert.deepEqual(app.calls,[]);
+});
 
 test('actual worker rejects public callers and unsupported methods before provider or database work', async () => {
   const app = await worker({ SUPABASE_SERVICE_ROLE_KEY: 'service-private', CONSUMER_AUTOMATION_SECRET: 'scheduler-private', ERP_INTAKE_ENABLED: 'true' });

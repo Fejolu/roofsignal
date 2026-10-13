@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { consumerAdminKeys, isConsumerAdmin } from '../_shared/consumer-admin.mjs';
 import { processIntakes } from '../_shared/erp-intake.mjs';
+import { verifyErpDispatch } from '../_shared/erp-dispatch-auth.mjs';
 
 const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers });
@@ -13,7 +14,9 @@ serve(async (request: Request) => {
   const supplied = request.headers.get('x-automation-secret');
   const scheduled = ['ERP_AUTOMATION_SECRET', 'CONSUMER_AUTOMATION_SECRET']
     .some(name => Boolean(Deno.env.get(name) && supplied === Deno.env.get(name)));
-  if (!scheduled && !isConsumerAdmin(request.headers, keys)) return json({ error: 'Unauthorized' }, 401);
+  const administrator = scheduled || isConsumerAdmin(request.headers, keys);
+  const dispatch = administrator ? null : await verifyErpDispatch(request, Deno.env.get('ERP_INTAKE_SECRET'));
+  if (!administrator && !dispatch) return json({ error: 'Unauthorized' }, 401);
   const enabled = Deno.env.get('ERP_INTAKE_ENABLED') === 'true';
   if (!enabled) return json(await processIntakes({ enabled: false }));
   const key = keys.secret || keys.legacy;
@@ -25,6 +28,11 @@ serve(async (request: Request) => {
     return result.data;
   };
   try {
+    // A visible scheduler signature authorizes only one empty-body queue drain.
+    // Consume its private database nonce before reading or processing any job.
+    if (dispatch && await command('consume_erp_intake_scheduler_nonce', {
+      p_nonce: dispatch.nonce, p_timestamp: dispatch.timestamp,
+    }) !== true) return json({ error: 'Unauthorized' }, 401);
     const result = await processIntakes({ enabled, secret: Deno.env.get('ERP_INTAKE_SECRET'),
       claim: async () => await command('claim_erp_intakes', { p_limit: 10 }) || [],
       ack: async (job: any) => await command('ack_erp_intake', {
