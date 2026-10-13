@@ -1,13 +1,20 @@
 # Eigen RoofSignal ERP — medewerker- en klantlogin
 
-Status: eigen beheeraccount actief; websitekoppeling voorbereid, 12 oktober 2026.
-Eigen software; geen Odoo of ERPNext. De afzonderlijke testomgeving staat op
+Status: eigen beheeraccount en websitekoppeling actief, 13 oktober 2026.
+Eigen software; geen Odoo of ERPNext. De afzonderlijke ERP-omgeving staat op
 <https://roofsignal-erp-test.pages.dev>.
 Ferry's beheeraccount is aangemaakt en met een zelf gekozen wachtwoord ingelogd.
-De koppeling voor consumentenboekingen, De Parken en VvE-aanvragen is gebouwd en
-getest, maar nog niet runtime geactiveerd. Er zijn geen echte klanten, boekingen
-of financiële gegevens overgezet. De drie fictieve accounts zijn nog niet afgesloten;
-die handeling en de nieuwe, beperkte koppelsleutel wachten op expliciete toestemming.
+De koppeling voor consumentenboekingen, De Parken en VvE-aanvragen is gepubliceerd en
+geactiveerd. Vier verlopen consumentenboekingen en één bevestigde Parken-afspraak zijn
+overgenomen; er waren geen VvE-aanvragen in de bron. Herhaling maakte geen duplicaten.
+De drie fictieve accounts zijn afgesloten; hun rollen, machtigingen en sessies zijn
+ingetrokken en hun historie blijft bewaard. De websitebron is gepubliceerd via PR #25
+en de geslaagde productie-release `38305254597`. Cloudflare publiceert nu `main`;
+deployment `03efe4e0-8aaa-4649-930b-03bccb7089c4` gebruikt het zakelijke omgevingslabel
+en de versleuteld opgeslagen beperkte koppelsleutel. De bestaande workflow heeft de
+actieve ERP-stap succesvol uitgevoerd in run `38351756449`.
+De primaire broncron iedere minuut is voorbereid en lokaal getest; de echte
+automatische cronronde moet nog native worden bevestigd. GitHub blijft de terugval.
 Deze app en
 haar database worden niet meegenomen in de openbare websitebouw.
 
@@ -134,12 +141,23 @@ het hostingplatform; de adapter bevat daarnaast begrensde lokale controles.
 - Auditregistratie en herhaalbare schrijfverzoeken zonder dubbele records.
 - Database-identiteit voor 3D-modelversies en markeringen op waarnemingen; nog geen viewer.
 
-### Websiteboekingen — gebouwd, activering nog open
+### Websiteboekingen — actief
 
 De werkruimte **Websiteboekingen** ontvangt voorbereide kopieën van consumentenboekingen,
 De Parken en VvE-aanvragen. De bron bewaart iedere te verwerken wijziging in een
-duurzame wachtrij; het bestaande vijfminutenwerkproces stuurt haar naar één vast ERP-adres.
-Dit is geen directe synchronisatie na een klik; planning van de workflow kan vertraging geven.
+duurzame wachtrij. De voorbereide primaire route controleert die iedere minuut met
+`pg_cron` en `pg_net`; de bestaande GitHub-workflow blijft als vijfminutenterugval
+beschikbaar. Beide verwerken dezelfde begrensde batches naar één vast ERP-adres.
+De nieuwe broncron moet nog native worden bevestigd. Dit is geen directe synchronisatie
+na een klik en geen garantie van maximaal één minuut vertraging.
+
+De broncron verstuurt alleen `{}` met een doelgebonden handtekening, tijdstip en nonce.
+De handtekening geldt maximaal 60 seconden; de worker verbruikt de nonce éénmaal
+via een service-only RPC vóór het claimen van werk. De lang geldige koppelsleutel
+blijft in de bestaande bron-/ERP-omgevingen en de vaste Vault-naam, buiten queueheaders
+en croncommando's. De standaard leesbaarheid van `pg_net`-headers verleent daarmee
+geen inname-, betaal- of accountrechten. Zonder klaarstaand werk wordt niets verstuurd;
+actieve claims en bestaande verzoeken voorkomen overlappende verwerking.
 
 Consumentenboekingen en pilotafspraken krijgen één gekoppeld dossier en opdracht per
 bronidentiteit, met de opgeslagen prijs, akkoordversie, inspectiekeuze en afspraakstatus.
@@ -149,8 +167,9 @@ met een prijsindicatie; zij maakt geen opdracht, factuur, betaling of portaalrec
 Historische bedragen worden niet herberekend met huidige tarieven. Onbekende prijssplitsing,
 veranderde prijsafspraak of gewijzigde contact-/objectidentiteit krijgen een controlemelding.
 
-De nieuwe bronmigratie, worker en ERP-ontvanger zijn getest. Publicatie, afsluiten van de
-proefaccounts en het instellen van de beperkte HMAC-koppelsleutel zijn nog niet uitgevoerd.
+De bronmigratie, worker en ERP-ontvanger zijn getest, gepubliceerd en met echte
+bronregistraties gecontroleerd. De wachtrij is volledig geleverd, zonder fouten
+of controlegevallen. Nieuwe bronwijzigingen worden automatisch klaargezet.
 De volledige gegevensafspraken, stappen en acceptatieproeven staan in
 [Website → eigen ERP](../../docs/erp-website-intakes.md).
 
@@ -208,7 +227,7 @@ Modelmarkeringen mogen alleen naar een waarneming uit dezelfde inspectieronde ve
 PDF's worden lokaal buiten de webroot opgeslagen, gecontroleerd op grootte/type,
 alleen na dossierautorisatie geleverd en als download geserveerd. De browsercache
 is uitgeschakeld. De hosted adapter gebruikt private opslag met serverdownloads;
-de websitekoppeling en back-up/herstel zijn nog niet geactiveerd.
+de websitekoppeling is actief. Back-up/herstel moet nog afzonderlijk worden beproefd.
 
 ## Getest
 
@@ -240,9 +259,11 @@ exact één winnaar. Dezelfde accounts zijn ook via het browserinlogscherm gecon
 Een fictief object bevat twee vrijgegeven inspectieronden, een leesbare voorbeeld-PDF
 en een voorstel voor de volgende halfjaarlijkse ronde. Er is geen klantmail verstuurd.
 
-167 lokale ERP-tests en de bestaande 119 websitecontroles slagen, gemeten vóór de
-laatste interface-aanpassing voor websiteboekingen. De afsluitende suite volgt na
-die wijziging. Ook de nieuwe VvE-gegevensprojectie en HMAC-/wachtrijgrenzen zijn getest.
+De afsluitende lokale suite telt 182 geslaagde ERP-tests en 119 geslaagde websitecontroles.
+Ook de VvE-gegevensprojectie, HMAC-/wachtrijgrenzen en de 14 broncronproeven zijn getest.
+Die proeven gebruiken echte PostgreSQL-ondertekening en controleren nonceverbruik,
+verloop, claims en herhaalbare installatie. Zij bevestigen nog geen werkende hosted
+cronronde; die bewijsronde volgt afzonderlijk na publicatie.
 De bestaande 33 CMS-pagina's bouwen correct.
 De Cloudflare-server compileert met Wrangler 4.149.0. De afzonderlijke online omgeving
 doorliep daarna de HTTPS-proef: medewerker- en klantlogin, klant A/B-isolatie,
@@ -252,16 +273,15 @@ browser toont de twee inspectieronden en het halfjaarlijkse datumvoorstel.
 
 ## Vervolg vóór gebruik met echte klanten
 
-1. **Proefaccounts en websitekoppeling:** na specifiek akkoord de drie fictieve accounts
-   blokkeren, hun ERP-rechten en sessies intrekken en hun dossiers afschermen. De eerste
-   echte administrator is actief. Publiceer vervolgens de geteste innameketen en bewijs
-   ontvangst vóór activering. Herstel per e-mail blijft uit tot SMTP en bezorging zijn getest.
+1. **Toegangsbeheer:** het eigen beheeraccount is actief en de proefaccounts zijn
+   afgesloten. Herstel per e-mail blijft uit tot SMTP en bezorging zijn getest.
 2. **Beheer van dossiers en bestanden:** back-up/herstelprocedure beproeven en controle
    op achtergebleven private uploads toevoegen. Private opslag en serverdownloads zijn getest.
-3. **Website → ERP:** de gebouwde bronwachtrij en ontvanger activeren na een providerproef;
-   historische import alleen expliciet en in begrensde batches. Bewaar prijs, akkoord,
-   betaalreferentie en reisafspraak. Dit maakt geen nieuwe klantmails of portaalrechten.
-   Bestaande Google/Mollie-routes blijven eigenaar van planning en betalingsbevestiging tot migratie.
+3. **Website → ERP beheren:** de bronwachtrij en ontvanger zijn actief en de expliciet
+   goedgekeurde historische import is afgerond. Controleer achterstanden en meldingen.
+   Publiceer en bevestig de voorbereide minuutcron; behoud GitHub als terugval.
+   Bewaar prijs, akkoord, betaalreferentie en reisafspraak. Bestaande Google/Mollie-routes
+   blijven eigenaar van planning en betalingsbevestiging tot migratie.
 4. **Offerte en financiën:** offertes, orderregels, facturen, creditnota's en gecontroleerde
    betalingsverwerking. Daarna eigen grootboek, dagboeken, btw-verwerking, bankafstemming,
    periodeafsluiting en accountantsexport met inhoudelijke controles. Geen dubbele facturatie.

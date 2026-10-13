@@ -8,8 +8,10 @@ nieuwe systeem. Het klantportaal wordt vanaf de gegevensstructuur meegenomen.
 
 Zie [Eigen ERP en klantportaal — functionele opzet](eigen-erp-klantportaal.md) voor
 de actuele uitgangspunten, objecttoegang, periodieke planning en klikbare bevindingen
-in 3D-modellen. Een eerste lokale bouwfase met fictieve dossiers staat in
-[apps/erp](../apps/erp/README.md). De productieomgeving en migratie zijn nog niet ingericht.
+in 3D-modellen. De eigen login en afzonderlijke online ERP-omgeving staan in
+[apps/erp](../apps/erp/README.md). Op 13 oktober 2026 zijn het eigen beheeraccount en
+de [websitekoppeling](erp-website-intakes.md) actief; vijf bestaande registraties zijn
+overgenomen. Volledige financiën, uitvoeringsplanning en 3D-viewer volgen afzonderlijk.
 Onderstaande langetermijnvisie blijft achtergrondmateriaal. De abonnementsprijzen,
 upsellregels en SaaS-uitbreiding daarin zijn hiermee niet opnieuw vastgesteld.
 
