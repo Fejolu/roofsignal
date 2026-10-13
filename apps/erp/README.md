@@ -13,8 +13,10 @@ en de geslaagde productie-release `38305254597`. Cloudflare publiceert nu `main`
 deployment `03efe4e0-8aaa-4649-930b-03bccb7089c4` gebruikt het zakelijke omgevingslabel
 en de versleuteld opgeslagen beperkte koppelsleutel. De bestaande workflow heeft de
 actieve ERP-stap succesvol uitgevoerd in run `38351756449`.
-De primaire broncron iedere minuut is voorbereid en lokaal getest; de echte
-automatische cronronde moet nog native worden bevestigd. GitHub blijft de terugval.
+De primaire broncron iedere minuut is actief via PR #41 en release `38388252684`.
+De echte automatische ronde om 13:13 Nederlandse tijd bevestigde één herhaalde
+Parken-levering met HTTP 200, zonder fouten of dubbele opdrachten. Alle vijf snapshots
+en laatste revisies kwamen overeen en beide wachtrijen waren leeg. GitHub blijft de terugval.
 Deze app en
 haar database worden niet meegenomen in de openbare websitebouw.
 
@@ -143,12 +145,12 @@ het hostingplatform; de adapter bevat daarnaast begrensde lokale controles.
 
 ### Websiteboekingen — actief
 
-De werkruimte **Websiteboekingen** ontvangt voorbereide kopieën van consumentenboekingen,
+De werkruimte **Websiteboekingen** ontvangt kopieën van consumentenboekingen,
 De Parken en VvE-aanvragen. De bron bewaart iedere te verwerken wijziging in een
-duurzame wachtrij. De voorbereide primaire route controleert die iedere minuut met
+duurzame wachtrij. De primaire route controleert die iedere minuut met
 `pg_cron` en `pg_net`; de bestaande GitHub-workflow blijft als vijfminutenterugval
 beschikbaar. Beide verwerken dezelfde begrensde batches naar één vast ERP-adres.
-De nieuwe broncron moet nog native worden bevestigd. Dit is geen directe synchronisatie
+De broncron is native bevestigd. Dit is geen directe synchronisatie
 na een klik en geen garantie van maximaal één minuut vertraging.
 
 De broncron verstuurt alleen `{}` met een doelgebonden handtekening, tijdstip en nonce.
@@ -262,8 +264,9 @@ en een voorstel voor de volgende halfjaarlijkse ronde. Er is geen klantmail vers
 De afsluitende lokale suite telt 182 geslaagde ERP-tests en 119 geslaagde websitecontroles.
 Ook de VvE-gegevensprojectie, HMAC-/wachtrijgrenzen en de 14 broncronproeven zijn getest.
 Die proeven gebruiken echte PostgreSQL-ondertekening en controleren nonceverbruik,
-verloop, claims en herhaalbare installatie. Zij bevestigen nog geen werkende hosted
-cronronde; die bewijsronde volgt afzonderlijk na publicatie.
+verloop, claims en herhaalbare installatie. De hosted cronronde is daarnaast met
+een echte herhaalde levering bevestigd. Een volgende lege minuutronde verstuurde
+geen extra netwerkverzoek en liet alle vijf registraties ongewijzigd.
 De bestaande 33 CMS-pagina's bouwen correct.
 De Cloudflare-server compileert met Wrangler 4.149.0. De afzonderlijke online omgeving
 doorliep daarna de HTTPS-proef: medewerker- en klantlogin, klant A/B-isolatie,
@@ -279,7 +282,7 @@ browser toont de twee inspectieronden en het halfjaarlijkse datumvoorstel.
    op achtergebleven private uploads toevoegen. Private opslag en serverdownloads zijn getest.
 3. **Website → ERP beheren:** de bronwachtrij en ontvanger zijn actief en de expliciet
    goedgekeurde historische import is afgerond. Controleer achterstanden en meldingen.
-   Publiceer en bevestig de voorbereide minuutcron; behoud GitHub als terugval.
+   De minuutcron is gepubliceerd en native bevestigd; behoud GitHub als terugval.
    Bewaar prijs, akkoord, betaalreferentie en reisafspraak. Bestaande Google/Mollie-routes
    blijven eigenaar van planning en betalingsbevestiging tot migratie.
 4. **Offerte en financiën:** offertes, orderregels, facturen, creditnota's en gecontroleerde

@@ -24,7 +24,7 @@ Ferry heeft zelf een wachtwoord ingesteld en is ingelogd. De eigenaaractivatie
 verstuurde geen e-mail. Het account heeft expliciete administratorrechten; een
 e-mailadres of domein bepaalt nooit een rol.
 
-De afsluitende lokale suite telt 182 geslaagde ERP-tests, inclusief de voorbereide
+De afsluitende lokale suite telt 182 geslaagde ERP-tests, inclusief de actieve
 broncron en echte PostgreSQL-ondertekening. De bestaande 119 websitecontroles
 slagen eveneens; ook de GitHub-controles en beide Cloudflare-publicaties zijn geslaagd.
 De providerproef en historische overname staan hieronder vastgelegd.
@@ -51,14 +51,26 @@ vóór deze proef was om 03:23 Nederlandse tijd, bijna vier uur vóór de contro
 Een handmatige ronde om 07:30 slaagde. De bron bewaart nieuwe gegevens duurzaam totdat
 een verwerkingsronde ze bevestigt.
 
-### Broncron · voorbereid, nog niet native bevestigd
+### Broncron · actief en native bevestigd
 
-De primaire verwerkingsroute wordt een broncontrole iedere minuut met `pg_cron` en
-`pg_net`. De migratie en ondertekende workergrens zijn voorbereid en lokaal getest;
-een echte automatische cronronde in de website-Supabaseomgeving moet nog worden
-bevestigd. De hierboven vastgelegde activering en historische import zijn wel afgerond.
-De bestaande GitHub-route blijft beschikbaar als terugval. De minuutcontrole is
-geen toezegging van synchronisatie binnen één minuut.
+PR #41 is samengevoegd als `c23a0fa33e8231343072d994ea815afb30bd0c1d`;
+productierelease `38388252684` en alle zes productiecontroles zijn geslaagd.
+ERP-Pages-deployment `0faed192-37ba-480d-abbf-b5f554e97e6b` is geslaagd.
+De vaste broncron controleert de wachtrij iedere minuut met `pg_cron` en `pg_net`.
+De bestaande beperkte koppelsleutel is via de gebonden RPC in de bron-Vault opgeslagen.
+
+De automatische ronde op 13 oktober om **13:13 Nederlandse tijd** verstuurde één
+reeds geleverde, bevestigde Parken-registratie opnieuw, met dezelfde revisie.
+De werkelijke netwerkontvangst gaf HTTP 200, zonder timeout; de nonce was verbruikt.
+De worker bevestigde één levering, nul fouten en nul handmatige controles.
+Bron- en netwerkqueues waren daarna leeg. Alle vijf bron-, outbox- en ERP-snapshots
+en hun laatste revisies komen overeen; er zijn vijf opdrachten zonder duplicaten.
+De proef wijzigde geen betaling, bronafspraak of klantmail en verleende geen portaalrecht.
+De volgende lege minuutronde slaagde zonder extra netwerkverzoek; alle vijf
+registraties, revisies en opdrachten bleven ongewijzigd.
+
+GitHub blijft beschikbaar als terugval. De minuutcontrole is geen toezegging van
+synchronisatie binnen één minuut.
 
 ## Gescheiden bron en bestemming
 
@@ -134,7 +146,7 @@ blijft een daadwerkelijk geannuleerde afspraak geannuleerd.
 ## Wachtrij, snelheid en storingen
 
 De websitehandeling wacht niet op een HTTP-verzoek aan het ERP. De bron schrijft
-alleen de eigen duurzame wachtrij. De voorbereide primaire broncron
+alleen de eigen duurzame wachtrij. De actieve primaire broncron
 `roofsignal-erp-intake-every-minute` controleert die wachtrij iedere minuut. Hij roept
 uitsluitend de bestaande `process-erp-intakes`-worker aan, met een lege JSON-body.
 Zonder klaarstaande records volgt geen netwerkverzoek. Een toekomstige herhaaltermijn,
@@ -154,8 +166,8 @@ De bestaande workflow **Consumentenboekingen controleren en bevestigen** blijft 
 terugval met een GitHub-schema van elke vijf minuten. De ERP-stap draait ook wanneer
 de consumentencontrole in die ronde faalt. Beide routes gebruiken dezelfde claims en
 ontvangstbewijzen. Planners, transport en begrensde batches kunnen vertraging geven;
-noch het minuutontwerp, noch het GitHub-schema vormt een maximumvertraging. De nieuwe
-broncron is pas native bevestigd na een echte automatische ronde en gecontroleerde
+noch de minuutcontrole, noch het GitHub-schema vormt een maximumvertraging.
+De broncron is native bevestigd met een echte automatische ronde en gecontroleerde
 ontvangst, zonder een tweede opdracht of inspectieronde.
 
 Bij transport- of configuratiefouten blijft de bronregistratie in de wachtrij met
@@ -174,7 +186,7 @@ bevestigingsmail. De workflow kan herstel of benodigde controle melden.
   methode, vaste route, inhoudstype, grootte en toegestane bronvelden.
 - Deze sleutel autoriseert uitsluitend website-inname en de beperkte ERP-verwerkingsopdracht. Zij kan geen
   medewerkersessie maken, portaalrechten toekennen, rapport publiceren of geld innen.
-- De voorbereide broncron gebruikt dezelfde sleutel met een afzonderlijk
+- De broncron gebruikt dezelfde sleutel met een afzonderlijk
   `erp-drain:v1`-doel voor zijn 60-secondenopdracht. Deze handtekening kan niet als
   website-inname, betaling of accountautorisatie worden gebruikt. Alleen de bronworker
   mag de nonce verbruiken; de browser kan de dispatcher, nonceopslag of Vault niet benaderen.
@@ -228,14 +240,14 @@ stappen beschrijven de herhaalbare werkwijze; zij zijn geen openstaande goedkeur
    `backfill_erp_intakes` gebruiken. De migratie importeert historische records niet
    vanzelf. Begin begrensd, controleer de mapping en herhaal zonder duplicaten.
 
-Voor de nog te bevestigen broncron volgt aanvullend de beoordeelde migratie
-`20261013010000_erp_intake_cron.sql` en de worker met ondertekeningscontrole. Provision
-de bestaande koppelsleutel via de gebonden, service-only
-`set_erp_intake_scheduler_secret`-RPC; neem geen sleutelwaarde op in SQL of een
-croncommando. De proef zet precies één al geleverde, bevestigde Parken-registratie
-met dezelfde revisie opnieuw klaar. Controleer de echte cronronde, eenmalig
-nonceverbruik, ontvangstbewijs, lege wachtrij en ongewijzigd aantal opdrachten.
-Deze native bewijsronde is nog niet als afgerond vastgelegd.
+Voor de actieve broncron zijn de beoordeelde migratie
+`20261013010000_erp_intake_cron.sql` en de worker met ondertekeningscontrole gepubliceerd.
+De bestaande koppelsleutel is via de gebonden, service-only
+`set_erp_intake_scheduler_secret`-RPC opgeslagen, zonder sleutelwaarde in SQL of een
+croncommando. De proef zette precies één al geleverde, bevestigde Parken-registratie
+met dezelfde revisie opnieuw klaar. De echte cronronde, het eenmalige nonceverbruik,
+ontvangstbewijs, de lege wachtrij en het ongewijzigde aantal opdrachten zijn gecontroleerd.
+Deze native bewijsronde is afgerond; zie de vastgelegde ontvangst hierboven.
 
 Bij een verkeerde mapping of uitval kan `ERP_INTAKE_ENABLED` weer uit. Nieuwe
 bronwijzigingen blijven dan duurzaam klaarstaan; planning en betalingen blijven
@@ -251,10 +263,10 @@ HMAC, replay, verkeerde handtekeningen, bodygrenzen, redirects, ontvangstbevesti
 herhaling en tijdelijk uitgevallen transport. De eigenaaractivatie en de eerdere
 Auth-/Storage-proef zijn met echte providers gecontroleerd.
 
-De voorbereide broncron is getest met echte `pgcrypto`, doelgescheiden HMAC, eenmalig
+De broncron is getest met echte `pgcrypto`, doelgescheiden HMAC, eenmalig
 nonceverbruik, verlopen opdrachten, behouden claims, lege wachtrijen, herhaalbare
 installatie en het behouden van een bewust gepauzeerde job. De hosted netwerkuitvoering
-en automatische cronronde moeten nog afzonderlijk worden bevestigd.
+en automatische cronronde zijn daarnaast met de echte providers bevestigd.
 
 De live bron→ERP-providerproef en activering zijn afgerond. Facturen, creditnota's,
 grootboek, bankafstemming, eigen capaciteitsplanning, echte
@@ -264,7 +276,7 @@ levert hun brongegevens; zij bevestigt die functies niet als opgeleverd.
 ## Bronnen in deze checkout
 
 - [Bronmigratie](../supabase/migrations/20261012223000_erp_intake_outbox.sql)
-- [Voorbereide broncron](../supabase/migrations/20261013010000_erp_intake_cron.sql) en [eenmalige opdrachtcontrole](../supabase/functions/_shared/erp-dispatch-auth.mjs)
+- [Broncron](../supabase/migrations/20261013010000_erp_intake_cron.sql) en [eenmalige opdrachtcontrole](../supabase/functions/_shared/erp-dispatch-auth.mjs)
 - [Bronworker](../supabase/functions/process-erp-intakes/index.ts) en [ondertekening/verwerking](../supabase/functions/_shared/erp-intake.mjs)
 - [VvE-metadata](../supabase/functions/_shared/vve-intake.mjs)
 - [ERP-ontvanger](../apps/erp/src/website-intake-handler.mjs) en [ERP-inname-SQL](../apps/erp/db/005_website_intake.sql)
