@@ -184,6 +184,9 @@ async function bookingPage({ configuration, record, returnToken = null, respond,
   };
   const context = vm.createContext({
     ...bookingCore, window, document, URL, URLSearchParams, crypto,
+    takeBookingReturnToken: () => new URL(location).searchParams.get('booking'),
+    clearBookingReturnToken() {},
+    reportConfirmedBooking() {},
     ...(fastCheckoutTimers ? { Date: ClockDate } : {}),
     setTimeout: schedule, clearTimeout: cancel, AbortSignal: { timeout(milliseconds) {
       const controller = new AbortController();

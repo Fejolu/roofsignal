@@ -17,6 +17,7 @@ import {googleExecutionError,googleTokenProvider} from '../_shared/consumer-goog
 import {planAvailability} from '../_shared/consumer-availability.mjs';
 import {consumerMode,verifiedChallenge,assertMode,publicError} from '../_shared/consumer-access.mjs';
 import {acquisitionCampaign} from '../_shared/consumer-acquisition.mjs';
+import {eligibleAdsConversion} from '../_shared/consumer-ads.mjs';
 
 // Private tests and public live bookings use separate credentials and records.
 // Public creation remains disabled until CONSUMER_LIVE_ENABLED is set explicitly.
@@ -228,7 +229,8 @@ async function view(a:any) {
  const q=await one('consumer_quotes','id',a.quote_id);
  if(a.preparation_only)return {requestId:a.id,state:'pending'};
  const identity={requestId:a.id,quoteId:a.quote_id,slotId:a.slot_id,reference:a.reference,currency:'EUR',totalCents:q.total_cents};
- if(TERMINAL.has(a.status))return {...identity,state:'closed',status:a.status,requestClosed:true};
+ if(TERMINAL.has(a.status))return {...identity,state:'closed',status:a.status,requestClosed:true,
+  ...(eligibleAdsConversion(a,q)?{adsConversion:{id:'rs_'+await sha('ads-conversion:'+a.id),currency:'EUR',valueCents:q.total_cents}}:{})};
  if(a.checkout_url&&a.payment_status==='open')return {...identity,state:'checkout_ready',checkoutUrl:a.checkout_url};
  return {requestId:a.id,state:'pending'};
 }
