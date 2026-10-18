@@ -65,17 +65,20 @@ function save(grant) {
 function mount() {
   if (privatePath) return;
   const style = document.createElement('style');
-  style.textContent = '.rs-ads-consent{position:fixed;bottom:16px;left:16px;right:16px;z-index:10000;background:#fff;color:#141917;border:1px solid #ccd6d5;border-top:3px solid #bb3d00;padding:18px;box-shadow:0 4px 24px #0002;max-width:760px;margin:auto;font:16px/1.5 system-ui}.rs-ads-consent[hidden]{display:none}.rs-ads-consent p{margin:0 0 12px}.rs-ads-consent a{color:#a93600}.rs-ads-consent button{font:inherit;padding:9px 14px;margin:4px 8px 0 0;background:#fff;color:#a93600;border:1px solid #a93600;border-radius:6px;cursor:pointer}.rs-ads-settings{font:inherit;background:none;border:0;color:#a93600;text-decoration:underline;cursor:pointer;margin:12px}';
+  style.textContent = '.rs-ads-consent{position:fixed;bottom:12px;left:12px;right:12px;z-index:10000;background:#fff;color:#141917;border:1px solid #dce2df;border-radius:8px;padding:12px 16px;box-shadow:0 2px 12px #0001;max-width:600px;margin:auto;display:flex;align-items:center;gap:12px;font:14px/1.45 system-ui}.rs-ads-consent[hidden]{display:none}.rs-ads-consent p{margin:0;flex:1}.rs-ads-consent a{color:#a93600;text-decoration:underline}.rs-ads-consent-actions{display:flex;gap:8px;flex-shrink:0}.rs-ads-consent button{font:inherit;padding:8px 10px;background:#fff;color:#a93600;border:1px solid #a93600;border-radius:5px;cursor:pointer}.rs-ads-settings{font:inherit;background:none;border:0;color:#a93600;text-decoration:underline;cursor:pointer;margin:12px}@media(max-width:520px){.rs-ads-consent{flex-wrap:wrap;gap:10px}.rs-ads-consent p{flex-basis:100%}}';
   document.head.append(style);
   panel = document.createElement('section');
   panel.className = 'rs-ads-consent'; panel.setAttribute('aria-label', 'Advertentiemeting');
   const text = document.createElement('p');
-  text.textContent = 'Mogen we met Google meten of onze advertenties tot een betaalde inspectie leiden? Alleen met uw toestemming gebruiken we hiervoor advertentiecookies en delen we een boekingsreferentie en het bedrag. We delen geen naam, adres of contactgegevens en gebruiken dit niet voor gepersonaliseerde advertenties.';
+  text.textContent = 'Cookies voor het meten van onze Google-advertenties? ';
   panel.append(text);
-  const policy = document.createElement('a'); policy.href = '/cookies'; policy.textContent = 'Meer informatie'; panel.append(policy, document.createElement('br'));
+  const policy = document.createElement('a'); policy.href = '/cookies'; policy.textContent = 'Cookiebeleid';
+  const privacy = document.createElement('a'); privacy.href = '/privacy'; privacy.textContent = 'Privacy';
+  text.append(policy, ' · ', privacy);
+  const actions = document.createElement('div'); actions.className = 'rs-ads-consent-actions'; panel.append(actions);
   for (const [label, value] of [['Weigeren', false], ['Toestaan', true]]) {
     const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
-    button.addEventListener('click', () => save(value)); panel.append(button);
+    button.addEventListener('click', () => save(value)); actions.append(button);
   }
   document.body.append(panel);
   const settings = document.createElement('button'); settings.type = 'button'; settings.className = 'rs-ads-settings'; settings.textContent = 'Advertentiemeting wijzigen';
