@@ -1,0 +1,29 @@
+Versie 18 oktober 2026.
+Bewaar deze tekst
+.
+1. Functionele opslag en beveiliging
+De website gebruikt Cloudflare voor hosting en beveiliging. Formulieren gebruiken Cloudflare Turnstile om geautomatiseerd misbruik tegen te gaan. Daarbij worden technische gegevens over browser en verbinding verwerkt. Afhankelijk van de beveiligingscontrole kunnen noodzakelijke cookies of vergelijkbare technieken worden gebruikt. Voor noodzakelijk technisch gebruik vragen wij geen toestemming.
+Bij inloggen op een klant- of beheeromgeving kan functionele browseropslag nodig zijn om uw sessie en gekozen dossier te onthouden. De Odoo-klantomgeving staat op roofsignal.odoo.com en gebruikt eigen functionele sessietechnieken. De openbare website geeft uw login of dossiergegevens niet door aan de statistiekdienst.
+2. Beperkte websitegebruiksstatistieken
+RoofSignal gebruikt Umami Cloud om de openbare website te verbeteren. Wij tellen paginaweergaven en vaste gebeurtenissen, bijvoorbeeld het downloaden van een voorbeeldrapport, een klik op een contactlink en het slagen of mislukken van een aanvraag. Umami gebruikt hiervoor geen analyticscookies en volgt bezoekers niet over verschillende websites voor advertenties.
+Onze inrichting verwijdert zoekparameters en fragmenten uit pagina-adressen. Namen, e-mailadressen, postcodes, vrije formuliertekst en boekingsreferenties worden niet als meetgegevens meegestuurd. Offerte-akkoordpagina’s, inlog- en beheerpagina’s en de herroepingspagina zijn uitgesloten. Er worden geen sessieopnamen of persoonlijke advertentieprofielen gemaakt. Uw IP-adres wordt bij de verbinding technisch ontvangen door de dienst; cookieloos betekent niet dat er geen gegevensverwerking plaatsvindt.
+Wij beperken deze statistieken tot websiteverbetering met geringe privacy-impact. Daarvoor is volgens de Nederlandse cookieregels geen toestemming nodig. Wij respecteren de browsersignalen Do Not Track en Global Privacy Control: bij zo’n signaal laden wij de statistiekdienst niet. Meer over de techniek staat in de
+documentatie van Umami
+.
+Bij campagnebezoeken meten wij uitsluitend een vooraf vastgelegde campagnenaam en algemene boekingsstappen. Wij slaan hiervoor geen marketingcookies of klik-ID’s op. Een gestart betaalproces is in deze statistieken geen bewijs van een betaalde opdracht. Bij een boeking kan de campagnenaam worden vastgelegd om bevestigde opdrachten per campagne te tellen; onbekende herkomst blijft onbekend. Bij Do Not Track of Global Privacy Control leggen wij deze campagnenaam niet vanuit de browser vast.
+Advertentiemeting met uw toestemming
+Alleen als u Toestaan kiest, laden we de Google-tag voor Google Ads. Bij Weigeren en bij Do Not Track of Global Privacy Control laden we die niet. Google verwerkt dan geen meetverzoek vanuit deze koppeling. Uw keuze bewaren we maximaal 180 dagen in lokale browseropslag. U kunt die via Advertentiemeting wijzigen in de voettekst altijd intrekken.
+Na toestemming kan Google advertentieklik-ID’s en _gcl_-cookies gebruiken om een advertentie aan een betaalde inspectie te koppelen. Cookies voor advertentieklikken kunnen maximaal 90 dagen blijven bestaan. Alleen een door de server geverifieerd betaalde en ingeplande inspectie wordt als conversie verzonden, met een niet-geheime referentie, EUR-bedrag inclusief btw en een opgeschoond pagina-adres. Wij sturen geen naam, contactgegevens, objectadres of geheime boekingscode mee. Google ontvangt bij een verbinding ook technische gegevens zoals IP-adres en browsergegevens. Geen enhanced conversions of gepersonaliseerde advertenties. Zie
+Google Privacy
+. Boeken blijft mogelijk zonder toestemming.
+3. Geen overige advertentietrackers
+Wij gebruiken geen Meta-pixel, Google Analytics of socialmediatrackers. Google Ads-meting werkt uitsluitend volgens de toestemmingskeuze hierboven.
+4. Uw browserinstellingen en privacy
+U kunt cookies en lokale opslag verwijderen of blokkeren via uw browser. Dat kan het inloggen of beveiligde formulieren beïnvloeden. U kunt Do Not Track of Global Privacy Control gebruiken om de Umami-meting op deze website uit te schakelen. In de
+privacyverklaring
+staat wie gegevens verwerkt, waarvoor en hoe u uw rechten kunt gebruiken.
+5. Vragen en wijzigingen
+Vragen over deze inrichting kunt u stellen via
+info@roofsignal.nl
+. Wij werken deze pagina bij als de gebruikte technieken veranderen.
+Laatst bijgewerkt: 11 oktober 2026.

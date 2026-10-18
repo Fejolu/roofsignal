@@ -1,4 +1,6 @@
 import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261012-direct-betalen';
+import { takeBookingReturnToken, clearBookingReturnToken, reportConfirmedBooking } from '../assets/ads-consent.mjs';
+const bookingReturnToken = takeBookingReturnToken();
 
 // Missing or invalid configuration fails closed. All calendar and payment
 // credentials remain on the server.
@@ -443,6 +445,7 @@ function applyAttemptResponse(data, resume = false) {
       : 'Er is geen betaling aangemaakt. Controleer uw adres opnieuw voordat u een nieuwe opdracht start.');
   } else if (result.state === 'closed') {
     if (['confirmed', 'paid_review_required'].includes(result.status)) closedStatus = result.status;
+    if (result.status === 'confirmed') reportConfirmedBooking(data);
     else releaseRecovery();
     message('booking-status', paymentMessage(result.status));
   } else if (result.state === 'checkout_ready') {
@@ -564,7 +567,7 @@ el('earlyStartRequested').addEventListener('change', updateSummary);
 form.addEventListener('reset', () => Promise.resolve().then(clearQuote));
 
 async function showReturnStatus() {
-  const token = new URLSearchParams(window.location.search).get('booking');
+  const token = bookingReturnToken;
   if (!connected || checkingReturnStatus || !token || !/^[A-Za-z0-9_-]{32,200}$/.test(token)) return;
   // A redirect parameter can select a record; it never proves payment.
   checkingReturnStatus = true;
@@ -596,6 +599,8 @@ async function showReturnStatus() {
     // released the calendar hold and durably closed this booking attempt.
     const closed = result?.state === 'closed';
     const status = closed ? result.status : result?.state === 'checkout_ready' ? 'open' : 'pending';
+    if (closed && status === 'confirmed') reportConfirmedBooking(data);
+    if (closed) clearBookingReturnToken();
     message('booking-status', paymentMessage(status));
     if (closed && ['failed', 'canceled', 'expired'].includes(status) && !recovery && !recoveryBlocked) {
       returnOrder = null;
