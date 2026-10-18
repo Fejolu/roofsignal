@@ -228,7 +228,7 @@ def main() -> int:
         run(["supabase", "db", "push", "--dry-run", "--linked"], env=env)
         run(["supabase", "db", "push", "--linked"], env=env)
         for function in manifest["functions"]:
-            run(["supabase", "functions", "deploy", function, "--project-ref", manifest["project_ref"]], env=env)
+            run(["supabase", "functions", "deploy", function, "--project-ref", manifest["project_ref"], "--use-api"], env=env)
         run(["supabase", "config", "push", "--project-ref", manifest["project_ref"]], env=env)
         smoke_test_functions(manifest)
         print("✓ RoofSignal Supabase-release volledig afgerond.")
