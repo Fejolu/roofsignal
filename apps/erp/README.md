@@ -326,3 +326,18 @@ migratie 006 en de bijgewerkte RPC-wrapper uit 005 toepassen in één transactie
 
 Deze punten zijn geen geleverde functies. Externe verbindingen worden pas als
 werkend gemeld na een geslaagde proef met de bestaande dienst.
+
+### Providers bevestigd op 27 oktober
+
+- Telefonie: Dubline. CRM-gebeurtenissen en de toegestane afzendercontrole zijn nog
+  niet bevestigd. Geen Voys-overstap of extra abonnement starten. De bestaande
+  interne nummerherkenning blijft bruikbaar.
+- E-mail: Antagonist, afzender `info@roofsignal.nl`, afzendernaam RoofSignal.
+  SMTP-host `mail.antagonist.nl`, versleuteld op 587 (alternatief 465), met
+  authenticatie. Het mailboxwachtwoord hoort alleen in de afgeschermde SMTP-configuratie.
+- Supabase-project hervatten zonder upgrade is expliciet goedgekeurd. De hervatting
+  is op 27 oktober aangevraagd; gezonde database en login moeten nog worden teruggelezen.
+
+Bronnen: [Antagonist mailinstellingen](https://www.antagonist.nl/blog/problemen-met-mail-oplossen/),
+[Supabase eigen SMTP](https://supabase.com/docs/guides/auth/auth-smtp),
+[Dubline ondersteuning](https://www.dubline.nl/ondersteuning/faq/hoe-werkt-dubline/).
