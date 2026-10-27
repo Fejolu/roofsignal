@@ -126,3 +126,29 @@
  .rs-public .footer { padding:40px 24px;gap:32px; }
  .rs-public .footer .footer-cols { grid-template-columns:1fr;gap:28px; }
 }
+
+.header-call { display: none; }
+@media (max-width: 700px) {
+  .rs-public .site-header .header-call {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background: #ff6c2c;
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    line-height: 1;
+    text-decoration: none;
+    flex-shrink: 0;
+    opacity: 1;
+  }
+  .rs-public .site-header .header-call:hover { color: #fff; opacity: 1; }
+  .rs-public .site-header .mobile-nav { margin-left: 8px; }
+  .rs-public .site-header { gap: 8px; }
+}
+.rs-public .footer a.footer-quiet { opacity: .65; font-size: .9rem; }

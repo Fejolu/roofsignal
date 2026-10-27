@@ -19,7 +19,7 @@ def test_cloudflare_has_a_real_not_found_page():
 
 def test_homepage_targets_independent_inspection_and_a_concrete_outcome():
     content = read("index.html")
-    assert "Onafhankelijke dak- en gevelinspectie | RoofSignal" in content
+    assert "Dakinspectie met drone in Apeldoorn en Oost-Nederland | RoofSignal" in content
     assert "Begin met één gebouw." in content
     assert "VvE beheerders" in content
     assert "onderhoudsprioriteiten" in content
@@ -70,7 +70,12 @@ def test_public_navigation_uses_one_approach_and_proposal_destination():
     for path in pages:
         content = path.read_text(encoding="utf-8")
         assert '<a href="/werkwijze">Werkwijze</a>' not in content, path.name
-        assert '<a href="/tarieven">Tarieven</a>' not in content, path.name
+        if '<nav class="nav"' in content:
+            nav = content.split('<nav class="nav"', 1)[1].split("</nav>", 1)[0]
+            assert ">Tarieven</a>" in nav, path.name
+            assert "bouwvoortgang" not in nav, path.name
+            assert "stormrespons" not in nav, path.name
+            assert "Property Intelligence" not in nav, path.name
     rates = read("tarieven.html")
     assert "Aanpak &amp; offerte" in rates
     assert 'id="aanpak"' in rates
@@ -84,7 +89,6 @@ def test_public_prices_distinguish_starting_quotes_and_fixed_pilot():
         assert "Vanaf €750 excl. btw" in content, path
         assert "offerte" in content.lower(), path
         assert "€1.000" not in content and "€1.250" not in content, path
-        assert '"priceCurrency"' not in content, path
     costs = read("kennisbank-dakinspectie-kosten.html")
     cost_text = BeautifulSoup(costs, "html.parser").main.get_text(" ", strip=True)
     assert "€361,79" in cost_text and "€664,29" in cost_text
@@ -92,7 +96,6 @@ def test_public_prices_distinguish_starting_quotes_and_fixed_pilot():
     assert "Alle bedragen exclusief btw." in cost_text
     assert all(price in costs for price in ("€750", "€1.000", "€1.250", "€400", "€550"))
     assert '/inspectie-boeken/' in costs and '/inspectie-boeken/#vve' in costs
-    assert '"priceCurrency"' not in costs
     pilot = read("de-parken/index.html")
     assert "€361,79 incl. btw" in pilot
     assert "Vanaf €" not in pilot

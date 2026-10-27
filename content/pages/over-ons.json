@@ -1,11 +1,11 @@
 {
   "seo": {
-    "title": "Over ons | RoofSignal",
-    "description": "RoofSignal voert onafhankelijke visuele dak- en gevelinspecties uitsluitend met drones uit. Heldere rapportage en onderhoudsprioriteiten, zonder herstelverkoop."
+    "title": "Over RoofSignal: onafhankelijke dakinspectie | RoofSignal",
+    "description": "RoofSignal in Apeldoorn voert onafhankelijke dak- en gevelinspecties uit, uitsluitend met drones. Kwalificaties, werkwijze en geen verkoop van herstelwerk."
   },
   "section_01": {
     "item_01": "Onze overtuiging",
-    "item_02": "Betere onderhoudsbeslissingen beginnen met betere vastgoeddata.",
+    "item_02": "Onafhankelijke dak- en gevelinspectie vanuit Apeldoorn.",
     "item_03": "Veel onderhoud wordt pas zichtbaar wanneer schade al duur wordt. RoofSignal maakt conditie, risico en opvolging eerder inzichtelijk."
   },
   "section_02": {
@@ -18,11 +18,11 @@
       "alt": "Ferdinand Joosten, oprichter van RoofSignal"
     },
     "item_06": "Ferdinand Joosten",
-    "item_07": "Ferdinand is bedrijfskundig opgeleid en voltooide de master Facility and Real Estate Management. Hij is werkzaam op het gebied van facilitair en vastgoed bij Defensie en bouwt RoofSignal voor beheerders en eigenaren die technische signalen willen vertalen naar heldere onderhoudsbesluiten.",
-    "item_08": "Bedrijfskundig opgeleid",
-    "item_09": "Master Facility & Real Estate Management",
-    "item_10": "Dronebewijs A1/A2/A3",
-    "item_11": "Exploitantennummer"
+    "item_07": "Ferdinand Joosten is oprichter van RoofSignal. Hij is bedrijfskundig opgeleid en voltooide de master Facility and Real Estate Management. Hij is werkzaam op het gebied van facilitair en vastgoed bij Defensie. RoofSignal is er voor beheerders en eigenaren die technische signalen willen vertalen naar heldere onderhoudsbesluiten.",
+    "item_08": "VOL-VCA-diploma",
+    "item_09": "Vliegbewijzen A1/A3 en A2",
+    "item_10": "Geregistreerd bij de RDW",
+    "item_11": "Verzekerd vliegen"
   },
   "section_03": {
     "item_01": "Werkwijze",
