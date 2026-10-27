@@ -179,7 +179,7 @@ Een datumvoorstel reserveert geen agendatijd. Een herstelmelding wijzigt geen
 inspectieoordeel. Vrijgegeven rapporten en waarnemingen worden niet overschreven.
 Nieuwe opdrachten nodigen geen klant uit en versturen geen e-mail.
 
-### Voys en telefoonherkenning
+### Telefonie en telefoonherkenning
 
 De werkruimte **Telefonie** en de route `#call/<URL-gecodeerd-nummer>` bereiden de
 klantweergave bij een inkomend gesprek voor. Alleen de medewerker kan nummers
@@ -188,7 +188,7 @@ afgeschermde nummers en zoekfouten worden afzonderlijk afgehandeld. Een wachtend
 oproep kan na de proeflogin worden geopend. Nieuwe klantgegevens worden pas na
 bevestiging opgeslagen.
 
-Voys is nog niet verbonden. Er is geen openbare webhook of nieuwe toegang tot
+Ferry bevestigde op 27 oktober dat Dubline de huidige telco is en Antagonist de mailprovider. Een providerverbinding is nog niet geverifieerd. De onderstaande Voys-verwijzing is historisch ontwerp, geen nieuwe providerkeuze. Er is geen openbare webhook of nieuwe toegang tot
 Voys aangemaakt. De echte verbinding volgt in de beveiligde online ERP-omgeving
 via [Voys gespreksnotificaties](https://help.voys.nl/gespreksnotificaties), met
 afzendercontrole en meldingen voor de juiste medewerker. De lokale proefserver

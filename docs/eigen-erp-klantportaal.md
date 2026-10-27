@@ -207,7 +207,19 @@ en betaalstatus, geen eigen factuur of boekhoudkundige verwerking. De bronbedrag
 blijven behouden bij een latere tariefwijziging. Een VvE-staffelindicatie blijft
 vrijblijvend en wordt niet als overeengekomen prijs of betaling behandeld.
 
-## 9. Telefonie en Voys
+## 9. Telefonie — huidige provider Dubline
+
+Actualisatie 27 oktober 2026 door Ferry: **Dubline** is de huidige telco;
+**Antagonist** verzorgt e-mail. Er wordt geen Voys-abonnement of overstap gestart.
+De onderstaande functionele eisen voor nummerherkenning blijven gelden, maar de
+historisch voorgestelde Voys-transportkoppeling is geen besluit voor de huidige
+provider. Een ondersteunde Dubline-gebeurtenis/API en afzendercontrole moeten eerst
+worden bevestigd; openbare documentatie bevestigt nog geen werkende CRM-webhook.
+Antagonist-SMTP voor uitnodigingen en herstel wordt pas aangezet na veilige
+serverconfiguratie en een bezorgproef. Geen wachtwoorden of API-sleutels in dit document.
+
+### Historisch ontwerp: Voys
+
 
 Vastgesteld door Ferry op 11 oktober 2026: de eigen backoffice moet bij een
 inkomende oproep de beller herkennen aan het telefoonnummer. Eén bestaande match
