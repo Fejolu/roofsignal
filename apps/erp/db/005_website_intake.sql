@@ -212,9 +212,12 @@ do $$ begin
 end $$;
 revoke all on function erp.auth_command(text,jsonb) from public,anon,authenticated,service_role;
 create or replace function public.roofsignal_erp(action text,payload jsonb default '{}') returns jsonb language plpgsql security definer set search_path=pg_catalog as $$
-declare answer jsonb;target uuid;visible_customers jsonb;
+declare answer jsonb;target uuid;visible_customers jsonb;commercial_data jsonb;
 begin
  if exists(select 1 from erp.fixture_identities where user_id=auth.uid()) then raise exception 'Geen toegang' using errcode='42501'; end if;
+ if action in('commercial.create','commercial.release','commercial.withdraw') and to_regprocedure('erp.commercial_action(text,jsonb)') is not null then
+  execute 'select erp.commercial_action($1,$2)' into answer using action,payload;return answer;
+ end if;
  if action='access.grant' then
   target:=(payload->>'user_id')::uuid;
   if exists(select 1 from erp.fixture_identities where user_id=target) or exists(select 1 from auth.users u where u.id=target and(to_jsonb(u)->>'banned_until')::timestamptz>now()) then raise exception 'Geen toegang' using errcode='42501'; end if;
@@ -236,6 +239,9 @@ begin
    from erp.external_appointments a join erp.orders o on o.id=a.order_id join erp.website_intakes t on t.id=a.intake_id
    where erp.intake_org_visible(o.organization_id) and(erp.is_staff() or(o.status<>'draft' and erp.can_access(o.organization_id,o.property_id)))),'[]'),
    'order_sources',case when erp.is_staff() then coalesce((select jsonb_agg(jsonb_build_object('id',t.id,'order_id',t.order_id,'source',t.source,'reference',t.reference,'state',t.state,'total_cents',t.total_cents,'payment_status',t.payment_status,'financial_review',t.financial_review,'identity_review',t.identity_review)) from erp.website_intakes t where t.order_id is not null and erp.intake_org_visible(t.organization_id)),'[]') else '[]'::jsonb end);
+ end if;
+ if action='snapshot' and to_regprocedure('erp.commercial_snapshot()') is not null then
+  execute 'select erp.commercial_snapshot()' into commercial_data;answer:=answer||jsonb_build_object('commercial_documents',commercial_data);
  end if;
  return answer;
 end;

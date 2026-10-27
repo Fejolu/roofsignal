@@ -28,19 +28,23 @@ Het eerste echte beheeraccount, **Ferry Joosten · ferry@roofsignal.nl**, is act
 de eigenaar heeft zelf zijn wachtwoord ingesteld en de login bevestigd. Toegang
 volgt uit een expliciete administratorrol, nooit uit een e-maildomein.
 
-De gegevenskoppeling voor consumentenboekingen, De Parken en VvE-aanvragen is
-gebouwd en getest; **activering staat nog open**. De afzonderlijke ERP-database
-is `seyuhowazudrhgrbwtbk`; de online hostnaam bevat voorlopig nog `test`.
-De drie fictieve accounts zijn nog niet afgesloten. Hun afsluiting, de nieuwe
-beperkte koppelsleutel en publicatie wachten op afzonderlijk akkoord.
-168 ERP-tests en de bestaande 119 websitecontroles slagen, vóór de laatste
-interface-aanpassing voor websiteboekingen. De afsluitende suite wordt daarna uitgevoerd.
+De gegevenskoppeling voor consumentenboekingen, De Parken en VvE-aanvragen is sinds
+13 oktober actief. De drie fictieve accounts zijn afgesloten. De ERP-database is
+`seyuhowazudrhgrbwtbk` en blijft gescheiden van de openbare website. De hostnaam
+bevat voorlopig nog `test`. Bronwijzigingen komen via de duurzame wachtrij binnen;
+een import verstuurt geen klantbericht en maakt geen nieuwe betaling.
 
-Er zijn geen echte klantboekingen geïmporteerd of uitnodigingen aan echte klanten
-verzonden. Herstel per e-mail blijft bij zakelijke activering uit tot SMTP en
-bezorging zijn getest; de eigenaaractivatie werkt zonder e-mail. Financiële
-administratie, vervanging van de agenda-/betaalverwerking en de 3D-viewer zijn nog
-niet opgeleverd. Er is geen abonnement of nieuwe prijs vastgesteld.
+Op 27 oktober wordt de commerciële werkruimte toegevoegd: offertes en
+factuurconcepten, btw-berekening op de server, expliciete offertevrijgave en
+intrekking en afzonderlijke financiële portaalrechten. Factuurconcepten zijn
+nog geen uitgegeven facturen; uitgifte, creditnota's, betaalreconciliatie en de
+boekhouding behoren tot de nog af te ronden financiële keten.
+
+Herstel per e-mail blijft uit totdat SMTP en bezorging zijn getest. De echte
+Voys-verbinding, volledige capaciteitsplanning en de afgeschermde 3D-viewer zijn
+nog niet opgeleverd. De actuele technische status en acceptatieproeven staan in
+[apps/erp/README.md](../apps/erp/README.md). De volledige scope hieronder blijft
+de opleverlijst; aanwezige tabbladen betekenen niet dat alle onderdelen af zijn.
 
 ## 2. Eén dossier, twee omgevingen
 
@@ -203,7 +207,19 @@ en betaalstatus, geen eigen factuur of boekhoudkundige verwerking. De bronbedrag
 blijven behouden bij een latere tariefwijziging. Een VvE-staffelindicatie blijft
 vrijblijvend en wordt niet als overeengekomen prijs of betaling behandeld.
 
-## 9. Telefonie en Voys
+## 9. Telefonie — huidige provider Dubline
+
+Actualisatie 27 oktober 2026 door Ferry: **Dubline** is de huidige telco;
+**Antagonist** verzorgt e-mail. Er wordt geen Voys-abonnement of overstap gestart.
+De onderstaande functionele eisen voor nummerherkenning blijven gelden, maar de
+historisch voorgestelde Voys-transportkoppeling is geen besluit voor de huidige
+provider. Een ondersteunde Dubline-gebeurtenis/API en afzendercontrole moeten eerst
+worden bevestigd; openbare documentatie bevestigt nog geen werkende CRM-webhook.
+Antagonist-SMTP voor uitnodigingen en herstel wordt pas aangezet na veilige
+serverconfiguratie en een bezorgproef. Geen wachtwoorden of API-sleutels in dit document.
+
+### Historisch ontwerp: Voys
+
 
 Vastgesteld door Ferry op 11 oktober 2026: de eigen backoffice moet bij een
 inkomende oproep de beller herkennen aan het telefoonnummer. Eén bestaande match

@@ -179,7 +179,7 @@ Een datumvoorstel reserveert geen agendatijd. Een herstelmelding wijzigt geen
 inspectieoordeel. Vrijgegeven rapporten en waarnemingen worden niet overschreven.
 Nieuwe opdrachten nodigen geen klant uit en versturen geen e-mail.
 
-### Voys en telefoonherkenning
+### Telefonie en telefoonherkenning
 
 De werkruimte **Telefonie** en de route `#call/<URL-gecodeerd-nummer>` bereiden de
 klantweergave bij een inkomend gesprek voor. Alleen de medewerker kan nummers
@@ -188,7 +188,7 @@ afgeschermde nummers en zoekfouten worden afzonderlijk afgehandeld. Een wachtend
 oproep kan na de proeflogin worden geopend. Nieuwe klantgegevens worden pas na
 bevestiging opgeslagen.
 
-Voys is nog niet verbonden. Er is geen openbare webhook of nieuwe toegang tot
+Ferry bevestigde op 27 oktober dat Dubline de huidige telco is en Antagonist de mailprovider. Een providerverbinding is nog niet geverifieerd. De onderstaande Voys-verwijzing is historisch ontwerp, geen nieuwe providerkeuze. Er is geen openbare webhook of nieuwe toegang tot
 Voys aangemaakt. De echte verbinding volgt in de beveiligde online ERP-omgeving
 via [Voys gespreksnotificaties](https://help.voys.nl/gespreksnotificaties), met
 afzendercontrole en meldingen voor de juiste medewerker. De lokale proefserver
@@ -299,3 +299,45 @@ afzonderlijke ERP-database toegepast. De nieuwe bronwachtrij staat wél in de
 website-Supabasemigraties; publicatie daarvan loopt via de bestaande productie-release.
 Houd deze publicatieroutes gescheiden. Geen ERP-bouw of import geeft automatisch
 portaalrechten, nodigt klanten uit of schakelt het bestaande portaal om.
+
+## Commerciële werkruimte — bouw 27 oktober
+
+`db/006_commercial.sql` voegt offertes en factuurconcepten toe. De server rekent
+btw en totaal in gehele centen uit; dezelfde schrijfaanvraag maakt geen duplicaat.
+Een offerte kan expliciet worden vrijgegeven of ingetrokken. Vrijgegeven inhoud
+kan niet worden overschreven. Een financieel contact ziet uitsluitend vrijgegeven
+offertes voor de toegewezen organisatie/objecten. Dossierlezers en klantcontacten
+krijgen hierdoor geen financiële toegang. Factuurconcepten blijven intern en
+kunnen nog niet worden uitgegeven, betaald of verstuurd.
+
+Deze migratie is uitsluitend voor de eigen ERP-database. Nooit de oude
+initialisatie/cloud-smoke met fictieve accounts opnieuw op de ingerichte omgeving
+uitvoeren. Eerst tests en een afzonderlijke controle van projectidentiteit, daarna
+migratie 006 en de bijgewerkte RPC-wrapper uit 005 toepassen in één transactie; pas vervolgens de bijbehorende interface publiceren.
+
+### Open voor volledige oplevering
+
+- Uitgegeven facturen/creditnota's, nummerreeks, bedrijfsgegevens en boekhouding.
+- Mollie-reconciliatie van betalingen, terugbetalingen en chargebacks.
+- Volledige capaciteitsplanning en periodieke opdrachten met Google-agendacontrole.
+- Private modellen/foto's, 3D-viewer en klikbare bevindingen.
+- Echte Voys-gebeurtenissen en routering naar de juiste medewerker.
+- SMTP-bezorging en een geteste klantuitnodiging/herstelketen.
+
+Deze punten zijn geen geleverde functies. Externe verbindingen worden pas als
+werkend gemeld na een geslaagde proef met de bestaande dienst.
+
+### Providers bevestigd op 27 oktober
+
+- Telefonie: Dubline. CRM-gebeurtenissen en de toegestane afzendercontrole zijn nog
+  niet bevestigd. Geen Voys-overstap of extra abonnement starten. De bestaande
+  interne nummerherkenning blijft bruikbaar.
+- E-mail: Antagonist, afzender `info@roofsignal.nl`, afzendernaam RoofSignal.
+  SMTP-host `mail.antagonist.nl`, versleuteld op 587 (alternatief 465), met
+  authenticatie. Het mailboxwachtwoord hoort alleen in de afgeschermde SMTP-configuratie.
+- Supabase-project hervatten zonder upgrade is expliciet goedgekeurd. De hervatting
+  is op 27 oktober aangevraagd; gezonde database en login moeten nog worden teruggelezen.
+
+Bronnen: [Antagonist mailinstellingen](https://www.antagonist.nl/blog/problemen-met-mail-oplossen/),
+[Supabase eigen SMTP](https://supabase.com/docs/guides/auth/auth-smtp),
+[Dubline ondersteuning](https://www.dubline.nl/ondersteuning/faq/hoe-werkt-dubline/).
