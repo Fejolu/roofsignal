@@ -49,6 +49,7 @@ export async function openDatabase(dataDir) {
   await db.exec(await readFile(new URL('../db/002_telephony.sql',import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../db/003_auth_and_documents.sql',import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../db/005_website_intake.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../db/006_commercial.sql',import.meta.url),'utf8'));
   return db;
 }
 

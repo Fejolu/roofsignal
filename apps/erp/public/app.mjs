@@ -98,7 +98,7 @@ async function submitAuth(form) {
 }
 function canManageAccess(){return data?.staff===true&&data.staff_role==='administrator'&&data.permissions?.manage_access===true;}
 function navigation(active) {
-  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['incoming','Websiteboekingen'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['requests','Verzoeken'],...(canManageAccess()?[['access','Toegang']]:[])]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
+  const tabs=data.staff?[['overview','Overzicht'],['customers','Klanten'],['incoming','Websiteboekingen'],['telephony','Telefonie'],['objects','Objecten'],['orders','Opdrachten'],['reports','Rapporten'],['commercial','Offertes & facturen'],['requests','Verzoeken'],...(canManageAccess()?[['access','Toegang']]:[])]:[['overview','Mijn overzicht'],['objects','Mijn objecten'],['reports','Rapporten'],['visits','Afspraken'],['commercial','Offertes'],['requests','Mijn verzoeken'],['profile','Mijn gegevens']];
   const selected={customer:'customers',call:'telephony',object:'objects',order:'orders',report:'reports'}[active]||active;
   return tabs.map(([key,title])=>`<a href="#${key}" class="${selected===key?'active':''}" ${selected===key?'aria-current="page"':''}>${icon(key)}${title}</a>`).join('');
 }
@@ -191,6 +191,11 @@ function visitRows(visits){return visits.map(v=>row(date(v.proposed_on),`${prope
 function appointmentRows(items){return items.map(a=>row(dateTime(a.starts_at),`${propertyName(a.property_id)} · ${a.state==='confirmed'?'Afspraak bevestigd':a.state==='cancelled'?'Afspraak geannuleerd':'Nog af te stemmen'}`,'')).join('')||empty('Nog geen afspraken');}
 function visitsPage(){return head('Planning','Afspraken','Uw inspectiemomenten en datumvoorstellen.')+panel('Afspraken',appointmentRows(data.appointments||[]))+panel('Datumvoorstellen',visitRows(data.visits));}
 function requestRows(items){return items.map(r=>row(label(r.kind),`${propertyName(r.property_id)} · ${date(r.created_at)}`,badge(r.status),'#requests')).join('')||empty('Geen open verzoeken');}
+function commercialPage() {
+  const docs=data.commercial_documents||[];
+  return head('Financieel',data.staff?'Offertes & factuurconcepten':'Mijn offertes',data.staff?'Leg prijsafspraken vast. Factuurconcepten zijn nog geen uitgegeven facturen.':'Vrijgegeven offertes voor uw financiële toegang.',data.staff?button('Nieuw document','commercial.new'):'')+
+    docs.filter(matches).map(d=>panel(esc(d.title),`<div class="panelbody"><p>${esc(d.organization_name)} · ${esc(d.property_name)}</p><p>${d.kind==='quote'?'Offerte':'Factuurconcept'} · ${badge(d.status)}</p><p class="request-message">${esc(d.description)}</p><dl><dt>Exclusief btw</dt><dd>${money(d.amount_excl_cents)}</dd><dt>Btw (${d.vat_percent}%)</dt><dd>${money(d.vat_cents)}</dd><dt>Totaal</dt><dd><b>${money(d.total_cents)}</b></dd></dl>${d.valid_until?`<p>Geldig tot ${date(d.valid_until)}</p>`:''}${data.staff?`<div class="buttons">${d.kind==='quote'&&d.status==='draft'?button('Vrijgeven','commercial.release',d.id):''}${d.status==='released'?button('Intrekken','commercial.withdraw',d.id,true):''}</div>`:''}</div>`)).join('')+(docs.length?'':empty('Nog geen documenten',data.staff?'Maak een offerte of factuurconcept aan.':'Alleen vrijgegeven offertes met financiële toegang worden hier getoond.'));
+}
 function requestsPage() {
   return head('Contact & opvolging',data.staff?'Klantverzoeken':'Mijn verzoeken',data.staff?'Beantwoord vragen en volg meldingen op.':'Stel een vraag, meld herstel of geef een wijziging door.',!data.staff&&data.properties.some(p=>p.can_request)?button('Verzoek indienen','request.new'):'')+
     data.requests.filter(matches).map(r=>panel(esc(label(r.kind)),`<div class="panelbody">${badge(r.status)}<p><small>${esc(propertyName(r.property_id))} · ${date(r.created_at)}</small></p><p class="request-message">${esc(r.message)}</p>${r.preferred_on?`<p><small>Voorkeursdatum: ${date(r.preferred_on)}</small></p>`:''}${r.kind==='repair'?'<p class="hint">Dit is een herstelmelding van de klant; nog geen nieuwe beoordeling door RoofSignal.</p>':''}${r.response?`<div class="response"><b>Reactie RoofSignal</b><br>${esc(r.response)}</div>`:''}${data.staff?`<div class="buttons">${button('Behandelen','request.respond',r.id,true)}</div>`:''}</div>`)).join('')+(data.requests.length?'':empty('Nog geen verzoeken'));
@@ -263,7 +268,7 @@ function denied(){return head('Dossier','Niet beschikbaar','Dit onderdeel is nie
 function render() {
   if(!data)return;
   const [route='overview',id,org]=location.hash.slice(1).split('/');
-  const content=({overview,customers,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage,access:accessPage,incoming:()=>incomingPage(id)})[route];
+  const content=({overview,customers,commercial:commercialPage,telephony:telephonyPage,call:telephonyPage,objects,orders:ordersPage,reports:reportsPage,requests:requestsPage,visits:visitsPage,profile:profilePage,access:accessPage,incoming:()=>incomingPage(id)})[route];
   const page=content?content():route==='customer'?customerPage(id):route==='object'?objectPage(id,org):route==='order'?orderPage(id):route==='report'?reportPage(id):denied();
   const search=['customers','objects','orders','reports','requests','incoming'].includes(route)?`<input id="search" class="search" type="search" value="${esc(query)}" placeholder="Zoek in dit overzicht…" aria-label="Zoeken in dit overzicht">`:`<small>${esc(data.person.name)}</small>`;
   app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><div class="wordmark">ROOF<span>SIGNAL</span></div><small>PROPERTY INTELLIGENCE</small></div><div><p class="nav-label">${data.staff?'Werkruimte':'Klantportaal'}</p><nav class="nav" aria-label="Werkruimten">${navigation(route)}</nav></div><div class="sidebar-foot"><strong>${esc(data.person.name)}</strong><small>${data.staff?'RoofSignal backoffice':'Uw persoonlijke dossier'}</small><button data-action="logout">Uitloggen →</button></div></aside><div class="workspace"><header class="topbar"><span>${data.staff?'RoofSignal / Backoffice':'RoofSignal / Klantportaal'}</span>${search}${data.staff&&pendingCallRoute?button('Oproep openen','call.open','',true):''}<button class="text-button mobile-signout" data-action="logout">Uitloggen</button></header><main class="page" id="main">${page}</main></div></div>`;
@@ -311,6 +316,14 @@ function action(name,id='') {
     if(!data.organizations.length){toast('Voeg eerst een klant toe.');return;}
     showForm('Object toevoegen','property.create',select('organization_id','Klant',data.organizations.map(o=>[o.id,o.name]),id)+field('name','Objectnaam')+field('address','Straat en huisnummer(s)')+`<div class="form-grid">${field('postcode','Postcode','text','',false)}${field('city','Plaats')}</div>`,{},'Object toevoegen');
   }
+  if(name==='commercial.new'){
+    if(!data.staff||!data.properties.length){toast('Voeg eerst een klant en object toe.');return;}
+    showForm('Financieel document','commercial.create',select('object','Object',objectOptions())+select('kind','Document',[['quote','Offerte'],['invoice_draft','Factuurconcept']])+field('title','Titel')+area('description','Werkzaamheden en prijsafspraak')+field('amount_eur','Bedrag exclusief btw (€)','text')+select('vat_percent','Btw',[[21,'21%'],[9,'9%'],[0,'0%']])+field('valid_until','Geldig tot (offerte)','date','',false),{},'Concept opslaan');return;
+  }
+  if(name==='commercial.release'||name==='commercial.withdraw'){
+    if(!data.staff)return;const d=(data.commercial_documents||[]).find(x=>x.id===id);if(!d)return;
+    showForm(name==='commercial.release'?'Offerte vrijgeven':'Offerte intrekken',name,`<p><b>${esc(d.title)}</b> · ${money(d.total_cents)}</p><p>${name==='commercial.release'?'Deze offerte wordt zichtbaar voor bevoegde financiële contacten. Er wordt geen e-mail of betaalopdracht verstuurd.':'De offerte verdwijnt uit het klantportaal. De historie blijft bewaard.'}</p>`,{id},name==='commercial.release'?'Vrijgeven':'Intrekken');return;
+  }
   if(name==='order.new')newOrder(id);
   if(name==='order.status'){const o=byId(data.orders,id);showForm('Opdrachtstatus','order.status',select('status','Status',['draft','active','completed','cancelled'].map(k=>[k,label(k)]),o.status),{id});}
   if(name==='inspection.new')showForm('Inspectieronde toevoegen','inspection.create',field('label','Naam van de ronde','text','Vervolginspectie')+field('proposed_on','Datumvoorstel','date','',false)+field('inspected_on','Werkelijke inspectiedatum','date','',false)+'<p class="hint">Een datumvoorstel reserveert nog geen agendatijd.</p>',{order_id:id});
@@ -355,6 +368,11 @@ document.addEventListener('submit',async e=>{
   const generation=authVersion;
   const payload={...Object.fromEntries(new FormData(form)),...form._context};
   if(form.dataset.command==='access.grant'){payload.property_id=payload.property_id||null;payload.expires_at=payload.expires_at?new Date(payload.expires_at).toISOString():null;}
+  if(form.dataset.command==='commercial.create'){
+    const amount=String(payload.amount_eur||'').trim();
+    if(!/^\d{1,7}([,.]\d{1,2})?$/.test(amount)){toast('Vul een bedrag in, bijvoorbeeld 299,00.');return;}
+    const [whole,fraction='']=amount.replace(',','.').split('.');payload.amount_excl_cents=Number(whole)*100+Number(fraction.padEnd(2,'0'));delete payload.amount_eur;payload.vat_percent=Number(payload.vat_percent);
+  }
   if(payload.object){[payload.property_id,payload.organization_id]=payload.object.split('/');delete payload.object;}
   form.dataset.requestId||=crypto.randomUUID();payload.request_id=form.dataset.requestId;
   const buttons=[...form.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);

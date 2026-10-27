@@ -299,3 +299,30 @@ afzonderlijke ERP-database toegepast. De nieuwe bronwachtrij staat wél in de
 website-Supabasemigraties; publicatie daarvan loopt via de bestaande productie-release.
 Houd deze publicatieroutes gescheiden. Geen ERP-bouw of import geeft automatisch
 portaalrechten, nodigt klanten uit of schakelt het bestaande portaal om.
+
+## Commerciële werkruimte — bouw 27 oktober
+
+`db/006_commercial.sql` voegt offertes en factuurconcepten toe. De server rekent
+btw en totaal in gehele centen uit; dezelfde schrijfaanvraag maakt geen duplicaat.
+Een offerte kan expliciet worden vrijgegeven of ingetrokken. Vrijgegeven inhoud
+kan niet worden overschreven. Een financieel contact ziet uitsluitend vrijgegeven
+offertes voor de toegewezen organisatie/objecten. Dossierlezers en klantcontacten
+krijgen hierdoor geen financiële toegang. Factuurconcepten blijven intern en
+kunnen nog niet worden uitgegeven, betaald of verstuurd.
+
+Deze migratie is uitsluitend voor de eigen ERP-database. Nooit de oude
+initialisatie/cloud-smoke met fictieve accounts opnieuw op de ingerichte omgeving
+uitvoeren. Eerst tests en een afzonderlijke controle van projectidentiteit, daarna
+migratie 006 en de bijgewerkte RPC-wrapper uit 005 toepassen in één transactie; pas vervolgens de bijbehorende interface publiceren.
+
+### Open voor volledige oplevering
+
+- Uitgegeven facturen/creditnota's, nummerreeks, bedrijfsgegevens en boekhouding.
+- Mollie-reconciliatie van betalingen, terugbetalingen en chargebacks.
+- Volledige capaciteitsplanning en periodieke opdrachten met Google-agendacontrole.
+- Private modellen/foto's, 3D-viewer en klikbare bevindingen.
+- Echte Voys-gebeurtenissen en routering naar de juiste medewerker.
+- SMTP-bezorging en een geteste klantuitnodiging/herstelketen.
+
+Deze punten zijn geen geleverde functies. Externe verbindingen worden pas als
+werkend gemeld na een geslaagde proef met de bestaande dienst.
