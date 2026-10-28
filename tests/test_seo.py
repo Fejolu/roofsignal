@@ -19,7 +19,7 @@ def test_cloudflare_has_a_real_not_found_page():
 
 def test_homepage_targets_independent_inspection_and_a_concrete_outcome():
     content = read("index.html")
-    assert "Dakinspectie met drone in Apeldoorn en Oost-Nederland | RoofSignal" in content
+    assert "Dakinspectie met drone in Apeldoorn | RoofSignal" in content
     assert "Begin met één gebouw." in content
     assert "VvE beheerders" in content
     assert "onderhoudsprioriteiten" in content
