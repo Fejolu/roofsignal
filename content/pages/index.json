@@ -1,14 +1,15 @@
 {
   "seo": {
-    "title": "Onafhankelijke dak- en gevelinspectie | RoofSignal",
-    "description": "Onafhankelijke visuele dak- en gevelinspectie, uitsluitend met drones. Voor VvE’s, beheerders en eigenaren. Rapport met bevindingen en onderhoudsprioriteiten."
+    "title": "Dakinspectie met drone in Apeldoorn en Oost-Nederland | RoofSignal",
+    "description": "Onafhankelijke dakinspectie met een drone vanuit Apeldoorn, voor woningen en VvE’s in Nederland. Rapport met foto’s, bevindingen en onderhoudsprioriteiten."
   },
   "section_01": {
     "item_01": {
       "src": "/assets/hero-roofsignal-mobile.webp"
     },
     "item_02": {
-      "src": "/assets/hero-roofsignal-v6.webp"
+      "src": "/assets/hero-roofsignal-v6.webp",
+      "alt": "Drone boven een appartementengebouw, met aanduidingen van aandachtspunten aan dak en gevel: beschadigde nokvorst, los loodwerk, vervuilde dakgoot, hotspot op een zonnepaneel, scheur in het metselwerk, open voeg en houtrot aan een boeibord."
     },
     "item_03": "Voor VvE’s, beheerders en vastgoedeigenaren",
     "item_04": "Onafhankelijke dak- en gevelinspectie.",

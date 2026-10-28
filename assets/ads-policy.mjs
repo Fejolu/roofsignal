@@ -12,7 +12,7 @@ export function safeAdsUrl(href) {
     if (value && /^[A-Za-z0-9_-]{1,512}$/.test(value)) clean.searchParams.set(key, value);
   }
   const campaign = url.searchParams.get('rs_campaign');
-  if (['search_consument_apeldoorn', 'google_bedrijfsprofiel', 'parken_flyer'].includes(campaign)) clean.searchParams.set('rs_campaign', campaign);
+  if (['search_consument_apeldoorn', 'google_bedrijfsprofiel', 'parken_flyer', 'linkedin', 'outreach', 'partners'].includes(campaign)) clean.searchParams.set('rs_campaign', campaign);
   if (url.hash === '#vve') clean.hash = 'vve';
   return clean.href;
 }

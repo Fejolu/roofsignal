@@ -9,8 +9,11 @@ window.ROOFSIGNAL_ANALYTICS = {
     "/cases",
     "/contact",
     "/cookies",
+    "/bouwvoortgang",
     "/dakinspectie-apeldoorn",
+    "/dakinspectie-deventer",
     "/dakinspectie-vve",
+    "/dakinspectie-zutphen",
     "/de-parken",
     "/diensten",
     "/drone-dakinspectie",
@@ -18,6 +21,8 @@ window.ROOFSIGNAL_ANALYTICS = {
     "/inspectie-boeken",
     "/kennisbank",
     "/kennisbank-dakinspectie-herfst",
+    "/kennisbank-daknulmeting-vve",
+    "/kennisbank-gratis-dakinspectie",
     "/kennisbank-dakinspectie-kosten",
     "/kennisbank-dakinspectie-woningaankoop",
     "/kennisbank-dakonderhoud-vve",
@@ -32,13 +37,13 @@ window.ROOFSIGNAL_ANALYTICS = {
     "/privacy",
     "/projecten",
     "/tarieven",
+    "/thermografische-inspectie",
     "/toepassingen",
     "/vastgoedbeheerders",
     "/voor-wie",
     "/voorbeeldrapport-uitgebreid",
     "/voorwaarden",
     "/vve-beheerders",
-    "/werkgebied",
-    "/werkwijze"
+    "/werkgebied"
   ]
 };

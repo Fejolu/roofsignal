@@ -9,7 +9,7 @@
   const pages = new Set(cfg.publicPaths || []);
   if (!pages.has(path)) return;
   // Fixed campaign labels only. No click IDs, attribution cookies or storage.
-  const campaigns = new Set(['search_consument_apeldoorn', 'google_bedrijfsprofiel', 'parken_flyer']);
+  const campaigns = new Set(['search_consument_apeldoorn', 'google_bedrijfsprofiel', 'parken_flyer', 'linkedin', 'outreach', 'partners']);
   const candidate = new URLSearchParams(window.location.search || '').get('rs_campaign');
   const campaign = campaigns.has(candidate) ? candidate : null;
   const events = new Set([
