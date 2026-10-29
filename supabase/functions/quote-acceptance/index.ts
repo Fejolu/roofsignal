@@ -52,6 +52,13 @@ async function addCustomerAcceptance(pdfBytes: Uint8Array, details: {
 async function finalizeAcceptedDocument(service: any, quote: any, actor: {
   id?: string | null; name: string; email: string; acceptedAt: Date; ipHash?: string | null; userAgent?: string | null; authMethod: string;
 }) {
+  if (quote.accepted_document_id) {
+    const { data: existing } = await service.from("documents").select("id,storage_path").eq("id", quote.accepted_document_id).eq("quote_id", quote.id).maybeSingle();
+    if (existing) {
+      const { data: signed } = await service.storage.from("portal-documents").createSignedUrl(existing.storage_path, 900);
+      return { documentPending: false, documentId: existing.id, documentUrl: signed?.signedUrl || null };
+    }
+  }
   const { data: issuedDocument } = await service.from("documents")
     .select("id,storage_path,title,version,metadata")
     .eq("quote_id", quote.id)
@@ -110,7 +117,8 @@ async function finalizeAcceptedDocument(service: any, quote: any, actor: {
     ip_hash: actor.ipHash || null,
     user_agent: safeText(actor.userAgent, 1000),
   }, { onConflict: "quote_id,quote_version,event_type" });
-  return { documentPending: false, documentId: acceptedDocument.id, documentHash: acceptedHash };
+  const { data: signed } = await service.storage.from("portal-documents").createSignedUrl(path, 900);
+  return { documentPending: false, documentId: acceptedDocument.id, documentHash: acceptedHash, documentUrl: signed?.signedUrl || null };
 }
 
 function safeText(value: unknown, max = 250) {
@@ -184,7 +192,7 @@ serve(async (req) => {
 
   const { data: quote, error } = await service
     .from("quotes")
-    .select("id,organization_id,quote_number,title,amount,status,valid_until,sent_at,accepted_at,accepted_by_name,acceptance_token_expires_at,acceptance_version,organizations(name,contact_name,contact_email),quote_items(id,inspection_product,inspection_depth,scope,amount,properties(name,address,postcode,city))")
+    .select("id,organization_id,quote_number,title,amount,status,valid_until,sent_at,accepted_at,accepted_by_name,accepted_document_id,acceptance_token_expires_at,acceptance_version,organizations(name,contact_name,contact_email),quote_items(id,inspection_product,inspection_depth,scope,amount,properties(name,address,postcode,city))")
     .eq("acceptance_token_hash", tokenHash)
     .maybeSingle();
   if (error || !quote) return new Response(JSON.stringify({ error: "Deze offertelink is ongeldig of niet meer actief." }), { status: 404, headers });
@@ -255,11 +263,15 @@ serve(async (req) => {
     p_ip_hash: ipHash,
   });
   if (acceptError) return new Response(JSON.stringify({ error: acceptError.message }), { status: 400, headers });
-  const acceptedAt = new Date(String(accepted?.accepted_at || new Date().toISOString()));
+  if (acceptanceDocument?.metadata?.acceptance_style === "simple") {
+    // Keep this recipient's scoped link usable for the accepted copy and safe retries.
+    await service.from("quotes").update({ acceptance_token_hash: tokenHash, acceptance_token_expires_at: quote.acceptance_token_expires_at }).eq("id", quote.id).eq("status", "accepted");
+  }
+  const acceptedAt = new Date(String(quote.accepted_at || accepted?.accepted_at || new Date().toISOString()));
   const finalized = await finalizeAcceptedDocument(service, quote, {
     name: actorName, email: actorEmail, acceptedAt, ipHash,
     userAgent: req.headers.get("user-agent"), authMethod: "secure_email_link_with_confirmation",
   });
-  if (acceptanceDocument?.metadata?.acceptance_test !== true) await notifyAcceptance(quote, actorName, actorEmail);
+  if (!accepted?.already_accepted && acceptanceDocument?.metadata?.acceptance_test !== true) await notifyAcceptance(quote, actorName, actorEmail);
   return new Response(JSON.stringify({ success: true, result: accepted, ...finalized }), { headers });
 });
