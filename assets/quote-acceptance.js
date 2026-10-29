@@ -36,7 +36,7 @@
     const items = (quote.items || []).map((item) => {
       const property = item.properties || {};
       const address = [property.address, property.postcode, property.city].filter(Boolean).join(", ");
-      return `<article><strong>${escapeHtml(property.name || address || "Object")}</strong><span>${escapeHtml(product(item.inspection_product))} ${escapeHtml(depth(item.inspection_depth))}</span><small>${escapeHtml(address)}</small><b>${escapeHtml(money(item.amount))} excl. btw</b></article>`;
+      return `<article><strong>${escapeHtml(property.name || address || "Object")}</strong><span>${quote.recipientEmail ? "RoofSignal Inspectie" : `${escapeHtml(product(item.inspection_product))} ${escapeHtml(depth(item.inspection_depth))}`}</span><small>${escapeHtml(address)}</small><b>${escapeHtml(money(item.amount))} excl. btw</b></article>`;
     }).join("");
     summary.innerHTML = `
       <dl class="quote-acceptance-summary">
@@ -53,6 +53,10 @@
       return;
     }
     status.textContent = "Controleer hieronder de offertegegevens en bevestig daarna uw akkoord.";
+    for (const [name, value] of [["actor_name", quote.recipientName], ["actor_email", quote.recipientEmail]]) {
+      const input = form.elements.namedItem(name);
+      if (input && value) { input.value = value; input.readOnly = true; }
+    }
     form.hidden = false;
   }
 
