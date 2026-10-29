@@ -101,3 +101,37 @@ def test_public_prices_distinguish_starting_quotes_and_fixed_pilot():
     assert "Vanaf €" not in pilot
     assert "€356,95" not in pilot and "€295" not in pilot
     assert "25 bevestigde opdrachten" not in pilot
+
+
+def test_diensten_dropdown_opens_from_its_menu_item():
+    css = read("assets/public.css")
+    nav_services = css.split(".nav-services {", 1)[1].split("}", 1)[0]
+    assert "position: relative" in nav_services
+    assert "position: static" not in nav_services
+    dropdown = css.split(".services-dropdown {", 1)[1].split("}", 1)[0]
+    assert "left: 0" in dropdown
+    assert "top: 100%" in dropdown
+    assert "right: auto" in dropdown
+    assert "margin" not in dropdown
+    assert "right: 24px" not in css
+    assert ".nav-services:hover .services-dropdown" in css
+    assert ".nav-services:focus-within .services-dropdown" in css
+    bridge = css.split(".services-dropdown:before {", 1)[1].split("}", 1)[0]
+    assert "top: -" in bridge
+    assert "height:" in bridge
+    pages = [
+        path for path in ROOT.rglob("*.html")
+        if "apps" not in path.parts and "dist" not in path.parts and "node_modules" not in path.parts
+    ]
+    checked = 0
+    for path in pages:
+        content = path.read_text(encoding="utf-8")
+        if 'class="nav-services"' not in content:
+            continue
+        parent = BeautifulSoup(content, "html.parser").select_one(".nav-services")
+        trigger = parent.select_one(":scope > .nav-services-trigger")
+        dropdown = parent.select_one(":scope > .services-dropdown")
+        assert trigger is not None and trigger.get_text(strip=True) == "Diensten", path
+        assert dropdown is not None and dropdown.find("a") is not None, path
+        checked += 1
+    assert checked >= 2
