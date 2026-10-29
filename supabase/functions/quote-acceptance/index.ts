@@ -1,3 +1,4 @@
+import { stampSimpleAcceptance, acceptanceRecipientMatches } from "../_shared/quote-simple-acceptance.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -24,7 +25,8 @@ const formatMoment = (value: Date) => new Intl.DateTimeFormat("nl-NL", {
 
 async function addCustomerAcceptance(pdfBytes: Uint8Array, details: {
   actorName: string; actorEmail: string; acceptedAt: Date; quoteVersion: number;
-}) {
+}, simple = false) {
+  if (simple) return stampSimpleAcceptance(pdfBytes, details, { PDFDocument, StandardFonts, rgb });
   const pdf = await PDFDocument.load(pdfBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -50,6 +52,13 @@ async function addCustomerAcceptance(pdfBytes: Uint8Array, details: {
 async function finalizeAcceptedDocument(service: any, quote: any, actor: {
   id?: string | null; name: string; email: string; acceptedAt: Date; ipHash?: string | null; userAgent?: string | null; authMethod: string;
 }) {
+  if (quote.accepted_document_id) {
+    const { data: existing } = await service.from("documents").select("id,storage_path").eq("id", quote.accepted_document_id).eq("quote_id", quote.id).maybeSingle();
+    if (existing) {
+      const { data: signed } = await service.storage.from("portal-documents").createSignedUrl(existing.storage_path, 900);
+      return { documentPending: false, documentId: existing.id, documentUrl: signed?.signedUrl || null };
+    }
+  }
   const { data: issuedDocument } = await service.from("documents")
     .select("id,storage_path,title,version,metadata")
     .eq("quote_id", quote.id)
@@ -67,7 +76,7 @@ async function finalizeAcceptedDocument(service: any, quote: any, actor: {
   const acceptedVersion = Number(acceptedVersionRow?.version || Number(quote.acceptance_version || 1) + 1);
   const acceptedBytes = await addCustomerAcceptance(new Uint8Array(await sourcePdf.arrayBuffer()), {
     actorName: actor.name, actorEmail: actor.email, acceptedAt: actor.acceptedAt, quoteVersion: acceptedVersion,
-  });
+  }, issuedDocument.metadata?.acceptance_style === "simple");
   const acceptedHash = await sha256Bytes(acceptedBytes);
   const path = `${quote.organization_id}/general/${quote.id}/v${acceptedVersion}-geaccepteerd.pdf`;
   const { error: uploadError } = await service.storage.from("portal-documents").upload(
@@ -108,7 +117,8 @@ async function finalizeAcceptedDocument(service: any, quote: any, actor: {
     ip_hash: actor.ipHash || null,
     user_agent: safeText(actor.userAgent, 1000),
   }, { onConflict: "quote_id,quote_version,event_type" });
-  return { documentPending: false, documentId: acceptedDocument.id, documentHash: acceptedHash };
+  const { data: signed } = await service.storage.from("portal-documents").createSignedUrl(path, 900);
+  return { documentPending: false, documentId: acceptedDocument.id, documentHash: acceptedHash, documentUrl: signed?.signedUrl || null };
 }
 
 function safeText(value: unknown, max = 250) {
@@ -182,7 +192,7 @@ serve(async (req) => {
 
   const { data: quote, error } = await service
     .from("quotes")
-    .select("id,organization_id,quote_number,title,amount,status,valid_until,sent_at,accepted_at,accepted_by_name,acceptance_token_expires_at,acceptance_version,organizations(name),quote_items(id,inspection_product,inspection_depth,scope,amount,properties(name,address,postcode,city))")
+    .select("id,organization_id,quote_number,title,amount,status,valid_until,sent_at,accepted_at,accepted_by_name,accepted_document_id,acceptance_token_expires_at,acceptance_version,organizations(name,contact_name,contact_email),quote_items(id,inspection_product,inspection_depth,scope,amount,properties(name,address,postcode,city))")
     .eq("acceptance_token_hash", tokenHash)
     .maybeSingle();
   if (error || !quote) return new Response(JSON.stringify({ error: "Deze offertelink is ongeldig of niet meer actief." }), { status: 404, headers });
@@ -193,7 +203,7 @@ serve(async (req) => {
   if (action === "view") {
     const { data: document } = await service
       .from("documents")
-      .select("title,storage_path")
+      .select("title,storage_path,metadata")
       .eq("quote_id", quote.id)
       .eq("document_type", "quote")
       .order("created_at", { ascending: false })
@@ -220,6 +230,8 @@ serve(async (req) => {
         acceptedAt: quote.accepted_at,
         acceptedByName: quote.accepted_by_name,
         organizationName: quote.organizations?.name,
+        recipientName: document?.metadata?.acceptance_style === "simple" ? quote.organizations?.contact_name : null,
+        recipientEmail: document?.metadata?.acceptance_style === "simple" ? quote.organizations?.contact_email : null,
         items: quote.quote_items,
         documentUrl: signedDocument?.signedUrl || null,
         documentTitle: document?.title || null,
@@ -234,6 +246,13 @@ serve(async (req) => {
   if (actorName.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(actorEmail)) {
     return new Response(JSON.stringify({ error: "Vul uw naam en een geldig e-mailadres in." }), { status: 400, headers });
   }
+  const { data: acceptanceDocument } = await service.from("documents")
+    .select("metadata").eq("quote_id", quote.id).eq("document_type", "quote")
+    .eq("metadata->>execution_status", "issued").order("version", { ascending: false }).limit(1).maybeSingle();
+  if (acceptanceDocument?.metadata?.acceptance_style === "simple" &&
+      !acceptanceRecipientMatches(actorName, actorEmail, quote.organizations)) {
+    return new Response(JSON.stringify({ error: "Gebruik de gegevens van de geadresseerde bij deze persoonlijke offertelink." }), { status: 400, headers });
+  }
   const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
   const ipHash = forwarded ? await sha256(`${forwarded}:${Deno.env.get("QUOTE_ACCEPTANCE_IP_SALT") || "roofsignal"}`) : null;
   const { data: accepted, error: acceptError } = await service.rpc("accept_quote_by_token", {
@@ -244,11 +263,15 @@ serve(async (req) => {
     p_ip_hash: ipHash,
   });
   if (acceptError) return new Response(JSON.stringify({ error: acceptError.message }), { status: 400, headers });
-  const acceptedAt = new Date(String(accepted?.accepted_at || new Date().toISOString()));
+  if (acceptanceDocument?.metadata?.acceptance_style === "simple") {
+    // Keep this recipient's scoped link usable for the accepted copy and safe retries.
+    await service.from("quotes").update({ acceptance_token_hash: tokenHash, acceptance_token_expires_at: quote.acceptance_token_expires_at }).eq("id", quote.id).eq("status", "accepted");
+  }
+  const acceptedAt = new Date(String(quote.accepted_at || accepted?.accepted_at || new Date().toISOString()));
   const finalized = await finalizeAcceptedDocument(service, quote, {
     name: actorName, email: actorEmail, acceptedAt, ipHash,
     userAgent: req.headers.get("user-agent"), authMethod: "secure_email_link_with_confirmation",
   });
-  await notifyAcceptance(quote, actorName, actorEmail);
+  if (!accepted?.already_accepted && acceptanceDocument?.metadata?.acceptance_test !== true) await notifyAcceptance(quote, actorName, actorEmail);
   return new Response(JSON.stringify({ success: true, result: accepted, ...finalized }), { headers });
 });

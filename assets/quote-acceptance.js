@@ -36,7 +36,7 @@
     const items = (quote.items || []).map((item) => {
       const property = item.properties || {};
       const address = [property.address, property.postcode, property.city].filter(Boolean).join(", ");
-      return `<article><strong>${escapeHtml(property.name || address || "Object")}</strong><span>${escapeHtml(product(item.inspection_product))} ${escapeHtml(depth(item.inspection_depth))}</span><small>${escapeHtml(address)}</small><b>${escapeHtml(money(item.amount))} excl. btw</b></article>`;
+      return `<article><strong>${escapeHtml(property.name || address || "Object")}</strong><span>${quote.recipientEmail ? "RoofSignal Inspectie" : `${escapeHtml(product(item.inspection_product))} ${escapeHtml(depth(item.inspection_depth))}`}</span><small>${escapeHtml(address)}</small><b>${escapeHtml(money(item.amount))} excl. btw</b></article>`;
     }).join("");
     summary.innerHTML = `
       <dl class="quote-acceptance-summary">
@@ -53,6 +53,10 @@
       return;
     }
     status.textContent = "Controleer hieronder de offertegegevens en bevestig daarna uw akkoord.";
+    for (const [name, value] of [["actor_name", quote.recipientName], ["actor_email", quote.recipientEmail]]) {
+      const input = form.elements.namedItem(name);
+      if (input && value) { input.value = value; input.readOnly = true; }
+    }
     form.hidden = false;
   }
 
@@ -75,13 +79,17 @@
     formStatus.textContent = "Uw akkoord wordt geregistreerd…";
     form.querySelector("button").disabled = true;
     try {
-      await request("accept", {
+      const accepted = await request("accept", {
         actorName: String(data.get("actor_name") || "").trim(),
         actorEmail: String(data.get("actor_email") || "").trim(),
         confirmed: data.get("confirmed") === "on",
       });
+      if (accepted.documentUrl) {
+        const documentLink = summary.querySelector(".quote-document-link");
+        if (documentLink) documentLink.href = accepted.documentUrl;
+      }
       form.hidden = true;
-      status.textContent = "Dank u. Uw akkoord is geregistreerd. RoofSignal ontvangt hiervan direct bericht en neemt de inspectie op in de planning.";
+      status.textContent = accepted.documentPending ? "Uw akkoord is geregistreerd. De bevestigde PDF wordt nog verwerkt; open deze link opnieuw om de status te bekijken." : "Dank u. Uw akkoord is geregistreerd. Via Offerte kunt u de PDF met akkoorddatum en tijd downloaden.";
       summary.insertAdjacentHTML("afterend", '<div class="quote-acceptance-success"><strong>Offerte akkoord</strong><span>De opdracht staat nu klaar voor planning.</span></div>');
       window.RoofSignalAnalytics?.track("Offerte akkoord", { path: window.location.pathname });
     } catch (error) {
