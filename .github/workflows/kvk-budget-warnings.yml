@@ -1,7 +1,7 @@
 name: KVK-verbruikswaarschuwingen
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '17 8 * * *'
   workflow_dispatch:
 permissions:
   contents: read

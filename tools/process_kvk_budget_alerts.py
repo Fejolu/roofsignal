@@ -2,6 +2,8 @@
 """Deliver pending KVK budget warnings without making KVK API requests."""
 import json
 import os
+import re
+from pathlib import Path
 import urllib.error
 import urllib.request
 
@@ -31,9 +33,11 @@ def main():
         {"Authorization": f"Bearer {token}"},
     )
     service_key = next(key["api_key"] for key in keys if key["name"] == "service_role")
+    config = (Path(__file__).resolve().parents[1] / 'assets/supabase-config.js').read_text()
+    public_key = re.search(r'anonKey:\s*"([^"]+)"', config).group(1)
     result = request_json(
         f"https://{PROJECT}.supabase.co/functions/v1/vve-kvk/budget-alerts",
-        {"Authorization": f"Bearer {service_key}", "apikey": service_key, "x-roofsignal-budget-worker": service_key, "Content-Type": "application/json"},
+        {"Authorization": f"Bearer {public_key}", "apikey": public_key, "x-roofsignal-budget-worker": service_key, "Content-Type": "application/json"},
         {},
     )
     if not isinstance(result.get("sent"), bool):
