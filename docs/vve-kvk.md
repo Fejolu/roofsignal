@@ -4,7 +4,7 @@ De bezoeker mag altijd zonder KVK-nummer een object aanmelden. Het KVK-nummer is
 
 ## Activering
 
-De publieke invoer werkt zonder abonnement; de knop **Vul naam in** verschijnt uitsluitend wanneer de serverkoppeling is ingeschakeld. Op 11 oktober 2026 is nog geen KVK-abonnement aanwezig en blijft automatisch ophalen daarom uitgeschakeld.
+De publieke invoer werkt zonder abonnement; automatisch ophalen start uitsluitend wanneer de serverkoppeling is ingeschakeld, 500 ms na het invullen van acht cijfers. Op 16 november 2026 is de productieverbinding geactiveerd in websiteproject `kakpticlxlaxtebhsuoh`. `KVK_API_KEY` en `VVE_KVK_ENABLED=true` zijn als Supabase-servergeheimen opgeslagen. De live website vulde voor KVK-nummer 71883436 de naam “Vereniging van Eigenaars Prinseneiland 93 te Amsterdam” in. Handmatige naaminvoer zonder nummer is eveneens gecontroleerd. Er is geen aanmelding verstuurd. De 18 tests voor KVK en VvE-aanmelding slagen.
 
 Voor productie zijn, na toestemming voor de abonnementskosten, twee Supabase-secrets nodig:
 
@@ -23,7 +23,7 @@ Publiceer via de normale Supabase-releaseworkflow. De nieuwe functie is `vve-kvk
 - De volledige registratie, adressen, RSIN en vestigingsaantallen worden niet teruggestuurd of opgeslagen.
 - Verificatie controleert Turnstile, hostname en formulieractie. De token wordt na de check vernieuwd vóór de aanmelding.
 - Maximaal 10 pogingen per IP-hash per uur en 100 per voortschrijdende 24 uur, over alle serverinstanties gezamenlijk. Een databasefout stopt de betaalde opvraag. Dit staat los van de limiet op daadwerkelijke aanmeldingen.
-- Er wordt per klik maximaal één betaalde Basisprofiel-opvraag gedaan; geen automatische herhaalpogingen of aanvragen tijdens typen.
+- Er wordt na een volledig nummer maximaal één betaalde Basisprofiel-opvraag gedaan. Snelle wijzigingen worden gebundeld en hetzelfde nummer wordt niet automatisch opnieuw opgevraagd.
 - Nooit de KVK-testomgeving of testkey instellen als productiebron. De productie-URL is vastgelegd in de serverfunctie.
 
 ## Controle
