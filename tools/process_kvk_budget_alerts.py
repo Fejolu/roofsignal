@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Deliver pending KVK budget warnings without making KVK API requests."""
 import json
+import hashlib
+import hmac
+import time
 import os
 import re
 from pathlib import Path
@@ -35,9 +38,12 @@ def main():
     service_key = next(key["api_key"] for key in keys if key["name"] == "service_role")
     config = (Path(__file__).resolve().parents[1] / 'assets/supabase-config.js').read_text()
     public_key = re.search(r'anonKey:\s*"([^"]+)"', config).group(1)
+    timestamp = str(int(time.time()))
+    signature = hmac.new(service_key.encode(),
+                         f"{timestamp}.kvk-budget-warning:v1".encode(), hashlib.sha256).hexdigest()
     result = request_json(
         f"https://{PROJECT}.supabase.co/functions/v1/vve-kvk/budget-alerts",
-        {"Authorization": f"Bearer {public_key}", "apikey": public_key, "x-roofsignal-budget-worker": service_key, "Content-Type": "application/json"},
+        {"Authorization": f"Bearer {public_key}", "apikey": public_key, "x-roofsignal-budget-timestamp": timestamp, "x-roofsignal-budget-signature": signature, "Content-Type": "application/json"},
         {},
     )
     if not isinstance(result.get("sent"), bool):

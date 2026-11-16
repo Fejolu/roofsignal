@@ -171,3 +171,19 @@ test('budget warnings are acknowledged only after successful delivery and remain
   assert.match(kvkBudgetMessage(warning).text, /80 KVK-opvragingen/);
   assert.match(kvkBudgetMessage(warning).text, /maandplafond is 100/);
 });
+
+
+test('scheduled budget warning authorization expires and is scoped to warnings', async () => {
+  const { createHmac } = await import('node:crypto');
+  const { authorizeKvkBudgetWorker } = await import('../supabase/functions/_shared/vve-kvk-budget.mjs');
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const sign = (time, purpose) => createHmac('sha256', 'worker-fixture').update(`${time}.${purpose}`).digest('hex');
+  const req = (time, purpose) => new Request('https://example.invalid/budget-alerts', { headers: {
+    'x-roofsignal-budget-timestamp': time,
+    'x-roofsignal-budget-signature': sign(time, purpose)
+  } });
+  assert.equal(await authorizeKvkBudgetWorker(req(timestamp, 'kvk-budget-warning:v1'), 'worker-fixture'), true);
+  assert.equal(await authorizeKvkBudgetWorker(req(timestamp, 'other-purpose'), 'worker-fixture'), false);
+  assert.equal(await authorizeKvkBudgetWorker(req(String(Number(timestamp) - 600), 'kvk-budget-warning:v1'), 'worker-fixture'), false);
+  assert.equal(await authorizeKvkBudgetWorker(req(timestamp, 'kvk-budget-warning:v1'), 'wrong-secret'), false);
+});
