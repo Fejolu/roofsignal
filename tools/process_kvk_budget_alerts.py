@@ -36,18 +36,11 @@ def request_json(url, headers, body=None):
 
 
 def main():
-    token = os.environ["SUPABASE_ACCESS_TOKEN"]
-    keys = request_json(
-        f"https://api.supabase.com/v1/projects/{PROJECT}/api-keys?reveal=true",
-        {"Authorization": f"Bearer {token}"},
-    )
-    service_key = next(key["api_key"] for key in keys if key["name"] == "service_role")
-    if not service_key.startswith('eyJ') or '*' in service_key:
-        raise RuntimeError("Supabase did not return a usable server credential")
+    worker_secret = os.environ["CONSUMER_AUTOMATION_SECRET"]
     config = (Path(__file__).resolve().parents[1] / 'assets/supabase-config.js').read_text()
     public_key = re.search(r'anonKey:\s*"([^"]+)"', config).group(1)
     timestamp = str(int(time.time()))
-    signature = hmac.new(service_key.encode(),
+    signature = hmac.new(worker_secret.encode(),
                          f"{timestamp}.kvk-budget-warning:v1".encode(), hashlib.sha256).hexdigest()
     result = request_json(
         f"https://{PROJECT}.supabase.co/functions/v1/vve-kvk/budget-alerts",

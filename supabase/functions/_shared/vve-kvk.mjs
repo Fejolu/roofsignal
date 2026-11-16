@@ -25,7 +25,7 @@ export function createKvkHandler({ env, verify, consume, fetchProfile, processWa
     };
     const reply = (body, status = 200) => new Response(JSON.stringify(body), { status, headers });
     if (req.method === 'POST' && new URL(req.url).pathname.endsWith('/budget-alerts')) {
-      const expected = env('SUPABASE_SERVICE_ROLE_KEY');
+      const expected = env('CONSUMER_AUTOMATION_SECRET') || env('SUPABASE_SERVICE_ROLE_KEY');
       if (!expected || (req.headers.get('authorization') !== `Bearer ${expected}` && !await authorizeKvkBudgetWorker(req, expected))) return reply({ error: 'authorization' }, 401);
       try { return reply(await processWarnings()); }
       catch { return reply({ error: 'warning_delivery' }, 503); }
