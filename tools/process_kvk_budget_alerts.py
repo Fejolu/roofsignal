@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Deliver pending KVK budget warnings without making KVK API requests."""
 import json
+import hashlib
+import hmac
+import time
 import os
+import re
+from pathlib import Path
 import urllib.error
 import urllib.request
 
@@ -17,7 +22,9 @@ def request_json(url, headers, body=None):
     try:
         with urllib.request.urlopen(request, timeout=40) as response:
             return json.load(response)
-    except (urllib.error.URLError, ValueError) as error:
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"KVK warning worker HTTP {error.code}") from None
+    except (urllib.error.URLError, ValueError):
         # Provider error bodies may contain credentials. Keep action logs generic.
         raise RuntimeError("KVK warning worker request failed") from None
 
@@ -29,9 +36,14 @@ def main():
         {"Authorization": f"Bearer {token}"},
     )
     service_key = next(key["api_key"] for key in keys if key["name"] == "service_role")
+    config = (Path(__file__).resolve().parents[1] / 'assets/supabase-config.js').read_text()
+    public_key = re.search(r'anonKey:\s*"([^"]+)"', config).group(1)
+    timestamp = str(int(time.time()))
+    signature = hmac.new(service_key.encode(),
+                         f"{timestamp}.kvk-budget-warning:v1".encode(), hashlib.sha256).hexdigest()
     result = request_json(
         f"https://{PROJECT}.supabase.co/functions/v1/vve-kvk/budget-alerts",
-        {"Authorization": f"Bearer {service_key}", "Content-Type": "application/json"},
+        {"Authorization": f"Bearer {public_key}", "apikey": public_key, "x-roofsignal-budget-timestamp": timestamp, "x-roofsignal-budget-signature": signature, "Content-Type": "application/json"},
         {},
     )
     if not isinstance(result.get("sent"), bool):
