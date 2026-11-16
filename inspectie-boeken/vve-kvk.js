@@ -2,7 +2,6 @@
   const form = document.getElementById('vve-form');
   const input = document.getElementById('vve-kvk');
   const name = document.getElementById('vve-organization');
-  const button = document.getElementById('vve-kvk-check');
   const status = document.getElementById('vve-kvk-status');
   const submit = document.getElementById('vve-submit');
   const config = window.ROOFSIGNAL_SUPABASE;
@@ -14,38 +13,57 @@
   let available = false;
   let filledName = '';
   let busy = false;
+  let timer;
+  let attempted = '';
+  let waitingSince = 0;
+  let previousNumber = number();
   const note = text => { status.textContent = text; status.hidden = !text; };
-  const restoreButton = () => { button.disabled = busy || !available; button.textContent = busy ? 'Controleren…' : 'Vul naam in'; };
+  const schedule = () => {
+    clearTimeout(timer);
+    if (available && /^\d{8}$/.test(number()) && number() !== attempted) {
+      timer = setTimeout(lookup, 500);
+    }
+  };
 
-  // No unavailable check button is shown before a real KVK subscription is connected.
+  // Check availability before scheduling any paid lookup.
   fetch(`${endpoint}/status`, { headers, signal: AbortSignal.timeout(6000) })
     .then(async response => response.ok && (await response.json()).enabled === true)
-    .then(enabled => { available = enabled; button.hidden = !enabled; restoreButton(); })
+    .then(enabled => { available = enabled; schedule(); })
     .catch(() => {});
 
   input.addEventListener('input', () => {
+    if (number() === previousNumber) return;
+    previousNumber = number();
     request++;
     if (filledName && name.value === filledName) name.value = '';
     filledName = '';
+    waitingSince = 0;
     note('');
+    schedule();
   });
-  name.addEventListener('input', () => { request++; filledName = ''; note(''); });
-  form.addEventListener('reset', () => { request++; filledName = ''; note(''); });
+  name.addEventListener('input', () => { clearTimeout(timer); request++; attempted = number(); filledName = ''; note(''); });
+  form.addEventListener('reset', () => { clearTimeout(timer); request++; previousNumber = ''; attempted = ''; waitingSince = 0; filledName = ''; note(''); });
   form.addEventListener('submit', event => {
     if (!busy) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     note('De KVK-check wordt afgerond. U kunt zo verder.');
   }, true);
-  button.addEventListener('click', async () => {
+  async function lookup() {
     if (busy || !available || form.getAttribute('aria-busy') === 'true' || form.classList.contains('is-complete')) return;
     const kvk = number();
-    if (!/^\d{8}$/.test(kvk)) { note('Vul 8 cijfers in, of vul zelf de naam in.'); return; }
+    if (!/^\d{8}$/.test(kvk) || kvk === attempted) return;
     const security = window.RoofSignalFormSecurity;
     try { security.ensureReady(form); }
-    catch { note('De controle is nog niet klaar. Probeer opnieuw of vul zelf de naam in.'); return; }
+    catch {
+      waitingSince ||= Date.now();
+      if (Date.now() - waitingSince < 10000) schedule();
+      else note('Ophalen lukt nu niet. U kunt zelf de naam invullen en doorgaan.');
+      return;
+    }
+    attempted = kvk;
     const current = ++request;
-    busy = true; submit.disabled = true; restoreButton(); note('');
+    busy = true; submit.disabled = true; note('VvE-naam ophalen…');
     try {
       const response = await fetch(endpoint, {
         method: 'POST', headers, signal: AbortSignal.timeout(20000),
@@ -67,9 +85,10 @@
     } catch {
       if (current === request) note('Ophalen lukt nu niet. U kunt zelf de naam invullen en doorgaan.');
     } finally {
-      busy = false; restoreButton();
+      busy = false;
       submit.disabled = form.classList.contains('is-complete');
       security.reset(form); // A Turnstile token is single-use; submitting needs a fresh one.
+      schedule();
     }
-  });
+  }
 })();

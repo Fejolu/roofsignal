@@ -68,8 +68,10 @@ async function ui({ enabled = true, lookup = async () => Response.json({ found: 
     setCustomValidity() {}, getAttribute: () => null
   });
   let calls = 0, resets = 0;
+  let scheduled;
   vm.runInNewContext(script, {
     document: { getElementById: id => elements.get(id) }, AbortSignal,
+    setTimeout: callback => { scheduled = callback; return 1; }, clearTimeout: () => { scheduled = null; },
     window: { ROOFSIGNAL_SUPABASE: { url: 'https://example.invalid', anonKey: 'public' },
       RoofSignalFormSecurity: { ensureReady() {}, getPayload: () => ({ turnstile_token: 'fixture' }), reset() { resets++; } } },
     fetch: async (url, options) => url.endsWith('/status') ? Response.json({ enabled }) : (calls++, lookup(url, options))
@@ -78,14 +80,14 @@ async function ui({ enabled = true, lookup = async () => Response.json({ found: 
   const get = id => elements.get(id);
   return { get, calls: () => calls, resets: () => resets,
     input(value) { get('vve-kvk').value = value; get('vve-kvk').listeners.input(); },
-    click: () => get('vve-kvk-check').listeners.click()
+    click: async () => { const callback = scheduled; scheduled = null; if (callback) await callback(); }
   };
 }
 test('KVK field has no required or pattern constraint; missing subscription preserves manual entry', async () => {
   const tag = html.match(/<input id="vve-kvk"[^>]*>/)[0];
   assert.doesNotMatch(tag, /\brequired\b|\bpattern=/);
   const x = await ui({ enabled: false });
-  assert.equal(x.get('vve-kvk-check').hidden, true);
+  assert.doesNotMatch(html, /id="vve-kvk-check"/);
   assert.equal(x.get('vve-organization').disabled, false);
   await x.click(); assert.equal(x.calls(), 0);
 });
@@ -123,4 +125,13 @@ test('optional KVK number is carried into the existing lead message, blank numbe
   const form = { dataset: { leadContext: 'vve-object' }, fields: { organization: 'Naam', kvk_number: '9000 0749' } };
   assert.match(context.window.build(form, 'price').message, /KVK-nummer VvE \(opgegeven\): 90000749/);
   form.fields.kvk_number = ''; assert.doesNotMatch(context.window.build(form, 'price').message, /KVK/);
+});
+
+test('automatic lookup waits for eight digits and debounces edits without repeated paid lookups', async () => {
+  const x = await ui();
+  x.input('9000074'); await x.click(); assert.equal(x.calls(), 0);
+  x.input('12345678'); x.input('90000749'); await x.click();
+  assert.equal(x.calls(), 1);
+  x.input('90000749'); await x.click(); assert.equal(x.calls(), 1);
+  assert.equal(x.get('vve-organization').value, 'Global Conron');
 });
