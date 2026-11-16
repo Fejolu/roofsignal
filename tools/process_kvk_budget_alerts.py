@@ -23,7 +23,13 @@ def request_json(url, headers, body=None):
         with urllib.request.urlopen(request, timeout=40) as response:
             return json.load(response)
     except urllib.error.HTTPError as error:
-        raise RuntimeError(f"KVK warning worker HTTP {error.code}") from None
+        try:
+            payload = json.loads(error.read())
+            category = payload.get('error')
+        except (ValueError, AttributeError):
+            category = None
+        category = category if category in {'authorization', 'warning_delivery'} else 'gateway'
+        raise RuntimeError(f"KVK warning worker HTTP {error.code} ({category})") from None
     except (urllib.error.URLError, ValueError):
         # Provider error bodies may contain credentials. Keep action logs generic.
         raise RuntimeError("KVK warning worker request failed") from None
