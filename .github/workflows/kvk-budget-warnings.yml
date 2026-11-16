@@ -20,5 +20,5 @@ jobs:
           python-version: '3.12'
       - name: Verstuur openstaande KVK-verbruikswaarschuwing
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          CONSUMER_AUTOMATION_SECRET: ${{ secrets.CONSUMER_AUTOMATION_SECRET }}
         run: python tools/process_kvk_budget_alerts.py

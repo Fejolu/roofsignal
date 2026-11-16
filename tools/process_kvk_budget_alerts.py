@@ -23,23 +23,24 @@ def request_json(url, headers, body=None):
         with urllib.request.urlopen(request, timeout=40) as response:
             return json.load(response)
     except urllib.error.HTTPError as error:
-        raise RuntimeError(f"KVK warning worker HTTP {error.code}") from None
+        try:
+            payload = json.loads(error.read())
+            category = payload.get('error')
+        except (ValueError, AttributeError):
+            category = None
+        category = category if category in {'authorization', 'warning_delivery'} else 'gateway'
+        raise RuntimeError(f"KVK warning worker HTTP {error.code} ({category})") from None
     except (urllib.error.URLError, ValueError):
         # Provider error bodies may contain credentials. Keep action logs generic.
         raise RuntimeError("KVK warning worker request failed") from None
 
 
 def main():
-    token = os.environ["SUPABASE_ACCESS_TOKEN"]
-    keys = request_json(
-        f"https://api.supabase.com/v1/projects/{PROJECT}/api-keys",
-        {"Authorization": f"Bearer {token}"},
-    )
-    service_key = next(key["api_key"] for key in keys if key["name"] == "service_role")
+    worker_secret = os.environ["CONSUMER_AUTOMATION_SECRET"]
     config = (Path(__file__).resolve().parents[1] / 'assets/supabase-config.js').read_text()
     public_key = re.search(r'anonKey:\s*"([^"]+)"', config).group(1)
     timestamp = str(int(time.time()))
-    signature = hmac.new(service_key.encode(),
+    signature = hmac.new(worker_secret.encode(),
                          f"{timestamp}.kvk-budget-warning:v1".encode(), hashlib.sha256).hexdigest()
     result = request_json(
         f"https://{PROJECT}.supabase.co/functions/v1/vve-kvk/budget-alerts",
