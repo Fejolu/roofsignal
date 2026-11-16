@@ -133,4 +133,5 @@ test('automatic lookup waits for eight digits and debounces edits without repeat
   x.input('12345678'); x.input('90000749'); await x.click();
   assert.equal(x.calls(), 1);
   x.input('90000749'); await x.click(); assert.equal(x.calls(), 1);
+  assert.equal(x.get('vve-organization').value, 'Global Conron');
 });

@@ -16,6 +16,7 @@
   let timer;
   let attempted = '';
   let waitingSince = 0;
+  let previousNumber = number();
   const note = text => { status.textContent = text; status.hidden = !text; };
   const schedule = () => {
     clearTimeout(timer);
@@ -31,6 +32,8 @@
     .catch(() => {});
 
   input.addEventListener('input', () => {
+    if (number() === previousNumber) return;
+    previousNumber = number();
     request++;
     if (filledName && name.value === filledName) name.value = '';
     filledName = '';
@@ -39,7 +42,7 @@
     schedule();
   });
   name.addEventListener('input', () => { clearTimeout(timer); request++; attempted = number(); filledName = ''; note(''); });
-  form.addEventListener('reset', () => { clearTimeout(timer); request++; attempted = ''; waitingSince = 0; filledName = ''; note(''); });
+  form.addEventListener('reset', () => { clearTimeout(timer); request++; previousNumber = ''; attempted = ''; waitingSince = 0; filledName = ''; note(''); });
   form.addEventListener('submit', event => {
     if (!busy) return;
     event.preventDefault();
