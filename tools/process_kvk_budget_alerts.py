@@ -17,7 +17,9 @@ def request_json(url, headers, body=None):
     try:
         with urllib.request.urlopen(request, timeout=40) as response:
             return json.load(response)
-    except (urllib.error.URLError, ValueError) as error:
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"KVK warning worker HTTP {error.code}") from None
+    except (urllib.error.URLError, ValueError):
         # Provider error bodies may contain credentials. Keep action logs generic.
         raise RuntimeError("KVK warning worker request failed") from None
 
@@ -31,7 +33,7 @@ def main():
     service_key = next(key["api_key"] for key in keys if key["name"] == "service_role")
     result = request_json(
         f"https://{PROJECT}.supabase.co/functions/v1/vve-kvk/budget-alerts",
-        {"Authorization": f"Bearer {service_key}", "Content-Type": "application/json"},
+        {"Authorization": f"Bearer {service_key}", "apikey": service_key, "x-roofsignal-budget-worker": service_key, "Content-Type": "application/json"},
         {},
     )
     if not isinstance(result.get("sent"), bool):
