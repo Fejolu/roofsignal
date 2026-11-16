@@ -13,7 +13,7 @@ export function vveFromProfile(profile, number) {
   return { found: true, kvkNumber: number, name };
 }
 
-export function createKvkHandler({ env, verify, consume, fetchProfile }) {
+export function createKvkHandler({ env, verify, consume, fetchProfile, processWarnings }) {
   return async req => {
     const origin = req.headers.get('origin') || '';
     const headers = {
@@ -23,6 +23,12 @@ export function createKvkHandler({ env, verify, consume, fetchProfile }) {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
     };
     const reply = (body, status = 200) => new Response(JSON.stringify(body), { status, headers });
+    if (req.method === 'POST' && new URL(req.url).pathname.endsWith('/budget-alerts')) {
+      const expected = env('SUPABASE_SERVICE_ROLE_KEY');
+      if (!expected || req.headers.get('authorization') !== `Bearer ${expected}`) return reply({ error: 'authorization' }, 401);
+      try { return reply(await processWarnings()); }
+      catch { return reply({ error: 'warning_delivery' }, 503); }
+    }
     if (req.method === 'OPTIONS') return reply({});
     if (!origins.has(origin)) return reply({ error: 'origin' }, 403);
     const enabled = env('VVE_KVK_ENABLED') === 'true' && Boolean(env('KVK_API_KEY')?.trim());

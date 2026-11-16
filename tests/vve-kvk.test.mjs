@@ -135,3 +135,39 @@ test('automatic lookup waits for eight digits and debounces edits without repeat
   x.input('90000749'); await x.click(); assert.equal(x.calls(), 1);
   assert.equal(x.get('vve-organization').value, 'Global Conron');
 });
+
+
+test('budget warning worker rejects public callers and never consumes KVK calls', async () => {
+  let warnings = 0;
+  const h = handler({
+    env: key => ({ SUPABASE_SERVICE_ROLE_KEY: 'worker-fixture' })[key],
+    processWarnings: async () => { warnings++; return { sent: true }; }
+  });
+  const call = authorization => new Request('https://example.invalid/vve-kvk/budget-alerts', {
+    method: 'POST', headers: { authorization }
+  });
+  assert.equal((await h.run(call('Bearer public'))).status, 401);
+  assert.equal(warnings, 0);
+  assert.deepEqual(await (await h.run(call('Bearer worker-fixture'))).json(), { sent: true });
+  assert.equal(warnings, 1);
+  assert.equal(h.calls(), 0);
+});
+
+test('budget warnings are acknowledged only after successful delivery and remain retryable on failure', async () => {
+  const { processKvkBudgetWarning, kvkBudgetMessage } = await import('../supabase/functions/_shared/vve-kvk-budget.mjs');
+  const warning = { month: '2026-11-01', count: 80, limit: 100, threshold: 80, claim: 'fixture' };
+  const events = [];
+  const config = {
+    claim: async () => warning,
+    deliver: async () => { events.push('delivered'); },
+    finish: async (item, sent) => { assert.equal(item, warning); events.push(sent); }
+  };
+  assert.deepEqual(await processKvkBudgetWarning(config), { sent: true });
+  assert.deepEqual(events, ['delivered', true]);
+  events.length = 0;
+  await assert.rejects(processKvkBudgetWarning({ ...config, deliver: async () => { throw Error('provider'); } }), /DELIVERY_FAILED/);
+  assert.deepEqual(events, [false]);
+  assert.deepEqual(await processKvkBudgetWarning({ ...config, claim: async () => null }), { sent: false });
+  assert.match(kvkBudgetMessage(warning).text, /80 KVK-opvragingen/);
+  assert.match(kvkBudgetMessage(warning).text, /maandplafond is 100/);
+});

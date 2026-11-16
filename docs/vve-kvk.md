@@ -4,7 +4,7 @@ De bezoeker mag altijd zonder KVK-nummer een object aanmelden. Het KVK-nummer is
 
 ## Activering
 
-De publieke invoer werkt zonder abonnement; automatisch ophalen start uitsluitend wanneer de serverkoppeling is ingeschakeld, 500 ms na het invullen van acht cijfers. Op 16 november 2026 is de productieverbinding geactiveerd in websiteproject `kakpticlxlaxtebhsuoh`. `KVK_API_KEY` en `VVE_KVK_ENABLED=true` zijn als Supabase-servergeheimen opgeslagen. De live website vulde voor KVK-nummer 71883436 de naam “Vereniging van Eigenaars Prinseneiland 93 te Amsterdam” in. Handmatige naaminvoer zonder nummer is eveneens gecontroleerd. Er is geen aanmelding verstuurd. De 18 tests voor KVK en VvE-aanmelding slagen.
+De publieke invoer werkt zonder abonnement; automatisch ophalen start uitsluitend wanneer de serverkoppeling is ingeschakeld, 500 ms na het invullen van acht cijfers. Op 16 november 2026 is de productieverbinding geactiveerd in websiteproject `kakpticlxlaxtebhsuoh`. `KVK_API_KEY` en `VVE_KVK_ENABLED=true` zijn als Supabase-servergeheimen opgeslagen. De live website vulde voor KVK-nummer 71883436 de naam “Vereniging van Eigenaars Prinseneiland 93 te Amsterdam” in. Handmatige naaminvoer zonder nummer is eveneens gecontroleerd. Er is geen aanmelding verstuurd. De tests voor KVK en VvE-aanmelding slagen.
 
 Voor productie zijn, na toestemming voor de abonnementskosten, twee Supabase-secrets nodig:
 
@@ -33,3 +33,11 @@ Publiceer via de normale Supabase-releaseworkflow. De nieuwe functie is `vve-kvk
 Na activering: controleer een echte, bekende VvE, handmatige invoer zonder nummer en een onbekend nummer. Controleer dat de naam wordt ingevuld en de overige objectvelden leeg blijven; verstuur hiervoor geen ongevraagde proefaanmelding.
 
 Bronnen: [Basisprofiel](https://developers.kvk.nl/documentation/basisprofiel-api), [testomgeving](https://developers.kvk.nl/documentation/testing), [tarieven](https://developers.kvk.nl/nl/pricing). Op 11 oktober 2026: €6,40 per maand en €0,02 per Basisprofiel-opvraag, vrijgesteld van btw.
+
+## Maandplafond en waarschuwing (16 november 2026)
+
+Het serverplafond is 100 gereserveerde Basisprofiel-opvragingen per kalendermaand in Europe/Amsterdam. Bij 80 wordt een waarschuwing klaargezet voor ferry@roofsignal.nl. Bestaande opvragingen worden bij invoering meegeteld. Mislukte providerverzoeken blijven conservatief meetellen. Een nieuwe maand krijgt automatisch een eigen teller.
+
+De onafhankelijke GitHub-worker `kvk-budget-warnings.yml` controleert elk kwartier op openstaande waarschuwingen. GitHub kan geplande runs vertragen. Een databaseclaim voorkomt gelijktijdig verzenden. Alleen succesvolle mailprovideracceptatie markeert de waarschuwing als afgehandeld; mislukkingen blijven beschikbaar voor een volgende run. Bij uitval na mailacceptatie maar vóór databasebevestiging kan een waarschuwing dubbel worden verstuurd. De worker doet geen KVK-opvragingen en gebruikt de bestaande productieautorisatie.
+
+Het plafond geldt uitsluitend voor deze websitefunctie. De vaste abonnementskosten en gebruik van dezelfde sleutel via andere toepassingen vallen erbuiten. Het formulier blijft handmatig bruikbaar boven het plafond.
