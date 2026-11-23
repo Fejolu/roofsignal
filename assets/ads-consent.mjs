@@ -1,4 +1,4 @@
-import { CONSENT_VERSION, CONSENT_MAX_AGE, consentGranted, safeAdsUrl, conversionPayload } from './ads-policy.mjs';
+import { CONSENT_VERSION, CONSENT_MAX_AGE, consentGranted, safeAdsUrl, conversionPayload } from './ads-policy.mjs?v=20261123-gevel';
 
 const KEY = 'roofsignal-advertentiemeting';
 const optedOut = navigator.globalPrivacyControl === true || ['1', 'yes'].includes(String(navigator.doNotTrack || window.doNotTrack || ''));

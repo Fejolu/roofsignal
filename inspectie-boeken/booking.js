@@ -1,5 +1,5 @@
-import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261012-direct-betalen';
-import { takeBookingReturnToken, clearBookingReturnToken, reportConfirmedBooking } from '../assets/ads-consent.mjs';
+import { BASE_CENTS, THERMAL_CENTS, RECOVERY_STORAGE_KEY, resolveBookingConfiguration, money, normalizePostcode, normalizeHouseNumber, subtotal, validateQuote, validateSlots, validateSelectedSlot, needsEarlyStart, slotLabel, validateCheckout, createRecoveryRecord, validateRecoveryRecord, validateRecoveryResponse, canReleaseAttempt, paymentMessage } from './booking-core.mjs?v=20261123-gevel';
+import { takeBookingReturnToken, clearBookingReturnToken, reportConfirmedBooking } from '../assets/ads-consent.mjs?v=20261123-gevel';
 const bookingReturnToken = takeBookingReturnToken();
 
 // Missing or invalid configuration fails closed. All calendar and payment
@@ -46,8 +46,11 @@ function message(id, text) {
 
 // A combined visit has the same server product whichever inspection is chosen first.
 const primaryInspection = () => el('inspection-thermal').checked ? 'thermal' : el('inspection-envelope').checked ? 'building_envelope' : null;
-const chosenInspection = () => !primaryInspection() ? null : primaryInspection() === 'thermal' && !el('thermal').checked ? 'thermal' : 'building_envelope';
+const facadeScope=()=>el('inspection-scope').value==='facade';
+const chosenInspection = () => !primaryInspection() ? null : primaryInspection() === 'thermal' && !el('thermal').checked ? (facadeScope()?'facade_thermal':'thermal') : (facadeScope()?'facade':'building_envelope');
 const chosenThermal = () => Boolean(primaryInspection()) && (el('inspection-thermal').checked || el('thermal').checked);
+
+if(new URLSearchParams(window.location.search).get('scope')==='facade')el('inspection-scope').value='facade';
 
 function updateEarlyStartConsent() {
   const needed = Boolean(selectedSlot && needsEarlyStart(selectedSlot.start));
@@ -62,17 +65,19 @@ function updateSummary() {
   if (!selected) el('thermal').checked = false;
   const inspectionType = quote?.inspectionType || chosenInspection();
   const thermal = quote ? quote.thermalCents > 0 : chosenThermal();
-  const thermalOnly = inspectionType === 'thermal';
+  const thermalOnly = ['thermal','facade_thermal'].includes(inspectionType);
+  const visualLabel=facadeScope()?'Bouwkundige gevelinspectie':'Dak- en gevelinspectie',thermalLabel=facadeScope()?'Thermische gevelinspectie':'Thermografische inspectie';
+  el('inspection-envelope-label').textContent=visualLabel;el('inspection-thermal-label').textContent=thermalLabel;
   const thermalPrimary = el('inspection-thermal').checked;
   const combined = !thermalOnly && thermal;
   el('product-addon').hidden = !selected;
   el('thermal').disabled = !selected || configurationBlocked || loading || Boolean(recovery) || recoveryBlocked;
-  el('addon-title').textContent = thermalPrimary ? 'Dak- en gevelinspectie toevoegen' : 'Thermografische inspectie toevoegen';
-  el('addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : 'Warmtebeelden van dak en gevel.';
+  el('addon-title').textContent = thermalPrimary ? visualLabel+' toevoegen' : thermalLabel+' toevoegen';
+  el('addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : facadeScope()?'Warmtebeelden van de gevels.':'Warmtebeelden van dak en gevel.';
   el('summary-base-row').hidden = false;
-  el('summary-base-label').textContent = !selected ? 'Inspectie' : thermalPrimary ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
+  el('summary-base-label').textContent = !selected ? 'Inspectie' : thermalPrimary ? thermalLabel : visualLabel;
   el('summary-base').textContent = !selected ? 'Nog te kiezen' : money(thermalOnly ? quote?.thermalCents ?? BASE_CENTS : quote?.baseCents ?? BASE_CENTS);
-  el('summary-thermal-label').textContent = !selected ? 'Aanvulling' : thermalPrimary ? 'Dak- en gevelinspectie' : 'Thermografie';
+  el('summary-thermal-label').textContent = !selected ? 'Aanvulling' : thermalPrimary ? visualLabel : thermalLabel;
   el('summary-thermal').textContent = !selected ? 'Nog te kiezen' : combined ? money(quote ? quote.thermalCents : THERMAL_CENTS) : 'Niet toegevoegd';
   el('summary-travel').textContent = quote ? money(quote.travelCents) : 'Na adrescontrole';
   el('summary-total').textContent = quote ? money(quote.totalCents) : recovery || returnOrder ? money((recovery || returnOrder).totalCents) : selected ? money(subtotal(thermal, inspectionType)) : 'Kies uw inspectie';
@@ -556,7 +561,7 @@ form.addEventListener('submit', async event => {
   } finally { loading = false; updateSummary(); }
 });
 
-for (const id of ['postcode', 'houseNumber', 'thermal', 'inspection-envelope', 'inspection-thermal']) {
+for (const id of ['postcode', 'houseNumber', 'thermal', 'inspection-envelope', 'inspection-thermal', 'inspection-scope']) {
   el(id).addEventListener(['postcode', 'houseNumber'].includes(id) ? 'input' : 'change', () => {
     if (!recovery && !recoveryBlocked && ['inspection-envelope', 'inspection-thermal'].includes(id)) el('thermal').checked = false;
     clearQuote();

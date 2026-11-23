@@ -49,3 +49,5 @@ test('Opt-in loads once, keeps secrets out of payloads and deduplicates confirme
 test('GPC overrides a previously granted consent',()=>{
   const b=browser({choice:{version:CONSENT_VERSION,granted:true,at:Date.now()},optedOut:true});assert.equal(b.head.children.filter(x=>x.tag==='script').length,0);
 });
+
+test('facade entry link survives URL cleaning while arbitrary scope and secrets are removed',()=>{assert.equal(safeAdsUrl('https://www.roofsignal.nl/inspectie-boeken/?scope=facade&booking=secret'),'https://www.roofsignal.nl/inspectie-boeken/?scope=facade');assert.equal(safeAdsUrl('https://www.roofsignal.nl/inspectie-boeken/?scope=private-address'),'https://www.roofsignal.nl/inspectie-boeken/');});

@@ -45,8 +45,8 @@ export function normalizeHouseNumber(value) {
 }
 
 export function subtotal(thermal, inspectionType = 'building_envelope') {
-  if (!['building_envelope', 'thermal'].includes(inspectionType)) throw new Error('Kies een geldige inspectie.');
-  return BASE_CENTS + (inspectionType === 'building_envelope' && thermal ? THERMAL_CENTS : 0);
+  if (!['building_envelope', 'thermal', 'facade', 'facade_thermal'].includes(inspectionType)) throw new Error('Kies een geldige inspectie.');
+  return BASE_CENTS + (['building_envelope', 'facade'].includes(inspectionType) && thermal ? THERMAL_CENTS : 0);
 }
 
 function validInstant(value) {
@@ -56,9 +56,9 @@ function validInstant(value) {
 export function validateQuote(data, thermal, now = Date.now(), requestedAddress = null, inspectionType = 'building_envelope') {
   if (!data || data.serviceable !== true) throw new Error('Voor dit adres is eerst afstemming nodig. Neem contact op met RoofSignal.');
   if (typeof data.quoteId !== 'string' || data.quoteId.length < 16) throw new Error('De prijsopgave is onvolledig.');
-  const baseCents = inspectionType === 'thermal' ? 0 : BASE_CENTS;
-  const thermalCents = inspectionType === 'thermal' ? BASE_CENTS : thermal ? THERMAL_CENTS : 0;
-  if (!['building_envelope', 'thermal'].includes(inspectionType) || data.inspectionType !== inspectionType || data.currency !== 'EUR' || data.baseCents !== baseCents || data.thermalCents !== thermalCents) throw new Error('De prijsopgave wijkt af van uw gekozen inspectie. Controleer uw adres opnieuw.');
+  const baseCents = ['thermal', 'facade_thermal'].includes(inspectionType) ? 0 : BASE_CENTS;
+  const thermalCents = ['thermal', 'facade_thermal'].includes(inspectionType) ? BASE_CENTS : thermal ? THERMAL_CENTS : 0;
+  if (!['building_envelope', 'thermal', 'facade', 'facade_thermal'].includes(inspectionType) || data.inspectionType !== inspectionType || data.currency !== 'EUR' || data.baseCents !== baseCents || data.thermalCents !== thermalCents) throw new Error('De prijsopgave wijkt af van uw gekozen inspectie. Controleer uw adres opnieuw.');
   if (!Number.isSafeInteger(data.travelCents) || data.travelCents < 0) throw new Error('De reiskosten zijn nog niet vastgesteld. Er kan nog niet worden afgerekend.');
   if (!Number.isSafeInteger(data.totalCents) || data.totalCents !== subtotal(thermal, inspectionType) + data.travelCents) throw new Error('De totaalprijs kon niet worden gecontroleerd.');
   if (!validInstant(data.expiresAt) || Date.parse(data.expiresAt) <= now) throw new Error('Deze prijsopgave is verlopen. Controleer uw adres opnieuw.');

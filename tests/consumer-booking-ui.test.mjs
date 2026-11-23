@@ -1218,7 +1218,7 @@ test('Standalone thermography sends its product, includes only the thermal price
   assert.equal(ui.get('addon-title').textContent, 'Thermografische inspectie toevoegen');
   assert.equal(ui.get('summary-base-label').textContent, 'Dak- en gevelinspectie');
   assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
-  assert.equal(ui.get('summary-thermal-label').textContent, 'Thermografie');
+  assert.equal(ui.get('summary-thermal-label').textContent, 'Thermografische inspectie');
   assert.equal(ui.get('summary-thermal').textContent, 'Niet toegevoegd');
   assert.equal(ui.get('summary-total').textContent, bookingCore.money(36179));
   assert.equal(ui.get('checkout-button').disabled, true);
@@ -1268,7 +1268,7 @@ test('Thermal-first and envelope-first combinations quote and pay the same amoun
     await ui.get('thermal').dispatch('change');
     assert.equal(ui.get('summary-total').textContent, bookingCore.money(66429));
     assert.equal(ui.get('summary-base-label').textContent, first === 'thermal' ? 'Thermografische inspectie' : 'Dak- en gevelinspectie');
-    assert.equal(ui.get('summary-thermal-label').textContent, first === 'thermal' ? 'Dak- en gevelinspectie' : 'Thermografie');
+    assert.equal(ui.get('summary-thermal-label').textContent, first === 'thermal' ? 'Dak- en gevelinspectie' : 'Thermografische inspectie');
     assert.equal(ui.get('summary-base').textContent, bookingCore.money(36179));
     assert.equal(ui.get('summary-thermal').textContent, bookingCore.money(30250));
     ui.get('postcode').value = '1234AB'; ui.get('houseNumber').value = '12';
@@ -1507,3 +1507,5 @@ test('Checkout submits the time chosen in the calendar and locks all calendar co
   assert.equal(ui.get('summary-date').textContent,selectedLabel);
   assert.equal(ui.requests.filter(request=>request.path.endsWith('/checkout')).length,1);
 });
+
+test('facade booking has all three authoritative products and switching scope clears the quoted slot',async()=>{for(const [primary,addon,type,total] of [['building_envelope',false,'facade',36179],['thermal',false,'facade_thermal',36179],['building_envelope',true,'facade',66429],['thermal',true,'facade',66429]]){const slot=calendarSlot('facade-time',new Date(Date.now()+30*86400000).toISOString());const ui=await bookingPage({configuration:connectedConfiguration,respond(request){const {inspectionType,thermal}=request.body,heatOnly=inspectionType==='facade_thermal',baseCents=heatOnly?0:36179,thermalCents=heatOnly?36179:thermal?30250:0;return {quoteId:recoveryRecord.quoteId,inspectionType,serviceable:true,currency:'EUR',baseCents,thermalCents,travelCents:0,totalCents:baseCents+thermalCents,travelDescription:'Test',termsVersion:'test',expiresAt:new Date(Date.now()+600000).toISOString(),address:{postcode:'1234AB',houseNumber:'12',street:'Teststraat',city:'Testplaats',country:'NL'},availability:{quoteId:recoveryRecord.quoteId,slots:[slot]}};}});ui.get('inspection-scope').value='facade';await ui.get('inspection-scope').dispatch('change');ui.get('postcode').value='1234AB';ui.get('houseNumber').value='12';await chooseProduct(ui,primary);ui.get('thermal').checked=addon;await ui.get('thermal').dispatch('change');await ui.get('check-address').dispatch('click');assert.equal(ui.requests[0].body.inspectionType,type);assert.equal(ui.get('summary-total').textContent,bookingCore.money(total));assert.equal(ui.get('booking-calendar').hidden,false);ui.get('inspection-scope').value='building_envelope';await ui.get('inspection-scope').dispatch('change');assert.equal(ui.get('booking-calendar').hidden,true);assert.equal(ui.get('checkout-button').disabled,true);}});

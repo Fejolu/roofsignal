@@ -17,7 +17,7 @@ export function paymentBody(attempt, quote, publicBase) {
   if (!UUID.test(attempt.id) || quote.id !== attempt.quote_id || !['test','live'].includes(attempt.mode)) throw Error('INVALID_ATTEMPT');
   return {
     amount:{currency:'EUR',value:euro(quote.total_cents)},
-    description:`RoofSignal ${quote.inspection_type === 'thermal' ? 'Thermische inspectie' : 'Inspectie'} ${attempt.reference}`,
+    description:`RoofSignal ${({thermal:'Thermische inspectie',facade:'Gevelinspectie',facade_thermal:'Thermische gevelinspectie'})[quote.inspection_type] || 'Inspectie'} ${attempt.reference}`,
     // An array retains Mollie's hosted payment-method screen. A scalar iDEAL
     // method skips that screen and may return the official iDEAL checkout.
     profileId:PROFILE_ID, testmode:attempt.mode==='test', method:['ideal'], locale:'nl_NL',
