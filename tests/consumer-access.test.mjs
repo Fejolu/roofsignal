@@ -12,7 +12,8 @@ import {CONSUMER_TERMS as PREVIOUS_CONSUMER_TERMS} from '../supabase/functions/_
 import {CONSUMER_TERMS as PAYMENT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011betalen.mjs';
 import {CONSUMER_TERMS as PREVIOUS_THERMAL_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011thermografie.mjs';
 import {CONSUMER_TERMS as SHORT_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011kort.mjs';
-import {CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011los.mjs';
+import {CONSUMER_TERMS as LOS_CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261011los.mjs';
+import {CONSUMER_TERMS} from '../supabase/functions/_shared/consumer-terms-20261123gevel.mjs';
 import {TERMS_TEXT} from '../supabase/functions/_shared/terms-20260924.mjs';
 import {TERMS_TEXT as THERMAL_TERMS_TEXT} from '../supabase/functions/_shared/terms-20261011thermografie.mjs';
 
@@ -63,7 +64,7 @@ test('Actual checkout rejects missing or forged early consent before claim or pa
  assert.equal((await app.checkout(true)).state,'pending');
  assert.equal(app.claims.length,1);
  assert.equal(app.claims[0].payload.terms.earlyStartRequested,true,'The exact explicit choice is persisted in the atomic claim');
- assert.equal(app.claims[0].payload.terms.version,'2026-10-11-consumer-los');
+ assert.equal(app.claims[0].payload.terms.version,'2026-11-23-consumer-gevel');
 });
 
 test('Actual checkout permits later dates without early consent but still validates the terms version',async()=>{
@@ -81,7 +82,7 @@ test('Actual checkout permits later dates without early consent but still valida
 
 test('Receipt recovery retains the exact accepted consumer and general terms for existing bookings',async()=>{
  const source=backend.slice(backend.indexOf('async function receipt('),backend.indexOf('async function deliver('));
- const context={TERMS,TERMS_TEXT,THERMAL_TERMS_TEXT,LEGACY_CONSUMER_TERMS,PREVIOUS_CONSUMER_TERMS,PAYMENT_CONSUMER_TERMS,PREVIOUS_THERMAL_CONSUMER_TERMS,SHORT_CONSUMER_TERMS,CONSUMER_TERMS,
+ const context={TERMS,TERMS_TEXT,THERMAL_TERMS_TEXT,LEGACY_CONSUMER_TERMS,PREVIOUS_CONSUMER_TERMS,PAYMENT_CONSUMER_TERMS,PREVIOUS_THERMAL_CONSUMER_TERMS,SHORT_CONSUMER_TERMS,LOS_CONSUMER_TERMS,CONSUMER_TERMS,
   withdrawalLastDay,reportDueDay,consumerProduct,LEGACY_CONSUMER_PRICING_VERSION,TextEncoder,
   btoa:value=>Buffer.from(value,'binary').toString('base64'),env:()=> 'ferry@roofsignal.nl'};
  vm.runInNewContext(stripTypeScriptTypes(source),context);
@@ -91,6 +92,7 @@ test('Receipt recovery retains the exact accepted consumer and general terms for
   ['2026-10-11-consumer-pay',PAYMENT_CONSUMER_TERMS,TERMS_TEXT],
   ['2026-10-11-consumer-thermal',PREVIOUS_THERMAL_CONSUMER_TERMS,THERMAL_TERMS_TEXT],
   ['2026-10-11-consumer-kort',SHORT_CONSUMER_TERMS,THERMAL_TERMS_TEXT],
+  ['2026-10-11-consumer-los',LOS_CONSUMER_TERMS,THERMAL_TERMS_TEXT],
   [TERMS,CONSUMER_TERMS,THERMAL_TERMS_TEXT]
  ]) {
   const early=['2026-10-11-consumer-kort',TERMS].includes(version);

@@ -67,3 +67,5 @@ test('the actual form payload carries raw choices and original message; the publ
   const backend=await readFile(new URL('../supabase/functions/submit-public-lead/index.ts',import.meta.url),'utf8');
   assert.match(backend,/vveIntakeDetails\(body\)/); assert.match(backend,/intake_details: intakeDetails/);
 });
+
+test('facade enquiries always require a reviewed bespoke quote, including small VvEs',()=>{for(const [type,thermal] of [['facade',false],['facade_thermal',true],['facade',true]]){const d=vveIntakeDetails(input({inspection_type:type,thermal,address_count:2}));assert.equal(d.inspection_type,type);assert.equal(d.price_indication.kind,'custom');assert.equal(d.price_indication.total_excl_cents,null);}assert.throws(()=>vveIntakeDetails(input({inspection_type:'facade_thermal',thermal:false})));});

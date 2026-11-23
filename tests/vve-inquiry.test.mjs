@@ -116,10 +116,10 @@ test('Thermal primary offers envelope supplement with identical combined totals 
   const ui = setup();
   ui.inspection('thermal');
   assert.equal(ui.get('vve-product-addon').hidden, false);
-  assert.equal(ui.get('vve-addon-title').textContent, 'Gebouwschilinspectie toevoegen');
+  assert.equal(ui.get('vve-addon-title').textContent, 'Dak- en gevelinspectie toevoegen');
   assert.equal(ui.get('vve-addon-description').textContent, 'Foto’s, bevindingen en onderhoudsadvies.');
   assert.equal(ui.get('vve-summary-base-label').textContent, 'Thermografische inspectie');
-  assert.equal(ui.get('vve-summary-thermal-label').textContent, 'Gebouwschilinspectie');
+  assert.equal(ui.get('vve-summary-thermal-label').textContent, 'Dak- en gevelinspectie');
   for (const [count, base, thermal, thermalVat, total, totalVat] of tierCases) {
     ui.count(count);
     assert.equal(normalized(ui.get('vve-estimate').textContent), `€${thermal}excl.btw`);
@@ -147,7 +147,7 @@ test('Switching either primary clears the previous addon and refreshes its title
   ui.inspection('building_envelope'); ui.addon(true);
   ui.inspection('thermal');
   assert.equal(ui.get('vve-thermal').checked, false);
-  assert.equal(ui.get('vve-addon-title').textContent, 'Gebouwschilinspectie toevoegen');
+  assert.equal(ui.get('vve-addon-title').textContent, 'Dak- en gevelinspectie toevoegen');
   assert.equal(normalized(ui.get('vve-estimate').textContent), '€550,00excl.btw');
   assert.equal(normalized(ui.get('vve-thermal-price').textContent), '+€1.000,00');
   ui.addon(true); ui.inspection('building_envelope');
@@ -237,3 +237,5 @@ test('The VvE action remains disabled until its backend and form verification ar
     assert.match(unavailable.get('vve-form').status.textContent, /tijdelijk niet beschikbaar/);
   }
 });
+
+test('facade-only VvE form asks for a bespoke price instead of reusing roof tiers',()=>{const ui=setup();ui.get('vve-inspection-scope').value='facade';ui.get('vve-inspection-scope').listeners.change();ui.count('2');ui.inspection('thermal');assert.equal(ui.get('vve-inspection-product').value,'facade_thermal');assert.match(ui.get('vve-estimate').textContent,/op maat/);ui.addon(true);assert.equal(ui.get('vve-inspection-product').value,'facade');assert.match(ui.get('vve-scope').value,/bouwkundig en thermisch/);assert.match(ui.get('vve-scope').value,/geveloppervlak, hoogte en complexiteit/);});

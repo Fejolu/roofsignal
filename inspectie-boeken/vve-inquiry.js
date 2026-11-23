@@ -23,7 +23,8 @@
   }
 
   function updatePrice() {
-    const inspection = chosenInspection();
+    const inspection = chosenInspection(),facade=byId('vve-inspection-scope').value==='facade',visualLabel=facade?'Bouwkundige gevelinspectie':'Dak- en gevelinspectie',thermalLabel=facade?'Thermische gevelinspectie':'Thermografische inspectie';
+    byId('vve-envelope-label').textContent=visualLabel;byId('vve-thermal-label').textContent=thermalLabel;
     if (inspection !== lastInspection || !inspection) byId('vve-thermal').checked = false;
     lastInspection = inspection;
     const addon = Boolean(inspection && byId('vve-thermal').checked);
@@ -33,17 +34,17 @@
     const thermalOnly = thermal && !envelope;
     byId('vve-product-addon').hidden = !inspection;
     byId('vve-thermal').disabled = !inspection;
-    byId('vve-addon-title').textContent = thermalPrimary ? 'Gebouwschilinspectie toevoegen' : 'Thermografische inspectie toevoegen';
-    byId('vve-addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : 'Warmtebeelden van dak en gevel.';
+    byId('vve-addon-title').textContent = thermalPrimary ? visualLabel+' toevoegen' : thermalLabel+' toevoegen';
+    byId('vve-addon-description').textContent = thermalPrimary ? 'Foto’s, bevindingen en onderhoudsadvies.' : facade?'Warmtebeelden van de gevels.':'Warmtebeelden van dak en gevel.';
     // A combined enquiry has the same canonical products in either direction.
-    byId('vve-inspection-product').value = envelope ? 'building_envelope' : thermalOnly ? 'thermal' : '';
+    byId('vve-inspection-product').value = envelope ? (facade?'facade':'building_envelope') : thermalOnly ? (facade?'facade_thermal':'thermal') : '';
     const count = Number(byId('vve-address-count').value);
     const valid = Number.isSafeInteger(count) && count >= 1 && count <= 10000;
     const scope = byId('vve-object-scope').value;
-    const tier = valid && scope === 'single' ? tiers.find(item => count <= item.maximum) : null;
-    const custom = scope !== 'single' || (valid && count > 20);
+    const tier = !facade && valid && scope === 'single' ? tiers.find(item => count <= item.maximum) : null;
+    const custom = facade || scope !== 'single' || (valid && count > 20);
     byId('vve-thermal-interest').value = thermal ? 'yes' : 'no';
-    byId('vve-scope').value = !inspection ? '' : thermalOnly
+    byId('vve-scope').value = facade&&inspection ? `Gevelinspectie op maat — ${thermalOnly?'thermisch':thermal?'bouwkundig en thermisch':'bouwkundig'}, inclusief rapport. Prijsvoorstel op basis van geveloppervlak, hoogte en complexiteit.` : !inspection ? '' : thermalOnly
       ? 'VvE-objectaanmelding — thermografische inspectie, inclusief rapport'
       : `VvE-objectaanmelding — dak en gevel, inclusief inspectierapport${thermal ? ' en thermografie' : ''}`;
     const net = tier ? (envelope ? tier.net : 0) + (thermal ? tier.thermalNet : 0) : 0;
@@ -53,9 +54,9 @@
     byId('vve-thermal-price').textContent = tier
       ? `+ ${money(thermalPrimary ? tier.net : tier.thermalNet)}`
       : custom ? 'Op maat' : `Vanaf ${money(thermalPrimary ? tiers[0].net : tiers[0].thermalNet)}`;
-    byId('vve-summary-base-label').textContent = !inspection ? 'Inspectie' : thermalPrimary ? 'Thermografische inspectie' : 'Dak- en gevelinspectie';
+    byId('vve-summary-base-label').textContent = !inspection ? 'Inspectie' : thermalPrimary ? thermalLabel : visualLabel;
     byId('vve-summary-base').textContent = !inspection ? 'Nog te kiezen' : tier ? money(thermalPrimary ? tier.thermalNet : tier.net) : custom ? 'Op maat' : 'Na objectgegevens';
-    byId('vve-summary-thermal-label').textContent = !inspection ? 'Aanvulling' : thermalPrimary ? 'Gebouwschilinspectie' : 'Thermografie';
+    byId('vve-summary-thermal-label').textContent = !inspection ? 'Aanvulling' : thermalPrimary ? visualLabel : thermalLabel;
     byId('vve-summary-thermal').textContent = !inspection ? 'Nog te kiezen' : addon ? tier ? money(thermalPrimary ? tier.net : tier.thermalNet) : custom ? 'Op maat' : 'Na objectgegevens' : 'Niet toegevoegd';
     byId('vve-estimate-label').textContent = !inspection ? 'Uw prijs' : addon ? 'Uw gecombineerde inspectie' : thermalPrimary ? 'Uw thermografische inspectie' : 'Uw basisprijs';
     byId('vve-estimate').textContent = !inspection ? 'Kies uw inspectie' : tier ? `${money(net)} excl. btw` : custom ? 'Voorstel op maat' : 'Nog te bepalen';
@@ -66,6 +67,8 @@
     return Boolean(inspection);
   }
 
+  byId('vve-inspection-scope').addEventListener('change',updatePrice);
+  if(new URLSearchParams(window.location.search).get('scope')==='facade')byId('vve-inspection-scope').value='facade';
   for (const button of choices) {
     button.addEventListener('click', () => showAudience(button.dataset.audienceChoice));
     button.disabled = false;

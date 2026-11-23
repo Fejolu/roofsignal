@@ -91,3 +91,5 @@ test('Actual new quote creation stores the latest authoritative price and ignore
   }
  }
 });
+
+test('facade products use approved cents, reject historical versions and carry matching payment labels',()=>{for(const [type,thermal,total] of [['facade',false,36179],['facade_thermal',true,36179],['facade',true,66429]]){const p=consumerProduct(type,thermal);assert.equal(p.subtotalCents,total);assert.match(p.label,/gevelinspectie/);assert.throws(()=>consumerProduct(type,thermal,LEGACY_CONSUMER_PRICING_VERSION));const b=paymentBody({id:'601f78aa-31f3-4c63-941d-07b31df84902',quote_id:'q',reference:'RS-FACADE',mode:'test',status_token:'a'.repeat(64)},{id:'q',inspection_type:type,thermal,total_cents:total},'https://test.invalid');assert.equal(b.amount.value,(total/100).toFixed(2));assert.match(b.description,/gevelinspectie/i);}assert.throws(()=>consumerProduct('facade_thermal',false));});

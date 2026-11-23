@@ -1,6 +1,6 @@
 // Optional structured metadata for the existing VvE inquiry. This is never an
 // accepted quote, booking or payment. Legacy free text is not parsed or guessed.
-const TYPES = new Set(['building_envelope', 'thermal']);
+const TYPES = new Set(['building_envelope', 'thermal', 'facade', 'facade_thermal']);
 const SCOPES = new Set(['single', 'multiple', 'unknown']);
 const INPUT_KEYS = ['inspection_type', 'thermal', 'address_count', 'object_scope', 'object_address', 'object_city', 'phone', 'kvk_number'];
 const fail = () => { throw Error('INVALID_VVE_INTAKE'); };
@@ -16,7 +16,7 @@ export function vveIntakeDetails(body) {
     || !input || typeof input !== 'object' || Array.isArray(input)
     || Object.keys(input).some(key => !INPUT_KEYS.includes(key))
     || !TYPES.has(input.inspection_type) || typeof input.thermal !== 'boolean'
-    || (input.inspection_type === 'thermal' && input.thermal !== true)
+    || (['thermal','facade_thermal'].includes(input.inspection_type) && input.thermal !== true)
     || !Number.isSafeInteger(input.address_count) || input.address_count < 1 || input.address_count > 10000
     || !SCOPES.has(input.object_scope)) return fail();
   const suppliedKvk = input.kvk_number == null ? '' : text(input.kvk_number, 20, false).replace(/\s/g, '');
@@ -24,7 +24,8 @@ export function vveIntakeDetails(body) {
   // stay in the original message; they are not presented as a registry number.
   const kvk = /^\d{8}$/.test(suppliedKvk) ? suppliedKvk : null;
   const objectAddress = text(input.object_address, 500), city = text(input.object_city, 100), phone = text(input.phone, 40, false);
-  const tier = input.object_scope === 'single' ? [
+  const facade=['facade','facade_thermal'].includes(input.inspection_type);
+  const tier = !facade && input.object_scope === 'single' ? [
     { max: 5, building: 75000, thermal: 40000 },
     { max: 10, building: 100000, thermal: 55000 },
     { max: 20, building: 125000, thermal: 75000 },

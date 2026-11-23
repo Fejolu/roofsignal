@@ -13,6 +13,7 @@ export function safeAdsUrl(href) {
   }
   const campaign = url.searchParams.get('rs_campaign');
   if (['search_consument_apeldoorn', 'google_bedrijfsprofiel', 'parken_flyer', 'linkedin', 'outreach', 'partners'].includes(campaign)) clean.searchParams.set('rs_campaign', campaign);
+  if (url.pathname.replace(/\/$/, '') === '/inspectie-boeken' && url.searchParams.get('scope') === 'facade') clean.searchParams.set('scope', 'facade');
   if (url.hash === '#vve') clean.hash = 'vve';
   return clean.href;
 }
